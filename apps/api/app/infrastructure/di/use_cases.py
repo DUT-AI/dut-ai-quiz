@@ -1,0 +1,81 @@
+from dishka import Provider, Scope, provide
+from app.infrastructure.repositories.attempts import AttemptRepository
+from app.infrastructure.repositories.focus_events import FocusEventRepository
+from app.domain.events.bus import EventBus
+
+from app.application.use_cases.exams.exam_use_case import (
+    CreateExamUseCase,
+    DeleteExamUseCase,
+    GetExamUseCase,
+    ListExamQuestionsUseCase,
+    ListExamsUseCase,
+    SetExamQuestionsUseCase,
+    UpdateExamUseCase,
+)
+from app.application.use_cases.questions.question_use_case import (
+    CreateQuestionUseCase,
+    DeleteQuestionUseCase,
+    GetQuestionUseCase,
+    ListQuestionsUseCase,
+    UpdateQuestionUseCase,
+)
+from app.application.use_cases.attempts.attempt_use_case import (
+    StartAttemptUseCase,
+    SubmitAttemptUseCase,
+    GetAttemptUseCase,
+    GetAttemptDetailUseCase,
+    ListExamAttemptsUseCase,
+    PatchAttemptAnswersUseCase,
+    RecordFocusEventUseCase,
+)
+from app.application.use_cases.leaderboard.leaderboard_use_case import GetLeaderboardUseCase
+from app.application.use_cases.practice.practice_use_case import (
+    StartPracticeSessionUseCase,
+    GetPracticeSessionUseCase,
+    PatchPracticeAnswersUseCase,
+    FinishPracticeSessionUseCase,
+    ListPracticeHistoryUseCase,
+)
+
+class UseCaseProvider(Provider):
+    create_exam_use_case = provide(CreateExamUseCase, scope=Scope.REQUEST)
+    delete_exam_use_case = provide(DeleteExamUseCase, scope=Scope.REQUEST)
+    get_exam_use_case = provide(GetExamUseCase, scope=Scope.REQUEST)
+    list_exam_questions_use_case = provide(ListExamQuestionsUseCase, scope=Scope.REQUEST)
+    list_exams_use_case = provide(ListExamsUseCase, scope=Scope.REQUEST)
+    set_exam_questions_use_case = provide(SetExamQuestionsUseCase, scope=Scope.REQUEST)
+    update_exam_use_case = provide(UpdateExamUseCase, scope=Scope.REQUEST)
+
+    # questions
+    create_question_use_case = provide(CreateQuestionUseCase, scope=Scope.REQUEST)
+    delete_question_use_case = provide(DeleteQuestionUseCase, scope=Scope.REQUEST)
+    get_question_use_case = provide(GetQuestionUseCase, scope=Scope.REQUEST)
+    list_questions_use_case = provide(ListQuestionsUseCase, scope=Scope.REQUEST)
+    update_question_use_case = provide(UpdateQuestionUseCase, scope=Scope.REQUEST)
+
+    # attempts
+    start_attempt_use_case = provide(StartAttemptUseCase, scope=Scope.REQUEST)
+    submit_attempt_use_case = provide(SubmitAttemptUseCase, scope=Scope.REQUEST)
+    get_attempt_use_case = provide(GetAttemptUseCase, scope=Scope.REQUEST)
+    get_attempt_detail_use_case = provide(GetAttemptDetailUseCase, scope=Scope.REQUEST)
+    list_exam_attempts_use_case = provide(ListExamAttemptsUseCase, scope=Scope.REQUEST)
+    patch_attempt_answers_use_case = provide(PatchAttemptAnswersUseCase, scope=Scope.REQUEST)
+    
+    @provide(scope=Scope.REQUEST)
+    def record_focus_event_use_case(
+        self,
+        att_repo: AttemptRepository,
+        fe_repo: FocusEventRepository,
+        event_bus: EventBus,
+    ) -> RecordFocusEventUseCase:
+        return RecordFocusEventUseCase(att_repo, fe_repo, event_bus)
+
+    # leaderboard
+    get_leaderboard_use_case = provide(GetLeaderboardUseCase, scope=Scope.REQUEST)
+
+    # practice
+    start_practice_session_use_case = provide(StartPracticeSessionUseCase, scope=Scope.REQUEST)
+    get_practice_session_use_case = provide(GetPracticeSessionUseCase, scope=Scope.REQUEST)
+    patch_practice_answers_use_case = provide(PatchPracticeAnswersUseCase, scope=Scope.REQUEST)
+    finish_practice_session_use_case = provide(FinishPracticeSessionUseCase, scope=Scope.REQUEST)
+    list_practice_history_use_case = provide(ListPracticeHistoryUseCase, scope=Scope.REQUEST)

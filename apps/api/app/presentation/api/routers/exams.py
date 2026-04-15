@@ -2,39 +2,54 @@ from datetime import datetime
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException
+from dishka.integrations.fastapi import FromDishka, inject
 
-from app.application.use_cases.exams import (
-    create_exam,
-    delete_exam,
-    execute_for_student,
-    execute_for_teacher,
-    get_exam,
-    list_exam_questions,
-    set_exam_questions,
-    update_exam,
+from app.application.use_cases.exams.exam_use_case import (
+    CreateExamUseCase,
+    DeleteExamUseCase,
+    GetExamUseCase,
+    ListExamQuestionsUseCase,
+    ListExamsUseCase,
+    SetExamQuestionsUseCase,
+    UpdateExamUseCase,
 )
-from app.presentation.api.deps import CurrentUser, SessionDep, TeacherUser
-from app.presentation.schemas.exams import ExamCreate, ExamOut, ExamQuestionsPut, ExamUpdate
+from app.presentation.api.deps import CurrentUser, TeacherUser
+from app.core.datetime_utils import now_ict
+from app.presentation.schemas.exams import (
+    ExamCreate,
+    ExamOut,
+    ExamQuestionsPut,
+    ExamUpdate,
+)
 from app.presentation.schemas.questions import QuestionOut
 
 router = APIRouter(prefix="/exams", tags=["exams"])
 
 
 @router.get("", response_model=list[ExamOut])
-async def list_exams_route(session: SessionDep, user: CurrentUser):
+@inject
+async def list_exams_route(
+    user: CurrentUser, use_case: FromDishka[ListExamsUseCase]
+):
     if user.quiz_role == "teacher":
-        return await execute_for_teacher(session, user.id)
-    return await execute_for_student(session, datetime.utcnow())
+        return await use_case.execute_for_teacher(user.id)
+    return await use_case.execute_for_student(now_ict())
 
 
 @router.post("", response_model=ExamOut)
-async def create_exam_route(session: SessionDep, user: TeacherUser, body: ExamCreate):
-    return await create_exam(body, session, user.id)
+@inject
+async def create_exam_route(
+    user: TeacherUser, body: ExamCreate, use_case: FromDishka[CreateExamUseCase]
+):
+    return await use_case.execute(body, user.id)
 
 
 @router.get("/{exam_id}", response_model=ExamOut)
-async def get_exam_route(session: SessionDep, user: CurrentUser, exam_id: UUID):
-    ex = await get_exam(session, exam_id)
+@inject
+async def get_exam_route(
+    user: CurrentUser, exam_id: UUID, use_case: FromDishka[GetExamUseCase]
+):
+    ex = await use_case.execute(exam_id)
     if not ex:
         raise HTTPException(status_code=404, detail="Not found")
     if user.quiz_role == "student":
@@ -44,32 +59,50 @@ async def get_exam_route(session: SessionDep, user: CurrentUser, exam_id: UUID):
 
 
 @router.patch("/{exam_id}", response_model=ExamOut)
-async def update_exam_route(session: SessionDep, user: TeacherUser, exam_id: UUID, body: ExamUpdate):
-    ex = await update_exam(session, exam_id, body, user.id)
+@inject
+async def update_exam_route(
+    user: TeacherUser,
+    exam_id: UUID,
+    body: ExamUpdate,
+    use_case: FromDishka[UpdateExamUseCase],
+):
+    ex = await use_case.execute(exam_id, body, user.id)
     if not ex:
         raise HTTPException(status_code=404, detail="Not found")
     return ex
 
 
 @router.delete("/{exam_id}")
-async def delete_exam_route(session: SessionDep, user: TeacherUser, exam_id: UUID):
-    ok = await delete_exam(session, exam_id, user.id)
+@inject
+async def delete_exam_route(
+    user: TeacherUser, exam_id: UUID, use_case: FromDishka[DeleteExamUseCase]
+):
+    ok = await use_case.execute(exam_id, user.id)
     if not ok:
         raise HTTPException(status_code=404, detail="Not found")
     return {"ok": True}
 
 
 @router.get("/{exam_id}/questions", response_model=list[QuestionOut])
-async def get_exam_questions_route(session: SessionDep, user: TeacherUser, exam_id: UUID):
-    rows = await list_exam_questions(session, exam_id, user.id)
+@inject
+async def get_exam_questions_route(
+    user: TeacherUser, exam_id: UUID, use_case: FromDishka[ListExamQuestionsUseCase]
+):
+    rows = await use_case.execute(exam_id, user.id)
     if rows is None:
         raise HTTPException(status_code=404, detail="Not found")
     return rows
 
 
 @router.put("/{exam_id}/questions")
-async def put_exam_questions(session: SessionDep, user: TeacherUser, exam_id: UUID, body: ExamQuestionsPut):
-    ok = await set_exam_questions(session, exam_id, body.question_ids, user.id)
+@inject
+async def put_exam_questions(
+    user: TeacherUser,
+    exam_id: UUID,
+    body: ExamQuestionsPut,
+    use_case: FromDishka[SetExamQuestionsUseCase],
+):
+    ok = await use_case.execute(exam_id, body.question_ids, user.id)
     if not ok:
         raise HTTPException(status_code=404, detail="Not found")
     return {"ok": True}

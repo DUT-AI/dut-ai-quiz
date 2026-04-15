@@ -4,17 +4,29 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.infrastructure.database import init_db
-from app.presentation.api.routers import attempts, exams, health, leaderboard, me, practice, questions, uploads
+from app.infrastructure.di import setup_di, register_event_handlers
+from app.presentation.api.routers import (
+    attempts,
+    exams,
+    health,
+    leaderboard,
+    me,
+    practice,
+    questions,
+    uploads,
+)
 
 
 @asynccontextmanager
-async def lifespan(_app: FastAPI):
-    await init_db()
+async def lifespan(app: FastAPI):
+    # Register event handlers that need async container
+    await register_event_handlers(app.state.dishka_container)
     yield
 
 
 app = FastAPI(title="dut-ai-quiz API", lifespan=lifespan)
+setup_di(app)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origin_list,

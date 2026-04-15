@@ -2,9 +2,11 @@
 # Dùng: make help
 
 .PHONY: help db-up db-down db-logs api-sync api-dev api-lint \
-	migrate migrate-down alembic-revision alembic-history alembic-current
+	migrate migrate-down alembic-revision alembic-history alembic-current \
+	dev-web web-dev
 
 API_DIR := apps/api
+WEB_DIR := apps/web
 COMPOSE := docker compose
 
 help:
@@ -20,6 +22,7 @@ help:
 	@echo "  alembic-revision - autogenerate (cần MSG=\"...\")"
 	@echo "  alembic-history  - lịch sử revision"
 	@echo "  alembic-current  - revision hiện tại trên DB"
+	@echo "  dev-web          - chạy Next.js dev server cho frontend (apps/web)"
 
 db-up:
 	$(COMPOSE) up -d postgres
@@ -55,3 +58,6 @@ alembic-history: api-sync
 
 alembic-current: api-sync
 	cd $(API_DIR) && uv run alembic current
+
+dev-web web-dev:
+	cd $(WEB_DIR) && npm run dev

@@ -1,0 +1,4134 @@
+[
+    {
+        "label": "runpy",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "runpy",
+        "description": "runpy",
+        "detail": "runpy",
+        "documentation": {}
+    },
+    {
+        "label": "annotations",
+        "importPath": "__future__",
+        "description": "__future__",
+        "isExtraImport": true,
+        "detail": "__future__",
+        "documentation": {}
+    },
+    {
+        "label": "annotations",
+        "importPath": "__future__",
+        "description": "__future__",
+        "isExtraImport": true,
+        "detail": "__future__",
+        "documentation": {}
+    },
+    {
+        "label": "os",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "os",
+        "description": "os",
+        "detail": "os",
+        "documentation": {}
+    },
+    {
+        "label": "site",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "site",
+        "description": "site",
+        "detail": "site",
+        "documentation": {}
+    },
+    {
+        "label": "sys",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "sys",
+        "description": "sys",
+        "detail": "sys",
+        "documentation": {}
+    },
+    {
+        "label": "json",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "json",
+        "description": "json",
+        "detail": "json",
+        "documentation": {}
+    },
+    {
+        "label": "argparse",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "argparse",
+        "description": "argparse",
+        "detail": "argparse",
+        "documentation": {}
+    },
+    {
+        "label": "pformat",
+        "importPath": "pprint",
+        "description": "pprint",
+        "isExtraImport": true,
+        "detail": "pprint",
+        "documentation": {}
+    },
+    {
+        "label": "jmespath",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "jmespath",
+        "description": "jmespath",
+        "detail": "jmespath",
+        "documentation": {}
+    },
+    {
+        "label": "exceptions",
+        "importPath": "jmespath",
+        "description": "jmespath",
+        "isExtraImport": true,
+        "detail": "jmespath",
+        "documentation": {}
+    },
+    {
+        "label": "Sequence",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Union",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Sequence",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Union",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Annotated",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "op",
+        "importPath": "alembic",
+        "description": "alembic",
+        "isExtraImport": true,
+        "detail": "alembic",
+        "documentation": {}
+    },
+    {
+        "label": "op",
+        "importPath": "alembic",
+        "description": "alembic",
+        "isExtraImport": true,
+        "detail": "alembic",
+        "documentation": {}
+    },
+    {
+        "label": "context",
+        "importPath": "alembic",
+        "description": "alembic",
+        "isExtraImport": true,
+        "detail": "alembic",
+        "documentation": {}
+    },
+    {
+        "label": "sqlalchemy",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "sqlalchemy",
+        "description": "sqlalchemy",
+        "detail": "sqlalchemy",
+        "documentation": {}
+    },
+    {
+        "label": "pool",
+        "importPath": "sqlalchemy",
+        "description": "sqlalchemy",
+        "isExtraImport": true,
+        "detail": "sqlalchemy",
+        "documentation": {}
+    },
+    {
+        "label": "select",
+        "importPath": "sqlalchemy",
+        "description": "sqlalchemy",
+        "isExtraImport": true,
+        "detail": "sqlalchemy",
+        "documentation": {}
+    },
+    {
+        "label": "Column",
+        "importPath": "sqlalchemy",
+        "description": "sqlalchemy",
+        "isExtraImport": true,
+        "detail": "sqlalchemy",
+        "documentation": {}
+    },
+    {
+        "label": "String",
+        "importPath": "sqlalchemy",
+        "description": "sqlalchemy",
+        "isExtraImport": true,
+        "detail": "sqlalchemy",
+        "documentation": {}
+    },
+    {
+        "label": "UniqueConstraint",
+        "importPath": "sqlalchemy",
+        "description": "sqlalchemy",
+        "isExtraImport": true,
+        "detail": "sqlalchemy",
+        "documentation": {}
+    },
+    {
+        "label": "func",
+        "importPath": "sqlalchemy",
+        "description": "sqlalchemy",
+        "isExtraImport": true,
+        "detail": "sqlalchemy",
+        "documentation": {}
+    },
+    {
+        "label": "select",
+        "importPath": "sqlalchemy",
+        "description": "sqlalchemy",
+        "isExtraImport": true,
+        "detail": "sqlalchemy",
+        "documentation": {}
+    },
+    {
+        "label": "delete",
+        "importPath": "sqlalchemy",
+        "description": "sqlalchemy",
+        "isExtraImport": true,
+        "detail": "sqlalchemy",
+        "documentation": {}
+    },
+    {
+        "label": "select",
+        "importPath": "sqlalchemy",
+        "description": "sqlalchemy",
+        "isExtraImport": true,
+        "detail": "sqlalchemy",
+        "documentation": {}
+    },
+    {
+        "label": "select",
+        "importPath": "sqlalchemy",
+        "description": "sqlalchemy",
+        "isExtraImport": true,
+        "detail": "sqlalchemy",
+        "documentation": {}
+    },
+    {
+        "label": "select",
+        "importPath": "sqlalchemy",
+        "description": "sqlalchemy",
+        "isExtraImport": true,
+        "detail": "sqlalchemy",
+        "documentation": {}
+    },
+    {
+        "label": "select",
+        "importPath": "sqlalchemy",
+        "description": "sqlalchemy",
+        "isExtraImport": true,
+        "detail": "sqlalchemy",
+        "documentation": {}
+    },
+    {
+        "label": "select",
+        "importPath": "sqlalchemy",
+        "description": "sqlalchemy",
+        "isExtraImport": true,
+        "detail": "sqlalchemy",
+        "documentation": {}
+    },
+    {
+        "label": "func",
+        "importPath": "sqlalchemy",
+        "description": "sqlalchemy",
+        "isExtraImport": true,
+        "detail": "sqlalchemy",
+        "documentation": {}
+    },
+    {
+        "label": "select",
+        "importPath": "sqlalchemy",
+        "description": "sqlalchemy",
+        "isExtraImport": true,
+        "detail": "sqlalchemy",
+        "documentation": {}
+    },
+    {
+        "label": "postgresql",
+        "importPath": "sqlalchemy.dialects",
+        "description": "sqlalchemy.dialects",
+        "isExtraImport": true,
+        "detail": "sqlalchemy.dialects",
+        "documentation": {}
+    },
+    {
+        "label": "postgresql",
+        "importPath": "sqlalchemy.dialects",
+        "description": "sqlalchemy.dialects",
+        "isExtraImport": true,
+        "detail": "sqlalchemy.dialects",
+        "documentation": {}
+    },
+    {
+        "label": "asyncio",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "asyncio",
+        "description": "asyncio",
+        "detail": "asyncio",
+        "documentation": {}
+    },
+    {
+        "label": "fileConfig",
+        "importPath": "logging.config",
+        "description": "logging.config",
+        "isExtraImport": true,
+        "detail": "logging.config",
+        "documentation": {}
+    },
+    {
+        "label": "Connection",
+        "importPath": "sqlalchemy.engine",
+        "description": "sqlalchemy.engine",
+        "isExtraImport": true,
+        "detail": "sqlalchemy.engine",
+        "documentation": {}
+    },
+    {
+        "label": "create_async_engine",
+        "importPath": "sqlalchemy.ext.asyncio",
+        "description": "sqlalchemy.ext.asyncio",
+        "isExtraImport": true,
+        "detail": "sqlalchemy.ext.asyncio",
+        "documentation": {}
+    },
+    {
+        "label": "AsyncSession",
+        "importPath": "sqlalchemy.ext.asyncio",
+        "description": "sqlalchemy.ext.asyncio",
+        "isExtraImport": true,
+        "detail": "sqlalchemy.ext.asyncio",
+        "documentation": {}
+    },
+    {
+        "label": "AsyncSession",
+        "importPath": "sqlalchemy.ext.asyncio",
+        "description": "sqlalchemy.ext.asyncio",
+        "isExtraImport": true,
+        "detail": "sqlalchemy.ext.asyncio",
+        "documentation": {}
+    },
+    {
+        "label": "AsyncSession",
+        "importPath": "sqlalchemy.ext.asyncio",
+        "description": "sqlalchemy.ext.asyncio",
+        "isExtraImport": true,
+        "detail": "sqlalchemy.ext.asyncio",
+        "documentation": {}
+    },
+    {
+        "label": "AsyncSession",
+        "importPath": "sqlalchemy.ext.asyncio",
+        "description": "sqlalchemy.ext.asyncio",
+        "isExtraImport": true,
+        "detail": "sqlalchemy.ext.asyncio",
+        "documentation": {}
+    },
+    {
+        "label": "AsyncSession",
+        "importPath": "sqlalchemy.ext.asyncio",
+        "description": "sqlalchemy.ext.asyncio",
+        "isExtraImport": true,
+        "detail": "sqlalchemy.ext.asyncio",
+        "documentation": {}
+    },
+    {
+        "label": "AsyncSession",
+        "importPath": "sqlalchemy.ext.asyncio",
+        "description": "sqlalchemy.ext.asyncio",
+        "isExtraImport": true,
+        "detail": "sqlalchemy.ext.asyncio",
+        "documentation": {}
+    },
+    {
+        "label": "AsyncSession",
+        "importPath": "sqlalchemy.ext.asyncio",
+        "description": "sqlalchemy.ext.asyncio",
+        "isExtraImport": true,
+        "detail": "sqlalchemy.ext.asyncio",
+        "documentation": {}
+    },
+    {
+        "label": "AsyncSession",
+        "importPath": "sqlalchemy.ext.asyncio",
+        "description": "sqlalchemy.ext.asyncio",
+        "isExtraImport": true,
+        "detail": "sqlalchemy.ext.asyncio",
+        "documentation": {}
+    },
+    {
+        "label": "async_sessionmaker",
+        "importPath": "sqlalchemy.ext.asyncio",
+        "description": "sqlalchemy.ext.asyncio",
+        "isExtraImport": true,
+        "detail": "sqlalchemy.ext.asyncio",
+        "documentation": {}
+    },
+    {
+        "label": "create_async_engine",
+        "importPath": "sqlalchemy.ext.asyncio",
+        "description": "sqlalchemy.ext.asyncio",
+        "isExtraImport": true,
+        "detail": "sqlalchemy.ext.asyncio",
+        "documentation": {}
+    },
+    {
+        "label": "AsyncSession",
+        "importPath": "sqlalchemy.ext.asyncio",
+        "description": "sqlalchemy.ext.asyncio",
+        "isExtraImport": true,
+        "detail": "sqlalchemy.ext.asyncio",
+        "documentation": {}
+    },
+    {
+        "label": "SQLModel",
+        "importPath": "sqlmodel",
+        "description": "sqlmodel",
+        "isExtraImport": true,
+        "detail": "sqlmodel",
+        "documentation": {}
+    },
+    {
+        "label": "Field",
+        "importPath": "sqlmodel",
+        "description": "sqlmodel",
+        "isExtraImport": true,
+        "detail": "sqlmodel",
+        "documentation": {}
+    },
+    {
+        "label": "SQLModel",
+        "importPath": "sqlmodel",
+        "description": "sqlmodel",
+        "isExtraImport": true,
+        "detail": "sqlmodel",
+        "documentation": {}
+    },
+    {
+        "label": "SQLModel",
+        "importPath": "sqlmodel",
+        "description": "sqlmodel",
+        "isExtraImport": true,
+        "detail": "sqlmodel",
+        "documentation": {}
+    },
+    {
+        "label": "app.infrastructure.persistence.models",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "app.infrastructure.persistence.models",
+        "description": "app.infrastructure.persistence.models",
+        "detail": "app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "Question",
+        "importPath": "app.infrastructure.persistence.models",
+        "description": "app.infrastructure.persistence.models",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "Question",
+        "importPath": "app.infrastructure.persistence.models",
+        "description": "app.infrastructure.persistence.models",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "AttemptStatus",
+        "importPath": "app.infrastructure.persistence.models",
+        "description": "app.infrastructure.persistence.models",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "FocusEvent",
+        "importPath": "app.infrastructure.persistence.models",
+        "description": "app.infrastructure.persistence.models",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "Attempt",
+        "importPath": "app.infrastructure.persistence.models",
+        "description": "app.infrastructure.persistence.models",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "AttemptStatus",
+        "importPath": "app.infrastructure.persistence.models",
+        "description": "app.infrastructure.persistence.models",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "AttemptStatus",
+        "importPath": "app.infrastructure.persistence.models",
+        "description": "app.infrastructure.persistence.models",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "Exam",
+        "importPath": "app.infrastructure.persistence.models",
+        "description": "app.infrastructure.persistence.models",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "Exam",
+        "importPath": "app.infrastructure.persistence.models",
+        "description": "app.infrastructure.persistence.models",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "Lesson",
+        "importPath": "app.infrastructure.persistence.models",
+        "description": "app.infrastructure.persistence.models",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "PracticeSessionStatus",
+        "importPath": "app.infrastructure.persistence.models",
+        "description": "app.infrastructure.persistence.models",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "PracticeSessionStatus",
+        "importPath": "app.infrastructure.persistence.models",
+        "description": "app.infrastructure.persistence.models",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "PoolType",
+        "importPath": "app.infrastructure.persistence.models",
+        "description": "app.infrastructure.persistence.models",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "PracticeSession",
+        "importPath": "app.infrastructure.persistence.models",
+        "description": "app.infrastructure.persistence.models",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "PracticeSessionStatus",
+        "importPath": "app.infrastructure.persistence.models",
+        "description": "app.infrastructure.persistence.models",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "Question",
+        "importPath": "app.infrastructure.persistence.models",
+        "description": "app.infrastructure.persistence.models",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "Question",
+        "importPath": "app.infrastructure.persistence.models",
+        "description": "app.infrastructure.persistence.models",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "Question",
+        "importPath": "app.infrastructure.persistence.models",
+        "description": "app.infrastructure.persistence.models",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "Attempt",
+        "importPath": "app.infrastructure.persistence.models",
+        "description": "app.infrastructure.persistence.models",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "AttemptAnswer",
+        "importPath": "app.infrastructure.persistence.models",
+        "description": "app.infrastructure.persistence.models",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "AttemptStatus",
+        "importPath": "app.infrastructure.persistence.models",
+        "description": "app.infrastructure.persistence.models",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "ExamQuestion",
+        "importPath": "app.infrastructure.persistence.models",
+        "description": "app.infrastructure.persistence.models",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "Question",
+        "importPath": "app.infrastructure.persistence.models",
+        "description": "app.infrastructure.persistence.models",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "Exam",
+        "importPath": "app.infrastructure.persistence.models",
+        "description": "app.infrastructure.persistence.models",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "FocusEvent",
+        "importPath": "app.infrastructure.persistence.models",
+        "description": "app.infrastructure.persistence.models",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "Lesson",
+        "importPath": "app.infrastructure.persistence.models",
+        "description": "app.infrastructure.persistence.models",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "PracticeSession",
+        "importPath": "app.infrastructure.persistence.models",
+        "description": "app.infrastructure.persistence.models",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "Difficulty",
+        "importPath": "app.infrastructure.persistence.models",
+        "description": "app.infrastructure.persistence.models",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "PoolType",
+        "importPath": "app.infrastructure.persistence.models",
+        "description": "app.infrastructure.persistence.models",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "Question",
+        "importPath": "app.infrastructure.persistence.models",
+        "description": "app.infrastructure.persistence.models",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "Difficulty",
+        "importPath": "app.infrastructure.persistence.models",
+        "description": "app.infrastructure.persistence.models",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "PoolType",
+        "importPath": "app.infrastructure.persistence.models",
+        "description": "app.infrastructure.persistence.models",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "AttemptStatus",
+        "importPath": "app.infrastructure.persistence.models",
+        "description": "app.infrastructure.persistence.models",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "Difficulty",
+        "importPath": "app.infrastructure.persistence.models",
+        "description": "app.infrastructure.persistence.models",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "PoolType",
+        "importPath": "app.infrastructure.persistence.models",
+        "description": "app.infrastructure.persistence.models",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "Difficulty",
+        "importPath": "app.infrastructure.persistence.models",
+        "description": "app.infrastructure.persistence.models",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "PoolType",
+        "importPath": "app.infrastructure.persistence.models",
+        "description": "app.infrastructure.persistence.models",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.config",
+        "description": "app.config",
+        "isExtraImport": true,
+        "detail": "app.config",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.config",
+        "description": "app.config",
+        "isExtraImport": true,
+        "detail": "app.config",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.config",
+        "description": "app.config",
+        "isExtraImport": true,
+        "detail": "app.config",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.config",
+        "description": "app.config",
+        "isExtraImport": true,
+        "detail": "app.config",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.config",
+        "description": "app.config",
+        "isExtraImport": true,
+        "detail": "app.config",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.config",
+        "description": "app.config",
+        "isExtraImport": true,
+        "detail": "app.config",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.config",
+        "description": "app.config",
+        "isExtraImport": true,
+        "detail": "app.config",
+        "documentation": {}
+    },
+    {
+        "label": "uuid",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "uuid",
+        "description": "uuid",
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "uuid4",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "UUID",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "random",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "random",
+        "description": "random",
+        "detail": "random",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "timedelta",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "AttemptRepository",
+        "importPath": "app.infrastructure.repositories.attempts",
+        "description": "app.infrastructure.repositories.attempts",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.repositories.attempts",
+        "documentation": {}
+    },
+    {
+        "label": "AttemptRepository",
+        "importPath": "app.infrastructure.repositories.attempts",
+        "description": "app.infrastructure.repositories.attempts",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.repositories.attempts",
+        "documentation": {}
+    },
+    {
+        "label": "AttemptRepository",
+        "importPath": "app.infrastructure.repositories.attempts",
+        "description": "app.infrastructure.repositories.attempts",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.repositories.attempts",
+        "documentation": {}
+    },
+    {
+        "label": "AttemptRepository",
+        "importPath": "app.infrastructure.repositories.attempts",
+        "description": "app.infrastructure.repositories.attempts",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.repositories.attempts",
+        "documentation": {}
+    },
+    {
+        "label": "AttemptRepository",
+        "importPath": "app.infrastructure.repositories.attempts",
+        "description": "app.infrastructure.repositories.attempts",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.repositories.attempts",
+        "documentation": {}
+    },
+    {
+        "label": "AttemptRepository",
+        "importPath": "app.infrastructure.repositories.attempts",
+        "description": "app.infrastructure.repositories.attempts",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.repositories.attempts",
+        "documentation": {}
+    },
+    {
+        "label": "AttemptRepository",
+        "importPath": "app.infrastructure.repositories.attempts",
+        "description": "app.infrastructure.repositories.attempts",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.repositories.attempts",
+        "documentation": {}
+    },
+    {
+        "label": "AttemptRepository",
+        "importPath": "app.infrastructure.repositories.attempts",
+        "description": "app.infrastructure.repositories.attempts",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.repositories.attempts",
+        "documentation": {}
+    },
+    {
+        "label": "AttemptRepository",
+        "importPath": "app.infrastructure.repositories.attempts",
+        "description": "app.infrastructure.repositories.attempts",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.repositories.attempts",
+        "documentation": {}
+    },
+    {
+        "label": "FocusEventRepository",
+        "importPath": "app.infrastructure.repositories.focus_events",
+        "description": "app.infrastructure.repositories.focus_events",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.repositories.focus_events",
+        "documentation": {}
+    },
+    {
+        "label": "FocusEventIn",
+        "importPath": "app.presentation.schemas.common",
+        "description": "app.presentation.schemas.common",
+        "isExtraImport": true,
+        "detail": "app.presentation.schemas.common",
+        "documentation": {}
+    },
+    {
+        "label": "FocusEventIn",
+        "importPath": "app.presentation.schemas.common",
+        "description": "app.presentation.schemas.common",
+        "isExtraImport": true,
+        "detail": "app.presentation.schemas.common",
+        "documentation": {}
+    },
+    {
+        "label": "presentation_from_snapshot",
+        "importPath": "app.application.services.shuffle",
+        "description": "app.application.services.shuffle",
+        "isExtraImport": true,
+        "detail": "app.application.services.shuffle",
+        "documentation": {}
+    },
+    {
+        "label": "build_shuffled_exam_payload",
+        "importPath": "app.application.services.shuffle",
+        "description": "app.application.services.shuffle",
+        "isExtraImport": true,
+        "detail": "app.application.services.shuffle",
+        "documentation": {}
+    },
+    {
+        "label": "build_shuffled_exam_payload",
+        "importPath": "app.application.services.shuffle",
+        "description": "app.application.services.shuffle",
+        "isExtraImport": true,
+        "detail": "app.application.services.shuffle",
+        "documentation": {}
+    },
+    {
+        "label": "ExamQuestionRepository",
+        "importPath": "app.infrastructure.repositories.exam_questions",
+        "description": "app.infrastructure.repositories.exam_questions",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.repositories.exam_questions",
+        "documentation": {}
+    },
+    {
+        "label": "ExamQuestionRepository",
+        "importPath": "app.infrastructure.repositories.exam_questions",
+        "description": "app.infrastructure.repositories.exam_questions",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.repositories.exam_questions",
+        "documentation": {}
+    },
+    {
+        "label": "ExamQuestionRepository",
+        "importPath": "app.infrastructure.repositories.exam_questions",
+        "description": "app.infrastructure.repositories.exam_questions",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.repositories.exam_questions",
+        "documentation": {}
+    },
+    {
+        "label": "ExamQuestionRepository",
+        "importPath": "app.infrastructure.repositories.exam_questions",
+        "description": "app.infrastructure.repositories.exam_questions",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.repositories.exam_questions",
+        "documentation": {}
+    },
+    {
+        "label": "ExamQuestionRepository",
+        "importPath": "app.infrastructure.repositories.exam_questions",
+        "description": "app.infrastructure.repositories.exam_questions",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.repositories.exam_questions",
+        "documentation": {}
+    },
+    {
+        "label": "AttemptAnswersPatch",
+        "importPath": "app.presentation.schemas.attempts",
+        "description": "app.presentation.schemas.attempts",
+        "isExtraImport": true,
+        "detail": "app.presentation.schemas.attempts",
+        "documentation": {}
+    },
+    {
+        "label": "AttemptAnswersPatch",
+        "importPath": "app.presentation.schemas.attempts",
+        "description": "app.presentation.schemas.attempts",
+        "isExtraImport": true,
+        "detail": "app.presentation.schemas.attempts",
+        "documentation": {}
+    },
+    {
+        "label": "AttemptAnswersPatch",
+        "importPath": "app.presentation.schemas.attempts",
+        "description": "app.presentation.schemas.attempts",
+        "isExtraImport": true,
+        "detail": "app.presentation.schemas.attempts",
+        "documentation": {}
+    },
+    {
+        "label": "AttemptOut",
+        "importPath": "app.presentation.schemas.attempts",
+        "description": "app.presentation.schemas.attempts",
+        "isExtraImport": true,
+        "detail": "app.presentation.schemas.attempts",
+        "documentation": {}
+    },
+    {
+        "label": "StartAttemptOut",
+        "importPath": "app.presentation.schemas.attempts",
+        "description": "app.presentation.schemas.attempts",
+        "isExtraImport": true,
+        "detail": "app.presentation.schemas.attempts",
+        "documentation": {}
+    },
+    {
+        "label": "LeaderboardRow",
+        "importPath": "app.presentation.schemas.attempts",
+        "description": "app.presentation.schemas.attempts",
+        "isExtraImport": true,
+        "detail": "app.presentation.schemas.attempts",
+        "documentation": {}
+    },
+    {
+        "label": "AttemptOut",
+        "importPath": "app.presentation.schemas.attempts",
+        "description": "app.presentation.schemas.attempts",
+        "isExtraImport": true,
+        "detail": "app.presentation.schemas.attempts",
+        "documentation": {}
+    },
+    {
+        "label": "AttemptAnswersPatch",
+        "importPath": "app.presentation.schemas.attempts",
+        "description": "app.presentation.schemas.attempts",
+        "isExtraImport": true,
+        "detail": "app.presentation.schemas.attempts",
+        "documentation": {}
+    },
+    {
+        "label": "PresignBody",
+        "importPath": "app.presentation.schemas.attempts",
+        "description": "app.presentation.schemas.attempts",
+        "isExtraImport": true,
+        "detail": "app.presentation.schemas.attempts",
+        "documentation": {}
+    },
+    {
+        "label": "secrets",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "secrets",
+        "description": "secrets",
+        "detail": "secrets",
+        "documentation": {}
+    },
+    {
+        "label": "ExamRepository",
+        "importPath": "app.infrastructure.repositories.exams",
+        "description": "app.infrastructure.repositories.exams",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.repositories.exams",
+        "documentation": {}
+    },
+    {
+        "label": "ExamRepository",
+        "importPath": "app.infrastructure.repositories.exams",
+        "description": "app.infrastructure.repositories.exams",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.repositories.exams",
+        "documentation": {}
+    },
+    {
+        "label": "ExamRepository",
+        "importPath": "app.infrastructure.repositories.exams",
+        "description": "app.infrastructure.repositories.exams",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.repositories.exams",
+        "documentation": {}
+    },
+    {
+        "label": "ExamRepository",
+        "importPath": "app.infrastructure.repositories.exams",
+        "description": "app.infrastructure.repositories.exams",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.repositories.exams",
+        "documentation": {}
+    },
+    {
+        "label": "ExamRepository",
+        "importPath": "app.infrastructure.repositories.exams",
+        "description": "app.infrastructure.repositories.exams",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.repositories.exams",
+        "documentation": {}
+    },
+    {
+        "label": "ExamRepository",
+        "importPath": "app.infrastructure.repositories.exams",
+        "description": "app.infrastructure.repositories.exams",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.repositories.exams",
+        "documentation": {}
+    },
+    {
+        "label": "ExamRepository",
+        "importPath": "app.infrastructure.repositories.exams",
+        "description": "app.infrastructure.repositories.exams",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.repositories.exams",
+        "documentation": {}
+    },
+    {
+        "label": "ExamRepository",
+        "importPath": "app.infrastructure.repositories.exams",
+        "description": "app.infrastructure.repositories.exams",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.repositories.exams",
+        "documentation": {}
+    },
+    {
+        "label": "ExamRepository",
+        "importPath": "app.infrastructure.repositories.exams",
+        "description": "app.infrastructure.repositories.exams",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.repositories.exams",
+        "documentation": {}
+    },
+    {
+        "label": "ExamRepository",
+        "importPath": "app.infrastructure.repositories.exams",
+        "description": "app.infrastructure.repositories.exams",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.repositories.exams",
+        "documentation": {}
+    },
+    {
+        "label": "score_attempt",
+        "importPath": "app.application.services.scoring",
+        "description": "app.application.services.scoring",
+        "isExtraImport": true,
+        "detail": "app.application.services.scoring",
+        "documentation": {}
+    },
+    {
+        "label": "ExamCreate",
+        "importPath": "app.presentation.schemas.exams",
+        "description": "app.presentation.schemas.exams",
+        "isExtraImport": true,
+        "detail": "app.presentation.schemas.exams",
+        "documentation": {}
+    },
+    {
+        "label": "ExamUpdate",
+        "importPath": "app.presentation.schemas.exams",
+        "description": "app.presentation.schemas.exams",
+        "isExtraImport": true,
+        "detail": "app.presentation.schemas.exams",
+        "documentation": {}
+    },
+    {
+        "label": "ExamCreate",
+        "importPath": "app.presentation.schemas.exams",
+        "description": "app.presentation.schemas.exams",
+        "isExtraImport": true,
+        "detail": "app.presentation.schemas.exams",
+        "documentation": {}
+    },
+    {
+        "label": "ExamOut",
+        "importPath": "app.presentation.schemas.exams",
+        "description": "app.presentation.schemas.exams",
+        "isExtraImport": true,
+        "detail": "app.presentation.schemas.exams",
+        "documentation": {}
+    },
+    {
+        "label": "ExamQuestionsPut",
+        "importPath": "app.presentation.schemas.exams",
+        "description": "app.presentation.schemas.exams",
+        "isExtraImport": true,
+        "detail": "app.presentation.schemas.exams",
+        "documentation": {}
+    },
+    {
+        "label": "ExamUpdate",
+        "importPath": "app.presentation.schemas.exams",
+        "description": "app.presentation.schemas.exams",
+        "isExtraImport": true,
+        "detail": "app.presentation.schemas.exams",
+        "documentation": {}
+    },
+    {
+        "label": "PracticeStartIn",
+        "importPath": "app.presentation.schemas.exams",
+        "description": "app.presentation.schemas.exams",
+        "isExtraImport": true,
+        "detail": "app.presentation.schemas.exams",
+        "documentation": {}
+    },
+    {
+        "label": "LessonRepository",
+        "importPath": "app.infrastructure.repositories.lessons",
+        "description": "app.infrastructure.repositories.lessons",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.repositories.lessons",
+        "documentation": {}
+    },
+    {
+        "label": "LessonRepository",
+        "importPath": "app.infrastructure.repositories.lessons",
+        "description": "app.infrastructure.repositories.lessons",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.repositories.lessons",
+        "documentation": {}
+    },
+    {
+        "label": "LessonRepository",
+        "importPath": "app.infrastructure.repositories.lessons",
+        "description": "app.infrastructure.repositories.lessons",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.repositories.lessons",
+        "documentation": {}
+    },
+    {
+        "label": "LessonRepository",
+        "importPath": "app.infrastructure.repositories.lessons",
+        "description": "app.infrastructure.repositories.lessons",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.repositories.lessons",
+        "documentation": {}
+    },
+    {
+        "label": "LessonCreate",
+        "importPath": "app.presentation.schemas.lessons",
+        "description": "app.presentation.schemas.lessons",
+        "isExtraImport": true,
+        "detail": "app.presentation.schemas.lessons",
+        "documentation": {}
+    },
+    {
+        "label": "LessonUpdate",
+        "importPath": "app.presentation.schemas.lessons",
+        "description": "app.presentation.schemas.lessons",
+        "isExtraImport": true,
+        "detail": "app.presentation.schemas.lessons",
+        "documentation": {}
+    },
+    {
+        "label": "LessonCreate",
+        "importPath": "app.presentation.schemas.lessons",
+        "description": "app.presentation.schemas.lessons",
+        "isExtraImport": true,
+        "detail": "app.presentation.schemas.lessons",
+        "documentation": {}
+    },
+    {
+        "label": "LessonOut",
+        "importPath": "app.presentation.schemas.lessons",
+        "description": "app.presentation.schemas.lessons",
+        "isExtraImport": true,
+        "detail": "app.presentation.schemas.lessons",
+        "documentation": {}
+    },
+    {
+        "label": "LessonUpdate",
+        "importPath": "app.presentation.schemas.lessons",
+        "description": "app.presentation.schemas.lessons",
+        "isExtraImport": true,
+        "detail": "app.presentation.schemas.lessons",
+        "documentation": {}
+    },
+    {
+        "label": "Request",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Query",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Query",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Request",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Query",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Request",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "FastAPI",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "quiz_role_from_manage",
+        "importPath": "app.application.services.auth_roles",
+        "description": "app.application.services.auth_roles",
+        "isExtraImport": true,
+        "detail": "app.application.services.auth_roles",
+        "documentation": {}
+    },
+    {
+        "label": "quiz_role_from_manage",
+        "importPath": "app.application.services.auth_roles",
+        "description": "app.application.services.auth_roles",
+        "isExtraImport": true,
+        "detail": "app.application.services.auth_roles",
+        "documentation": {}
+    },
+    {
+        "label": "fetch_me",
+        "importPath": "app.infrastructure.auth_manage.client",
+        "description": "app.infrastructure.auth_manage.client",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.auth_manage.client",
+        "documentation": {}
+    },
+    {
+        "label": "fetch_me",
+        "importPath": "app.infrastructure.auth_manage.client",
+        "description": "app.infrastructure.auth_manage.client",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.auth_manage.client",
+        "documentation": {}
+    },
+    {
+        "label": "PracticeSessionRepository",
+        "importPath": "app.infrastructure.repositories.practice_sessions",
+        "description": "app.infrastructure.repositories.practice_sessions",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.repositories.practice_sessions",
+        "documentation": {}
+    },
+    {
+        "label": "PracticeSessionRepository",
+        "importPath": "app.infrastructure.repositories.practice_sessions",
+        "description": "app.infrastructure.repositories.practice_sessions",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.repositories.practice_sessions",
+        "documentation": {}
+    },
+    {
+        "label": "PracticeSessionRepository",
+        "importPath": "app.infrastructure.repositories.practice_sessions",
+        "description": "app.infrastructure.repositories.practice_sessions",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.repositories.practice_sessions",
+        "documentation": {}
+    },
+    {
+        "label": "PracticeSessionRepository",
+        "importPath": "app.infrastructure.repositories.practice_sessions",
+        "description": "app.infrastructure.repositories.practice_sessions",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.repositories.practice_sessions",
+        "documentation": {}
+    },
+    {
+        "label": "PracticeSessionRepository",
+        "importPath": "app.infrastructure.repositories.practice_sessions",
+        "description": "app.infrastructure.repositories.practice_sessions",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.repositories.practice_sessions",
+        "documentation": {}
+    },
+    {
+        "label": "QuestionRepository",
+        "importPath": "app.infrastructure.repositories.questions",
+        "description": "app.infrastructure.repositories.questions",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.repositories.questions",
+        "documentation": {}
+    },
+    {
+        "label": "QuestionRepository",
+        "importPath": "app.infrastructure.repositories.questions",
+        "description": "app.infrastructure.repositories.questions",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.repositories.questions",
+        "documentation": {}
+    },
+    {
+        "label": "QuestionRepository",
+        "importPath": "app.infrastructure.repositories.questions",
+        "description": "app.infrastructure.repositories.questions",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.repositories.questions",
+        "documentation": {}
+    },
+    {
+        "label": "QuestionRepository",
+        "importPath": "app.infrastructure.repositories.questions",
+        "description": "app.infrastructure.repositories.questions",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.repositories.questions",
+        "documentation": {}
+    },
+    {
+        "label": "QuestionRepository",
+        "importPath": "app.infrastructure.repositories.questions",
+        "description": "app.infrastructure.repositories.questions",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.repositories.questions",
+        "documentation": {}
+    },
+    {
+        "label": "QuestionCreate",
+        "importPath": "app.presentation.schemas.questions",
+        "description": "app.presentation.schemas.questions",
+        "isExtraImport": true,
+        "detail": "app.presentation.schemas.questions",
+        "documentation": {}
+    },
+    {
+        "label": "QuestionListQuery",
+        "importPath": "app.presentation.schemas.questions",
+        "description": "app.presentation.schemas.questions",
+        "isExtraImport": true,
+        "detail": "app.presentation.schemas.questions",
+        "documentation": {}
+    },
+    {
+        "label": "QuestionUpdate",
+        "importPath": "app.presentation.schemas.questions",
+        "description": "app.presentation.schemas.questions",
+        "isExtraImport": true,
+        "detail": "app.presentation.schemas.questions",
+        "documentation": {}
+    },
+    {
+        "label": "QuestionOut",
+        "importPath": "app.presentation.schemas.questions",
+        "description": "app.presentation.schemas.questions",
+        "isExtraImport": true,
+        "detail": "app.presentation.schemas.questions",
+        "documentation": {}
+    },
+    {
+        "label": "QuestionCreate",
+        "importPath": "app.presentation.schemas.questions",
+        "description": "app.presentation.schemas.questions",
+        "isExtraImport": true,
+        "detail": "app.presentation.schemas.questions",
+        "documentation": {}
+    },
+    {
+        "label": "QuestionListQuery",
+        "importPath": "app.presentation.schemas.questions",
+        "description": "app.presentation.schemas.questions",
+        "isExtraImport": true,
+        "detail": "app.presentation.schemas.questions",
+        "documentation": {}
+    },
+    {
+        "label": "QuestionOut",
+        "importPath": "app.presentation.schemas.questions",
+        "description": "app.presentation.schemas.questions",
+        "isExtraImport": true,
+        "detail": "app.presentation.schemas.questions",
+        "documentation": {}
+    },
+    {
+        "label": "QuestionUpdate",
+        "importPath": "app.presentation.schemas.questions",
+        "description": "app.presentation.schemas.questions",
+        "isExtraImport": true,
+        "detail": "app.presentation.schemas.questions",
+        "documentation": {}
+    },
+    {
+        "label": "boto3",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "boto3",
+        "description": "boto3",
+        "detail": "boto3",
+        "documentation": {}
+    },
+    {
+        "label": "Config",
+        "importPath": "botocore.client",
+        "description": "botocore.client",
+        "isExtraImport": true,
+        "detail": "botocore.client",
+        "documentation": {}
+    },
+    {
+        "label": "httpx",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "httpx",
+        "description": "httpx",
+        "detail": "httpx",
+        "documentation": {}
+    },
+    {
+        "label": "StrEnum",
+        "importPath": "enum",
+        "description": "enum",
+        "isExtraImport": true,
+        "detail": "enum",
+        "documentation": {}
+    },
+    {
+        "label": "ARRAY",
+        "importPath": "sqlalchemy.dialects.postgresql",
+        "description": "sqlalchemy.dialects.postgresql",
+        "isExtraImport": true,
+        "detail": "sqlalchemy.dialects.postgresql",
+        "documentation": {}
+    },
+    {
+        "label": "JSONB",
+        "importPath": "sqlalchemy.dialects.postgresql",
+        "description": "sqlalchemy.dialects.postgresql",
+        "isExtraImport": true,
+        "detail": "sqlalchemy.dialects.postgresql",
+        "documentation": {}
+    },
+    {
+        "label": "AsyncGenerator",
+        "importPath": "collections.abc",
+        "description": "collections.abc",
+        "isExtraImport": true,
+        "detail": "collections.abc",
+        "documentation": {}
+    },
+    {
+        "label": "execute",
+        "importPath": "app.application.use_cases.attempts.focus_event",
+        "description": "app.application.use_cases.attempts.focus_event",
+        "isExtraImport": true,
+        "detail": "app.application.use_cases.attempts.focus_event",
+        "documentation": {}
+    },
+    {
+        "label": "execute",
+        "importPath": "app.application.use_cases.attempts.get_attempt",
+        "description": "app.application.use_cases.attempts.get_attempt",
+        "isExtraImport": true,
+        "detail": "app.application.use_cases.attempts.get_attempt",
+        "documentation": {}
+    },
+    {
+        "label": "execute",
+        "importPath": "app.application.use_cases.attempts.get_attempt_detail",
+        "description": "app.application.use_cases.attempts.get_attempt_detail",
+        "isExtraImport": true,
+        "detail": "app.application.use_cases.attempts.get_attempt_detail",
+        "documentation": {}
+    },
+    {
+        "label": "execute",
+        "importPath": "app.application.use_cases.attempts.list_exam_attempts",
+        "description": "app.application.use_cases.attempts.list_exam_attempts",
+        "isExtraImport": true,
+        "detail": "app.application.use_cases.attempts.list_exam_attempts",
+        "documentation": {}
+    },
+    {
+        "label": "execute",
+        "importPath": "app.application.use_cases.attempts.patch_attempt_answers",
+        "description": "app.application.use_cases.attempts.patch_attempt_answers",
+        "isExtraImport": true,
+        "detail": "app.application.use_cases.attempts.patch_attempt_answers",
+        "documentation": {}
+    },
+    {
+        "label": "execute",
+        "importPath": "app.application.use_cases.attempts.start_attempt",
+        "description": "app.application.use_cases.attempts.start_attempt",
+        "isExtraImport": true,
+        "detail": "app.application.use_cases.attempts.start_attempt",
+        "documentation": {}
+    },
+    {
+        "label": "execute",
+        "importPath": "app.application.use_cases.attempts.submit_attempt",
+        "description": "app.application.use_cases.attempts.submit_attempt",
+        "isExtraImport": true,
+        "detail": "app.application.use_cases.attempts.submit_attempt",
+        "documentation": {}
+    },
+    {
+        "label": "SessionDep",
+        "importPath": "app.presentation.api.deps",
+        "description": "app.presentation.api.deps",
+        "isExtraImport": true,
+        "detail": "app.presentation.api.deps",
+        "documentation": {}
+    },
+    {
+        "label": "StudentUser",
+        "importPath": "app.presentation.api.deps",
+        "description": "app.presentation.api.deps",
+        "isExtraImport": true,
+        "detail": "app.presentation.api.deps",
+        "documentation": {}
+    },
+    {
+        "label": "TeacherUser",
+        "importPath": "app.presentation.api.deps",
+        "description": "app.presentation.api.deps",
+        "isExtraImport": true,
+        "detail": "app.presentation.api.deps",
+        "documentation": {}
+    },
+    {
+        "label": "CurrentUser",
+        "importPath": "app.presentation.api.deps",
+        "description": "app.presentation.api.deps",
+        "isExtraImport": true,
+        "detail": "app.presentation.api.deps",
+        "documentation": {}
+    },
+    {
+        "label": "SessionDep",
+        "importPath": "app.presentation.api.deps",
+        "description": "app.presentation.api.deps",
+        "isExtraImport": true,
+        "detail": "app.presentation.api.deps",
+        "documentation": {}
+    },
+    {
+        "label": "TeacherUser",
+        "importPath": "app.presentation.api.deps",
+        "description": "app.presentation.api.deps",
+        "isExtraImport": true,
+        "detail": "app.presentation.api.deps",
+        "documentation": {}
+    },
+    {
+        "label": "CurrentUser",
+        "importPath": "app.presentation.api.deps",
+        "description": "app.presentation.api.deps",
+        "isExtraImport": true,
+        "detail": "app.presentation.api.deps",
+        "documentation": {}
+    },
+    {
+        "label": "SessionDep",
+        "importPath": "app.presentation.api.deps",
+        "description": "app.presentation.api.deps",
+        "isExtraImport": true,
+        "detail": "app.presentation.api.deps",
+        "documentation": {}
+    },
+    {
+        "label": "CurrentUser",
+        "importPath": "app.presentation.api.deps",
+        "description": "app.presentation.api.deps",
+        "isExtraImport": true,
+        "detail": "app.presentation.api.deps",
+        "documentation": {}
+    },
+    {
+        "label": "SessionDep",
+        "importPath": "app.presentation.api.deps",
+        "description": "app.presentation.api.deps",
+        "isExtraImport": true,
+        "detail": "app.presentation.api.deps",
+        "documentation": {}
+    },
+    {
+        "label": "TeacherUser",
+        "importPath": "app.presentation.api.deps",
+        "description": "app.presentation.api.deps",
+        "isExtraImport": true,
+        "detail": "app.presentation.api.deps",
+        "documentation": {}
+    },
+    {
+        "label": "CurrentUser",
+        "importPath": "app.presentation.api.deps",
+        "description": "app.presentation.api.deps",
+        "isExtraImport": true,
+        "detail": "app.presentation.api.deps",
+        "documentation": {}
+    },
+    {
+        "label": "SessionDep",
+        "importPath": "app.presentation.api.deps",
+        "description": "app.presentation.api.deps",
+        "isExtraImport": true,
+        "detail": "app.presentation.api.deps",
+        "documentation": {}
+    },
+    {
+        "label": "SessionDep",
+        "importPath": "app.presentation.api.deps",
+        "description": "app.presentation.api.deps",
+        "isExtraImport": true,
+        "detail": "app.presentation.api.deps",
+        "documentation": {}
+    },
+    {
+        "label": "StudentUser",
+        "importPath": "app.presentation.api.deps",
+        "description": "app.presentation.api.deps",
+        "isExtraImport": true,
+        "detail": "app.presentation.api.deps",
+        "documentation": {}
+    },
+    {
+        "label": "SessionDep",
+        "importPath": "app.presentation.api.deps",
+        "description": "app.presentation.api.deps",
+        "isExtraImport": true,
+        "detail": "app.presentation.api.deps",
+        "documentation": {}
+    },
+    {
+        "label": "TeacherUser",
+        "importPath": "app.presentation.api.deps",
+        "description": "app.presentation.api.deps",
+        "isExtraImport": true,
+        "detail": "app.presentation.api.deps",
+        "documentation": {}
+    },
+    {
+        "label": "SessionDep",
+        "importPath": "app.presentation.api.deps",
+        "description": "app.presentation.api.deps",
+        "isExtraImport": true,
+        "detail": "app.presentation.api.deps",
+        "documentation": {}
+    },
+    {
+        "label": "TeacherUser",
+        "importPath": "app.presentation.api.deps",
+        "description": "app.presentation.api.deps",
+        "isExtraImport": true,
+        "detail": "app.presentation.api.deps",
+        "documentation": {}
+    },
+    {
+        "label": "create_exam",
+        "importPath": "app.application.use_cases.exams",
+        "description": "app.application.use_cases.exams",
+        "isExtraImport": true,
+        "detail": "app.application.use_cases.exams",
+        "documentation": {}
+    },
+    {
+        "label": "delete_exam",
+        "importPath": "app.application.use_cases.exams",
+        "description": "app.application.use_cases.exams",
+        "isExtraImport": true,
+        "detail": "app.application.use_cases.exams",
+        "documentation": {}
+    },
+    {
+        "label": "execute_for_student",
+        "importPath": "app.application.use_cases.exams",
+        "description": "app.application.use_cases.exams",
+        "isExtraImport": true,
+        "detail": "app.application.use_cases.exams",
+        "documentation": {}
+    },
+    {
+        "label": "execute_for_teacher",
+        "importPath": "app.application.use_cases.exams",
+        "description": "app.application.use_cases.exams",
+        "isExtraImport": true,
+        "detail": "app.application.use_cases.exams",
+        "documentation": {}
+    },
+    {
+        "label": "get_exam",
+        "importPath": "app.application.use_cases.exams",
+        "description": "app.application.use_cases.exams",
+        "isExtraImport": true,
+        "detail": "app.application.use_cases.exams",
+        "documentation": {}
+    },
+    {
+        "label": "list_exam_questions",
+        "importPath": "app.application.use_cases.exams",
+        "description": "app.application.use_cases.exams",
+        "isExtraImport": true,
+        "detail": "app.application.use_cases.exams",
+        "documentation": {}
+    },
+    {
+        "label": "set_exam_questions",
+        "importPath": "app.application.use_cases.exams",
+        "description": "app.application.use_cases.exams",
+        "isExtraImport": true,
+        "detail": "app.application.use_cases.exams",
+        "documentation": {}
+    },
+    {
+        "label": "update_exam",
+        "importPath": "app.application.use_cases.exams",
+        "description": "app.application.use_cases.exams",
+        "isExtraImport": true,
+        "detail": "app.application.use_cases.exams",
+        "documentation": {}
+    },
+    {
+        "label": "execute",
+        "importPath": "app.application.use_cases.leaderboard.get_leaderboard",
+        "description": "app.application.use_cases.leaderboard.get_leaderboard",
+        "isExtraImport": true,
+        "detail": "app.application.use_cases.leaderboard.get_leaderboard",
+        "documentation": {}
+    },
+    {
+        "label": "create_lesson",
+        "importPath": "app.application.use_cases.lessons",
+        "description": "app.application.use_cases.lessons",
+        "isExtraImport": true,
+        "detail": "app.application.use_cases.lessons",
+        "documentation": {}
+    },
+    {
+        "label": "delete_lesson",
+        "importPath": "app.application.use_cases.lessons",
+        "description": "app.application.use_cases.lessons",
+        "isExtraImport": true,
+        "detail": "app.application.use_cases.lessons",
+        "documentation": {}
+    },
+    {
+        "label": "list_lessons",
+        "importPath": "app.application.use_cases.lessons",
+        "description": "app.application.use_cases.lessons",
+        "isExtraImport": true,
+        "detail": "app.application.use_cases.lessons",
+        "documentation": {}
+    },
+    {
+        "label": "update_lesson",
+        "importPath": "app.application.use_cases.lessons",
+        "description": "app.application.use_cases.lessons",
+        "isExtraImport": true,
+        "detail": "app.application.use_cases.lessons",
+        "documentation": {}
+    },
+    {
+        "label": "execute",
+        "importPath": "app.application.use_cases.me.get_profile",
+        "description": "app.application.use_cases.me.get_profile",
+        "isExtraImport": true,
+        "detail": "app.application.use_cases.me.get_profile",
+        "documentation": {}
+    },
+    {
+        "label": "execute",
+        "importPath": "app.application.use_cases.me.list_attempts",
+        "description": "app.application.use_cases.me.list_attempts",
+        "isExtraImport": true,
+        "detail": "app.application.use_cases.me.list_attempts",
+        "documentation": {}
+    },
+    {
+        "label": "execute",
+        "importPath": "app.application.use_cases.practice.finish_session",
+        "description": "app.application.use_cases.practice.finish_session",
+        "isExtraImport": true,
+        "detail": "app.application.use_cases.practice.finish_session",
+        "documentation": {}
+    },
+    {
+        "label": "execute",
+        "importPath": "app.application.use_cases.practice.get_session",
+        "description": "app.application.use_cases.practice.get_session",
+        "isExtraImport": true,
+        "detail": "app.application.use_cases.practice.get_session",
+        "documentation": {}
+    },
+    {
+        "label": "execute",
+        "importPath": "app.application.use_cases.practice.list_history",
+        "description": "app.application.use_cases.practice.list_history",
+        "isExtraImport": true,
+        "detail": "app.application.use_cases.practice.list_history",
+        "documentation": {}
+    },
+    {
+        "label": "execute",
+        "importPath": "app.application.use_cases.practice.patch_answers",
+        "description": "app.application.use_cases.practice.patch_answers",
+        "isExtraImport": true,
+        "detail": "app.application.use_cases.practice.patch_answers",
+        "documentation": {}
+    },
+    {
+        "label": "execute",
+        "importPath": "app.application.use_cases.practice.start_session",
+        "description": "app.application.use_cases.practice.start_session",
+        "isExtraImport": true,
+        "detail": "app.application.use_cases.practice.start_session",
+        "documentation": {}
+    },
+    {
+        "label": "create_question",
+        "importPath": "app.application.use_cases.questions",
+        "description": "app.application.use_cases.questions",
+        "isExtraImport": true,
+        "detail": "app.application.use_cases.questions",
+        "documentation": {}
+    },
+    {
+        "label": "delete_question",
+        "importPath": "app.application.use_cases.questions",
+        "description": "app.application.use_cases.questions",
+        "isExtraImport": true,
+        "detail": "app.application.use_cases.questions",
+        "documentation": {}
+    },
+    {
+        "label": "get_question",
+        "importPath": "app.application.use_cases.questions",
+        "description": "app.application.use_cases.questions",
+        "isExtraImport": true,
+        "detail": "app.application.use_cases.questions",
+        "documentation": {}
+    },
+    {
+        "label": "list_questions",
+        "importPath": "app.application.use_cases.questions",
+        "description": "app.application.use_cases.questions",
+        "isExtraImport": true,
+        "detail": "app.application.use_cases.questions",
+        "documentation": {}
+    },
+    {
+        "label": "update_question",
+        "importPath": "app.application.use_cases.questions",
+        "description": "app.application.use_cases.questions",
+        "isExtraImport": true,
+        "detail": "app.application.use_cases.questions",
+        "documentation": {}
+    },
+    {
+        "label": "execute",
+        "importPath": "app.application.use_cases.uploads.presign_upload",
+        "description": "app.application.use_cases.uploads.presign_upload",
+        "isExtraImport": true,
+        "detail": "app.application.use_cases.uploads.presign_upload",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "Field",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "Field",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "Field",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "Field",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "get_session",
+        "importPath": "app.infrastructure.database",
+        "description": "app.infrastructure.database",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.database",
+        "documentation": {}
+    },
+    {
+        "label": "init_db",
+        "importPath": "app.infrastructure.database",
+        "description": "app.infrastructure.database",
+        "isExtraImport": true,
+        "detail": "app.infrastructure.database",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "BaseSettings",
+        "importPath": "pydantic_settings",
+        "description": "pydantic_settings",
+        "isExtraImport": true,
+        "detail": "pydantic_settings",
+        "documentation": {}
+    },
+    {
+        "label": "SettingsConfigDict",
+        "importPath": "pydantic_settings",
+        "description": "pydantic_settings",
+        "isExtraImport": true,
+        "detail": "pydantic_settings",
+        "documentation": {}
+    },
+    {
+        "label": "asynccontextmanager",
+        "importPath": "contextlib",
+        "description": "contextlib",
+        "isExtraImport": true,
+        "detail": "contextlib",
+        "documentation": {}
+    },
+    {
+        "label": "CORSMiddleware",
+        "importPath": "fastapi.middleware.cors",
+        "description": "fastapi.middleware.cors",
+        "isExtraImport": true,
+        "detail": "fastapi.middleware.cors",
+        "documentation": {}
+    },
+    {
+        "label": "attempts",
+        "importPath": "app.presentation.api.routers",
+        "description": "app.presentation.api.routers",
+        "isExtraImport": true,
+        "detail": "app.presentation.api.routers",
+        "documentation": {}
+    },
+    {
+        "label": "exams",
+        "importPath": "app.presentation.api.routers",
+        "description": "app.presentation.api.routers",
+        "isExtraImport": true,
+        "detail": "app.presentation.api.routers",
+        "documentation": {}
+    },
+    {
+        "label": "health",
+        "importPath": "app.presentation.api.routers",
+        "description": "app.presentation.api.routers",
+        "isExtraImport": true,
+        "detail": "app.presentation.api.routers",
+        "documentation": {}
+    },
+    {
+        "label": "leaderboard",
+        "importPath": "app.presentation.api.routers",
+        "description": "app.presentation.api.routers",
+        "isExtraImport": true,
+        "detail": "app.presentation.api.routers",
+        "documentation": {}
+    },
+    {
+        "label": "lessons",
+        "importPath": "app.presentation.api.routers",
+        "description": "app.presentation.api.routers",
+        "isExtraImport": true,
+        "detail": "app.presentation.api.routers",
+        "documentation": {}
+    },
+    {
+        "label": "me",
+        "importPath": "app.presentation.api.routers",
+        "description": "app.presentation.api.routers",
+        "isExtraImport": true,
+        "detail": "app.presentation.api.routers",
+        "documentation": {}
+    },
+    {
+        "label": "practice",
+        "importPath": "app.presentation.api.routers",
+        "description": "app.presentation.api.routers",
+        "isExtraImport": true,
+        "detail": "app.presentation.api.routers",
+        "documentation": {}
+    },
+    {
+        "label": "questions",
+        "importPath": "app.presentation.api.routers",
+        "description": "app.presentation.api.routers",
+        "isExtraImport": true,
+        "detail": "app.presentation.api.routers",
+        "documentation": {}
+    },
+    {
+        "label": "uploads",
+        "importPath": "app.presentation.api.routers",
+        "description": "app.presentation.api.routers",
+        "isExtraImport": true,
+        "detail": "app.presentation.api.routers",
+        "documentation": {}
+    },
+    {
+        "label": "stringify",
+        "importPath": "flatted",
+        "description": "flatted",
+        "isExtraImport": true,
+        "detail": "flatted",
+        "documentation": {}
+    },
+    {
+        "label": "parse",
+        "importPath": "flatted",
+        "description": "flatted",
+        "isExtraImport": true,
+        "detail": "flatted",
+        "documentation": {}
+    },
+    {
+        "label": "TTFont",
+        "importPath": "fontTools.ttLib",
+        "description": "fontTools.ttLib",
+        "isExtraImport": true,
+        "detail": "fontTools.ttLib",
+        "documentation": {}
+    },
+    {
+        "label": "sfnt",
+        "importPath": "fontTools.ttLib",
+        "description": "fontTools.ttLib",
+        "isExtraImport": true,
+        "detail": "fontTools.ttLib",
+        "documentation": {}
+    },
+    {
+        "label": "TTFont",
+        "importPath": "fontTools.ttLib",
+        "description": "fontTools.ttLib",
+        "isExtraImport": true,
+        "detail": "fontTools.ttLib",
+        "documentation": {}
+    },
+    {
+        "label": "timestampNow",
+        "importPath": "fontTools.misc.timeTools",
+        "description": "fontTools.misc.timeTools",
+        "isExtraImport": true,
+        "detail": "fontTools.misc.timeTools",
+        "documentation": {}
+    },
+    {
+        "label": "collections",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "collections",
+        "description": "collections",
+        "detail": "collections",
+        "documentation": {}
+    },
+    {
+        "label": "parse_tfm",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "parse_tfm",
+        "description": "parse_tfm",
+        "detail": "parse_tfm",
+        "documentation": {}
+    },
+    {
+        "label": "subprocess",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "subprocess",
+        "description": "subprocess",
+        "detail": "subprocess",
+        "documentation": {}
+    },
+    {
+        "label": "bin_dir",
+        "kind": 5,
+        "importPath": "apps.api..venv.bin.activate_this",
+        "description": "apps.api..venv.bin.activate_this",
+        "peekOfCode": "bin_dir = os.path.dirname(abs_file)\nbase = bin_dir[: -len(\"bin\") - 1]  # strip away the bin part from the __file__, plus the path separator\n# prepend bin to PATH (this file is inside the bin directory)\nos.environ[\"PATH\"] = os.pathsep.join([bin_dir, *os.environ.get(\"PATH\", \"\").split(os.pathsep)])\nos.environ[\"VIRTUAL_ENV\"] = base  # virtual env is right above bin directory\nos.environ[\"VIRTUAL_ENV_PROMPT\"] = \"dut-ai-quiz-api\" or os.path.basename(base)  # noqa: SIM222\n# add the virtual environments libraries to the host python import mechanism\nprev_length = len(sys.path)\nfor lib in \"../lib/python3.12/site-packages\".split(os.pathsep):\n    path = os.path.realpath(os.path.join(bin_dir, lib))",
+        "detail": "apps.api..venv.bin.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "base",
+        "kind": 5,
+        "importPath": "apps.api..venv.bin.activate_this",
+        "description": "apps.api..venv.bin.activate_this",
+        "peekOfCode": "base = bin_dir[: -len(\"bin\") - 1]  # strip away the bin part from the __file__, plus the path separator\n# prepend bin to PATH (this file is inside the bin directory)\nos.environ[\"PATH\"] = os.pathsep.join([bin_dir, *os.environ.get(\"PATH\", \"\").split(os.pathsep)])\nos.environ[\"VIRTUAL_ENV\"] = base  # virtual env is right above bin directory\nos.environ[\"VIRTUAL_ENV_PROMPT\"] = \"dut-ai-quiz-api\" or os.path.basename(base)  # noqa: SIM222\n# add the virtual environments libraries to the host python import mechanism\nprev_length = len(sys.path)\nfor lib in \"../lib/python3.12/site-packages\".split(os.pathsep):\n    path = os.path.realpath(os.path.join(bin_dir, lib))\n    site.addsitedir(path)",
+        "detail": "apps.api..venv.bin.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "os.environ[\"PATH\"]",
+        "kind": 5,
+        "importPath": "apps.api..venv.bin.activate_this",
+        "description": "apps.api..venv.bin.activate_this",
+        "peekOfCode": "os.environ[\"PATH\"] = os.pathsep.join([bin_dir, *os.environ.get(\"PATH\", \"\").split(os.pathsep)])\nos.environ[\"VIRTUAL_ENV\"] = base  # virtual env is right above bin directory\nos.environ[\"VIRTUAL_ENV_PROMPT\"] = \"dut-ai-quiz-api\" or os.path.basename(base)  # noqa: SIM222\n# add the virtual environments libraries to the host python import mechanism\nprev_length = len(sys.path)\nfor lib in \"../lib/python3.12/site-packages\".split(os.pathsep):\n    path = os.path.realpath(os.path.join(bin_dir, lib))\n    site.addsitedir(path)\nsys.path[:] = sys.path[prev_length:] + sys.path[0:prev_length]\nsys.real_prefix = sys.prefix",
+        "detail": "apps.api..venv.bin.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "os.environ[\"VIRTUAL_ENV\"]",
+        "kind": 5,
+        "importPath": "apps.api..venv.bin.activate_this",
+        "description": "apps.api..venv.bin.activate_this",
+        "peekOfCode": "os.environ[\"VIRTUAL_ENV\"] = base  # virtual env is right above bin directory\nos.environ[\"VIRTUAL_ENV_PROMPT\"] = \"dut-ai-quiz-api\" or os.path.basename(base)  # noqa: SIM222\n# add the virtual environments libraries to the host python import mechanism\nprev_length = len(sys.path)\nfor lib in \"../lib/python3.12/site-packages\".split(os.pathsep):\n    path = os.path.realpath(os.path.join(bin_dir, lib))\n    site.addsitedir(path)\nsys.path[:] = sys.path[prev_length:] + sys.path[0:prev_length]\nsys.real_prefix = sys.prefix\nsys.prefix = base",
+        "detail": "apps.api..venv.bin.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "os.environ[\"VIRTUAL_ENV_PROMPT\"]",
+        "kind": 5,
+        "importPath": "apps.api..venv.bin.activate_this",
+        "description": "apps.api..venv.bin.activate_this",
+        "peekOfCode": "os.environ[\"VIRTUAL_ENV_PROMPT\"] = \"dut-ai-quiz-api\" or os.path.basename(base)  # noqa: SIM222\n# add the virtual environments libraries to the host python import mechanism\nprev_length = len(sys.path)\nfor lib in \"../lib/python3.12/site-packages\".split(os.pathsep):\n    path = os.path.realpath(os.path.join(bin_dir, lib))\n    site.addsitedir(path)\nsys.path[:] = sys.path[prev_length:] + sys.path[0:prev_length]\nsys.real_prefix = sys.prefix\nsys.prefix = base",
+        "detail": "apps.api..venv.bin.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "prev_length",
+        "kind": 5,
+        "importPath": "apps.api..venv.bin.activate_this",
+        "description": "apps.api..venv.bin.activate_this",
+        "peekOfCode": "prev_length = len(sys.path)\nfor lib in \"../lib/python3.12/site-packages\".split(os.pathsep):\n    path = os.path.realpath(os.path.join(bin_dir, lib))\n    site.addsitedir(path)\nsys.path[:] = sys.path[prev_length:] + sys.path[0:prev_length]\nsys.real_prefix = sys.prefix\nsys.prefix = base",
+        "detail": "apps.api..venv.bin.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "sys.path[:]",
+        "kind": 5,
+        "importPath": "apps.api..venv.bin.activate_this",
+        "description": "apps.api..venv.bin.activate_this",
+        "peekOfCode": "sys.path[:] = sys.path[prev_length:] + sys.path[0:prev_length]\nsys.real_prefix = sys.prefix\nsys.prefix = base",
+        "detail": "apps.api..venv.bin.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "sys.real_prefix",
+        "kind": 5,
+        "importPath": "apps.api..venv.bin.activate_this",
+        "description": "apps.api..venv.bin.activate_this",
+        "peekOfCode": "sys.real_prefix = sys.prefix\nsys.prefix = base",
+        "detail": "apps.api..venv.bin.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "sys.prefix",
+        "kind": 5,
+        "importPath": "apps.api..venv.bin.activate_this",
+        "description": "apps.api..venv.bin.activate_this",
+        "peekOfCode": "sys.prefix = base",
+        "detail": "apps.api..venv.bin.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "apps.api..venv.bin.jp",
+        "description": "apps.api..venv.bin.jp",
+        "peekOfCode": "def main():\n    parser = argparse.ArgumentParser()\n    parser.add_argument('expression')\n    parser.add_argument('-f', '--filename',\n                        help=('The filename containing the input data.  '\n                              'If a filename is not given then data is '\n                              'read from stdin.'))\n    parser.add_argument('--ast', action='store_true',\n                        help=('Pretty print the AST, do not search the data.'))\n    args = parser.parse_args()",
+        "detail": "apps.api..venv.bin.jp",
+        "documentation": {}
+    },
+    {
+        "label": "upgrade",
+        "kind": 2,
+        "importPath": "apps.api.alembic.versions.4e4b87526a03_initial",
+        "description": "apps.api.alembic.versions.4e4b87526a03_initial",
+        "peekOfCode": "def upgrade() -> None:\n    # ### commands auto generated by Alembic - please adjust! ###\n    op.create_table('exams',\n    sa.Column('id', sa.Uuid(), nullable=False),\n    sa.Column('title', sa.String(), nullable=False),\n    sa.Column('description', sa.String(), nullable=False),\n    sa.Column('start_time', sa.DateTime(), nullable=True),\n    sa.Column('end_time', sa.DateTime(), nullable=True),\n    sa.Column('duration_minutes', sa.Integer(), nullable=False),\n    sa.Column('max_attempts', sa.Integer(), nullable=False),",
+        "detail": "apps.api.alembic.versions.4e4b87526a03_initial",
+        "documentation": {}
+    },
+    {
+        "label": "downgrade",
+        "kind": 2,
+        "importPath": "apps.api.alembic.versions.4e4b87526a03_initial",
+        "description": "apps.api.alembic.versions.4e4b87526a03_initial",
+        "peekOfCode": "def downgrade() -> None:\n    # ### commands auto generated by Alembic - please adjust! ###\n    op.drop_index(op.f('ix_focus_events_attempt_id'), table_name='focus_events')\n    op.drop_table('focus_events')\n    op.drop_index(op.f('ix_attempt_answers_question_id'), table_name='attempt_answers')\n    op.drop_index(op.f('ix_attempt_answers_attempt_id'), table_name='attempt_answers')\n    op.drop_table('attempt_answers')\n    op.drop_index(op.f('ix_exam_questions_question_id'), table_name='exam_questions')\n    op.drop_index(op.f('ix_exam_questions_exam_id'), table_name='exam_questions')\n    op.drop_table('exam_questions')",
+        "detail": "apps.api.alembic.versions.4e4b87526a03_initial",
+        "documentation": {}
+    },
+    {
+        "label": "upgrade",
+        "kind": 2,
+        "importPath": "apps.api.alembic.versions.b2c9f1d3e4a5_add_lessons",
+        "description": "apps.api.alembic.versions.b2c9f1d3e4a5_add_lessons",
+        "peekOfCode": "def upgrade() -> None:\n    # Bảng lessons – create_all có thể đã tạo rồi\n    if not _table_exists(\"lessons\"):\n        op.create_table(\n            \"lessons\",\n            sa.Column(\"id\", sa.Uuid(), nullable=False),\n            sa.Column(\"name\", sa.String(), nullable=False),\n            sa.Column(\"description\", sa.String(), nullable=False, server_default=\"\"),\n            sa.Column(\"order\", sa.Integer(), nullable=False, server_default=\"0\"),\n            sa.Column(\"created_at\", sa.DateTime(), nullable=False),",
+        "detail": "apps.api.alembic.versions.b2c9f1d3e4a5_add_lessons",
+        "documentation": {}
+    },
+    {
+        "label": "downgrade",
+        "kind": 2,
+        "importPath": "apps.api.alembic.versions.b2c9f1d3e4a5_add_lessons",
+        "description": "apps.api.alembic.versions.b2c9f1d3e4a5_add_lessons",
+        "peekOfCode": "def downgrade() -> None:\n    if _column_exists(\"practice_sessions\", \"lesson_ids_filter\"):\n        op.drop_column(\"practice_sessions\", \"lesson_ids_filter\")\n    if _column_exists(\"practice_sessions\", \"lesson_id\"):\n        op.drop_constraint(\n            \"fk_practice_sessions_lesson_id\", \"practice_sessions\", type_=\"foreignkey\"\n        )\n        op.execute(\"DROP INDEX IF EXISTS ix_practice_sessions_lesson_id\")\n        op.drop_column(\"practice_sessions\", \"lesson_id\")\n    if _column_exists(\"questions\", \"lesson_id\"):",
+        "detail": "apps.api.alembic.versions.b2c9f1d3e4a5_add_lessons",
+        "documentation": {}
+    },
+    {
+        "label": "get_url",
+        "kind": 2,
+        "importPath": "apps.api.alembic.env",
+        "description": "apps.api.alembic.env",
+        "peekOfCode": "def get_url() -> str:\n    return settings.DATABASE_URL\ndef run_migrations_offline() -> None:\n    context.configure(\n        url=get_url(),\n        target_metadata=target_metadata,\n        literal_binds=True,\n        dialect_opts={\"paramstyle\": \"named\"},\n        compare_type=True,\n    )",
+        "detail": "apps.api.alembic.env",
+        "documentation": {}
+    },
+    {
+        "label": "run_migrations_offline",
+        "kind": 2,
+        "importPath": "apps.api.alembic.env",
+        "description": "apps.api.alembic.env",
+        "peekOfCode": "def run_migrations_offline() -> None:\n    context.configure(\n        url=get_url(),\n        target_metadata=target_metadata,\n        literal_binds=True,\n        dialect_opts={\"paramstyle\": \"named\"},\n        compare_type=True,\n    )\n    with context.begin_transaction():\n        context.run_migrations()",
+        "detail": "apps.api.alembic.env",
+        "documentation": {}
+    },
+    {
+        "label": "do_run_migrations",
+        "kind": 2,
+        "importPath": "apps.api.alembic.env",
+        "description": "apps.api.alembic.env",
+        "peekOfCode": "def do_run_migrations(connection: Connection) -> None:\n    context.configure(connection=connection, target_metadata=target_metadata, compare_type=True)\n    with context.begin_transaction():\n        context.run_migrations()\nasync def run_async_migrations() -> None:\n    connectable = create_async_engine(get_url(), poolclass=pool.NullPool)\n    async with connectable.connect() as connection:\n        await connection.run_sync(do_run_migrations)\n    await connectable.dispose()\ndef run_migrations_online() -> None:",
+        "detail": "apps.api.alembic.env",
+        "documentation": {}
+    },
+    {
+        "label": "run_migrations_online",
+        "kind": 2,
+        "importPath": "apps.api.alembic.env",
+        "description": "apps.api.alembic.env",
+        "peekOfCode": "def run_migrations_online() -> None:\n    asyncio.run(run_async_migrations())\nif context.is_offline_mode():\n    run_migrations_offline()\nelse:\n    run_migrations_online()",
+        "detail": "apps.api.alembic.env",
+        "documentation": {}
+    },
+    {
+        "label": "config",
+        "kind": 5,
+        "importPath": "apps.api.alembic.env",
+        "description": "apps.api.alembic.env",
+        "peekOfCode": "config = context.config\nif config.config_file_name is not None:\n    fileConfig(config.config_file_name)\ntarget_metadata = SQLModel.metadata\ndef get_url() -> str:\n    return settings.DATABASE_URL\ndef run_migrations_offline() -> None:\n    context.configure(\n        url=get_url(),\n        target_metadata=target_metadata,",
+        "detail": "apps.api.alembic.env",
+        "documentation": {}
+    },
+    {
+        "label": "target_metadata",
+        "kind": 5,
+        "importPath": "apps.api.alembic.env",
+        "description": "apps.api.alembic.env",
+        "peekOfCode": "target_metadata = SQLModel.metadata\ndef get_url() -> str:\n    return settings.DATABASE_URL\ndef run_migrations_offline() -> None:\n    context.configure(\n        url=get_url(),\n        target_metadata=target_metadata,\n        literal_binds=True,\n        dialect_opts={\"paramstyle\": \"named\"},\n        compare_type=True,",
+        "detail": "apps.api.alembic.env",
+        "documentation": {}
+    },
+    {
+        "label": "quiz_role_from_manage",
+        "kind": 2,
+        "importPath": "apps.api.app.application.services.auth_roles",
+        "description": "apps.api.app.application.services.auth_roles",
+        "peekOfCode": "def quiz_role_from_manage(role_name: str) -> str:\n    if role_name == \"admin\":\n        return \"teacher\"\n    if role_name in (\"teammate\", \"leader\"):\n        return \"student\"\n    msg = f\"Unsupported role_name: {role_name}\"\n    raise ValueError(msg)",
+        "detail": "apps.api.app.application.services.auth_roles",
+        "documentation": {}
+    },
+    {
+        "label": "score_attempt",
+        "kind": 2,
+        "importPath": "apps.api.app.application.services.scoring",
+        "description": "apps.api.app.application.services.scoring",
+        "peekOfCode": "def score_attempt(questions: list[Question], answers_by_question_id: dict[UUID, str | None]) -> float:\n    n = len(questions)\n    if n == 0:\n        return 0.0\n    per = 10.0 / n\n    correct = 0\n    for q in questions:\n        sel = answers_by_question_id.get(q.id)\n        if sel is None:\n            continue",
+        "detail": "apps.api.app.application.services.scoring",
+        "documentation": {}
+    },
+    {
+        "label": "build_shuffled_exam_payload",
+        "kind": 2,
+        "importPath": "apps.api.app.application.services.shuffle",
+        "description": "apps.api.app.application.services.shuffle",
+        "peekOfCode": "def build_shuffled_exam_payload(\n    questions_in_order: list[Question],\n    seed: int,\n) -> tuple[list[dict[str, Any]], dict[str, Any]]:\n    rng = random.Random(seed)\n    ordered = list(questions_in_order)\n    rng.shuffle(ordered)\n    snapshot: dict[str, Any] = {\"question_order\": [str(q.id) for q in ordered], \"options\": {}}\n    presentation: list[dict[str, Any]] = []\n    for q in ordered:",
+        "detail": "apps.api.app.application.services.shuffle",
+        "documentation": {}
+    },
+    {
+        "label": "presentation_from_snapshot",
+        "kind": 2,
+        "importPath": "apps.api.app.application.services.shuffle",
+        "description": "apps.api.app.application.services.shuffle",
+        "peekOfCode": "def presentation_from_snapshot(\n    questions_by_id: dict[UUID, Question],\n    snapshot: dict[str, Any],\n) -> list[dict[str, Any]]:\n    out: list[dict[str, Any]] = []\n    for qid_str in snapshot.get(\"question_order\", []):\n        qid = UUID(qid_str)\n        q = questions_by_id[qid]\n        order_ids = snapshot.get(\"options\", {}).get(qid_str, [])\n        opts_by_id = {str(o[\"id\"]): o for o in q.options}",
+        "detail": "apps.api.app.application.services.shuffle",
+        "documentation": {}
+    },
+    {
+        "label": "execute",
+        "kind": 2,
+        "importPath": "apps.api.app.application.use_cases.uploads.presign_upload",
+        "description": "apps.api.app.application.use_cases.uploads.presign_upload",
+        "peekOfCode": "def execute(*, key: str, content_type: str) -> dict:\n    if (\n        not settings.MINIO_ACCESS_KEY\n        or not settings.MINIO_SECRET_KEY\n        or not settings.MINIO_ENDPOINT\n    ):\n        raise HTTPException(status_code=503, detail=\"MinIO not configured\")\n    scheme = \"https\" if settings.MINIO_SECURE else \"http\"\n    endpoint = f\"{scheme}://{settings.MINIO_ENDPOINT}\"\n    s3 = boto3.client(",
+        "detail": "apps.api.app.application.use_cases.uploads.presign_upload",
+        "documentation": {}
+    },
+    {
+        "label": "PoolType",
+        "kind": 6,
+        "importPath": "apps.api.app.infrastructure.persistence.models",
+        "description": "apps.api.app.infrastructure.persistence.models",
+        "peekOfCode": "class PoolType(StrEnum):\n    PRACTICE = \"PRACTICE\"\n    EXAM = \"EXAM\"\nclass Difficulty(StrEnum):\n    EASY = \"EASY\"\n    MEDIUM = \"MEDIUM\"\n    HARD = \"HARD\"\nclass AttemptStatus(StrEnum):\n    IN_PROGRESS = \"IN_PROGRESS\"\n    COMPLETED = \"COMPLETED\"",
+        "detail": "apps.api.app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "Difficulty",
+        "kind": 6,
+        "importPath": "apps.api.app.infrastructure.persistence.models",
+        "description": "apps.api.app.infrastructure.persistence.models",
+        "peekOfCode": "class Difficulty(StrEnum):\n    EASY = \"EASY\"\n    MEDIUM = \"MEDIUM\"\n    HARD = \"HARD\"\nclass AttemptStatus(StrEnum):\n    IN_PROGRESS = \"IN_PROGRESS\"\n    COMPLETED = \"COMPLETED\"\n    ABANDONED = \"ABANDONED\"\nclass PracticeSessionStatus(StrEnum):\n    IN_PROGRESS = \"IN_PROGRESS\"",
+        "detail": "apps.api.app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "AttemptStatus",
+        "kind": 6,
+        "importPath": "apps.api.app.infrastructure.persistence.models",
+        "description": "apps.api.app.infrastructure.persistence.models",
+        "peekOfCode": "class AttemptStatus(StrEnum):\n    IN_PROGRESS = \"IN_PROGRESS\"\n    COMPLETED = \"COMPLETED\"\n    ABANDONED = \"ABANDONED\"\nclass PracticeSessionStatus(StrEnum):\n    IN_PROGRESS = \"IN_PROGRESS\"\n    COMPLETED = \"COMPLETED\"\nclass Lesson(SQLModel, table=True):\n    \"\"\"Bài học – đơn vị tổ chức câu hỏi thay thế tags.\"\"\"\n    __tablename__ = \"lessons\"",
+        "detail": "apps.api.app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "PracticeSessionStatus",
+        "kind": 6,
+        "importPath": "apps.api.app.infrastructure.persistence.models",
+        "description": "apps.api.app.infrastructure.persistence.models",
+        "peekOfCode": "class PracticeSessionStatus(StrEnum):\n    IN_PROGRESS = \"IN_PROGRESS\"\n    COMPLETED = \"COMPLETED\"\nclass Lesson(SQLModel, table=True):\n    \"\"\"Bài học – đơn vị tổ chức câu hỏi thay thế tags.\"\"\"\n    __tablename__ = \"lessons\"\n    id: UUID = Field(default_factory=uuid4, primary_key=True)\n    name: str\n    description: str = \"\"\n    order: int = Field(default=0, index=True)",
+        "detail": "apps.api.app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "Lesson",
+        "kind": 6,
+        "importPath": "apps.api.app.infrastructure.persistence.models",
+        "description": "apps.api.app.infrastructure.persistence.models",
+        "peekOfCode": "class Lesson(SQLModel, table=True):\n    \"\"\"Bài học – đơn vị tổ chức câu hỏi thay thế tags.\"\"\"\n    __tablename__ = \"lessons\"\n    id: UUID = Field(default_factory=uuid4, primary_key=True)\n    name: str\n    description: str = \"\"\n    order: int = Field(default=0, index=True)\n    created_at: datetime = Field(default_factory=datetime.utcnow)\n    created_by: int = Field(default=0, index=True)\nclass Question(SQLModel, table=True):",
+        "detail": "apps.api.app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "Question",
+        "kind": 6,
+        "importPath": "apps.api.app.infrastructure.persistence.models",
+        "description": "apps.api.app.infrastructure.persistence.models",
+        "peekOfCode": "class Question(SQLModel, table=True):\n    __tablename__ = \"questions\"\n    id: UUID = Field(default_factory=uuid4, primary_key=True)\n    pool_type: PoolType = Field(index=True)\n    content: str = \"\"\n    options: list[dict[str, Any]] = Field(default_factory=list, sa_column=Column(JSONB, nullable=False))\n    solution: str | None = None\n    difficulty: Difficulty = Field(index=True)\n    tags: list[str] = Field(default_factory=list, sa_column=Column(ARRAY(String()), nullable=False))\n    lesson_id: UUID | None = Field(default=None, foreign_key=\"lessons.id\", index=True)",
+        "detail": "apps.api.app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "Exam",
+        "kind": 6,
+        "importPath": "apps.api.app.infrastructure.persistence.models",
+        "description": "apps.api.app.infrastructure.persistence.models",
+        "peekOfCode": "class Exam(SQLModel, table=True):\n    __tablename__ = \"exams\"\n    id: UUID = Field(default_factory=uuid4, primary_key=True)\n    title: str\n    description: str = \"\"\n    start_time: datetime | None = None\n    end_time: datetime | None = None\n    duration_minutes: int = 60\n    max_attempts: int = 1\n    is_published: bool = False",
+        "detail": "apps.api.app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "ExamQuestion",
+        "kind": 6,
+        "importPath": "apps.api.app.infrastructure.persistence.models",
+        "description": "apps.api.app.infrastructure.persistence.models",
+        "peekOfCode": "class ExamQuestion(SQLModel, table=True):\n    __tablename__ = \"exam_questions\"\n    __table_args__ = (UniqueConstraint(\"exam_id\", \"question_id\", name=\"uq_exam_question\"),)\n    id: UUID = Field(default_factory=uuid4, primary_key=True)\n    exam_id: UUID = Field(foreign_key=\"exams.id\", index=True)\n    question_id: UUID = Field(foreign_key=\"questions.id\", index=True)\n    position: int = 0\nclass Attempt(SQLModel, table=True):\n    __tablename__ = \"attempts\"\n    id: UUID = Field(default_factory=uuid4, primary_key=True)",
+        "detail": "apps.api.app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "Attempt",
+        "kind": 6,
+        "importPath": "apps.api.app.infrastructure.persistence.models",
+        "description": "apps.api.app.infrastructure.persistence.models",
+        "peekOfCode": "class Attempt(SQLModel, table=True):\n    __tablename__ = \"attempts\"\n    id: UUID = Field(default_factory=uuid4, primary_key=True)\n    exam_id: UUID = Field(foreign_key=\"exams.id\", index=True)\n    user_id: int = Field(index=True)\n    started_at: datetime = Field(default_factory=datetime.utcnow)\n    completed_at: datetime | None = None\n    expires_at: datetime\n    score: float | None = None\n    status: AttemptStatus = Field(default=AttemptStatus.IN_PROGRESS, index=True)",
+        "detail": "apps.api.app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "AttemptAnswer",
+        "kind": 6,
+        "importPath": "apps.api.app.infrastructure.persistence.models",
+        "description": "apps.api.app.infrastructure.persistence.models",
+        "peekOfCode": "class AttemptAnswer(SQLModel, table=True):\n    __tablename__ = \"attempt_answers\"\n    id: UUID = Field(default_factory=uuid4, primary_key=True)\n    attempt_id: UUID = Field(foreign_key=\"attempts.id\", index=True)\n    question_id: UUID = Field(foreign_key=\"questions.id\", index=True)\n    selected_option_id: str | None = None\nclass FocusEvent(SQLModel, table=True):\n    __tablename__ = \"focus_events\"\n    __table_args__ = (UniqueConstraint(\"attempt_id\", \"client_event_id\", name=\"uq_focus_client\"),)\n    id: UUID = Field(default_factory=uuid4, primary_key=True)",
+        "detail": "apps.api.app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "FocusEvent",
+        "kind": 6,
+        "importPath": "apps.api.app.infrastructure.persistence.models",
+        "description": "apps.api.app.infrastructure.persistence.models",
+        "peekOfCode": "class FocusEvent(SQLModel, table=True):\n    __tablename__ = \"focus_events\"\n    __table_args__ = (UniqueConstraint(\"attempt_id\", \"client_event_id\", name=\"uq_focus_client\"),)\n    id: UUID = Field(default_factory=uuid4, primary_key=True)\n    attempt_id: UUID = Field(foreign_key=\"attempts.id\", index=True)\n    client_event_id: str\n    event: str = \"\"\n    received_at: datetime = Field(default_factory=datetime.utcnow)\nclass PracticeSession(SQLModel, table=True):\n    __tablename__ = \"practice_sessions\"",
+        "detail": "apps.api.app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "PracticeSession",
+        "kind": 6,
+        "importPath": "apps.api.app.infrastructure.persistence.models",
+        "description": "apps.api.app.infrastructure.persistence.models",
+        "peekOfCode": "class PracticeSession(SQLModel, table=True):\n    __tablename__ = \"practice_sessions\"\n    id: UUID = Field(default_factory=uuid4, primary_key=True)\n    user_id: int = Field(index=True)\n    started_at: datetime = Field(default_factory=datetime.utcnow)\n    completed_at: datetime | None = None\n    status: PracticeSessionStatus = Field(default=PracticeSessionStatus.IN_PROGRESS)\n    snapshot: dict[str, Any] | None = Field(default=None, sa_column=Column(JSONB, nullable=True))\n    tags_filter: list[str] = Field(default_factory=list, sa_column=Column(ARRAY(String()), nullable=False))\n    lesson_id: UUID | None = Field(default=None, foreign_key=\"lessons.id\", index=True)",
+        "detail": "apps.api.app.infrastructure.persistence.models",
+        "documentation": {}
+    },
+    {
+        "label": "AttemptRepository",
+        "kind": 6,
+        "importPath": "apps.api.app.infrastructure.repositories.attempts",
+        "description": "apps.api.app.infrastructure.repositories.attempts",
+        "peekOfCode": "class AttemptRepository:\n    def __init__(self, session: AsyncSession) -> None:\n        self._s = session\n    async def count_for_user_exam(self, user_id: int, exam_id: UUID) -> int:\n        r = await self._s.execute(\n            select(func.count())\n            .select_from(Attempt)\n            .where(Attempt.user_id == user_id, Attempt.exam_id == exam_id)\n        )\n        return int(r.scalar_one() or 0)",
+        "detail": "apps.api.app.infrastructure.repositories.attempts",
+        "documentation": {}
+    },
+    {
+        "label": "AttemptAnswerRepository",
+        "kind": 6,
+        "importPath": "apps.api.app.infrastructure.repositories.attempts",
+        "description": "apps.api.app.infrastructure.repositories.attempts",
+        "peekOfCode": "class AttemptAnswerRepository:\n    def __init__(self, session: AsyncSession) -> None:\n        self._s = session\n    async def list_for_attempt(self, attempt_id: UUID) -> list[AttemptAnswer]:\n        r = await self._s.execute(select(AttemptAnswer).where(AttemptAnswer.attempt_id == attempt_id))\n        return list(r.scalars().all())",
+        "detail": "apps.api.app.infrastructure.repositories.attempts",
+        "documentation": {}
+    },
+    {
+        "label": "ExamQuestionRepository",
+        "kind": 6,
+        "importPath": "apps.api.app.infrastructure.repositories.exam_questions",
+        "description": "apps.api.app.infrastructure.repositories.exam_questions",
+        "peekOfCode": "class ExamQuestionRepository:\n    def __init__(self, session: AsyncSession) -> None:\n        self._s = session\n    async def list_question_ids_ordered(self, exam_id: UUID) -> list[UUID]:\n        r = await self._s.execute(\n            select(ExamQuestion.question_id, ExamQuestion.position)\n            .where(ExamQuestion.exam_id == exam_id)\n            .order_by(ExamQuestion.position, ExamQuestion.id)\n        )\n        rows = r.all()",
+        "detail": "apps.api.app.infrastructure.repositories.exam_questions",
+        "documentation": {}
+    },
+    {
+        "label": "ExamRepository",
+        "kind": 6,
+        "importPath": "apps.api.app.infrastructure.repositories.exams",
+        "description": "apps.api.app.infrastructure.repositories.exams",
+        "peekOfCode": "class ExamRepository:\n    def __init__(self, session: AsyncSession) -> None:\n        self._s = session\n    async def get(self, exam_id: UUID) -> Exam | None:\n        r = await self._s.execute(select(Exam).where(Exam.id == exam_id))\n        return r.scalar_one_or_none()\n    async def list_for_teacher(self, user_id: int) -> list[Exam]:\n        r = await self._s.execute(select(Exam).where(Exam.created_by == user_id).order_by(Exam.title))\n        return list(r.scalars().all())\n    async def list_published_for_student(self, now: datetime) -> list[Exam]:",
+        "detail": "apps.api.app.infrastructure.repositories.exams",
+        "documentation": {}
+    },
+    {
+        "label": "FocusEventRepository",
+        "kind": 6,
+        "importPath": "apps.api.app.infrastructure.repositories.focus_events",
+        "description": "apps.api.app.infrastructure.repositories.focus_events",
+        "peekOfCode": "class FocusEventRepository:\n    def __init__(self, session: AsyncSession) -> None:\n        self._s = session\n    async def exists(self, attempt_id: UUID, client_event_id: str) -> bool:\n        r = await self._s.execute(\n            select(FocusEvent.id).where(\n                FocusEvent.attempt_id == attempt_id,\n                FocusEvent.client_event_id == client_event_id,\n            )\n        )",
+        "detail": "apps.api.app.infrastructure.repositories.focus_events",
+        "documentation": {}
+    },
+    {
+        "label": "LessonRepository",
+        "kind": 6,
+        "importPath": "apps.api.app.infrastructure.repositories.lessons",
+        "description": "apps.api.app.infrastructure.repositories.lessons",
+        "peekOfCode": "class LessonRepository:\n    def __init__(self, session: AsyncSession) -> None:\n        self._s = session\n    async def list_all(self) -> list[Lesson]:\n        r = await self._s.execute(select(Lesson).order_by(Lesson.order, Lesson.name))\n        return list(r.scalars().all())\n    async def get(self, lesson_id: UUID) -> Lesson | None:\n        r = await self._s.execute(select(Lesson).where(Lesson.id == lesson_id))\n        return r.scalar_one_or_none()\n    async def add(self, lesson: Lesson) -> Lesson:",
+        "detail": "apps.api.app.infrastructure.repositories.lessons",
+        "documentation": {}
+    },
+    {
+        "label": "PracticeSessionRepository",
+        "kind": 6,
+        "importPath": "apps.api.app.infrastructure.repositories.practice_sessions",
+        "description": "apps.api.app.infrastructure.repositories.practice_sessions",
+        "peekOfCode": "class PracticeSessionRepository:\n    def __init__(self, session: AsyncSession) -> None:\n        self._s = session\n    async def get(self, session_id: UUID) -> PracticeSession | None:\n        r = await self._s.execute(select(PracticeSession).where(PracticeSession.id == session_id))\n        return r.scalar_one_or_none()\n    async def list_for_user(self, user_id: int, limit: int = 50) -> list[PracticeSession]:\n        r = await self._s.execute(\n            select(PracticeSession)\n            .where(PracticeSession.user_id == user_id)",
+        "detail": "apps.api.app.infrastructure.repositories.practice_sessions",
+        "documentation": {}
+    },
+    {
+        "label": "QuestionRepository",
+        "kind": 6,
+        "importPath": "apps.api.app.infrastructure.repositories.questions",
+        "description": "apps.api.app.infrastructure.repositories.questions",
+        "peekOfCode": "class QuestionRepository:\n    def __init__(self, session: AsyncSession) -> None:\n        self._s = session\n    async def get(self, question_id: UUID) -> Question | None:\n        r = await self._s.execute(select(Question).where(Question.id == question_id))\n        return r.scalar_one_or_none()\n    async def list_all(\n        self,\n        *,\n        pool_type: PoolType | None = None,",
+        "detail": "apps.api.app.infrastructure.repositories.questions",
+        "documentation": {}
+    },
+    {
+        "label": "engine",
+        "kind": 5,
+        "importPath": "apps.api.app.infrastructure.database",
+        "description": "apps.api.app.infrastructure.database",
+        "peekOfCode": "engine = create_async_engine(settings.DATABASE_URL, echo=False)\nAsyncSessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)\nasync def get_session() -> AsyncGenerator[AsyncSession, None]:\n    async with AsyncSessionLocal() as session:\n        try:\n            yield session\n            await session.commit()\n        except Exception:\n            await session.rollback()\n            raise",
+        "detail": "apps.api.app.infrastructure.database",
+        "documentation": {}
+    },
+    {
+        "label": "AsyncSessionLocal",
+        "kind": 5,
+        "importPath": "apps.api.app.infrastructure.database",
+        "description": "apps.api.app.infrastructure.database",
+        "peekOfCode": "AsyncSessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)\nasync def get_session() -> AsyncGenerator[AsyncSession, None]:\n    async with AsyncSessionLocal() as session:\n        try:\n            yield session\n            await session.commit()\n        except Exception:\n            await session.rollback()\n            raise\nasync def init_db() -> None:",
+        "detail": "apps.api.app.infrastructure.database",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "apps.api.app.presentation.api.routers.attempts",
+        "description": "apps.api.app.presentation.api.routers.attempts",
+        "peekOfCode": "router = APIRouter(tags=[\"attempts\"])\n@router.post(\"/exams/{exam_id}/attempts\", response_model=StartAttemptOut)\nasync def start_attempt_route(session: SessionDep, user: StudentUser, exam_id: UUID):\n    result, code = await start_attempt_uc(session, exam_id, user.id)\n    if code == \"not_found\":\n        raise HTTPException(status_code=404, detail=\"Exam not found\")\n    if code == \"not_started\":\n        raise HTTPException(status_code=403, detail=\"Exam not started yet\")\n    if code == \"ended\":\n        raise HTTPException(status_code=403, detail=\"Exam ended\")",
+        "detail": "apps.api.app.presentation.api.routers.attempts",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "apps.api.app.presentation.api.routers.exams",
+        "description": "apps.api.app.presentation.api.routers.exams",
+        "peekOfCode": "router = APIRouter(prefix=\"/exams\", tags=[\"exams\"])\n@router.get(\"\", response_model=list[ExamOut])\nasync def list_exams_route(session: SessionDep, user: CurrentUser):\n    if user.quiz_role == \"teacher\":\n        return await execute_for_teacher(session, user.id)\n    return await execute_for_student(session, datetime.utcnow())\n@router.post(\"\", response_model=ExamOut)\nasync def create_exam_route(session: SessionDep, user: TeacherUser, body: ExamCreate):\n    return await create_exam(body, session, user.id)\n@router.get(\"/{exam_id}\", response_model=ExamOut)",
+        "detail": "apps.api.app.presentation.api.routers.exams",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "apps.api.app.presentation.api.routers.health",
+        "description": "apps.api.app.presentation.api.routers.health",
+        "peekOfCode": "router = APIRouter(tags=[\"health\"])\n@router.get(\"/health\")\nasync def health():\n    return {\"status\": \"ok\"}",
+        "detail": "apps.api.app.presentation.api.routers.health",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "apps.api.app.presentation.api.routers.leaderboard",
+        "description": "apps.api.app.presentation.api.routers.leaderboard",
+        "peekOfCode": "router = APIRouter(prefix=\"/exams\", tags=[\"leaderboard\"])\n@router.get(\"/{exam_id}/leaderboard\", response_model=list[LeaderboardRow])\nasync def leaderboard_route(\n    session: SessionDep,\n    user: CurrentUser,\n    exam_id: UUID,\n    limit: int = Query(100, ge=1, le=500),\n):\n    exam_repo = ExamRepository(session)\n    ex = await exam_repo.get(exam_id)",
+        "detail": "apps.api.app.presentation.api.routers.leaderboard",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "apps.api.app.presentation.api.routers.lessons",
+        "description": "apps.api.app.presentation.api.routers.lessons",
+        "peekOfCode": "router = APIRouter(prefix=\"/lessons\", tags=[\"lessons\"])\n@router.get(\"\", response_model=list[LessonOut])\nasync def list_lessons_route(session: SessionDep, _user: CurrentUser):\n    \"\"\"Tất cả user (kể cả student) có thể xem danh sách bài học.\"\"\"\n    return await list_lessons(session)\n@router.post(\"\", response_model=LessonOut)\nasync def create_lesson_route(session: SessionDep, user: TeacherUser, body: LessonCreate):\n    return await create_lesson(session, body, user.id)\n@router.patch(\"/{lesson_id}\", response_model=LessonOut)\nasync def update_lesson_route(session: SessionDep, _user: TeacherUser, lesson_id: UUID, body: LessonUpdate):",
+        "detail": "apps.api.app.presentation.api.routers.lessons",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "apps.api.app.presentation.api.routers.me",
+        "description": "apps.api.app.presentation.api.routers.me",
+        "peekOfCode": "router = APIRouter(prefix=\"/me\", tags=[\"me\"])\n@router.get(\"\")\nasync def me(request: Request, user: CurrentUser):\n    data = await get_profile(request)\n    return {\"data\": data, \"is_success\": True}\n@router.get(\"/attempts\", response_model=list[AttemptOut])\nasync def me_attempts(\n    session: SessionDep,\n    user: CurrentUser,\n    limit: int = Query(50, ge=1, le=200),",
+        "detail": "apps.api.app.presentation.api.routers.me",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "apps.api.app.presentation.api.routers.practice",
+        "description": "apps.api.app.presentation.api.routers.practice",
+        "peekOfCode": "router = APIRouter(prefix=\"/practice\", tags=[\"practice\"])\n@router.post(\"/sessions\")\nasync def start_practice(session: SessionDep, user: StudentUser, body: PracticeStartIn):\n    row, code = await start_practice_uc(\n        session,\n        user.id,\n        lesson_id=body.lesson_id,\n        lesson_ids=body.lesson_ids,\n        difficulty=body.difficulty,\n        limit=body.limit,",
+        "detail": "apps.api.app.presentation.api.routers.practice",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "apps.api.app.presentation.api.routers.questions",
+        "description": "apps.api.app.presentation.api.routers.questions",
+        "peekOfCode": "router = APIRouter(prefix=\"/questions\", tags=[\"questions\"])\n@router.get(\"\", response_model=list[QuestionOut])\nasync def list_questions_route(\n    session: SessionDep,\n    user: TeacherUser,\n    pool_type: PoolType | None = None,\n    difficulty: Difficulty | None = None,\n    tag: str | None = None,\n    lesson_id: UUID | None = None,\n    offset: int = Query(0, ge=0),",
+        "detail": "apps.api.app.presentation.api.routers.questions",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "apps.api.app.presentation.api.routers.uploads",
+        "description": "apps.api.app.presentation.api.routers.uploads",
+        "peekOfCode": "router = APIRouter(prefix=\"/uploads\", tags=[\"uploads\"])\n@router.post(\"/presign\")\nasync def presign(session: SessionDep, user: TeacherUser, body: PresignBody):\n    return presign_upload(key=body.key, content_type=body.content_type)",
+        "detail": "apps.api.app.presentation.api.routers.uploads",
+        "documentation": {}
+    },
+    {
+        "label": "UserContext",
+        "kind": 6,
+        "importPath": "apps.api.app.presentation.api.deps",
+        "description": "apps.api.app.presentation.api.deps",
+        "peekOfCode": "class UserContext(BaseModel):\n    id: int\n    role_name: str\n    quiz_role: str\nSessionDep = Annotated[AsyncSession, Depends(get_session)]\nasync def get_current_user(request: Request) -> UserContext:\n    if settings.AUTH_DEV_BYPASS:\n        rn = settings.AUTH_DEV_ROLE_NAME\n        return UserContext(id=settings.AUTH_DEV_USER_ID, role_name=rn, quiz_role=quiz_role_from_manage(rn))\n    try:",
+        "detail": "apps.api.app.presentation.api.deps",
+        "documentation": {}
+    },
+    {
+        "label": "SessionDep",
+        "kind": 5,
+        "importPath": "apps.api.app.presentation.api.deps",
+        "description": "apps.api.app.presentation.api.deps",
+        "peekOfCode": "SessionDep = Annotated[AsyncSession, Depends(get_session)]\nasync def get_current_user(request: Request) -> UserContext:\n    if settings.AUTH_DEV_BYPASS:\n        rn = settings.AUTH_DEV_ROLE_NAME\n        return UserContext(id=settings.AUTH_DEV_USER_ID, role_name=rn, quiz_role=quiz_role_from_manage(rn))\n    try:\n        raw = await fetch_me(request.headers.get(\"cookie\"))\n    except Exception as e:\n        raise HTTPException(status_code=401, detail=\"Unauthorized\") from e\n    rn = str(raw.get(\"role_name\") or \"\")",
+        "detail": "apps.api.app.presentation.api.deps",
+        "documentation": {}
+    },
+    {
+        "label": "CurrentUser",
+        "kind": 5,
+        "importPath": "apps.api.app.presentation.api.deps",
+        "description": "apps.api.app.presentation.api.deps",
+        "peekOfCode": "CurrentUser = Annotated[UserContext, Depends(get_current_user)]\nTeacherUser = Annotated[UserContext, Depends(require_teacher)]\nStudentUser = Annotated[UserContext, Depends(require_student)]",
+        "detail": "apps.api.app.presentation.api.deps",
+        "documentation": {}
+    },
+    {
+        "label": "TeacherUser",
+        "kind": 5,
+        "importPath": "apps.api.app.presentation.api.deps",
+        "description": "apps.api.app.presentation.api.deps",
+        "peekOfCode": "TeacherUser = Annotated[UserContext, Depends(require_teacher)]\nStudentUser = Annotated[UserContext, Depends(require_student)]",
+        "detail": "apps.api.app.presentation.api.deps",
+        "documentation": {}
+    },
+    {
+        "label": "StudentUser",
+        "kind": 5,
+        "importPath": "apps.api.app.presentation.api.deps",
+        "description": "apps.api.app.presentation.api.deps",
+        "peekOfCode": "StudentUser = Annotated[UserContext, Depends(require_student)]",
+        "detail": "apps.api.app.presentation.api.deps",
+        "documentation": {}
+    },
+    {
+        "label": "AnswerItem",
+        "kind": 6,
+        "importPath": "apps.api.app.presentation.schemas.attempts",
+        "description": "apps.api.app.presentation.schemas.attempts",
+        "peekOfCode": "class AnswerItem(BaseModel):\n    question_id: UUID\n    selected_option_id: str | None = None\nclass AttemptAnswersPatch(BaseModel):\n    answers: list[AnswerItem] = Field(default_factory=list)\nclass AttemptOut(BaseModel):\n    id: UUID\n    exam_id: UUID\n    user_id: int\n    started_at: datetime",
+        "detail": "apps.api.app.presentation.schemas.attempts",
+        "documentation": {}
+    },
+    {
+        "label": "AttemptAnswersPatch",
+        "kind": 6,
+        "importPath": "apps.api.app.presentation.schemas.attempts",
+        "description": "apps.api.app.presentation.schemas.attempts",
+        "peekOfCode": "class AttemptAnswersPatch(BaseModel):\n    answers: list[AnswerItem] = Field(default_factory=list)\nclass AttemptOut(BaseModel):\n    id: UUID\n    exam_id: UUID\n    user_id: int\n    started_at: datetime\n    completed_at: datetime | None\n    expires_at: datetime\n    score: float | None",
+        "detail": "apps.api.app.presentation.schemas.attempts",
+        "documentation": {}
+    },
+    {
+        "label": "AttemptOut",
+        "kind": 6,
+        "importPath": "apps.api.app.presentation.schemas.attempts",
+        "description": "apps.api.app.presentation.schemas.attempts",
+        "peekOfCode": "class AttemptOut(BaseModel):\n    id: UUID\n    exam_id: UUID\n    user_id: int\n    started_at: datetime\n    completed_at: datetime | None\n    expires_at: datetime\n    score: float | None\n    status: AttemptStatus\n    tab_out_count: int",
+        "detail": "apps.api.app.presentation.schemas.attempts",
+        "documentation": {}
+    },
+    {
+        "label": "StartAttemptOut",
+        "kind": 6,
+        "importPath": "apps.api.app.presentation.schemas.attempts",
+        "description": "apps.api.app.presentation.schemas.attempts",
+        "peekOfCode": "class StartAttemptOut(BaseModel):\n    attempt_id: UUID\n    expires_at: datetime\n    tab_out_count: int\n    questions: list[dict]\nclass FocusEventOut(BaseModel):\n    tab_out_count: int\n    action: str\n    attempt: dict | None = None\nclass LeaderboardRow(BaseModel):",
+        "detail": "apps.api.app.presentation.schemas.attempts",
+        "documentation": {}
+    },
+    {
+        "label": "FocusEventOut",
+        "kind": 6,
+        "importPath": "apps.api.app.presentation.schemas.attempts",
+        "description": "apps.api.app.presentation.schemas.attempts",
+        "peekOfCode": "class FocusEventOut(BaseModel):\n    tab_out_count: int\n    action: str\n    attempt: dict | None = None\nclass LeaderboardRow(BaseModel):\n    user_id: int\n    best_score: float\nclass PresignBody(BaseModel):\n    key: str\n    content_type: str = \"application/octet-stream\"",
+        "detail": "apps.api.app.presentation.schemas.attempts",
+        "documentation": {}
+    },
+    {
+        "label": "LeaderboardRow",
+        "kind": 6,
+        "importPath": "apps.api.app.presentation.schemas.attempts",
+        "description": "apps.api.app.presentation.schemas.attempts",
+        "peekOfCode": "class LeaderboardRow(BaseModel):\n    user_id: int\n    best_score: float\nclass PresignBody(BaseModel):\n    key: str\n    content_type: str = \"application/octet-stream\"",
+        "detail": "apps.api.app.presentation.schemas.attempts",
+        "documentation": {}
+    },
+    {
+        "label": "PresignBody",
+        "kind": 6,
+        "importPath": "apps.api.app.presentation.schemas.attempts",
+        "description": "apps.api.app.presentation.schemas.attempts",
+        "peekOfCode": "class PresignBody(BaseModel):\n    key: str\n    content_type: str = \"application/octet-stream\"",
+        "detail": "apps.api.app.presentation.schemas.attempts",
+        "documentation": {}
+    },
+    {
+        "label": "Message",
+        "kind": 6,
+        "importPath": "apps.api.app.presentation.schemas.common",
+        "description": "apps.api.app.presentation.schemas.common",
+        "peekOfCode": "class Message(BaseModel):\n    detail: str = Field(default=\"ok\")\nclass OptionIn(BaseModel):\n    id: str\n    text: str\n    is_correct: bool = False\nclass FocusEventIn(BaseModel):\n    event: str\n    client_event_id: str\n    client_ts: str | None = None",
+        "detail": "apps.api.app.presentation.schemas.common",
+        "documentation": {}
+    },
+    {
+        "label": "OptionIn",
+        "kind": 6,
+        "importPath": "apps.api.app.presentation.schemas.common",
+        "description": "apps.api.app.presentation.schemas.common",
+        "peekOfCode": "class OptionIn(BaseModel):\n    id: str\n    text: str\n    is_correct: bool = False\nclass FocusEventIn(BaseModel):\n    event: str\n    client_event_id: str\n    client_ts: str | None = None",
+        "detail": "apps.api.app.presentation.schemas.common",
+        "documentation": {}
+    },
+    {
+        "label": "FocusEventIn",
+        "kind": 6,
+        "importPath": "apps.api.app.presentation.schemas.common",
+        "description": "apps.api.app.presentation.schemas.common",
+        "peekOfCode": "class FocusEventIn(BaseModel):\n    event: str\n    client_event_id: str\n    client_ts: str | None = None",
+        "detail": "apps.api.app.presentation.schemas.common",
+        "documentation": {}
+    },
+    {
+        "label": "ExamCreate",
+        "kind": 6,
+        "importPath": "apps.api.app.presentation.schemas.exams",
+        "description": "apps.api.app.presentation.schemas.exams",
+        "peekOfCode": "class ExamCreate(BaseModel):\n    title: str\n    description: str = \"\"\n    start_time: datetime | None = None\n    end_time: datetime | None = None\n    duration_minutes: int = 60\n    max_attempts: int = 1\n    is_published: bool = False\nclass ExamUpdate(BaseModel):\n    title: str | None = None",
+        "detail": "apps.api.app.presentation.schemas.exams",
+        "documentation": {}
+    },
+    {
+        "label": "ExamUpdate",
+        "kind": 6,
+        "importPath": "apps.api.app.presentation.schemas.exams",
+        "description": "apps.api.app.presentation.schemas.exams",
+        "peekOfCode": "class ExamUpdate(BaseModel):\n    title: str | None = None\n    description: str | None = None\n    start_time: datetime | None = None\n    end_time: datetime | None = None\n    duration_minutes: int | None = None\n    max_attempts: int | None = None\n    is_published: bool | None = None\nclass ExamOut(BaseModel):\n    id: UUID",
+        "detail": "apps.api.app.presentation.schemas.exams",
+        "documentation": {}
+    },
+    {
+        "label": "ExamOut",
+        "kind": 6,
+        "importPath": "apps.api.app.presentation.schemas.exams",
+        "description": "apps.api.app.presentation.schemas.exams",
+        "peekOfCode": "class ExamOut(BaseModel):\n    id: UUID\n    title: str\n    description: str\n    start_time: datetime | None\n    end_time: datetime | None\n    duration_minutes: int\n    max_attempts: int\n    is_published: bool\n    created_by: int",
+        "detail": "apps.api.app.presentation.schemas.exams",
+        "documentation": {}
+    },
+    {
+        "label": "ExamQuestionsPut",
+        "kind": 6,
+        "importPath": "apps.api.app.presentation.schemas.exams",
+        "description": "apps.api.app.presentation.schemas.exams",
+        "peekOfCode": "class ExamQuestionsPut(BaseModel):\n    question_ids: list[UUID] = Field(default_factory=list)\nclass PracticeStartIn(BaseModel):\n    \"\"\"\n    Khởi động phiên luyện tập / kiểm tra theo bài học.\n    - Luyện tập (mode=practice): truyền lesson_id, lấy câu PRACTICE\n    - Kiểm tra   (mode=test):    truyền lesson_ids, lấy câu EXAM\n    \"\"\"\n    lesson_id: UUID | None = None\n    lesson_ids: list[UUID] = Field(default_factory=list)",
+        "detail": "apps.api.app.presentation.schemas.exams",
+        "documentation": {}
+    },
+    {
+        "label": "PracticeStartIn",
+        "kind": 6,
+        "importPath": "apps.api.app.presentation.schemas.exams",
+        "description": "apps.api.app.presentation.schemas.exams",
+        "peekOfCode": "class PracticeStartIn(BaseModel):\n    \"\"\"\n    Khởi động phiên luyện tập / kiểm tra theo bài học.\n    - Luyện tập (mode=practice): truyền lesson_id, lấy câu PRACTICE\n    - Kiểm tra   (mode=test):    truyền lesson_ids, lấy câu EXAM\n    \"\"\"\n    lesson_id: UUID | None = None\n    lesson_ids: list[UUID] = Field(default_factory=list)\n    difficulty: Difficulty | None = None\n    limit: int = 10",
+        "detail": "apps.api.app.presentation.schemas.exams",
+        "documentation": {}
+    },
+    {
+        "label": "LessonCreate",
+        "kind": 6,
+        "importPath": "apps.api.app.presentation.schemas.lessons",
+        "description": "apps.api.app.presentation.schemas.lessons",
+        "peekOfCode": "class LessonCreate(BaseModel):\n    name: str\n    description: str = \"\"\n    order: int = 0\nclass LessonUpdate(BaseModel):\n    name: str | None = None\n    description: str | None = None\n    order: int | None = None\nclass LessonOut(BaseModel):\n    id: UUID",
+        "detail": "apps.api.app.presentation.schemas.lessons",
+        "documentation": {}
+    },
+    {
+        "label": "LessonUpdate",
+        "kind": 6,
+        "importPath": "apps.api.app.presentation.schemas.lessons",
+        "description": "apps.api.app.presentation.schemas.lessons",
+        "peekOfCode": "class LessonUpdate(BaseModel):\n    name: str | None = None\n    description: str | None = None\n    order: int | None = None\nclass LessonOut(BaseModel):\n    id: UUID\n    name: str\n    description: str\n    order: int\n    created_at: datetime",
+        "detail": "apps.api.app.presentation.schemas.lessons",
+        "documentation": {}
+    },
+    {
+        "label": "LessonOut",
+        "kind": 6,
+        "importPath": "apps.api.app.presentation.schemas.lessons",
+        "description": "apps.api.app.presentation.schemas.lessons",
+        "peekOfCode": "class LessonOut(BaseModel):\n    id: UUID\n    name: str\n    description: str\n    order: int\n    created_at: datetime\n    created_by: int\n    model_config = {\"from_attributes\": True}",
+        "detail": "apps.api.app.presentation.schemas.lessons",
+        "documentation": {}
+    },
+    {
+        "label": "QuestionCreate",
+        "kind": 6,
+        "importPath": "apps.api.app.presentation.schemas.questions",
+        "description": "apps.api.app.presentation.schemas.questions",
+        "peekOfCode": "class QuestionCreate(BaseModel):\n    pool_type: PoolType\n    content: str = \"\"\n    options: list[dict] = Field(default_factory=list)\n    solution: str | None = None\n    difficulty: Difficulty = Difficulty.MEDIUM\n    tags: list[str] = Field(default_factory=list)\n    lesson_id: UUID | None = None\nclass QuestionUpdate(BaseModel):\n    pool_type: PoolType | None = None",
+        "detail": "apps.api.app.presentation.schemas.questions",
+        "documentation": {}
+    },
+    {
+        "label": "QuestionUpdate",
+        "kind": 6,
+        "importPath": "apps.api.app.presentation.schemas.questions",
+        "description": "apps.api.app.presentation.schemas.questions",
+        "peekOfCode": "class QuestionUpdate(BaseModel):\n    pool_type: PoolType | None = None\n    content: str | None = None\n    options: list[dict] | None = None\n    solution: str | None = None\n    difficulty: Difficulty | None = None\n    tags: list[str] | None = None\n    lesson_id: UUID | None = None\nclass QuestionOut(BaseModel):\n    id: UUID",
+        "detail": "apps.api.app.presentation.schemas.questions",
+        "documentation": {}
+    },
+    {
+        "label": "QuestionOut",
+        "kind": 6,
+        "importPath": "apps.api.app.presentation.schemas.questions",
+        "description": "apps.api.app.presentation.schemas.questions",
+        "peekOfCode": "class QuestionOut(BaseModel):\n    id: UUID\n    pool_type: PoolType\n    content: str\n    options: list[dict]\n    solution: str | None\n    difficulty: Difficulty\n    tags: list[str]\n    lesson_id: UUID | None = None\n    created_at: datetime",
+        "detail": "apps.api.app.presentation.schemas.questions",
+        "documentation": {}
+    },
+    {
+        "label": "QuestionListQuery",
+        "kind": 6,
+        "importPath": "apps.api.app.presentation.schemas.questions",
+        "description": "apps.api.app.presentation.schemas.questions",
+        "peekOfCode": "class QuestionListQuery(BaseModel):\n    pool_type: PoolType | None = None\n    difficulty: Difficulty | None = None\n    tag: str | None = None\n    lesson_id: UUID | None = None\n    offset: int = 0\n    limit: int = 50",
+        "detail": "apps.api.app.presentation.schemas.questions",
+        "documentation": {}
+    },
+    {
+        "label": "Settings",
+        "kind": 6,
+        "importPath": "apps.api.app.config",
+        "description": "apps.api.app.config",
+        "peekOfCode": "class Settings(BaseSettings):\n    model_config = SettingsConfigDict(\n        env_file=_ENV_ROOT,\n        env_file_encoding=\"utf-8\",\n        extra=\"ignore\",\n    )\n    DATABASE_URL: str = \"\"\n    AUTH_MANAGE_BASE_URL: str = \"https://manage.dutai.site\"\n    MANAGE_AUTH_ME_PATH: str = \"/api/v1/auth/me\"\n    CORS_ORIGINS: str = \"http://localhost:3000,https://quiz.dutai.site\"",
+        "detail": "apps.api.app.config",
+        "documentation": {}
+    },
+    {
+        "label": "_API_DIR",
+        "kind": 5,
+        "importPath": "apps.api.app.config",
+        "description": "apps.api.app.config",
+        "peekOfCode": "_API_DIR = Path(__file__).resolve().parent.parent\n_REPO_ROOT = _API_DIR.parent.parent\n_ENV_ROOT = _REPO_ROOT / \".env\"\nclass Settings(BaseSettings):\n    model_config = SettingsConfigDict(\n        env_file=_ENV_ROOT,\n        env_file_encoding=\"utf-8\",\n        extra=\"ignore\",\n    )\n    DATABASE_URL: str = \"\"",
+        "detail": "apps.api.app.config",
+        "documentation": {}
+    },
+    {
+        "label": "_REPO_ROOT",
+        "kind": 5,
+        "importPath": "apps.api.app.config",
+        "description": "apps.api.app.config",
+        "peekOfCode": "_REPO_ROOT = _API_DIR.parent.parent\n_ENV_ROOT = _REPO_ROOT / \".env\"\nclass Settings(BaseSettings):\n    model_config = SettingsConfigDict(\n        env_file=_ENV_ROOT,\n        env_file_encoding=\"utf-8\",\n        extra=\"ignore\",\n    )\n    DATABASE_URL: str = \"\"\n    AUTH_MANAGE_BASE_URL: str = \"https://manage.dutai.site\"",
+        "detail": "apps.api.app.config",
+        "documentation": {}
+    },
+    {
+        "label": "_ENV_ROOT",
+        "kind": 5,
+        "importPath": "apps.api.app.config",
+        "description": "apps.api.app.config",
+        "peekOfCode": "_ENV_ROOT = _REPO_ROOT / \".env\"\nclass Settings(BaseSettings):\n    model_config = SettingsConfigDict(\n        env_file=_ENV_ROOT,\n        env_file_encoding=\"utf-8\",\n        extra=\"ignore\",\n    )\n    DATABASE_URL: str = \"\"\n    AUTH_MANAGE_BASE_URL: str = \"https://manage.dutai.site\"\n    MANAGE_AUTH_ME_PATH: str = \"/api/v1/auth/me\"",
+        "detail": "apps.api.app.config",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "kind": 5,
+        "importPath": "apps.api.app.config",
+        "description": "apps.api.app.config",
+        "peekOfCode": "settings = Settings()",
+        "detail": "apps.api.app.config",
+        "documentation": {}
+    },
+    {
+        "label": "app",
+        "kind": 5,
+        "importPath": "apps.api.app.main",
+        "description": "apps.api.app.main",
+        "peekOfCode": "app = FastAPI(title=\"dut-ai-quiz API\", lifespan=lifespan)\napp.add_middleware(\n    CORSMiddleware,\n    allow_origins=settings.CORS_ORIGINS.split(\",\"),\n    allow_credentials=True,\n    allow_methods=[\"*\"],\n    allow_headers=[\"*\"],\n)\napp.include_router(health.router)\napp.include_router(me.router, prefix=\"/api/v1\")",
+        "detail": "apps.api.app.main",
+        "documentation": {}
+    },
+    {
+        "label": "_Known",
+        "kind": 6,
+        "importPath": "apps.web.node_modules.flatted.python.flatted",
+        "description": "apps.web.node_modules.flatted.python.flatted",
+        "peekOfCode": "class _Known:\n    def __init__(self):\n        self.key = []\n        self.value = []\nclass _String:\n    def __init__(self, value):\n        self.value = value\ndef _array_keys(value):\n    keys = []\n    i = 0",
+        "detail": "apps.web.node_modules.flatted.python.flatted",
+        "documentation": {}
+    },
+    {
+        "label": "_String",
+        "kind": 6,
+        "importPath": "apps.web.node_modules.flatted.python.flatted",
+        "description": "apps.web.node_modules.flatted.python.flatted",
+        "peekOfCode": "class _String:\n    def __init__(self, value):\n        self.value = value\ndef _array_keys(value):\n    keys = []\n    i = 0\n    for _ in value:\n        keys.append(i)\n        i += 1\n    return keys",
+        "detail": "apps.web.node_modules.flatted.python.flatted",
+        "documentation": {}
+    },
+    {
+        "label": "parse",
+        "kind": 2,
+        "importPath": "apps.web.node_modules.flatted.python.flatted",
+        "description": "apps.web.node_modules.flatted.python.flatted",
+        "peekOfCode": "def parse(value, *args, **kwargs):\n    json = _json.loads(value, *args, **kwargs)\n    wrapped = []\n    for value in json:\n        wrapped.append(_wrap(value))\n    input = []\n    for value in wrapped:\n        if isinstance(value, _String):\n            input.append(value.value)\n        else:",
+        "detail": "apps.web.node_modules.flatted.python.flatted",
+        "documentation": {}
+    },
+    {
+        "label": "stringify",
+        "kind": 2,
+        "importPath": "apps.web.node_modules.flatted.python.flatted",
+        "description": "apps.web.node_modules.flatted.python.flatted",
+        "peekOfCode": "def stringify(value, *args, **kwargs):\n    known = _Known()\n    input = []\n    output = []\n    i = int(_index(known, input, value))\n    while i < len(input):\n        output.append(_transform(known, input, input[i]))\n        i += 1\n    return _json.dumps(output, *args, **kwargs)",
+        "detail": "apps.web.node_modules.flatted.python.flatted",
+        "documentation": {}
+    },
+    {
+        "label": "stringify",
+        "kind": 2,
+        "importPath": "apps.web.node_modules.flatted.python.test",
+        "description": "apps.web.node_modules.flatted.python.test",
+        "peekOfCode": "def stringify(value):\n    return _stringify(value, separators=(',', ':'))\nassert stringify([None, None]) == '[[null,null]]'\na = []\no = {}\nassert stringify(a) == '[[]]'\nassert stringify(o) == '[{}]'\na.append(a)\no['o'] = o\nassert stringify(a) == '[[\"0\"]]'",
+        "detail": "apps.web.node_modules.flatted.python.test",
+        "documentation": {}
+    },
+    {
+        "label": "a",
+        "kind": 5,
+        "importPath": "apps.web.node_modules.flatted.python.test",
+        "description": "apps.web.node_modules.flatted.python.test",
+        "peekOfCode": "a = []\no = {}\nassert stringify(a) == '[[]]'\nassert stringify(o) == '[{}]'\na.append(a)\no['o'] = o\nassert stringify(a) == '[[\"0\"]]'\nassert stringify(o) == '[{\"o\":\"0\"}]'\nb = parse(stringify(a))\nassert isinstance(b, list) and b[0] == b",
+        "detail": "apps.web.node_modules.flatted.python.test",
+        "documentation": {}
+    },
+    {
+        "label": "o",
+        "kind": 5,
+        "importPath": "apps.web.node_modules.flatted.python.test",
+        "description": "apps.web.node_modules.flatted.python.test",
+        "peekOfCode": "o = {}\nassert stringify(a) == '[[]]'\nassert stringify(o) == '[{}]'\na.append(a)\no['o'] = o\nassert stringify(a) == '[[\"0\"]]'\nassert stringify(o) == '[{\"o\":\"0\"}]'\nb = parse(stringify(a))\nassert isinstance(b, list) and b[0] == b\na.append(1)",
+        "detail": "apps.web.node_modules.flatted.python.test",
+        "documentation": {}
+    },
+    {
+        "label": "o['o']",
+        "kind": 5,
+        "importPath": "apps.web.node_modules.flatted.python.test",
+        "description": "apps.web.node_modules.flatted.python.test",
+        "peekOfCode": "o['o'] = o\nassert stringify(a) == '[[\"0\"]]'\nassert stringify(o) == '[{\"o\":\"0\"}]'\nb = parse(stringify(a))\nassert isinstance(b, list) and b[0] == b\na.append(1)\na.append('two')\na.append(True)\no['one'] = 1\no['two'] = 'two'",
+        "detail": "apps.web.node_modules.flatted.python.test",
+        "documentation": {}
+    },
+    {
+        "label": "b",
+        "kind": 5,
+        "importPath": "apps.web.node_modules.flatted.python.test",
+        "description": "apps.web.node_modules.flatted.python.test",
+        "peekOfCode": "b = parse(stringify(a))\nassert isinstance(b, list) and b[0] == b\na.append(1)\na.append('two')\na.append(True)\no['one'] = 1\no['two'] = 'two'\no['three'] = True\nassert stringify(a) == '[[\"0\",1,\"1\",true],\"two\"]'\nassert stringify(o) == '[{\"o\":\"0\",\"one\":1,\"two\":\"1\",\"three\":true},\"two\"]'",
+        "detail": "apps.web.node_modules.flatted.python.test",
+        "documentation": {}
+    },
+    {
+        "label": "o['one']",
+        "kind": 5,
+        "importPath": "apps.web.node_modules.flatted.python.test",
+        "description": "apps.web.node_modules.flatted.python.test",
+        "peekOfCode": "o['one'] = 1\no['two'] = 'two'\no['three'] = True\nassert stringify(a) == '[[\"0\",1,\"1\",true],\"two\"]'\nassert stringify(o) == '[{\"o\":\"0\",\"one\":1,\"two\":\"1\",\"three\":true},\"two\"]'\na.append(o)\no['a'] = a\nassert stringify(a) == '[[\"0\",1,\"1\",true,\"2\"],\"two\",{\"o\":\"2\",\"one\":1,\"two\":\"1\",\"three\":true,\"a\":\"0\"}]'\nassert stringify(o) == '[{\"o\":\"0\",\"one\":1,\"two\":\"1\",\"three\":true,\"a\":\"2\"},\"two\",[\"2\",1,\"1\",true,\"0\"]]'\na.append({'test': 'OK'})",
+        "detail": "apps.web.node_modules.flatted.python.test",
+        "documentation": {}
+    },
+    {
+        "label": "o['two']",
+        "kind": 5,
+        "importPath": "apps.web.node_modules.flatted.python.test",
+        "description": "apps.web.node_modules.flatted.python.test",
+        "peekOfCode": "o['two'] = 'two'\no['three'] = True\nassert stringify(a) == '[[\"0\",1,\"1\",true],\"two\"]'\nassert stringify(o) == '[{\"o\":\"0\",\"one\":1,\"two\":\"1\",\"three\":true},\"two\"]'\na.append(o)\no['a'] = a\nassert stringify(a) == '[[\"0\",1,\"1\",true,\"2\"],\"two\",{\"o\":\"2\",\"one\":1,\"two\":\"1\",\"three\":true,\"a\":\"0\"}]'\nassert stringify(o) == '[{\"o\":\"0\",\"one\":1,\"two\":\"1\",\"three\":true,\"a\":\"2\"},\"two\",[\"2\",1,\"1\",true,\"0\"]]'\na.append({'test': 'OK'})\na.append([1, 2, 3])",
+        "detail": "apps.web.node_modules.flatted.python.test",
+        "documentation": {}
+    },
+    {
+        "label": "o['three']",
+        "kind": 5,
+        "importPath": "apps.web.node_modules.flatted.python.test",
+        "description": "apps.web.node_modules.flatted.python.test",
+        "peekOfCode": "o['three'] = True\nassert stringify(a) == '[[\"0\",1,\"1\",true],\"two\"]'\nassert stringify(o) == '[{\"o\":\"0\",\"one\":1,\"two\":\"1\",\"three\":true},\"two\"]'\na.append(o)\no['a'] = a\nassert stringify(a) == '[[\"0\",1,\"1\",true,\"2\"],\"two\",{\"o\":\"2\",\"one\":1,\"two\":\"1\",\"three\":true,\"a\":\"0\"}]'\nassert stringify(o) == '[{\"o\":\"0\",\"one\":1,\"two\":\"1\",\"three\":true,\"a\":\"2\"},\"two\",[\"2\",1,\"1\",true,\"0\"]]'\na.append({'test': 'OK'})\na.append([1, 2, 3])\no['test'] = {'test': 'OK'}",
+        "detail": "apps.web.node_modules.flatted.python.test",
+        "documentation": {}
+    },
+    {
+        "label": "o['a']",
+        "kind": 5,
+        "importPath": "apps.web.node_modules.flatted.python.test",
+        "description": "apps.web.node_modules.flatted.python.test",
+        "peekOfCode": "o['a'] = a\nassert stringify(a) == '[[\"0\",1,\"1\",true,\"2\"],\"two\",{\"o\":\"2\",\"one\":1,\"two\":\"1\",\"three\":true,\"a\":\"0\"}]'\nassert stringify(o) == '[{\"o\":\"0\",\"one\":1,\"two\":\"1\",\"three\":true,\"a\":\"2\"},\"two\",[\"2\",1,\"1\",true,\"0\"]]'\na.append({'test': 'OK'})\na.append([1, 2, 3])\no['test'] = {'test': 'OK'}\no['array'] = [1, 2, 3]\nassert stringify(a) == '[[\"0\",1,\"1\",true,\"2\",\"3\",\"4\"],\"two\",{\"o\":\"2\",\"one\":1,\"two\":\"1\",\"three\":true,\"a\":\"0\",\"test\":\"3\",\"array\":\"4\"},{\"test\":\"5\"},[1,2,3],\"OK\"]'\nassert stringify(o) == '[{\"o\":\"0\",\"one\":1,\"two\":\"1\",\"three\":true,\"a\":\"2\",\"test\":\"3\",\"array\":\"4\"},\"two\",[\"2\",1,\"1\",true,\"0\",\"3\",\"4\"],{\"test\":\"5\"},[1,2,3],\"OK\"]'\na2 = parse(stringify(a));",
+        "detail": "apps.web.node_modules.flatted.python.test",
+        "documentation": {}
+    },
+    {
+        "label": "o['test']",
+        "kind": 5,
+        "importPath": "apps.web.node_modules.flatted.python.test",
+        "description": "apps.web.node_modules.flatted.python.test",
+        "peekOfCode": "o['test'] = {'test': 'OK'}\no['array'] = [1, 2, 3]\nassert stringify(a) == '[[\"0\",1,\"1\",true,\"2\",\"3\",\"4\"],\"two\",{\"o\":\"2\",\"one\":1,\"two\":\"1\",\"three\":true,\"a\":\"0\",\"test\":\"3\",\"array\":\"4\"},{\"test\":\"5\"},[1,2,3],\"OK\"]'\nassert stringify(o) == '[{\"o\":\"0\",\"one\":1,\"two\":\"1\",\"three\":true,\"a\":\"2\",\"test\":\"3\",\"array\":\"4\"},\"two\",[\"2\",1,\"1\",true,\"0\",\"3\",\"4\"],{\"test\":\"5\"},[1,2,3],\"OK\"]'\na2 = parse(stringify(a));\no2 = parse(stringify(o));\nassert a2[0] == a2\nassert o2['o'] == o2\nassert a2[1] == 1 and a2[2] == 'two' and a2[3] == True and isinstance(a2[4], dict)\nassert a2[4] == a2[4]['o'] and a2 == a2[4]['o']['a']",
+        "detail": "apps.web.node_modules.flatted.python.test",
+        "documentation": {}
+    },
+    {
+        "label": "o['array']",
+        "kind": 5,
+        "importPath": "apps.web.node_modules.flatted.python.test",
+        "description": "apps.web.node_modules.flatted.python.test",
+        "peekOfCode": "o['array'] = [1, 2, 3]\nassert stringify(a) == '[[\"0\",1,\"1\",true,\"2\",\"3\",\"4\"],\"two\",{\"o\":\"2\",\"one\":1,\"two\":\"1\",\"three\":true,\"a\":\"0\",\"test\":\"3\",\"array\":\"4\"},{\"test\":\"5\"},[1,2,3],\"OK\"]'\nassert stringify(o) == '[{\"o\":\"0\",\"one\":1,\"two\":\"1\",\"three\":true,\"a\":\"2\",\"test\":\"3\",\"array\":\"4\"},\"two\",[\"2\",1,\"1\",true,\"0\",\"3\",\"4\"],{\"test\":\"5\"},[1,2,3],\"OK\"]'\na2 = parse(stringify(a));\no2 = parse(stringify(o));\nassert a2[0] == a2\nassert o2['o'] == o2\nassert a2[1] == 1 and a2[2] == 'two' and a2[3] == True and isinstance(a2[4], dict)\nassert a2[4] == a2[4]['o'] and a2 == a2[4]['o']['a']\nstr = parse('[{\"prop\":\"1\",\"a\":\"2\",\"b\":\"3\"},{\"value\":123},[\"4\",\"5\"],{\"e\":\"6\",\"t\":\"7\",\"p\":4},{},{\"b\":\"8\"},\"f\",{\"a\":\"9\"},[\"10\"],\"sup\",{\"a\":1,\"d\":2,\"c\":\"7\",\"z\":\"11\",\"h\":1},{\"g\":2,\"a\":\"7\",\"b\":\"12\",\"f\":6},{\"r\":4,\"u\":\"7\",\"c\":5}]')",
+        "detail": "apps.web.node_modules.flatted.python.test",
+        "documentation": {}
+    },
+    {
+        "label": "a2",
+        "kind": 5,
+        "importPath": "apps.web.node_modules.flatted.python.test",
+        "description": "apps.web.node_modules.flatted.python.test",
+        "peekOfCode": "a2 = parse(stringify(a));\no2 = parse(stringify(o));\nassert a2[0] == a2\nassert o2['o'] == o2\nassert a2[1] == 1 and a2[2] == 'two' and a2[3] == True and isinstance(a2[4], dict)\nassert a2[4] == a2[4]['o'] and a2 == a2[4]['o']['a']\nstr = parse('[{\"prop\":\"1\",\"a\":\"2\",\"b\":\"3\"},{\"value\":123},[\"4\",\"5\"],{\"e\":\"6\",\"t\":\"7\",\"p\":4},{},{\"b\":\"8\"},\"f\",{\"a\":\"9\"},[\"10\"],\"sup\",{\"a\":1,\"d\":2,\"c\":\"7\",\"z\":\"11\",\"h\":1},{\"g\":2,\"a\":\"7\",\"b\":\"12\",\"f\":6},{\"r\":4,\"u\":\"7\",\"c\":5}]')\nassert str['b']['t']['a'] == 'sup' and str['a'][1]['b'][0]['c'] == str['b']['t']\noo = parse('[{\"a\":\"1\",\"b\":\"0\",\"c\":\"2\"},{\"aa\":\"3\"},{\"ca\":\"4\",\"cb\":\"5\",\"cc\":\"6\",\"cd\":\"7\",\"ce\":\"8\",\"cf\":\"9\"},{\"aaa\":\"10\"},{\"caa\":\"4\"},{\"cba\":\"5\"},{\"cca\":\"2\"},{\"cda\":\"4\"},\"value2\",\"value3\",\"value1\"]');\nassert oo['a']['aa']['aaa'] == 'value1' and oo == oo['b'] and oo['c']['ca']['caa'] == oo['c']['ca']",
+        "detail": "apps.web.node_modules.flatted.python.test",
+        "documentation": {}
+    },
+    {
+        "label": "o2",
+        "kind": 5,
+        "importPath": "apps.web.node_modules.flatted.python.test",
+        "description": "apps.web.node_modules.flatted.python.test",
+        "peekOfCode": "o2 = parse(stringify(o));\nassert a2[0] == a2\nassert o2['o'] == o2\nassert a2[1] == 1 and a2[2] == 'two' and a2[3] == True and isinstance(a2[4], dict)\nassert a2[4] == a2[4]['o'] and a2 == a2[4]['o']['a']\nstr = parse('[{\"prop\":\"1\",\"a\":\"2\",\"b\":\"3\"},{\"value\":123},[\"4\",\"5\"],{\"e\":\"6\",\"t\":\"7\",\"p\":4},{},{\"b\":\"8\"},\"f\",{\"a\":\"9\"},[\"10\"],\"sup\",{\"a\":1,\"d\":2,\"c\":\"7\",\"z\":\"11\",\"h\":1},{\"g\":2,\"a\":\"7\",\"b\":\"12\",\"f\":6},{\"r\":4,\"u\":\"7\",\"c\":5}]')\nassert str['b']['t']['a'] == 'sup' and str['a'][1]['b'][0]['c'] == str['b']['t']\noo = parse('[{\"a\":\"1\",\"b\":\"0\",\"c\":\"2\"},{\"aa\":\"3\"},{\"ca\":\"4\",\"cb\":\"5\",\"cc\":\"6\",\"cd\":\"7\",\"ce\":\"8\",\"cf\":\"9\"},{\"aaa\":\"10\"},{\"caa\":\"4\"},{\"cba\":\"5\"},{\"cca\":\"2\"},{\"cda\":\"4\"},\"value2\",\"value3\",\"value1\"]');\nassert oo['a']['aa']['aaa'] == 'value1' and oo == oo['b'] and oo['c']['ca']['caa'] == oo['c']['ca']\nprint('OK')",
+        "detail": "apps.web.node_modules.flatted.python.test",
+        "documentation": {}
+    },
+    {
+        "label": "str",
+        "kind": 5,
+        "importPath": "apps.web.node_modules.flatted.python.test",
+        "description": "apps.web.node_modules.flatted.python.test",
+        "peekOfCode": "str = parse('[{\"prop\":\"1\",\"a\":\"2\",\"b\":\"3\"},{\"value\":123},[\"4\",\"5\"],{\"e\":\"6\",\"t\":\"7\",\"p\":4},{},{\"b\":\"8\"},\"f\",{\"a\":\"9\"},[\"10\"],\"sup\",{\"a\":1,\"d\":2,\"c\":\"7\",\"z\":\"11\",\"h\":1},{\"g\":2,\"a\":\"7\",\"b\":\"12\",\"f\":6},{\"r\":4,\"u\":\"7\",\"c\":5}]')\nassert str['b']['t']['a'] == 'sup' and str['a'][1]['b'][0]['c'] == str['b']['t']\noo = parse('[{\"a\":\"1\",\"b\":\"0\",\"c\":\"2\"},{\"aa\":\"3\"},{\"ca\":\"4\",\"cb\":\"5\",\"cc\":\"6\",\"cd\":\"7\",\"ce\":\"8\",\"cf\":\"9\"},{\"aaa\":\"10\"},{\"caa\":\"4\"},{\"cba\":\"5\"},{\"cca\":\"2\"},{\"cda\":\"4\"},\"value2\",\"value3\",\"value1\"]');\nassert oo['a']['aa']['aaa'] == 'value1' and oo == oo['b'] and oo['c']['ca']['caa'] == oo['c']['ca']\nprint('OK')",
+        "detail": "apps.web.node_modules.flatted.python.test",
+        "documentation": {}
+    },
+    {
+        "label": "oo",
+        "kind": 5,
+        "importPath": "apps.web.node_modules.flatted.python.test",
+        "description": "apps.web.node_modules.flatted.python.test",
+        "peekOfCode": "oo = parse('[{\"a\":\"1\",\"b\":\"0\",\"c\":\"2\"},{\"aa\":\"3\"},{\"ca\":\"4\",\"cb\":\"5\",\"cc\":\"6\",\"cd\":\"7\",\"ce\":\"8\",\"cf\":\"9\"},{\"aaa\":\"10\"},{\"caa\":\"4\"},{\"cba\":\"5\"},{\"cca\":\"2\"},{\"cda\":\"4\"},\"value2\",\"value3\",\"value1\"]');\nassert oo['a']['aa']['aaa'] == 'value1' and oo == oo['b'] and oo['c']['ca']['caa'] == oo['c']['ca']\nprint('OK')",
+        "detail": "apps.web.node_modules.flatted.python.test",
+        "documentation": {}
+    },
+    {
+        "label": "sfnt.USE_ZOPFLI",
+        "kind": 5,
+        "importPath": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "description": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "peekOfCode": "sfnt.USE_ZOPFLI = True\nif len(sys.argv) < 2:\n    print(\"Usage: %s <font file>\" % sys.argv[0])\n    sys.exit(1)\nfont_file = sys.argv[1]\nfont_name = os.path.splitext(os.path.basename(font_file))[0]\nfont = TTFont(font_file, recalcBBoxes=False, recalcTimestamp=False)\n# fix timestamp to the epoch\nfont['head'].created = 0\nfont['head'].modified = 0",
+        "detail": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "documentation": {}
+    },
+    {
+        "label": "font_file",
+        "kind": 5,
+        "importPath": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "description": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "peekOfCode": "font_file = sys.argv[1]\nfont_name = os.path.splitext(os.path.basename(font_file))[0]\nfont = TTFont(font_file, recalcBBoxes=False, recalcTimestamp=False)\n# fix timestamp to the epoch\nfont['head'].created = 0\nfont['head'].modified = 0\n# remove fontforge timestamps\nif 'FFTM' in font:\n    del font['FFTM']\n# remove redundant GDEF table",
+        "detail": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "documentation": {}
+    },
+    {
+        "label": "font_name",
+        "kind": 5,
+        "importPath": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "description": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "peekOfCode": "font_name = os.path.splitext(os.path.basename(font_file))[0]\nfont = TTFont(font_file, recalcBBoxes=False, recalcTimestamp=False)\n# fix timestamp to the epoch\nfont['head'].created = 0\nfont['head'].modified = 0\n# remove fontforge timestamps\nif 'FFTM' in font:\n    del font['FFTM']\n# remove redundant GDEF table\nif 'GDEF' in font:",
+        "detail": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "documentation": {}
+    },
+    {
+        "label": "font",
+        "kind": 5,
+        "importPath": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "description": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "peekOfCode": "font = TTFont(font_file, recalcBBoxes=False, recalcTimestamp=False)\n# fix timestamp to the epoch\nfont['head'].created = 0\nfont['head'].modified = 0\n# remove fontforge timestamps\nif 'FFTM' in font:\n    del font['FFTM']\n# remove redundant GDEF table\nif 'GDEF' in font:\n    del font['GDEF']",
+        "detail": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "documentation": {}
+    },
+    {
+        "label": "font['head'].created",
+        "kind": 5,
+        "importPath": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "description": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "peekOfCode": "font['head'].created = 0\nfont['head'].modified = 0\n# remove fontforge timestamps\nif 'FFTM' in font:\n    del font['FFTM']\n# remove redundant GDEF table\nif 'GDEF' in font:\n    del font['GDEF']\n# remove Macintosh table\n# https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6cmap.html",
+        "detail": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "documentation": {}
+    },
+    {
+        "label": "font['head'].modified",
+        "kind": 5,
+        "importPath": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "description": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "peekOfCode": "font['head'].modified = 0\n# remove fontforge timestamps\nif 'FFTM' in font:\n    del font['FFTM']\n# remove redundant GDEF table\nif 'GDEF' in font:\n    del font['GDEF']\n# remove Macintosh table\n# https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6cmap.html\nfont['name'].names = [record for record in font['name'].names if record.platformID != 1]",
+        "detail": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "documentation": {}
+    },
+    {
+        "label": "font['name'].names",
+        "kind": 5,
+        "importPath": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "description": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "peekOfCode": "font['name'].names = [record for record in font['name'].names if record.platformID != 1]\nfont['cmap'].tables = [table for table in font['cmap'].tables if table.platformID != 1]\n# fix OS/2 and hhea metrics\nglyf = font['glyf']\nascent = int(max(glyf[c].yMax for c in font.getGlyphOrder() if hasattr(glyf[c], \"yMax\")))\ndescent = -int(min(glyf[c].yMin for c in font.getGlyphOrder() if hasattr(glyf[c], \"yMin\")))\nfont['OS/2'].usWinAscent = ascent\nfont['OS/2'].usWinDescent = descent\nfont['hhea'].ascent = ascent\nfont['hhea'].descent = -descent",
+        "detail": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "documentation": {}
+    },
+    {
+        "label": "font['cmap'].tables",
+        "kind": 5,
+        "importPath": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "description": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "peekOfCode": "font['cmap'].tables = [table for table in font['cmap'].tables if table.platformID != 1]\n# fix OS/2 and hhea metrics\nglyf = font['glyf']\nascent = int(max(glyf[c].yMax for c in font.getGlyphOrder() if hasattr(glyf[c], \"yMax\")))\ndescent = -int(min(glyf[c].yMin for c in font.getGlyphOrder() if hasattr(glyf[c], \"yMin\")))\nfont['OS/2'].usWinAscent = ascent\nfont['OS/2'].usWinDescent = descent\nfont['hhea'].ascent = ascent\nfont['hhea'].descent = -descent\n# save TTF",
+        "detail": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "documentation": {}
+    },
+    {
+        "label": "glyf",
+        "kind": 5,
+        "importPath": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "description": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "peekOfCode": "glyf = font['glyf']\nascent = int(max(glyf[c].yMax for c in font.getGlyphOrder() if hasattr(glyf[c], \"yMax\")))\ndescent = -int(min(glyf[c].yMin for c in font.getGlyphOrder() if hasattr(glyf[c], \"yMin\")))\nfont['OS/2'].usWinAscent = ascent\nfont['OS/2'].usWinDescent = descent\nfont['hhea'].ascent = ascent\nfont['hhea'].descent = -descent\n# save TTF\nfont.save(font_file, reorderTables=None)\n# save WOFF",
+        "detail": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "documentation": {}
+    },
+    {
+        "label": "ascent",
+        "kind": 5,
+        "importPath": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "description": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "peekOfCode": "ascent = int(max(glyf[c].yMax for c in font.getGlyphOrder() if hasattr(glyf[c], \"yMax\")))\ndescent = -int(min(glyf[c].yMin for c in font.getGlyphOrder() if hasattr(glyf[c], \"yMin\")))\nfont['OS/2'].usWinAscent = ascent\nfont['OS/2'].usWinDescent = descent\nfont['hhea'].ascent = ascent\nfont['hhea'].descent = -descent\n# save TTF\nfont.save(font_file, reorderTables=None)\n# save WOFF\nfont.flavor = 'woff'",
+        "detail": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "documentation": {}
+    },
+    {
+        "label": "descent",
+        "kind": 5,
+        "importPath": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "description": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "peekOfCode": "descent = -int(min(glyf[c].yMin for c in font.getGlyphOrder() if hasattr(glyf[c], \"yMin\")))\nfont['OS/2'].usWinAscent = ascent\nfont['OS/2'].usWinDescent = descent\nfont['hhea'].ascent = ascent\nfont['hhea'].descent = -descent\n# save TTF\nfont.save(font_file, reorderTables=None)\n# save WOFF\nfont.flavor = 'woff'\nfont.save(os.path.join('woff', font_name + '.woff'), reorderTables=None)",
+        "detail": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "documentation": {}
+    },
+    {
+        "label": "font['OS/2'].usWinAscent",
+        "kind": 5,
+        "importPath": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "description": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "peekOfCode": "font['OS/2'].usWinAscent = ascent\nfont['OS/2'].usWinDescent = descent\nfont['hhea'].ascent = ascent\nfont['hhea'].descent = -descent\n# save TTF\nfont.save(font_file, reorderTables=None)\n# save WOFF\nfont.flavor = 'woff'\nfont.save(os.path.join('woff', font_name + '.woff'), reorderTables=None)\n# save WOFF2",
+        "detail": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "documentation": {}
+    },
+    {
+        "label": "font['OS/2'].usWinDescent",
+        "kind": 5,
+        "importPath": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "description": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "peekOfCode": "font['OS/2'].usWinDescent = descent\nfont['hhea'].ascent = ascent\nfont['hhea'].descent = -descent\n# save TTF\nfont.save(font_file, reorderTables=None)\n# save WOFF\nfont.flavor = 'woff'\nfont.save(os.path.join('woff', font_name + '.woff'), reorderTables=None)\n# save WOFF2\nfont.flavor = 'woff2'",
+        "detail": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "documentation": {}
+    },
+    {
+        "label": "font['hhea'].ascent",
+        "kind": 5,
+        "importPath": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "description": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "peekOfCode": "font['hhea'].ascent = ascent\nfont['hhea'].descent = -descent\n# save TTF\nfont.save(font_file, reorderTables=None)\n# save WOFF\nfont.flavor = 'woff'\nfont.save(os.path.join('woff', font_name + '.woff'), reorderTables=None)\n# save WOFF2\nfont.flavor = 'woff2'\nfont.save(os.path.join('woff2', font_name + '.woff2'), reorderTables=None)",
+        "detail": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "documentation": {}
+    },
+    {
+        "label": "font['hhea'].descent",
+        "kind": 5,
+        "importPath": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "description": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "peekOfCode": "font['hhea'].descent = -descent\n# save TTF\nfont.save(font_file, reorderTables=None)\n# save WOFF\nfont.flavor = 'woff'\nfont.save(os.path.join('woff', font_name + '.woff'), reorderTables=None)\n# save WOFF2\nfont.flavor = 'woff2'\nfont.save(os.path.join('woff2', font_name + '.woff2'), reorderTables=None)",
+        "detail": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "documentation": {}
+    },
+    {
+        "label": "font.flavor",
+        "kind": 5,
+        "importPath": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "description": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "peekOfCode": "font.flavor = 'woff'\nfont.save(os.path.join('woff', font_name + '.woff'), reorderTables=None)\n# save WOFF2\nfont.flavor = 'woff2'\nfont.save(os.path.join('woff2', font_name + '.woff2'), reorderTables=None)",
+        "detail": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "documentation": {}
+    },
+    {
+        "label": "font.flavor",
+        "kind": 5,
+        "importPath": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "description": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "peekOfCode": "font.flavor = 'woff2'\nfont.save(os.path.join('woff2', font_name + '.woff2'), reorderTables=None)",
+        "detail": "apps.web.node_modules.katex.src.fonts.generate_fonts",
+        "documentation": {}
+    },
+    {
+        "label": "find_font_path",
+        "kind": 2,
+        "importPath": "apps.web.node_modules.katex.src.metrics.extract_tfms",
+        "description": "apps.web.node_modules.katex.src.metrics.extract_tfms",
+        "peekOfCode": "def find_font_path(font_name):\n    try:\n        font_path = subprocess.check_output(['kpsewhich', font_name])\n    except OSError:\n        raise RuntimeError(\"Couldn't find kpsewhich program, make sure you\" +\n                           \" have TeX installed\")\n    except subprocess.CalledProcessError:\n        raise RuntimeError(\"Couldn't find font metrics: '%s'\" % font_name)\n    return font_path.strip()\ndef main():",
+        "detail": "apps.web.node_modules.katex.src.metrics.extract_tfms",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "apps.web.node_modules.katex.src.metrics.extract_tfms",
+        "description": "apps.web.node_modules.katex.src.metrics.extract_tfms",
+        "peekOfCode": "def main():\n    mapping = json.load(sys.stdin)\n    fonts = [\n        'cmbsy10.tfm',\n        'cmbx10.tfm',\n        'cmbxti10.tfm',\n        'cmex10.tfm',\n        'cmmi10.tfm',\n        'cmmib10.tfm',\n        'cmr10.tfm',",
+        "detail": "apps.web.node_modules.katex.src.metrics.extract_tfms",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "apps.web.node_modules.katex.src.metrics.extract_ttfs",
+        "description": "apps.web.node_modules.katex.src.metrics.extract_ttfs",
+        "peekOfCode": "def main():\n    start_json = json.load(sys.stdin)\n    for font in start_json:\n        fontInfo = TTFont(\"../../fonts/KaTeX_\" + font + \".ttf\")\n        glyf = fontInfo[\"glyf\"]\n        widths = fontInfo.getGlyphSet()\n        unitsPerEm = float(fontInfo[\"head\"].unitsPerEm)\n        # We keep ALL Unicode cmaps, not just fontInfo[\"cmap\"].getcmap(3, 1).\n        # This is playing it extra safe, since it reports inconsistencies.\n        # Platform 0 is Unicode, platform 3 is Windows. For platform 3,",
+        "detail": "apps.web.node_modules.katex.src.metrics.extract_ttfs",
+        "documentation": {}
+    },
+    {
+        "label": "metrics_to_extract",
+        "kind": 5,
+        "importPath": "apps.web.node_modules.katex.src.metrics.extract_ttfs",
+        "description": "apps.web.node_modules.katex.src.metrics.extract_ttfs",
+        "peekOfCode": "metrics_to_extract = {\n    # Font name\n    \"AMS-Regular\": {\n        u\"\\u21e2\": None,  # \\dashrightarrow\n        u\"\\u21e0\": None,  # \\dashleftarrow\n    },\n    \"Main-Regular\": {\n        # Skew and italic metrics can't be easily parsed from the TTF. Instead,\n        # we map each character to a \"base character\", which is a character\n        # from the same font with correct italic and skew metrics. A character",
+        "detail": "apps.web.node_modules.katex.src.metrics.extract_ttfs",
+        "documentation": {}
+    },
+    {
+        "label": "props",
+        "kind": 5,
+        "importPath": "apps.web.node_modules.katex.src.metrics.format_json",
+        "description": "apps.web.node_modules.katex.src.metrics.format_json",
+        "peekOfCode": "props = ['depth', 'height', 'italic', 'skew']\nif len(sys.argv) > 1:\n    if sys.argv[1] == '--width':\n        props.append('width')\ndata = json.load(sys.stdin)\nsys.stdout.write(\n  \"// This file is GENERATED by buildMetrics.sh. DO NOT MODIFY.\\n\")\nsep = \"export default {\\n    \"\nfor font in sorted(data):\n    sys.stdout.write(sep + json.dumps(font))",
+        "detail": "apps.web.node_modules.katex.src.metrics.format_json",
+        "documentation": {}
+    },
+    {
+        "label": "data",
+        "kind": 5,
+        "importPath": "apps.web.node_modules.katex.src.metrics.format_json",
+        "description": "apps.web.node_modules.katex.src.metrics.format_json",
+        "peekOfCode": "data = json.load(sys.stdin)\nsys.stdout.write(\n  \"// This file is GENERATED by buildMetrics.sh. DO NOT MODIFY.\\n\")\nsep = \"export default {\\n    \"\nfor font in sorted(data):\n    sys.stdout.write(sep + json.dumps(font))\n    sep = \": {\\n        \"\n    for glyph in sorted(data[font], key=int):\n        sys.stdout.write(sep + json.dumps(glyph) + \": \")\n        values = [value if value != 0.0 else 0 for value in",
+        "detail": "apps.web.node_modules.katex.src.metrics.format_json",
+        "documentation": {}
+    },
+    {
+        "label": "sep",
+        "kind": 5,
+        "importPath": "apps.web.node_modules.katex.src.metrics.format_json",
+        "description": "apps.web.node_modules.katex.src.metrics.format_json",
+        "peekOfCode": "sep = \"export default {\\n    \"\nfor font in sorted(data):\n    sys.stdout.write(sep + json.dumps(font))\n    sep = \": {\\n        \"\n    for glyph in sorted(data[font], key=int):\n        sys.stdout.write(sep + json.dumps(glyph) + \": \")\n        values = [value if value != 0.0 else 0 for value in\n                  [data[font][glyph][key] for key in props]]\n        sys.stdout.write(json.dumps(values))\n        sep = \",\\n        \"",
+        "detail": "apps.web.node_modules.katex.src.metrics.format_json",
+        "documentation": {}
+    },
+    {
+        "label": "CharInfoWord",
+        "kind": 6,
+        "importPath": "apps.web.node_modules.katex.src.metrics.parse_tfm",
+        "description": "apps.web.node_modules.katex.src.metrics.parse_tfm",
+        "peekOfCode": "class CharInfoWord(object):\n    def __init__(self, word):\n        b1, b2, b3, b4 = (word >> 24,\n                          (word & 0xff0000) >> 16,\n                          (word & 0xff00) >> 8,\n                          word & 0xff)\n        self.width_index = b1\n        self.height_index = b2 >> 4\n        self.depth_index = b2 & 0x0f\n        self.italic_index = (b3 & 0b11111100) >> 2",
+        "detail": "apps.web.node_modules.katex.src.metrics.parse_tfm",
+        "documentation": {}
+    },
+    {
+        "label": "LigKernProgram",
+        "kind": 6,
+        "importPath": "apps.web.node_modules.katex.src.metrics.parse_tfm",
+        "description": "apps.web.node_modules.katex.src.metrics.parse_tfm",
+        "peekOfCode": "class LigKernProgram(object):\n    def __init__(self, program):\n        self.program = program\n    def execute(self, start, next_char):\n        curr_instruction = start\n        while True:\n            instruction = self.program[curr_instruction]\n            (skip, inst_next_char, op, remainder) = instruction\n            if inst_next_char == next_char:\n                if op < 128:",
+        "detail": "apps.web.node_modules.katex.src.metrics.parse_tfm",
+        "documentation": {}
+    },
+    {
+        "label": "TfmCharMetrics",
+        "kind": 6,
+        "importPath": "apps.web.node_modules.katex.src.metrics.parse_tfm",
+        "description": "apps.web.node_modules.katex.src.metrics.parse_tfm",
+        "peekOfCode": "class TfmCharMetrics(object):\n    def __init__(self, width, height, depth, italic, kern_table):\n        self.width = width\n        self.height = height\n        self.depth = depth\n        self.italic_correction = italic\n        self.kern_table = kern_table\nclass TfmFile(object):\n    def __init__(self, start_char, end_char, char_info, width_table,\n                 height_table, depth_table, italic_table, ligkern_table,",
+        "detail": "apps.web.node_modules.katex.src.metrics.parse_tfm",
+        "documentation": {}
+    },
+    {
+        "label": "TfmFile",
+        "kind": 6,
+        "importPath": "apps.web.node_modules.katex.src.metrics.parse_tfm",
+        "description": "apps.web.node_modules.katex.src.metrics.parse_tfm",
+        "peekOfCode": "class TfmFile(object):\n    def __init__(self, start_char, end_char, char_info, width_table,\n                 height_table, depth_table, italic_table, ligkern_table,\n                 kern_table):\n        self.start_char = start_char\n        self.end_char = end_char\n        self.char_info = char_info\n        self.width_table = width_table\n        self.height_table = height_table\n        self.depth_table = depth_table",
+        "detail": "apps.web.node_modules.katex.src.metrics.parse_tfm",
+        "documentation": {}
+    },
+    {
+        "label": "TfmReader",
+        "kind": 6,
+        "importPath": "apps.web.node_modules.katex.src.metrics.parse_tfm",
+        "description": "apps.web.node_modules.katex.src.metrics.parse_tfm",
+        "peekOfCode": "class TfmReader(object):\n    def __init__(self, f):\n        self.f = f\n    def read_byte(self):\n        return ord(self.f.read(1))\n    def read_halfword(self):\n        b1 = self.read_byte()\n        b2 = self.read_byte()\n        return (b1 << 8) | b2\n    def read_word(self):",
+        "detail": "apps.web.node_modules.katex.src.metrics.parse_tfm",
+        "documentation": {}
+    },
+    {
+        "label": "read_tfm_file",
+        "kind": 2,
+        "importPath": "apps.web.node_modules.katex.src.metrics.parse_tfm",
+        "description": "apps.web.node_modules.katex.src.metrics.parse_tfm",
+        "peekOfCode": "def read_tfm_file(file_name):\n    with open(file_name, 'rb') as f:\n        reader = TfmReader(f)\n        # file_size\n        reader.read_halfword()\n        header_size = reader.read_halfword()\n        start_char = reader.read_halfword()\n        end_char = reader.read_halfword()\n        width_table_size = reader.read_halfword()\n        height_table_size = reader.read_halfword()",
+        "detail": "apps.web.node_modules.katex.src.metrics.parse_tfm",
+        "documentation": {}
+    }
+]

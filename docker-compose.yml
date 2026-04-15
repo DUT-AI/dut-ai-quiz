@@ -2,21 +2,48 @@ services:
     postgres:
         image: postgres:16-alpine
         container_name: dut-ai-quiz-postgres
-        env_file:
-            - .env
+        environment:
+            - TZ=Asia/Ho_Chi_Minh
+            - POSTGRES_USER=${POSTGRES_USER:-postgres}
+            - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+            - POSTGRES_DB=${POSTGRES_DB:-dut_ai_quiz}
+        command: postgres -c timezone='Asia/Ho_Chi_Minh'
         ports:
-            - "${POSTGRES_PORT}:5432"
+            - "${POSTGRES_PORT:-5432}:5432"
         volumes:
             - pgdata:/var/lib/postgresql/data
         healthcheck:
-            test:
-                [
-                    "CMD-SHELL",
-                    "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}",
-                ]
+            test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
             interval: 5s
             timeout: 5s
             retries: 5
+
+    api:
+        build:
+            context: ./apps/api
+            dockerfile: Dockerfile
+        container_name: dut-ai-quiz-api
+        environment:
+            - TZ=Asia/Ho_Chi_Minh
+            - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-dut_ai_quiz}
+        ports:
+            - "8000:8000"
+        depends_on:
+            postgres:
+                condition: service_healthy
+
+    web:
+        build:
+            context: ./apps/web
+            dockerfile: Dockerfile
+        container_name: dut-ai-quiz-web
+        environment:
+            - TZ=Asia/Ho_Chi_Minh
+            - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+        ports:
+            - "3000:3000"
+        depends_on:
+            - api
 
 volumes:
     pgdata:

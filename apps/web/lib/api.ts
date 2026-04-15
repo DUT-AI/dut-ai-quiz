@@ -8,8 +8,8 @@ export async function apiFetch(
 ): Promise<Response> {
   const url = path.startsWith("http") ? path : `${API_BASE}${path}`;
   return fetch(url, {
-    ...init,
     credentials: "include",
+    ...init,
   });
 }
 
@@ -46,3 +46,74 @@ export function apiPatchJson<T>(path: string, body: unknown): Promise<T> {
     body: JSON.stringify(body),
   });
 }
+
+// Aliases for compatibility
+export const apiGet = apiJson;
+export const apiPost = apiPostJson;
+export const apiPatch = apiPatchJson;
+
+// Polyfill for apiClient backward compatibility
+export const apiClient = {
+  delete: async (path: string) => {
+    const res = await apiFetch(path, { method: "DELETE" });
+    if (!res.ok) {
+      let detail = res.statusText;
+      try {
+        const body = await res.json();
+        if (body?.detail) detail = String(body.detail);
+      } catch {
+        /* ignore */
+      }
+      throw new Error(detail || `HTTP ${res.status}`);
+    }
+    let data;
+    try {
+      data = await res.json();
+    } catch {
+      data = {};
+    }
+    return { data };
+  },
+  put: async (path: string, body?: any, options?: any) => {
+    const isJson =
+      body !== null &&
+      typeof body === "object" &&
+      !(typeof Blob !== "undefined" && body instanceof Blob);
+
+    const headers: Record<string, string> = { ...options?.headers };
+    if (isJson && !headers["Content-Type"]) {
+      headers["Content-Type"] = "application/json";
+    }
+
+    const init: RequestInit = {
+      method: "PUT",
+      headers,
+      body: isJson ? JSON.stringify(body) : body,
+    };
+
+    if (options?.withCredentials === false) {
+      init.credentials = "omit";
+    }
+
+    const res = await apiFetch(path, init);
+
+    if (!res.ok) {
+      let detail = res.statusText;
+      try {
+        const rspBody = await res.json();
+        if (rspBody?.detail) detail = String(rspBody.detail);
+      } catch {
+        /* ignore */
+      }
+      throw new Error(detail || `HTTP ${res.status}`);
+    }
+
+    let data;
+    try {
+      data = await res.json();
+    } catch {
+      data = {};
+    }
+    return { data };
+  },
+};

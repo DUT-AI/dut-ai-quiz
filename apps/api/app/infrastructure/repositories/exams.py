@@ -4,33 +4,54 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.domain.entities.exam import ExamEntity
 from app.infrastructure.persistence.models import Exam
-
 
 class ExamRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._s = session
 
-    async def get(self, exam_id: UUID) -> Exam | None:
+    async def get(self, exam_id: UUID) -> ExamEntity | None:
         r = await self._s.execute(select(Exam).where(Exam.id == exam_id))
-        return r.scalar_one_or_none()
+        model = r.scalar_one_or_none()
+        return model.to_entity() if model else None
 
-    async def list_for_teacher(self, user_id: int) -> list[Exam]:
+    async def list_for_teacher(self, user_id: int) -> list[ExamEntity]:
         r = await self._s.execute(select(Exam).where(Exam.created_by == user_id).order_by(Exam.title))
-        return list(r.scalars().all())
+        return [m.to_entity() for m in r.scalars().all()]
 
-    async def list_published_for_student(self, now: datetime) -> list[Exam]:
+    async def list_published_for_student(self, now: datetime) -> list[ExamEntity]:
         stmt = select(Exam).where(Exam.is_published.is_(True))
         stmt = stmt.where((Exam.start_time.is_(None)) | (Exam.start_time <= now))
         stmt = stmt.where((Exam.end_time.is_(None)) | (Exam.end_time >= now))
         r = await self._s.execute(stmt.order_by(Exam.title))
-        return list(r.scalars().all())
+        return [m.to_entity() for m in r.scalars().all()]
 
-    async def add(self, exam: Exam) -> Exam:
-        self._s.add(exam)
+    async def add(self, entity: ExamEntity) -> ExamEntity:
+        model = Exam.from_entity(entity)
+        self._s.add(model)
         await self._s.flush()
-        await self._s.refresh(exam)
-        return exam
+        await self._s.refresh(model)
+        return model.to_entity()
 
-    async def delete(self, exam: Exam) -> None:
-        await self._s.delete(exam)
+    async def update(self, entity: ExamEntity) -> ExamEntity:
+        r = await self._s.execute(select(Exam).where(Exam.id == entity.id))
+        model = r.scalar_one_or_none()
+        if model:
+            model.title = entity.title
+            model.description = entity.description
+            model.start_time = entity.start_time
+            model.end_time = entity.end_time
+            model.duration_minutes = entity.duration_minutes
+            model.max_attempts = entity.max_attempts
+            model.is_published = entity.is_published
+            await self._s.flush()
+            await self._s.refresh(model)
+            return model.to_entity()
+        raise ValueError("Exam not found")
+
+    async def delete(self, entity: ExamEntity) -> None:
+        r = await self._s.execute(select(Exam).where(Exam.id == entity.id))
+        model = r.scalar_one_or_none()
+        if model:
+            await self._s.delete(model)
