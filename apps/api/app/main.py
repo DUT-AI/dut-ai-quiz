@@ -7,6 +7,7 @@ from app.config import settings
 from app.infrastructure.di import setup_di, register_event_handlers
 from app.presentation.api.routers import (
     attempts,
+    auth,
     exams,
     health,
     leaderboard,
@@ -36,6 +37,7 @@ app.add_middleware(
 )
 
 app.include_router(health.router)
+app.include_router(auth.router, prefix="/api/v1")
 app.include_router(me.router, prefix="/api/v1")
 app.include_router(questions.router, prefix="/api/v1")
 app.include_router(exams.router, prefix="/api/v1")

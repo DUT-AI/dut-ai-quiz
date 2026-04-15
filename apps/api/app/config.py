@@ -7,7 +7,12 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://dutai:dutai@localhost:5432/quizdb"
     manage_base_url: str = "https://manage.dutai.site"
     manage_auth_me_path: str = "/api/v1/auth/me"
+    manage_login_path: str = "/api/v1/auth/login"
+    
     cors_origins: str = "http://localhost:3000,https://quiz.dutai.site"
+    
+    redis_url: str = "redis://localhost:6379/0"
+    auth_cache_ttl: int = 600  # 10 minutes
 
     api_host: str = "0.0.0.0"
     api_port: int = 8000

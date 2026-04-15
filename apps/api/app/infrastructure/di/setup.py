@@ -5,6 +5,7 @@ from app.infrastructure.di.database import DatabaseProvider
 from app.infrastructure.di.repositories import RepositoryProvider
 from app.infrastructure.di.use_cases import UseCaseProvider
 from app.infrastructure.di.bus import BusProvider
+from app.infrastructure.di.cache import CacheProvider
 from app.domain.events.bus import EventBus
 from app.domain.events.attempts import AttemptViolationEvent
 from app.application.handlers.attempt_handlers import AttemptViolationHandler
@@ -16,6 +17,7 @@ def setup_di(app):
         RepositoryProvider(),
         UseCaseProvider(),
         BusProvider(),
+        CacheProvider(),
     )
     
     # We'll use the app state to store the container if needed, 

@@ -36,6 +36,9 @@ from app.application.use_cases.practice.practice_use_case import (
     FinishPracticeSessionUseCase,
     ListPracticeHistoryUseCase,
 )
+from app.application.use_cases.auth.auth_use_case import ProxyLoginUseCase, LogoutUseCase
+from app.application.use_cases.me.me_use_case import GetProfileUseCase
+from app.infrastructure.cache.redis_client import ProfileCache
 
 class UseCaseProvider(Provider):
     create_exam_use_case = provide(CreateExamUseCase, scope=Scope.REQUEST)
@@ -79,3 +82,14 @@ class UseCaseProvider(Provider):
     patch_practice_answers_use_case = provide(PatchPracticeAnswersUseCase, scope=Scope.REQUEST)
     finish_practice_session_use_case = provide(FinishPracticeSessionUseCase, scope=Scope.REQUEST)
     list_practice_history_use_case = provide(ListPracticeHistoryUseCase, scope=Scope.REQUEST)
+
+    # auth & me
+    proxy_login_use_case = provide(ProxyLoginUseCase, scope=Scope.REQUEST)
+    
+    @provide(scope=Scope.REQUEST)
+    def logout_use_case(self, cache: ProfileCache) -> LogoutUseCase:
+        return LogoutUseCase(cache)
+
+    @provide(scope=Scope.REQUEST)
+    def get_profile_use_case(self, cache: ProfileCache) -> GetProfileUseCase:
+        return GetProfileUseCase(cache)
