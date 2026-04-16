@@ -94,6 +94,22 @@ class AttemptRepository:
         )
         return [m.to_entity() for m in r.scalars().all()]
 
+    async def list_all_for_exam(self, exam_id: UUID) -> list[AttemptEntity]:
+        r = await self._s.execute(
+            select(Attempt).where(Attempt.exam_id == exam_id).order_by(Attempt.started_at)
+        )
+        return [m.to_entity() for m in r.scalars().all()]
+
+    async def list_for_user(self, user_id: int) -> list[tuple[AttemptEntity, str]]:
+        from app.infrastructure.persistence.models import Exam
+        r = await self._s.execute(
+            select(Attempt, Exam.title)
+            .join(Exam, Attempt.exam_id == Exam.id)
+            .where(Attempt.user_id == user_id)
+            .order_by(Attempt.started_at.desc())
+        )
+        return [(row[0].to_entity(), str(row[1])) for row in r.all()]
+
     async def leaderboard_best_per_user(self, exam_id: UUID, limit: int = 100) -> list[tuple[int, float]]:
         r = await self._s.execute(
             select(Attempt.user_id, func.max(Attempt.score))
@@ -107,6 +123,29 @@ class AttemptRepository:
             .limit(limit)
         )
         return [(int(uid), float(sc)) for uid, sc in r.all()]
+
+    async def list_completed_ids_by_question_id(self, question_id: UUID) -> list[UUID]:
+        r = await self._s.execute(
+            select(Attempt.id)
+            .join(AttemptAnswer, Attempt.id == AttemptAnswer.attempt_id)
+            .where(
+                AttemptAnswer.question_id == question_id,
+                Attempt.status == AttemptStatus.COMPLETED
+            )
+            .distinct()
+        )
+        return [UUID(str(row)) for row in r.scalars().all()]
+
+    async def list_all_answers_for_exam(self, exam_id: UUID) -> list[AttemptAnswerEntity]:
+        r = await self._s.execute(
+            select(AttemptAnswer)
+            .join(Attempt, Attempt.id == AttemptAnswer.attempt_id)
+            .where(
+                Attempt.exam_id == exam_id,
+                Attempt.status == AttemptStatus.COMPLETED
+            )
+        )
+        return [m.to_entity() for m in r.scalars().all()]
 
 
 class AttemptAnswerRepository:

@@ -4,7 +4,8 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities.question import QuestionEntity
-from app.infrastructure.persistence.models import Difficulty, PoolType, Question
+from app.infrastructure.persistence.models import PoolType, Question
+
 
 class QuestionRepository:
     def __init__(self, session: AsyncSession) -> None:
@@ -19,7 +20,7 @@ class QuestionRepository:
         self,
         *,
         pool_type: PoolType | None = None,
-        difficulty: Difficulty | None = None,
+        lesson_id: UUID | None = None,
         tag: str | None = None,
         offset: int = 0,
         limit: int = 50,
@@ -27,11 +28,15 @@ class QuestionRepository:
         stmt = select(Question)
         if pool_type is not None:
             stmt = stmt.where(Question.pool_type == pool_type)
-        if difficulty is not None:
-            stmt = stmt.where(Question.difficulty == difficulty)
+        if lesson_id:
+            stmt = stmt.where(Question.lesson_id == lesson_id)
         if tag:
             stmt = stmt.where(func.array_position(Question.tags, tag).isnot(None))
-        stmt = stmt.offset(offset).limit(limit).order_by(Question.created_at.desc())
+        stmt = (
+            stmt.offset(offset)
+            .limit(limit)
+            .order_by(Question.created_at.asc(), Question.id.asc())
+        )
         r = await self._s.execute(stmt)
         return [m.to_entity() for m in r.scalars().all()]
 
@@ -42,6 +47,12 @@ class QuestionRepository:
         await self._s.refresh(model)
         return model.to_entity()
 
+    async def add_bulk(self, entities: list[QuestionEntity]) -> list[QuestionEntity]:
+        models = [Question.from_entity(e) for e in entities]
+        self._s.add_all(models)
+        await self._s.flush()
+        return [m.to_entity() for m in models]
+
     async def update(self, entity: QuestionEntity) -> QuestionEntity:
         r = await self._s.execute(select(Question).where(Question.id == entity.id))
         model = r.scalar_one_or_none()
@@ -50,7 +61,7 @@ class QuestionRepository:
             model.content = entity.content
             model.options = entity.options
             model.solution = entity.solution
-            model.difficulty = entity.difficulty
+            model.lesson_id = entity.lesson_id
             model.tags = entity.tags
             await self._s.flush()
             await self._s.refresh(model)

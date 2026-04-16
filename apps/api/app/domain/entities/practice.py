@@ -2,7 +2,7 @@ import dataclasses
 from datetime import datetime
 from typing import Any
 from uuid import UUID
-from app.infrastructure.persistence.models import PracticeSessionStatus, Difficulty
+from app.infrastructure.persistence.models import PracticeSessionStatus
 
 @dataclasses.dataclass
 class PracticeSessionEntity:
@@ -13,5 +13,4 @@ class PracticeSessionEntity:
     status: PracticeSessionStatus
     snapshot: dict[str, Any] | None
     tags_filter: list[str]
-    difficulty_filter: Difficulty | None
     question_limit: int

@@ -11,10 +11,17 @@ from app.application.use_cases.attempts.attempt_use_case import (
     ListExamAttemptsUseCase,
     PatchAttemptAnswersUseCase,
     RecordFocusEventUseCase,
+    ReviewAttemptUseCase,
 )
 from app.application.use_cases.exams.exam_use_case import GetExamUseCase
-from app.presentation.api.deps import StudentUser, TeacherUser
-from app.presentation.schemas.attempts import AttemptAnswersPatch, AttemptOut, StartAttemptOut
+from app.presentation.api.deps import StudentUser, TeacherUser, CurrentUser
+from app.presentation.schemas.attempts import (
+    AttemptAnswersPatch,
+    AttemptOut,
+    StartAttemptOut,
+    AttemptAnswerOut,
+)
+from app.presentation.schemas.questions import QuestionOut
 from app.presentation.schemas.common import FocusEventIn
 
 router = APIRouter(tags=["attempts"])
@@ -23,7 +30,7 @@ router = APIRouter(tags=["attempts"])
 @router.post("/exams/{exam_id}/attempts", response_model=StartAttemptOut)
 @inject
 async def start_attempt_route(
-    user: StudentUser,
+    user: CurrentUser,
     exam_id: UUID,
     use_case: FromDishka[StartAttemptUseCase],
 ):
@@ -50,7 +57,7 @@ async def start_attempt_route(
 @router.get("/attempts/{attempt_id}")
 @inject
 async def get_attempt_route(
-    user: StudentUser,
+    user: CurrentUser,
     attempt_id: UUID,
     use_case: FromDishka[GetAttemptUseCase],
 ):
@@ -67,7 +74,7 @@ async def get_attempt_route(
 @router.patch("/attempts/{attempt_id}/answers")
 @inject
 async def patch_answers_route(
-    user: StudentUser,
+    user: CurrentUser,
     attempt_id: UUID,
     body: AttemptAnswersPatch,
     use_case: FromDishka[PatchAttemptAnswersUseCase],
@@ -81,7 +88,7 @@ async def patch_answers_route(
 @router.post("/attempts/{attempt_id}/submit", response_model=AttemptOut)
 @inject
 async def submit_route(
-    user: StudentUser,
+    user: CurrentUser,
     attempt_id: UUID,
     use_case: FromDishka[SubmitAttemptUseCase],
 ):
@@ -98,7 +105,7 @@ async def submit_route(
 @router.post("/attempts/{attempt_id}/focus-events")
 @inject
 async def focus_events_route(
-    user: StudentUser,
+    user: CurrentUser,
     attempt_id: UUID,
     body: FocusEventIn,
     use_case: FromDishka[RecordFocusEventUseCase],
@@ -140,3 +147,21 @@ async def attempt_detail_teacher(
     if not ex or ex.created_by != user.id:
         raise HTTPException(status_code=404, detail="Not found")
     return data
+
+
+@router.get("/attempts/{attempt_id}/review")
+@inject
+async def review_attempt_student(
+    user: CurrentUser,
+    attempt_id: UUID,
+    use_case: FromDishka[ReviewAttemptUseCase],
+):
+    data = await use_case.execute(attempt_id, user.id)
+    if not data:
+        raise HTTPException(status_code=404, detail="Not found or not completed")
+    
+    return {
+        "attempt": AttemptOut.model_validate(data["attempt"]),
+        "answers": [AttemptAnswerOut.model_validate(a) for a in data["answers"]],
+        "questions": [QuestionOut.model_validate(q) for q in data["questions"]]
+    }

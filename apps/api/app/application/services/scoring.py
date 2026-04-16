@@ -1,9 +1,11 @@
 from uuid import UUID
 
-from app.infrastructure.persistence.models import Question
+from app.domain.entities.question import QuestionEntity
 
 
-def score_attempt(questions: list[Question], answers_by_question_id: dict[UUID, str | None]) -> float:
+def score_attempt(
+    questions: list[QuestionEntity], answers_by_question_id: dict[UUID, str | None]
+) -> float:
     n = len(questions)
     if n == 0:
         return 0.0

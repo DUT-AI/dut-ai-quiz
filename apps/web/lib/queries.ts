@@ -14,6 +14,12 @@ import type {
   QuestionCreate,
   QuestionOut,
   UserMe,
+  ExternalTeam,
+  ExternalUser,
+  AttemptHistoryItem,
+  AttemptReviewResponse,
+  QuizQuestion,
+  ExamStats,
 } from "./types";
 
 const ICONS = [
@@ -106,6 +112,14 @@ export function useExam(id: string | null) {
   });
 }
 
+export function useExamStats(examId: string | null) {
+  return useQuery({
+    queryKey: ["exam-stats", examId],
+    queryFn: () => apiGet<ExamStats>(`/api/v1/exams/${examId!}/stats`),
+    enabled: !!examId,
+  });
+}
+
 export function useExamQuestions(examId: string | null) {
   return useQuery({
     queryKey: ["exam-questions", examId],
@@ -148,16 +162,16 @@ export function useDeleteExam() {
   });
 }
 
-export function useSetExamQuestions(examId: string) {
+export function useSetExamQuestions() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (questionIds: string[]) =>
+    mutationFn: ({ examId, questionIds }: { examId: string; questionIds: string[] }) =>
       apiClient
         .put(`/api/v1/exams/${examId}/questions`, {
           question_ids: questionIds,
         })
         .then((r) => r.data),
-    onSuccess: () => {
+    onSuccess: (_, { examId }) => {
       void qc.invalidateQueries({ queryKey: ["exam-questions", examId] });
     },
   });
@@ -166,14 +180,12 @@ export function useSetExamQuestions(examId: string) {
 /* ──────────── Questions ──────────── */
 export function useQuestions(params?: {
   pool_type?: string;
-  difficulty?: string;
   tag?: string;
   lesson_id?: string;
   limit?: number;
 }) {
   const search = new URLSearchParams();
   if (params?.pool_type) search.set("pool_type", params.pool_type);
-  if (params?.difficulty) search.set("difficulty", params.difficulty);
   if (params?.tag) search.set("tag", params.tag);
   if (params?.lesson_id) search.set("lesson_id", params.lesson_id);
   if (params?.limit) search.set("limit", String(params.limit));
@@ -198,11 +210,11 @@ export function useCreateQuestion() {
   });
 }
 
-export function useUpdateQuestion(id: string) {
+export function useUpdateQuestion() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: Partial<QuestionCreate>) =>
-      apiPatch<QuestionOut>(`/api/v1/questions/${id}`, body),
+    mutationFn: ({ id, payload }: { id: string; payload: Partial<QuestionCreate> }) =>
+      apiPatch<QuestionOut>(`/api/v1/questions/${id}`, payload),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["questions"] });
     },
@@ -214,6 +226,21 @@ export function useDeleteQuestion() {
   return useMutation({
     mutationFn: (id: string) =>
       apiClient.delete(`/api/v1/questions/${id}`).then((r) => r.data),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["questions"] });
+    },
+  });
+}
+
+export function useBulkCreateQuestions() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { 
+      questions: { question: string; options: any[]; solution?: string }[]; 
+      lesson_id?: string;
+      pool_type?: string;
+    }) =>
+      apiPost<QuestionOut[]>("/api/v1/questions/bulk", body),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["questions"] });
     },
@@ -235,8 +262,16 @@ export function useLeaderboard(examId: string | null) {
 export function useMyAttempts() {
   return useQuery({
     queryKey: ["my-attempts"],
-    queryFn: () => apiGet<AttemptOut[]>("/api/v1/me/attempts"),
+    queryFn: () => apiGet<AttemptHistoryItem[]>("/api/v1/me/attempts"),
     staleTime: 30_000,
+  });
+}
+
+export function useAttemptReview(attemptId: string | null) {
+  return useQuery({
+    queryKey: ["attempt-review", attemptId],
+    queryFn: () => apiGet<AttemptReviewResponse>(`/api/v1/attempts/${attemptId!}/review`),
+    enabled: !!attemptId,
   });
 }
 
@@ -245,6 +280,81 @@ export function usePracticeHistory() {
     queryKey: ["practice-history"],
     queryFn: () => apiGet<unknown[]>("/api/v1/practice/history"),
     staleTime: 30_000,
+  });
+}
+
+/* ──────────── Attempts (Exam Taking) ──────────── */
+export function useStartAttempt() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (examId: string) =>
+      apiPost<StartAttemptResponse>(`/api/v1/exams/${examId}/attempts`, {}),
+    onSuccess: (data) => {
+      void qc.invalidateQueries({ queryKey: ["attempt", data.attempt_id] });
+      void qc.invalidateQueries({ queryKey: ["my-attempts"] });
+    },
+  });
+}
+
+export function useAttempt(attemptId: string | null) {
+  return useQuery({
+    queryKey: ["attempt", attemptId],
+    queryFn: () =>
+      apiGet<{ attempt: AttemptOut; questions: QuizQuestion[] }>(
+        `/api/v1/attempts/${attemptId!}`
+      ),
+    enabled: !!attemptId,
+    staleTime: 0, // Always fresh during exam
+  });
+}
+
+export function usePatchAnswers() {
+  return useMutation({
+    mutationFn: ({
+      attemptId,
+      answers,
+    }: {
+      attemptId: string;
+      answers: { question_id: string; selected_option_id: string | null }[];
+    }) =>
+      apiPatch<{ ok: boolean }>(`/api/v1/attempts/${attemptId}/answers`, {
+        answers,
+      }),
+  });
+}
+
+export function useSubmitAttempt() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (attemptId: string) =>
+      apiPost<AttemptOut>(`/api/v1/attempts/${attemptId}/submit`, {}),
+    onSuccess: (data) => {
+      void qc.invalidateQueries({ queryKey: ["attempt", data.id] });
+      void qc.invalidateQueries({ queryKey: ["my-attempts"] });
+      void qc.invalidateQueries({ queryKey: ["leaderboard", data.exam_id] });
+    },
+  });
+}
+
+export function useRecordFocusEvent() {
+  return useMutation({
+    mutationFn: ({
+      attemptId,
+      event,
+      clientEventId,
+    }: {
+      attemptId: string;
+      event: string;
+      clientEventId: string;
+    }) =>
+      apiPost<{ tab_out_count: number; action: string; attempt?: any }>(
+        `/api/v1/attempts/${attemptId}/focus-events`,
+        {
+          event,
+          client_event_id: clientEventId,
+          client_ts: new Date().toISOString(),
+        }
+      ),
   });
 }
 
@@ -259,8 +369,23 @@ export function usePresignUpload() {
       content_type: string;
     }) =>
       apiPost<{ presigned_url: string; key: string; public_url: string }>(
-        "/api/v1/uploads/presign",
-        { key, content_type }
       ),
+  });
+}
+
+/* ──────────── External Proxy ──────────── */
+export function useExternalTeams() {
+  return useQuery({
+    queryKey: ["external-teams"],
+    queryFn: () => apiGet<{ data: ExternalTeam[] }>("/api/v1/external/teams"),
+    staleTime: 300_000,
+  });
+}
+
+export function useExternalUsers() {
+  return useQuery({
+    queryKey: ["external-users"],
+    queryFn: () => apiGet<{ data: ExternalUser[] }>("/api/v1/external/users"),
+    staleTime: 300_000,
   });
 }

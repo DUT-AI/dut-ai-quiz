@@ -17,30 +17,31 @@ export function renderMathInHTML(raw: string): string {
   let result = raw.replace(
     /!\[([^\]]*)\]\(([^)]+)\)/g,
     (_, alt: string, src: string) =>
-      `<img src="${src}" alt="${alt}" class="max-w-full my-2 rounded" style="max-height:320px"/>`
+      `<img src="${src}" alt="${alt}" class="max-w-full my-4 rounded-2xl clickable-img cursor-zoom-in shadow-sm hover:shadow-xl transition-all" style="max-height:400px; display: block; margin-left: auto; margin-right: auto;"/>`
   );
 
-  // 2. Block math: $$...$$ (phải xử lý trước $)
-  result = result.replace(/\$\$([\s\S]*?)\$\$/g, (_, math: string) => {
+  // 1.1 Process existing <img> tags to add class and cursor
+  result = result.replace(/<img /g, '<img class="clickable-img cursor-zoom-in" ');
+
+  // 2. Block math: $$...$$
+  result = result.replace(/\$\$([\s\S]+?)\$\$/g, (_, math: string) => {
     try {
       return katex.renderToString(math.trim(), {
         displayMode: true,
         throwOnError: false,
-        output: "html",
       });
     } catch {
-      return `<span style="color:red">$$${math}$$</span>`;
+      return `$$${math}$$`;
     }
   });
 
   // 3. Inline math: $...$
-  result = result.replace(/\$([^$\n<>]{1,300}?)\$/g, (match, math: string) => {
+  result = result.replace(/\$([\s\S]+?)\$/g, (match, math: string) => {
     if (!math.trim()) return match;
     try {
       return katex.renderToString(math.trim(), {
         displayMode: false,
         throwOnError: false,
-        output: "html",
       });
     } catch {
       return match;
@@ -49,12 +50,9 @@ export function renderMathInHTML(raw: string): string {
 
   // 4. Markdown: **bold**, *italic*, `code`
   result = result
-    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-    .replace(/\*(.+?)\*/g, "<em>$1</em>")
+    .replace(/\*\*((?:.|\n)+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*((?:.|\n)+?)\*/g, "<em>$1</em>")
     .replace(/`([^`]+)`/g, '<code class="bg-slate/10 px-1 rounded text-sm font-mono">$1</code>');
-
-  // 5. Line breaks: \n → <br> (ngoài HTML tags)
-  result = result.replace(/\n/g, "<br>");
 
   return result;
 }

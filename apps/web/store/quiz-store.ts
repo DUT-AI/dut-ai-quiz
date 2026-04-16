@@ -43,7 +43,11 @@ interface State {
   sessionError: string | null;
   sessionLoading: boolean;
 
+  lessons: any[];
+  lessonsLoading: boolean;
+
   fetchExams: () => Promise<void>;
+  fetchLessons: () => Promise<void>;
   selectExam: (exam: ExamTile) => Promise<void>;
   selectAnswer: (questionId: string, optionId: string) => Promise<void>;
   goNextQuestion: () => void;
@@ -65,6 +69,8 @@ const initialQuizSlice = {
   attemptResult: null,
   sessionError: null,
   sessionLoading: false,
+  lessons: [],
+  lessonsLoading: false,
 };
 
 export const useQuestionStore = create<State>()((set, get) => ({
@@ -88,6 +94,16 @@ export const useQuestionStore = create<State>()((set, get) => ({
         listError: e instanceof Error ? e.message : "Không tải được danh sách đề",
         listLoading: false,
       });
+    }
+  },
+  
+  fetchLessons: async () => {
+    set({ lessonsLoading: true });
+    try {
+      const rows = await apiJson<any[]>("/api/v1/lessons");
+      set({ lessons: rows, lessonsLoading: false });
+    } catch (e) {
+      set({ lessonsLoading: false });
     }
   },
 

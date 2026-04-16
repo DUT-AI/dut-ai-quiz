@@ -4,10 +4,14 @@ from dishka import Provider, Scope, provide
 from app.config import settings
 from app.infrastructure.cache.redis_client import ProfileCache
 
+
 class CacheProvider(Provider):
     @provide(scope=Scope.APP)
     def redis(self) -> Redis:
-        return from_url(settings.redis_url, decode_responses=True)
+        return from_url(
+            f"redis://{settings.redis_host}:{settings.redis_port}",
+            decode_responses=True,
+        )
 
     @provide(scope=Scope.APP)
     def profile_cache(self, redis: Redis) -> ProfileCache:

@@ -2,7 +2,9 @@ from fastapi import APIRouter, Request, HTTPException
 from dishka.integrations.fastapi import FromDishka, inject
 
 from app.application.use_cases.me.me_use_case import GetProfileUseCase
+from app.application.use_cases.attempts.attempt_use_case import ListUserAttemptsUseCase
 from app.presentation.api.deps import CurrentUser
+from app.presentation.schemas.attempts import AttemptOut
 
 router = APIRouter(prefix="/me", tags=["me"])
 
@@ -21,3 +23,19 @@ async def me(
         raise HTTPException(status_code=401, detail="Unauthorized")
         
     return {"data": data, "is_success": True}
+
+
+@router.get("/attempts")
+@inject
+async def list_my_attempts(
+    user: CurrentUser,
+    use_case: FromDishka[ListUserAttemptsUseCase],
+):
+    results = await use_case.execute(user.id)
+    return [
+        {
+            "attempt": AttemptOut.model_validate(r["attempt"]),
+            "exam_title": r["exam_title"],
+        }
+        for r in results
+    ]

@@ -21,7 +21,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchUser = async () => {
     try {
       setIsLoading(true);
-      const res = await apiGet<any>("/me");
+      const res = await apiGet<any>("/api/v1/me");
       if (res.is_success && res.data) {
         setUser(res.data);
       } else {
@@ -40,7 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const res = await apiPostJson<any>("/auth/login", { email, password });
+      const res = await apiPostJson<any>("/api/v1/auth/login", { email, password });
       if (res.is_success) {
         await fetchUser();
         return true;
@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
-      await apiPostJson<any>("/auth/logout", {});
+      await apiPostJson<any>("/api/v1/auth/logout", {});
     } finally {
       setUser(null);
     }

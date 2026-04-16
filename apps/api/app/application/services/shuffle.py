@@ -29,7 +29,6 @@ def build_shuffled_exam_payload(
                 "question_id": str(q.id),
                 "content": q.content,
                 "options": shuffled_opts,
-                "difficulty": q.difficulty.value,
                 "tags": q.tags,
             }
         )
@@ -56,7 +55,6 @@ def presentation_from_snapshot(
                 "question_id": qid_str,
                 "content": q.content,
                 "options": shuffled_opts,
-                "difficulty": q.difficulty.value,
                 "tags": q.tags,
             }
         )

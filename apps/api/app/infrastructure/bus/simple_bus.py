@@ -7,10 +7,12 @@ class SimpleEventBus(EventBus):
         self._handlers: Dict[Type[DomainEvent], List[Callable[[Any], Any]]] = {}
 
     async def publish(self, event: DomainEvent) -> None:
+        import asyncio
         event_type = type(event)
         if event_type in self._handlers:
             for handler in self._handlers[event_type]:
-                await handler(event)
+                # Fire and forget to avoid deadlocks in dev pool
+                asyncio.create_task(handler(event))
 
     def subscribe(self, event_type: Type[DomainEvent], handler: Callable[[Any], Any]) -> None:
         if event_type not in self._handlers:

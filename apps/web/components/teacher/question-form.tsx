@@ -2,7 +2,7 @@
 import { useState } from "react";
 import ImageUpload from "./image-upload";
 import { useLessons } from "@/lib/queries";
-import type { Difficulty, PoolType, QuestionCreate, QuestionOut } from "@/lib/types";
+import type { PoolType, QuestionCreate, QuestionOut } from "@/lib/types";
 
 interface Props {
   initial?: QuestionOut;
@@ -36,9 +36,6 @@ export default function QuestionForm({
       : [EMPTY_OPTION(), EMPTY_OPTION(), EMPTY_OPTION(), EMPTY_OPTION()]
   );
   const [solution, setSolution] = useState(initial?.solution ?? "");
-  const [difficulty, setDifficulty] = useState<Difficulty>(
-    initial?.difficulty ?? "MEDIUM"
-  );
   const [lessonId, setLessonId] = useState<string>(initial?.lesson_id ?? "");
   const [error, setError] = useState<string | null>(null);
 
@@ -79,7 +76,6 @@ export default function QuestionForm({
         content,
         options,
         solution: solution || undefined,
-        difficulty,
         tags: [],
         lesson_id: lessonId || null,
       });
@@ -90,9 +86,8 @@ export default function QuestionForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Pool type + Difficulty */}
       <div className="flex gap-4 flex-wrap">
-        <div className="flex-1 min-w-[140px]">
+        <div className="flex-1 min-w-[280px]">
           <label className="block text-xs font-semibold mb-1 text-gray-navy dark:text-light-blue">
             Loại câu hỏi
           </label>
@@ -103,20 +98,6 @@ export default function QuestionForm({
           >
             <option value="PRACTICE">Luyện tập</option>
             <option value="EXAM">Kiểm tra</option>
-          </select>
-        </div>
-        <div className="flex-1 min-w-[140px]">
-          <label className="block text-xs font-semibold mb-1 text-gray-navy dark:text-light-blue">
-            Độ khó
-          </label>
-          <select
-            value={difficulty}
-            onChange={(e) => setDifficulty(e.target.value as Difficulty)}
-            className="w-full rounded border border-slate/30 dark:border-white/20 bg-white dark:bg-slate/30 px-2 py-1.5 text-sm"
-          >
-            <option value="EASY">Dễ</option>
-            <option value="MEDIUM">Trung bình</option>
-            <option value="HARD">Khó</option>
           </select>
         </div>
       </div>

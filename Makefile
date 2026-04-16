@@ -42,21 +42,21 @@ api-dev: api-sync
 api-lint:
 	cd $(API_DIR) && uv run ruff check app
 
-migrate: api-sync
+migrate: 
 	cd $(API_DIR) && uv run alembic upgrade head
 
-migrate-down: api-sync
+migrate-down: 
 	cd $(API_DIR) && uv run alembic downgrade -1
 
 # Ví dụ: make alembic-revision MSG="add column foo"
-alembic-revision: api-sync
+alembic-revision: 
 	@test -n "$(MSG)" || (echo "Đặt MSG, ví dụ: make alembic-revision MSG=add_users_table" && exit 1)
 	cd $(API_DIR) && uv run alembic revision --autogenerate -m "$(MSG)"
 
-alembic-history: api-sync
+alembic-history: 
 	cd $(API_DIR) && uv run alembic history
 
-alembic-current: api-sync
+alembic-current: 
 	cd $(API_DIR) && uv run alembic current
 
 dev-web web-dev:

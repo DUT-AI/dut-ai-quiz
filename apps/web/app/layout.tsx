@@ -1,17 +1,14 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import localFont from "next/font/local";
+import "katex/dist/katex.min.css";
 import ThemeProvider from "@/components/providers/theme-provider";
 import { Providers } from "./providers";
-
-const rubik = localFont({
-  src: "../public/assets/fonts/Rubik-VariableFont_wght.ttf",
-  display: "swap",
-});
+import { ImageZoomPortal } from "@/components/atoms/ImageZoomPortal";
+import NextTopLoader from "nextjs-toploader";
 
 export const metadata: Metadata = {
-  title: "Frontend Quizz App",
-  description: "A frontend quiz app built with Next.js",
+  title: "DUT AI Quiz Portal",
+  description: "Hệ thống quản lý học tập và đánh giá năng lực tích hợp AI",
 };
 
 export default function RootLayout({
@@ -20,10 +17,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={rubik.className}>
+    <html lang="en" suppressHydrationWarning>
+      <body>
         <Providers>
-          <ThemeProvider>{children}</ThemeProvider>
+          <ThemeProvider>
+            <NextTopLoader color="#7C3AED" showSpinner={true} height={3} />
+            {children}
+            <ImageZoomPortal />
+          </ThemeProvider>
         </Providers>
       </body>
     </html>

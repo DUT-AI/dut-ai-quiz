@@ -20,7 +20,6 @@ class StartPracticeSessionUseCase:
         # Get questions from practice pool
         questions = await self._question_repo.list_all(
             pool_type=PoolType.PRACTICE,
-            difficulty=payload.difficulty,
             offset=0,
             limit=500, # Large enough to sample from
         )
@@ -53,7 +52,6 @@ class StartPracticeSessionUseCase:
             status=PracticeSessionStatus.IN_PROGRESS,
             snapshot=snapshot,
             tags_filter=payload.tags or [],
-            difficulty_filter=payload.difficulty,
             question_limit=payload.limit,
         )
         return await self._ps_repo.add(entity)

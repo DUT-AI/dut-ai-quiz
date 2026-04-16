@@ -13,6 +13,7 @@ from app.application.use_cases.exams.exam_use_case import (
     SetExamQuestionsUseCase,
     UpdateExamUseCase,
 )
+from app.application.use_cases.exams.stats_use_case import GetExamStatsUseCase
 from app.presentation.api.deps import CurrentUser, TeacherUser
 from app.core.datetime_utils import now_ict
 from app.presentation.schemas.exams import (
@@ -21,6 +22,7 @@ from app.presentation.schemas.exams import (
     ExamQuestionsPut,
     ExamUpdate,
 )
+from app.presentation.schemas.stats import ExamStatsOut
 from app.presentation.schemas.questions import QuestionOut
 
 router = APIRouter(prefix="/exams", tags=["exams"])
@@ -33,7 +35,7 @@ async def list_exams_route(
 ):
     if user.quiz_role == "teacher":
         return await use_case.execute_for_teacher(user.id)
-    return await use_case.execute_for_student(now_ict())
+    return await use_case.execute_for_student(user.id, now_ict())
 
 
 @router.post("", response_model=ExamOut)
@@ -49,7 +51,7 @@ async def create_exam_route(
 async def get_exam_route(
     user: CurrentUser, exam_id: UUID, use_case: FromDishka[GetExamUseCase]
 ):
-    ex = await use_case.execute(exam_id)
+    ex = await use_case.execute(exam_id, user_id=user.id, role=user.quiz_role)
     if not ex:
         raise HTTPException(status_code=404, detail="Not found")
     if user.quiz_role == "student":
@@ -106,3 +108,14 @@ async def put_exam_questions(
     if not ok:
         raise HTTPException(status_code=404, detail="Not found")
     return {"ok": True}
+
+
+@router.get("/{exam_id}/stats", response_model=ExamStatsOut)
+@inject
+async def get_exam_stats_route(
+    user: TeacherUser,
+    exam_id: UUID,
+    use_case: FromDishka[GetExamStatsUseCase],
+):
+    stats = await use_case.execute(exam_id)
+    return stats

@@ -6,11 +6,19 @@ from app.infrastructure.repositories.questions import QuestionRepository
 from app.infrastructure.repositories.focus_events import FocusEventRepository
 from app.infrastructure.repositories.practice_sessions import PracticeSessionRepository
 from app.infrastructure.repositories.attempts import AttemptRepository
+from app.infrastructure.repositories.lessons import SqlLessonRepository, LessonRepository
+
 
 class RepositoryProvider(Provider):
-    exam_repo = provide(ExamRepository, scope=Scope.REQUEST)
-    exam_question_repo = provide(ExamQuestionRepository, scope=Scope.REQUEST)
-    question_repo = provide(QuestionRepository, scope=Scope.REQUEST)
-    focus_event_repo = provide(FocusEventRepository, scope=Scope.REQUEST)
-    practice_session_repo = provide(PracticeSessionRepository, scope=Scope.REQUEST)
-    attempt_repo = provide(AttemptRepository, scope=Scope.REQUEST)
+    scope = Scope.REQUEST
+
+    # LessonRepository is a Protocol, so we provide the SQL implementation
+    lesson_repo = provide(SqlLessonRepository, provides=LessonRepository)
+
+    # These are currently concrete classes in your implementation
+    exam_repo = provide(ExamRepository)
+    exam_question_repo = provide(ExamQuestionRepository)
+    question_repo = provide(QuestionRepository)
+    focus_event_repo = provide(FocusEventRepository)
+    practice_session_repo = provide(PracticeSessionRepository)
+    attempt_repo = provide(AttemptRepository)

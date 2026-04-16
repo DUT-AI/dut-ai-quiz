@@ -3,9 +3,6 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from app.infrastructure.persistence.models import Difficulty
-
-
 class ExamCreate(BaseModel):
     title: str
     description: str = ""
@@ -14,6 +11,7 @@ class ExamCreate(BaseModel):
     duration_minutes: int = 60
     max_attempts: int = 1
     is_published: bool = False
+    participant_ids: list[int] = Field(default_factory=list)
 
 
 class ExamUpdate(BaseModel):
@@ -24,6 +22,7 @@ class ExamUpdate(BaseModel):
     duration_minutes: int | None = None
     max_attempts: int | None = None
     is_published: bool | None = None
+    participant_ids: list[int] | None = None
 
 
 class ExamOut(BaseModel):
@@ -36,6 +35,7 @@ class ExamOut(BaseModel):
     max_attempts: int
     is_published: bool
     created_by: int
+    participant_ids: list[int]
 
     model_config = {"from_attributes": True}
 
@@ -46,5 +46,4 @@ class ExamQuestionsPut(BaseModel):
 
 class PracticeStartIn(BaseModel):
     tags: list[str] = Field(default_factory=list)
-    difficulty: Difficulty | None = None
     limit: int = 10

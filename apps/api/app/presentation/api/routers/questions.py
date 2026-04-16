@@ -9,14 +9,16 @@ from app.application.use_cases.questions.question_use_case import (
     GetQuestionUseCase,
     ListQuestionsUseCase,
     UpdateQuestionUseCase,
+    BulkCreateQuestionsUseCase,
 )
-from app.infrastructure.persistence.models import Difficulty, PoolType
+from app.infrastructure.persistence.models import PoolType
 from app.presentation.api.deps import TeacherUser
 from app.presentation.schemas.questions import (
     QuestionCreate,
     QuestionListQuery,
     QuestionOut,
     QuestionUpdate,
+    QuestionBulkCreate,
 )
 
 router = APIRouter(prefix="/questions", tags=["questions"])
@@ -28,14 +30,14 @@ async def list_questions_route(
     user: TeacherUser,
     use_case: FromDishka[ListQuestionsUseCase],
     pool_type: PoolType | None = None,
-    difficulty: Difficulty | None = None,
+    lesson_id: UUID | None = None,
     tag: str | None = None,
     offset: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=200),
 ):
     q = QuestionListQuery(
         pool_type=pool_type,
-        difficulty=difficulty,
+        lesson_id=lesson_id,
         tag=tag,
         offset=offset,
         limit=limit,
@@ -86,3 +88,13 @@ async def delete_question_route(
     if not ok:
         raise HTTPException(status_code=404, detail="Not found")
     return {"ok": True}
+
+
+@router.post("/bulk", response_model=list[QuestionOut])
+@inject
+async def bulk_create_questions_route(
+    user: TeacherUser, 
+    body: QuestionBulkCreate, 
+    use_case: FromDishka[BulkCreateQuestionsUseCase]
+):
+    return await use_case.execute(body)

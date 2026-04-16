@@ -5,16 +5,19 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.infrastructure.di import setup_di, register_event_handlers
+from app.presentation.api.exceptions import setup_exception_handlers
 from app.presentation.api.routers import (
     attempts,
     auth,
     exams,
     health,
     leaderboard,
+    lessons,
     me,
     practice,
     questions,
     uploads,
+    external,
 )
 
 
@@ -27,6 +30,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="dut-ai-quiz API", lifespan=lifespan)
 setup_di(app)
+setup_exception_handlers(app)
 
 app.add_middleware(
     CORSMiddleware,
@@ -39,9 +43,11 @@ app.add_middleware(
 app.include_router(health.router)
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(me.router, prefix="/api/v1")
+app.include_router(lessons.router, prefix="/api/v1")
 app.include_router(questions.router, prefix="/api/v1")
 app.include_router(exams.router, prefix="/api/v1")
 app.include_router(attempts.router, prefix="/api/v1")
 app.include_router(leaderboard.router, prefix="/api/v1")
 app.include_router(practice.router, prefix="/api/v1")
 app.include_router(uploads.router, prefix="/api/v1")
+app.include_router(external.router, prefix="/api/v1")

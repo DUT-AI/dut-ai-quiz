@@ -12,12 +12,14 @@ from app.application.use_cases.exams.exam_use_case import (
     SetExamQuestionsUseCase,
     UpdateExamUseCase,
 )
+from app.application.use_cases.exams.stats_use_case import GetExamStatsUseCase
 from app.application.use_cases.questions.question_use_case import (
     CreateQuestionUseCase,
     DeleteQuestionUseCase,
     GetQuestionUseCase,
     ListQuestionsUseCase,
     UpdateQuestionUseCase,
+    BulkCreateQuestionsUseCase,
 )
 from app.application.use_cases.attempts.attempt_use_case import (
     StartAttemptUseCase,
@@ -27,7 +29,10 @@ from app.application.use_cases.attempts.attempt_use_case import (
     ListExamAttemptsUseCase,
     PatchAttemptAnswersUseCase,
     RecordFocusEventUseCase,
+    ListUserAttemptsUseCase,
+    ReviewAttemptUseCase,
 )
+from app.application.use_cases.attempts.rescore_use_case import RescoreAttemptUseCase
 from app.application.use_cases.leaderboard.leaderboard_use_case import GetLeaderboardUseCase
 from app.application.use_cases.practice.practice_use_case import (
     StartPracticeSessionUseCase,
@@ -35,6 +40,12 @@ from app.application.use_cases.practice.practice_use_case import (
     PatchPracticeAnswersUseCase,
     FinishPracticeSessionUseCase,
     ListPracticeHistoryUseCase,
+)
+from app.application.use_cases.lessons.lesson_use_case import (
+    ListLessonsUseCase,
+    CreateLessonUseCase,
+    UpdateLessonUseCase,
+    DeleteLessonUseCase,
 )
 from app.application.use_cases.auth.auth_use_case import ProxyLoginUseCase, LogoutUseCase
 from app.application.use_cases.me.me_use_case import GetProfileUseCase
@@ -48,6 +59,7 @@ class UseCaseProvider(Provider):
     list_exams_use_case = provide(ListExamsUseCase, scope=Scope.REQUEST)
     set_exam_questions_use_case = provide(SetExamQuestionsUseCase, scope=Scope.REQUEST)
     update_exam_use_case = provide(UpdateExamUseCase, scope=Scope.REQUEST)
+    get_exam_stats_use_case = provide(GetExamStatsUseCase, scope=Scope.REQUEST)
 
     # questions
     create_question_use_case = provide(CreateQuestionUseCase, scope=Scope.REQUEST)
@@ -55,6 +67,7 @@ class UseCaseProvider(Provider):
     get_question_use_case = provide(GetQuestionUseCase, scope=Scope.REQUEST)
     list_questions_use_case = provide(ListQuestionsUseCase, scope=Scope.REQUEST)
     update_question_use_case = provide(UpdateQuestionUseCase, scope=Scope.REQUEST)
+    bulk_create_questions_use_case = provide(BulkCreateQuestionsUseCase, scope=Scope.REQUEST)
 
     # attempts
     start_attempt_use_case = provide(StartAttemptUseCase, scope=Scope.REQUEST)
@@ -63,6 +76,9 @@ class UseCaseProvider(Provider):
     get_attempt_detail_use_case = provide(GetAttemptDetailUseCase, scope=Scope.REQUEST)
     list_exam_attempts_use_case = provide(ListExamAttemptsUseCase, scope=Scope.REQUEST)
     patch_attempt_answers_use_case = provide(PatchAttemptAnswersUseCase, scope=Scope.REQUEST)
+    list_user_attempts_use_case = provide(ListUserAttemptsUseCase, scope=Scope.REQUEST)
+    review_attempt_use_case = provide(ReviewAttemptUseCase, scope=Scope.REQUEST)
+    rescore_attempt_use_case = provide(RescoreAttemptUseCase, scope=Scope.REQUEST)
     
     @provide(scope=Scope.REQUEST)
     def record_focus_event_use_case(
@@ -82,6 +98,11 @@ class UseCaseProvider(Provider):
     patch_practice_answers_use_case = provide(PatchPracticeAnswersUseCase, scope=Scope.REQUEST)
     finish_practice_session_use_case = provide(FinishPracticeSessionUseCase, scope=Scope.REQUEST)
     list_practice_history_use_case = provide(ListPracticeHistoryUseCase, scope=Scope.REQUEST)
+
+    list_lessons_use_case = provide(ListLessonsUseCase, scope=Scope.REQUEST)
+    create_lesson_use_case = provide(CreateLessonUseCase, scope=Scope.REQUEST)
+    update_lesson_use_case = provide(UpdateLessonUseCase, scope=Scope.REQUEST)
+    delete_lesson_use_case = provide(DeleteLessonUseCase, scope=Scope.REQUEST)
 
     # auth & me
     proxy_login_use_case = provide(ProxyLoginUseCase, scope=Scope.REQUEST)

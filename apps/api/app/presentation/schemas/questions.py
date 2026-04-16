@@ -3,7 +3,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from app.infrastructure.persistence.models import Difficulty, PoolType
+from app.infrastructure.persistence.models import PoolType
 
 
 class QuestionCreate(BaseModel):
@@ -11,7 +11,7 @@ class QuestionCreate(BaseModel):
     content: str = ""
     options: list[dict] = Field(default_factory=list)
     solution: str | None = None
-    difficulty: Difficulty = Difficulty.MEDIUM
+    lesson_id: UUID | None = None
     tags: list[str] = Field(default_factory=list)
 
 
@@ -20,7 +20,7 @@ class QuestionUpdate(BaseModel):
     content: str | None = None
     options: list[dict] | None = None
     solution: str | None = None
-    difficulty: Difficulty | None = None
+    lesson_id: UUID | None = None
     tags: list[str] | None = None
 
 
@@ -30,7 +30,7 @@ class QuestionOut(BaseModel):
     content: str
     options: list[dict]
     solution: str | None
-    difficulty: Difficulty
+    lesson_id: UUID | None
     tags: list[str]
     created_at: datetime
 
@@ -39,7 +39,20 @@ class QuestionOut(BaseModel):
 
 class QuestionListQuery(BaseModel):
     pool_type: PoolType | None = None
-    difficulty: Difficulty | None = None
+    lesson_id: UUID | None = None
     tag: str | None = None
     offset: int = 0
     limit: int = 50
+
+
+class QuestionBulkItem(BaseModel):
+    question: str
+    options: list[dict]
+    solution: str | None = None
+
+
+class QuestionBulkCreate(BaseModel):
+    questions: list[QuestionBulkItem]
+    pool_type: PoolType = PoolType.PRACTICE
+    lesson_id: UUID | None = None
+    tags: list[str] = Field(default_factory=list)

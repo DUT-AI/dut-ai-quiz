@@ -29,6 +29,15 @@ class AttemptOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class AttemptAnswerOut(BaseModel):
+    id: UUID
+    attempt_id: UUID
+    question_id: UUID
+    selected_option_id: str | None
+    
+    model_config = {"from_attributes": True}
+
+
 class StartAttemptOut(BaseModel):
     attempt_id: UUID
     expires_at: datetime

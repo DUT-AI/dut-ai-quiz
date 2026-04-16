@@ -1,17 +1,25 @@
+from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# root/apps/api/app/config.py -> parent x 4 = root/
+ROOT_DIR = Path(__file__).resolve().parent.parent.parent.parent
+ENV_PATH = ROOT_DIR / ".env"
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=ENV_PATH, env_file_encoding="utf-8", extra="ignore"
+    )
 
     database_url: str = "postgresql+asyncpg://dutai:dutai@localhost:5432/quizdb"
-    manage_base_url: str = "https://manage.dutai.site"
-    manage_auth_me_path: str = "/api/v1/auth/me"
-    manage_login_path: str = "/api/v1/auth/login"
-    
+    manage_base_url: str = ""
+    manage_api_key: str = ""
+
     cors_origins: str = "http://localhost:3000,https://quiz.dutai.site"
-    
-    redis_url: str = "redis://localhost:6379/0"
+
+    redis_host: str = "redis://localhost:6379/0"
+    redis_port: int = 6379
+
     auth_cache_ttl: int = 600  # 10 minutes
 
     api_host: str = "0.0.0.0"

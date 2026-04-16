@@ -38,7 +38,6 @@ class PracticeSessionRepository:
             model.status = entity.status
             model.snapshot = entity.snapshot
             model.tags_filter = entity.tags_filter
-            model.difficulty_filter = entity.difficulty_filter
             model.question_limit = entity.question_limit
             await self._s.flush()
             await self._s.refresh(model)

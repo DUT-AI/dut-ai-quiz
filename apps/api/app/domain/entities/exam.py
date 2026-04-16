@@ -13,3 +13,4 @@ class ExamEntity:
     max_attempts: int
     is_published: bool
     created_by: int
+    participant_ids: list[int]

@@ -20,3 +20,20 @@ export function tintForTitle(title: string): string {
   for (let i = 0; i < title.length; i++) h = (h + title.charCodeAt(i) * (i + 1)) % 997;
   return TINTS[h % TINTS.length];
 }
+
+/** 
+ * Chuyển chuỗi datetime "naive ICT" (từ backend) sang đối tượng Date 
+ * bằng cách giả định nó luôn là UTC+7.
+ */
+export function parseICT(dateStr: string): Date {
+  if (!dateStr) return new Date();
+  // Nếu có Z hoặc offset rồi thì dùng mặc định
+  if (dateStr.endsWith("Z") || dateStr.includes("+") || dateStr.match(/\d{2}:\d{2}:\d{2}\.\d+/)) {
+      // Pydantic có thể serialize ISO thô mà không có Z nếu nó là naive.
+      // Ta đính thêm +07:00 nếu nó thiếu.
+      if (!dateStr.includes("+") && !dateStr.endsWith("Z")) {
+          return new Date(dateStr + "+07:00");
+      }
+  }
+  return new Date(dateStr);
+}
