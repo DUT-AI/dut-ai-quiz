@@ -43,7 +43,7 @@ export default function Navbar() {
                   href={l.href}
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                     active
-                      ? "bg-purple text-white"
+                      ? "bg-primary text-white"
                       : "text-gray-navy dark:text-light-blue hover:bg-slate/10 dark:hover:bg-white/10"
                   }`}
                 >

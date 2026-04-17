@@ -68,7 +68,7 @@ export default function StepParticipants({ selectedIds, onChange }: Props) {
               placeholder="Tìm kiếm thí sinh hoặc nhóm..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-12 pr-6 py-4 rounded-3xl bg-gray-50 dark:bg-white/5 border-none focus:ring-2 focus:ring-purple/50 transition-all font-medium"
+              className="w-full pl-12 pr-6 py-4 rounded-3xl bg-gray-50 dark:bg-white/5 border-none focus:ring-2 focus:ring-primary/50 transition-all font-medium"
             />
           </div>
 
@@ -77,7 +77,7 @@ export default function StepParticipants({ selectedIds, onChange }: Props) {
               onClick={() => setActiveTab("users")}
               className={cn(
                 "px-6 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2",
-                activeTab === "users" ? "bg-white dark:bg-navy-blue shadow-sm text-purple" : "text-gray-navy opacity-50"
+                activeTab === "users" ? "bg-white dark:bg-navy-blue shadow-sm text-primary" : "text-gray-navy opacity-50"
               )}
             >
               <User className="size-4" /> Cá nhân
@@ -86,7 +86,7 @@ export default function StepParticipants({ selectedIds, onChange }: Props) {
               onClick={() => setActiveTab("teams")}
               className={cn(
                 "px-6 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2",
-                activeTab === "teams" ? "bg-white dark:bg-navy-blue shadow-sm text-purple" : "text-gray-navy opacity-50"
+                activeTab === "teams" ? "bg-white dark:bg-navy-blue shadow-sm text-primary" : "text-gray-navy opacity-50"
               )}
             >
               <Users className="size-4" /> Nhóm hỏa tiễn
@@ -108,14 +108,14 @@ export default function StepParticipants({ selectedIds, onChange }: Props) {
                   className={cn(
                     "w-full flex items-center justify-between p-4 rounded-2xl border transition-all hover:scale-[1.01] active:scale-[0.99]",
                     selectedIds.includes(user.id) 
-                      ? "bg-purple/10 border-purple/30 text-purple" 
+                      ? "bg-primary/10 border-primary/30 text-primary" 
                       : "bg-white dark:bg-navy-blue/40 border-gray-100 dark:border-white/5"
                   )}
                 >
                   <div className="flex items-center gap-3">
                     <Avatar className="size-10 border-2 border-white dark:border-navy-blue">
                       <AvatarImage src={user.avatar_url ?? ""} />
-                      <AvatarFallback className="bg-purple/10 text-purple text-xs font-black">
+                      <AvatarFallback className="bg-primary/10 text-primary text-xs font-black">
                         {user.name.substring(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
@@ -125,7 +125,7 @@ export default function StepParticipants({ selectedIds, onChange }: Props) {
                     </div>
                   </div>
                   {selectedIds.includes(user.id) ? (
-                    <div className="size-6 rounded-full bg-purple flex items-center justify-center text-white">
+                    <div className="size-6 rounded-full bg-primary flex items-center justify-center text-white">
                       <Check className="size-3" />
                     </div>
                   ) : (
@@ -138,7 +138,7 @@ export default function StepParticipants({ selectedIds, onChange }: Props) {
                 <button
                   key={team.id}
                   onClick={() => addTeam(team.id)}
-                  className="w-full flex items-center justify-between p-5 rounded-2xl bg-white dark:bg-navy-blue/40 border border-gray-100 dark:border-white/5 hover:border-purple/30 transition-all hover:scale-[1.01] group"
+                  className="w-full flex items-center justify-between p-5 rounded-2xl bg-white dark:bg-navy-blue/40 border border-gray-100 dark:border-white/5 hover:border-primary/30 transition-all hover:scale-[1.01] group"
                 >
                   <div className="flex items-center gap-4">
                     <div className="size-12 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-600">
@@ -190,7 +190,7 @@ export default function StepParticipants({ selectedIds, onChange }: Props) {
                   >
                     <Avatar className="size-8">
                       <AvatarImage src={user.avatar_url ?? ""} />
-                      <AvatarFallback className="text-[10px] bg-purple/10 text-purple font-black">
+                      <AvatarFallback className="text-[10px] bg-primary/10 text-primary font-black">
                         {user.name.substring(0, 1)}
                       </AvatarFallback>
                     </Avatar>

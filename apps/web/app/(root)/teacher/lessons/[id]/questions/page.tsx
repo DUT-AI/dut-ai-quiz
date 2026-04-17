@@ -54,7 +54,7 @@ export default function LessonQuestionsPage() {
         </h1>
         <button
           onClick={() => setEditing("new")}
-          className="px-4 py-2 bg-purple text-white rounded-lg text-sm font-medium hover:bg-purple/80 transition"
+          className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/80 transition"
         >
           + Thêm câu hỏi
         </button>

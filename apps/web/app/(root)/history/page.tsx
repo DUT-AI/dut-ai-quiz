@@ -41,7 +41,7 @@ export default function HistoryPage() {
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
-        <Loader2 className="size-12 animate-spin text-purple" />
+        <Loader2 className="size-12 animate-spin text-primary" />
         <p className="text-gray-navy animate-pulse font-medium">Đang tải lịch sử của bạn...</p>
       </div>
     );
@@ -60,9 +60,9 @@ export default function HistoryPage() {
                 <motion.div 
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="flex items-center gap-3 text-purple-300 font-black tracking-widest uppercase text-sm"
+                  className="flex items-center gap-3 text-primary font-black tracking-widest uppercase text-sm"
                 >
-                    <div className="w-8 h-1 bg-purple-400 rounded-full" />
+                    <div className="w-8 h-1 bg-primary rounded-full" />
                     LỊCH SỬ HỌC TẬP
                 </motion.div>
                 <motion.h1 
@@ -86,13 +86,13 @@ export default function HistoryPage() {
       {/* Filters & Actions */}
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
         <div className="relative w-full md:w-96 group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-gray-navy transition-colors group-focus-within:text-purple" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-gray-navy transition-colors group-focus-within:text-primary" />
           <input 
             type="text"
             placeholder="Tìm kiếm bài thi..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-12 pr-4 py-4 bg-white dark:bg-navy-blue rounded-2xl border border-gray-navy/10 focus:ring-2 focus:ring-purple/20 focus:border-purple outline-none transition-all shadow-sm"
+            className="w-full pl-12 pr-4 py-4 bg-white dark:bg-navy-blue rounded-2xl border border-gray-navy/10 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all shadow-sm"
           />
         </div>
 
@@ -103,7 +103,7 @@ export default function HistoryPage() {
                     onClick={() => setFilter(f as any)}
                     className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
                         filter === f 
-                            ? "bg-white dark:bg-dark-blue text-purple shadow-lg" 
+                            ? "bg-white dark:bg-dark-blue text-primary shadow-lg" 
                             : "text-gray-navy hover:text-dark-blue"
                     }`}
                 >
@@ -134,19 +134,19 @@ export default function HistoryPage() {
             >
                 {/* Visual Accent */}
                 <div className={`absolute top-0 left-0 w-2 h-full ${
-                  item.attempt.status === "COMPLETED" ? "bg-green-500" : "bg-purple-500"
+                  item.attempt.status === "COMPLETED" ? "bg-green-500" : "bg-primary"
                 }`} />
 
                 <div className="p-8 flex flex-col md:flex-row items-center gap-8">
                     {/* Icon/Date */}
                     <div className="flex items-center gap-6 min-w-0 flex-1">
                         <div className={`shrink-0 size-14 rounded-2xl flex items-center justify-center ${
-                          item.attempt.status === "COMPLETED" ? "bg-green-50 text-green-600" : "bg-purple-50 text-purple"
+                          item.attempt.status === "COMPLETED" ? "bg-green-50 text-green-600" : "bg-primary text-primary"
                         }`}>
                             <History className="size-6" />
                         </div>
                         <div className="min-w-0">
-                            <h3 className="text-xl font-black tracking-tight text-dark-blue truncate group-hover:text-purple transition-colors">
+                            <h3 className="text-xl font-black tracking-tight text-dark-blue truncate group-hover:text-primary transition-colors">
                                 {item.exam_title}
                             </h3>
                             <div className="flex flex-wrap items-center gap-4 mt-1">
@@ -158,7 +158,7 @@ export default function HistoryPage() {
                                 <span className={`text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-wider ${
                                   item.attempt.status === "COMPLETED" 
                                     ? "bg-green-100 text-green-700" 
-                                    : "bg-purple-100 text-purple-700"
+                                    : "bg-primary text-primary"
                                 }`}>
                                     {item.attempt.status === "COMPLETED" ? "Hoàn thành" : "Đang làm"}
                                 </span>
@@ -187,7 +187,7 @@ export default function HistoryPage() {
                         {item.attempt.status === "COMPLETED" ? (
                           <Link 
                             href={`/history/${item.attempt.id}/review`}
-                            className="flex items-center gap-2 px-6 py-3.5 bg-dark-blue text-white rounded-2xl font-black text-sm hover:bg-purple hover:scale-105 active:scale-95 transition-all shadow-lg shadow-dark-blue/10"
+                            className="flex items-center gap-2 px-6 py-3.5 bg-dark-blue text-white rounded-2xl font-black text-sm hover:bg-primary hover:scale-105 active:scale-95 transition-all shadow-lg shadow-dark-blue/10"
                           >
                             XEM CHI TIẾT
                             <ChevronRight className="size-4" />
@@ -195,7 +195,7 @@ export default function HistoryPage() {
                         ) : (
                           <Link 
                             href={`/exams/${item.attempt.exam_id}/attempt/${item.attempt.id}`}
-                            className="flex items-center gap-2 px-6 py-3.5 bg-purple text-white rounded-2xl font-black text-sm hover:bg-dark-blue hover:scale-105 active:scale-95 transition-all shadow-lg shadow-purple/10"
+                            className="flex items-center gap-2 px-6 py-3.5 bg-primary text-white rounded-2xl font-black text-sm hover:bg-dark-blue hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/10"
                           >
                             TIẾP TỤC
                             <Timer className="size-4" />

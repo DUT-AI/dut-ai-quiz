@@ -32,7 +32,10 @@ export default function LessonDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { data: lessons = [] } = useLessons();
-  const { data: questions = [], isLoading } = useQuestions({ lesson_id: id });
+  const { data: questions = [], isLoading } = useQuestions({ 
+    lesson_id: id,
+    pool_type: "PRACTICE" 
+  });
 
   const lesson = useMemo(() => lessons.find(l => l.id === id), [lessons, id]);
   const [explainingQuestion, setExplainingQuestion] = useState<QuestionOut | null>(null);
@@ -69,7 +72,7 @@ export default function LessonDetailPage() {
     return (
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12 text-left">
         <div>
-          <span className="text-xs font-black text-purple uppercase tracking-[0.3em] mb-2 block">
+          <span className="text-xs font-black text-primary uppercase tracking-[0.3em] mb-2 block">
             BÀI HỌC {lesson.order}
           </span>
           <h1 className="text-4xl md:text-5xl font-bold text-dark-blue dark:text-white mb-4">
@@ -82,7 +85,7 @@ export default function LessonDetailPage() {
         <div className="flex gap-4">
           <div className="hidden sm:block p-4 rounded-3xl bg-white dark:bg-navy-blue shadow-lg border border-white/10 text-center min-w-[120px]">
             <p className="text-xs font-bold text-gray-navy opacity-50 uppercase tracking-tighter">Câu hỏi</p>
-            <p className="text-2xl font-black text-purple">{questions.length}</p>
+            <p className="text-2xl font-black text-primary">{questions.length}</p>
           </div>
 
           <button
@@ -97,7 +100,7 @@ export default function LessonDetailPage() {
 
           <button
             onClick={() => setShowAddModal(true)}
-            className="group relative px-8 py-5 rounded-[2rem] bg-gradient-to-br from-purple to-pink-500 text-white font-black uppercase tracking-widest text-[10px] flex items-center gap-3 shadow-xl shadow-purple/30 hover:scale-105 active:scale-95 transition-all text-nowrap"
+            className="group relative px-8 py-5 rounded-[2rem] bg-gradient-to-br from-primary to-pink-500 text-white font-black uppercase tracking-widest text-[10px] flex items-center gap-3 shadow-xl shadow-primary/30 hover:scale-105 active:scale-95 transition-all text-nowrap"
           >
             <div className="size-6 rounded-lg bg-white/20 flex items-center justify-center group-hover:rotate-90 transition-transform">
               <Plus className="size-4" />
@@ -122,7 +125,7 @@ export default function LessonDetailPage() {
     <div className="w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
       <button
         onClick={() => router.push("/lessons")}
-        className="flex items-center gap-2 text-purple font-bold hover:gap-3 transition-all mb-4 group"
+        className="flex items-center gap-2 text-primary font-bold hover:gap-3 transition-all mb-4 group"
       >
         <ArrowLeft className="size-5" />
         Quay lại danh sách bài học
@@ -132,7 +135,7 @@ export default function LessonDetailPage() {
 
       <div className="space-y-6 text-left">
         <h2 className="text-xl font-bold text-dark-blue dark:text-white flex items-center gap-3">
-          <ListRestart className="text-purple" />
+          <ListRestart className="text-primary" />
           Danh sách câu hỏi ôn tập
         </h2>
 
@@ -229,7 +232,7 @@ const QuestionCard = React.memo(({ q, idx, onExplain, onEdit, onDelete }: {
         "border-none shadow-lg bg-white dark:bg-navy-blue/60 rounded-3xl overflow-hidden hover:shadow-xl transition-all border-l-4",
         isRevealed
           ? (q.options.find(o => o.id === selectedId)?.is_correct ? "border-l-green" : "border-l-red")
-          : "border-l-purple/20"
+          : "border-l-primary/20"
       )}>
         <CardContent className="p-8">
           <div className="flex flex-col sm:flex-row gap-6">
@@ -243,7 +246,7 @@ const QuestionCard = React.memo(({ q, idx, onExplain, onEdit, onDelete }: {
                   size="icon"
                   variant="ghost"
                   onClick={handleReset}
-                  className="size-10 rounded-xl hover:bg-purple/10 text-purple"
+                  className="size-10 rounded-xl hover:bg-primary/10 text-primary"
                   title="Làm lại"
                 >
                   <RotateCcw className="size-5" />
@@ -262,7 +265,7 @@ const QuestionCard = React.memo(({ q, idx, onExplain, onEdit, onDelete }: {
                   const isSelected = selectedId === opt.id;
                   const isCorrect = opt.is_correct;
 
-                  let statusStyles = "bg-gray-50/50 dark:bg-white/5 border-gray-100 dark:border-white/5 hover:border-purple/30";
+                  let statusStyles = "bg-gray-50/50 dark:bg-white/5 border-gray-100 dark:border-white/5 hover:border-primary/30";
                   if (isRevealed) {
                     if (isCorrect) {
                       statusStyles = "bg-green/10 border-green/30 text-green ring-2 ring-green/20";
@@ -288,7 +291,7 @@ const QuestionCard = React.memo(({ q, idx, onExplain, onEdit, onDelete }: {
                         "size-8 rounded-xl flex items-center justify-center font-black text-xs shrink-0 transition-colors",
                         isRevealed && isCorrect ? "bg-green text-white" :
                           isSelected && !isCorrect ? "bg-red text-white" :
-                            "bg-white dark:bg-navy-blue border border-gray-200 dark:border-white/10 text-purple"
+                            "bg-white dark:bg-navy-blue border border-gray-200 dark:border-white/10 text-primary"
                       )}>
                         {isRevealed && isCorrect ? <Check className="size-4" /> :
                           isSelected && !isCorrect ? <XCircle className="size-4" /> :
@@ -300,7 +303,7 @@ const QuestionCard = React.memo(({ q, idx, onExplain, onEdit, onDelete }: {
                       />
 
                       {isSelected && !isRevealed && (
-                        <motion.div layoutId="selection" className="absolute inset-0 border-2 border-purple rounded-2xl pointer-events-none" />
+                        <motion.div layoutId="selection" className="absolute inset-0 border-2 border-primary rounded-2xl pointer-events-none" />
                       )}
                     </button>
                   );
@@ -314,8 +317,8 @@ const QuestionCard = React.memo(({ q, idx, onExplain, onEdit, onDelete }: {
                     animate={{ opacity: 1, height: "auto" }}
                     className="overflow-hidden"
                   >
-                    <div className="mt-8 p-6 rounded-3xl bg-purple/5 border border-purple/10 space-y-3">
-                      <h4 className="flex items-center gap-2 text-[10px] font-black text-purple uppercase tracking-widest opacity-60">
+                    <div className="mt-8 p-6 rounded-3xl bg-primary/5 border border-primary/10 space-y-3">
+                      <h4 className="flex items-center gap-2 text-[10px] font-black text-primary uppercase tracking-widest opacity-60">
                         <Lightbulb className="size-3" />
                         Hướng dẫn chi tiết
                       </h4>
@@ -333,7 +336,7 @@ const QuestionCard = React.memo(({ q, idx, onExplain, onEdit, onDelete }: {
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="text-gray-navy hover:text-purple hover:bg-purple/5 p-2 rounded-xl transition-all"
+                    className="text-gray-navy hover:text-primary hover:bg-primary/5 p-2 rounded-xl transition-all"
                     onClick={() => onEdit(q)}
                   >
                     <Edit3 className="size-4" />
@@ -351,7 +354,7 @@ const QuestionCard = React.memo(({ q, idx, onExplain, onEdit, onDelete }: {
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="text-purple font-bold flex items-center gap-2 hover:bg-purple/10 px-4 py-2 rounded-2xl"
+                  className="text-primary font-bold flex items-center gap-2 hover:bg-primary/10 px-4 py-2 rounded-2xl"
                   onClick={() => onExplain(q)}
                 >
                   <Sparkles className="size-4" />
@@ -394,10 +397,10 @@ function AIExplanationModal({ question, onClose }: { question: QuestionOut; onCl
         <div className="p-8 md:p-12 text-left">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
-              <div className="size-10 rounded-2xl bg-purple flex items-center justify-center text-white shadow-lg shadow-purple/20">
+              <div className="size-10 rounded-2xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
                 <Sparkles className="size-5" />
               </div>
-              <h2 className="text-2xl font-bold text-dark-blue dark:text-white">Hướng dẫn <span className="text-purple">Giải đáp</span></h2>
+              <h2 className="text-2xl font-bold text-dark-blue dark:text-white">Hướng dẫn <span className="text-primary">Giải đáp</span></h2>
             </div>
             <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">
               <X className="size-6 text-gray-navy" />
@@ -420,7 +423,7 @@ function AIExplanationModal({ question, onClose }: { question: QuestionOut; onCl
                     <Lightbulb className="size-3" />
                     Lời giải / Gợi ý
                   </h3>
-                  <div className="bg-purple/5 dark:bg-white/5 p-6 rounded-3xl border border-purple/10">
+                  <div className="bg-primary/5 dark:bg-white/5 p-6 rounded-3xl border border-primary/10">
                     <div
                       className="text-dark-blue dark:text-white leading-relaxed font-medium text-lg"
                       dangerouslySetInnerHTML={{ __html: solutionHtml }}

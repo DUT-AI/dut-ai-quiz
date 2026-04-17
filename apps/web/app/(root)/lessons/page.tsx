@@ -26,7 +26,7 @@ export default function LessonsPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-10">
         <div className="text-left">
           <h1 className="text-4xl md:text-5xl font-bold text-dark-blue dark:text-white">
-            Học tập & <span className="text-purple">Khám phá</span>
+            Học tập & <span className="text-primary">Khám phá</span>
           </h1>
           <p className="text-gray-navy dark:text-light-blue mt-2">
             Hệ thống lộ trình bài học giúp bạn nắm vững kiến thức từ cơ bản đến nâng cao.
@@ -37,7 +37,7 @@ export default function LessonsPage() {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setShowCreateModal(true)}
-          className="px-6 py-3 rounded-2xl bg-gradient-to-r from-purple to-purple/80 text-white font-bold flex items-center gap-2 shadow-lg shadow-purple/20 hover:shadow-purple/40 transition-all group"
+          className="px-6 py-3 rounded-2xl bg-gradient-to-r from-primary to-primary/80 text-white font-bold flex items-center gap-2 shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all group"
         >
           <Plus className="size-5 group-hover:rotate-90 transition-transform" />
           Tạo bài học mới
@@ -46,7 +46,7 @@ export default function LessonsPage() {
 
       {isLoadingLessons ? (
         <div className="flex flex-col items-center py-20 opacity-30">
-          <div className="size-10 border-4 border-purple border-t-transparent animate-spin rounded-full mb-4" />
+          <div className="size-10 border-4 border-primary border-t-transparent animate-spin rounded-full mb-4" />
           <p className="font-bold">Đang tải giáo trình...</p>
         </div>
       ) : (
@@ -63,16 +63,16 @@ export default function LessonsPage() {
                 className="cursor-pointer"
               >
                 <Card className="h-full border-none shadow-xl bg-white dark:bg-navy-blue/40 rounded-3xl overflow-hidden group">
-                  <div className="h-2 w-full bg-purple/10 group-hover:bg-purple transition-colors" />
+                  <div className="h-2 w-full bg-primary/10 group-hover:bg-primary transition-colors" />
                   <CardContent className="p-8 text-left">
                     <div className="flex justify-between items-start mb-6">
-                      <div className="size-14 rounded-2xl bg-purple/10 flex items-center justify-center text-purple font-black text-2xl group-hover:bg-purple group-hover:text-white transition-all">
+                      <div className="size-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black text-2xl group-hover:bg-primary group-hover:text-white transition-all">
                         {lesson.order}
                       </div>
                       <Badge className="bg-green/10 text-green border-none">Sẵn sàng</Badge>
                     </div>
                     
-                    <h3 className="text-2xl font-bold text-dark-blue dark:text-white mb-3 group-hover:text-purple transition-colors">
+                    <h3 className="text-2xl font-bold text-dark-blue dark:text-white mb-3 group-hover:text-primary transition-colors">
                       {lesson.name}
                     </h3>
                     <p className="text-gray-navy dark:text-light-blue text-sm line-clamp-2 mb-6 opacity-70">
@@ -84,7 +84,7 @@ export default function LessonsPage() {
                          <FileText className="size-4" />
                          Kiến thức trọng tâm
                       </div>
-                      <ChevronRight className="size-5 text-purple group-hover:translate-x-1 transition-transform" />
+                      <ChevronRight className="size-5 text-primary group-hover:translate-x-1 transition-transform" />
                     </div>
                   </CardContent>
                 </Card>
@@ -140,10 +140,10 @@ function CreateLessonModal({ onClose }: { onClose: () => void }) {
         <div className="p-8 md:p-10">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
-              <div className="size-10 rounded-2xl bg-purple flex items-center justify-center text-white">
+              <div className="size-10 rounded-2xl bg-primary flex items-center justify-center text-white">
                 <Plus className="size-5" />
               </div>
-              <h2 className="text-2xl font-bold text-dark-blue dark:text-white">Thêm <span className="text-purple">Bài học mới</span></h2>
+              <h2 className="text-2xl font-bold text-dark-blue dark:text-white">Thêm <span className="text-primary">Bài học mới</span></h2>
             </div>
             <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">
               <X className="size-6 text-gray-navy" />
@@ -158,7 +158,7 @@ function CreateLessonModal({ onClose }: { onClose: () => void }) {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Ví dụ: Giải tích 1 - Đạo hàm"
-                className="w-full px-6 py-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 focus:border-purple outline-none transition-all font-medium"
+                className="w-full px-6 py-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 focus:border-primary outline-none transition-all font-medium"
               />
             </div>
 
@@ -169,7 +169,7 @@ function CreateLessonModal({ onClose }: { onClose: () => void }) {
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Mô tả nội dung trọng tâm của bài học..."
                 rows={3}
-                className="w-full px-6 py-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 focus:border-purple outline-none transition-all font-medium resize-none"
+                className="w-full px-6 py-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 focus:border-primary outline-none transition-all font-medium resize-none"
               />
             </div>
 
@@ -180,7 +180,7 @@ function CreateLessonModal({ onClose }: { onClose: () => void }) {
                   type="number"
                   value={order}
                   onChange={(e) => setOrder(e.target.value)}
-                  className="w-full px-6 py-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 focus:border-purple outline-none transition-all font-medium"
+                  className="w-full px-6 py-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 focus:border-primary outline-none transition-all font-medium"
                 />
               </div>
               <div className="flex flex-col justify-end">
@@ -203,7 +203,7 @@ function CreateLessonModal({ onClose }: { onClose: () => void }) {
                <Button 
                 type="submit"
                 disabled={!name.trim() || createMut.isPending}
-                className="flex-2 px-10 py-6 rounded-2xl bg-purple text-white font-bold flex items-center gap-2 shadow-lg shadow-purple/20"
+                className="flex-2 px-10 py-6 rounded-2xl bg-primary text-white font-bold flex items-center gap-2 shadow-lg shadow-primary/20"
                >
                  {createMut.isPending ? (
                    <div className="size-4 border-2 border-white border-t-transparent animate-spin rounded-full" />

@@ -79,7 +79,7 @@ function LessonFormInline({
         <button
           type="submit"
           disabled={saving}
-          className="px-4 py-1.5 rounded-lg bg-purple text-white text-sm font-medium hover:bg-purple/80 disabled:opacity-50 transition"
+          className="px-4 py-1.5 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/80 disabled:opacity-50 transition"
         >
           {saving ? "Đang lưu…" : initial ? "Cập nhật" : "Tạo bài học"}
         </button>
@@ -110,7 +110,7 @@ function LessonRow({ lesson }: { lesson: Lesson }) {
     <div className="rounded-xl bg-white dark:bg-slate/20 border border-slate/10 dark:border-white/10 overflow-hidden">
       {!editing ? (
         <div className="flex items-center gap-4 p-4">
-          <div className="w-8 h-8 rounded-lg bg-purple/10 flex items-center justify-center text-purple font-bold text-sm shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-sm shrink-0">
             {lesson.order}
           </div>
           <div className="flex-1 min-w-0">
@@ -126,7 +126,7 @@ function LessonRow({ lesson }: { lesson: Lesson }) {
           <div className="flex gap-2 shrink-0">
             <Link
               href={`/teacher/lessons/${lesson.id}/questions`}
-              className="text-xs px-2 py-1 rounded bg-purple/10 text-purple hover:bg-purple/20 transition font-medium"
+              className="text-xs px-2 py-1 rounded bg-primary/10 text-primary hover:bg-primary/20 transition font-medium"
             >
               Câu hỏi
             </Link>
@@ -181,14 +181,14 @@ export default function LessonsPage() {
         </h1>
         <button
           onClick={() => setShowCreate(true)}
-          className="px-4 py-2 bg-purple text-white rounded-lg text-sm font-medium hover:bg-purple/80 transition"
+          className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/80 transition"
         >
           + Thêm bài học
         </button>
       </div>
 
       {showCreate && (
-        <div className="mb-4 p-4 rounded-xl bg-white dark:bg-slate/20 border border-purple/30 shadow-sm">
+        <div className="mb-4 p-4 rounded-xl bg-white dark:bg-slate/20 border border-primary/30 shadow-sm">
           <p className="text-sm font-semibold mb-3 text-dark-blue dark:text-white">
             Bài học mới
           </p>

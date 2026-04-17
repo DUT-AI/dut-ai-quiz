@@ -132,7 +132,7 @@ export default function ExamForm({ initial, onSave, onCancel, saving }: Props) {
           type="checkbox"
           checked={isPublished}
           onChange={(e) => setIsPublished(e.target.checked)}
-          className="accent-purple"
+          className="accent-primary"
         />
         <span className="text-sm">Công khai (học sinh có thể thấy)</span>
       </label>
@@ -150,7 +150,7 @@ export default function ExamForm({ initial, onSave, onCancel, saving }: Props) {
         <button
           type="submit"
           disabled={saving}
-          className="px-4 py-2 rounded text-sm font-medium bg-purple text-white hover:bg-purple/80 disabled:opacity-50 transition"
+          className="px-4 py-2 rounded text-sm font-medium bg-primary text-white hover:bg-primary/80 disabled:opacity-50 transition"
         >
           {saving ? "Đang lưu…" : initial ? "Cập nhật" : "Tạo mới"}
         </button>

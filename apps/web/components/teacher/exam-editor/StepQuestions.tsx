@@ -1,13 +1,13 @@
 "use client";
 import React, { useState, useMemo } from "react";
 import { useLessons, useQuestions } from "@/lib/queries";
-import { 
-  Search, 
-  Filter, 
-  Layers, 
-  HelpCircle, 
-  Plus, 
-  Minus, 
+import {
+  Search,
+  Filter,
+  Layers,
+  HelpCircle,
+  Plus,
+  Minus,
   GripVertical,
   BookOpen,
   Sparkles,
@@ -24,7 +24,7 @@ interface Props {
 
 export default function StepQuestions({ selectedIds, onChange }: Props) {
   const { data: lessons = [] } = useLessons();
-  
+
   const [activeLessonId, setActiveLessonId] = useState<string>("");
   const [activePoolType, setActivePoolType] = useState<string>("EXAM");
   const [search, setSearch] = useState("");
@@ -35,8 +35,8 @@ export default function StepQuestions({ selectedIds, onChange }: Props) {
   });
 
   const availableQuestions = useMemo(() => {
-    return allQuestions.filter(q => 
-      !selectedIds.includes(q.id) && 
+    return allQuestions.filter(q =>
+      !selectedIds.includes(q.id) &&
       q.content.toLowerCase().includes(search.toLowerCase())
     );
   }, [allQuestions, selectedIds, search]);
@@ -54,7 +54,7 @@ export default function StepQuestions({ selectedIds, onChange }: Props) {
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
       <div className="flex flex-col lg:flex-row gap-6">
-        
+
         {/* Left: Question Bank */}
         <div className="flex-1 min-w-0 space-y-4">
           <div className="flex flex-wrap items-center gap-4">
@@ -65,16 +65,16 @@ export default function StepQuestions({ selectedIds, onChange }: Props) {
                 placeholder="Tìm nội dung câu hỏi..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-12 pr-6 py-4 rounded-3xl bg-gray-50 dark:bg-white/5 border-none focus:ring-2 focus:ring-purple/50 transition-all font-medium"
+                className="w-full pl-12 pr-6 py-4 rounded-3xl bg-gray-50 dark:bg-white/5 border-none focus:ring-2 focus:ring-primary/50 transition-all font-medium"
               />
             </div>
-            
+
             <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-gray-50 dark:bg-white/5">
               <button
                 onClick={() => setActivePoolType("EXAM")}
                 className={cn(
                   "px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
-                  activePoolType === "EXAM" ? "bg-white dark:bg-navy-blue shadow-sm text-purple" : "text-gray-navy opacity-50"
+                  activePoolType === "EXAM" ? "bg-white dark:bg-navy-blue shadow-sm text-primary" : "text-gray-navy opacity-50"
                 )}
               >
                 Kiểm tra
@@ -83,7 +83,7 @@ export default function StepQuestions({ selectedIds, onChange }: Props) {
                 onClick={() => setActivePoolType("PRACTICE")}
                 className={cn(
                   "px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
-                  activePoolType === "PRACTICE" ? "bg-white dark:bg-navy-blue shadow-sm text-purple" : "text-gray-navy opacity-50"
+                  activePoolType === "PRACTICE" ? "bg-white dark:bg-navy-blue shadow-sm text-primary" : "text-gray-navy opacity-50"
                 )}
               >
                 Luyện tập
@@ -96,9 +96,9 @@ export default function StepQuestions({ selectedIds, onChange }: Props) {
               onClick={() => setActiveLessonId("")}
               className={cn(
                 "px-5 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all border",
-                activeLessonId === "" 
-                  ? "bg-purple text-white border-purple" 
-                  : "bg-white dark:bg-navy-blue border-gray-100 dark:border-white/5 text-gray-navy hover:border-purple/30"
+                activeLessonId === ""
+                  ? "bg-primary text-white border-primary"
+                  : "bg-white dark:bg-navy-blue border-gray-100 dark:border-white/5 text-gray-navy hover:border-primary/30"
               )}
             >
               Tất cả bài học
@@ -109,9 +109,9 @@ export default function StepQuestions({ selectedIds, onChange }: Props) {
                 onClick={() => setActiveLessonId(lesson.id)}
                 className={cn(
                   "px-5 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all border",
-                  activeLessonId === lesson.id 
-                    ? "bg-purple text-white border-purple" 
-                    : "bg-white dark:bg-navy-blue border-gray-100 dark:border-white/5 text-gray-navy hover:border-purple/30"
+                  activeLessonId === lesson.id
+                    ? "bg-primary text-white border-primary"
+                    : "bg-white dark:bg-navy-blue border-gray-100 dark:border-white/5 text-gray-navy hover:border-primary/30"
                 )}
               >
                 {lesson.name}
@@ -133,15 +133,15 @@ export default function StepQuestions({ selectedIds, onChange }: Props) {
               </div>
             ) : (
               availableQuestions.map((q, idx) => (
-                <div 
+                <div
                   key={q.id}
-                  className="group flex gap-4 p-5 rounded-[2rem] bg-white dark:bg-navy-blue/40 border border-gray-100 dark:border-white/5 hover:border-purple/30 transition-all hover:translate-x-1"
+                  className="group flex gap-4 p-5 rounded-[2rem] bg-white dark:bg-navy-blue/40 border border-gray-100 dark:border-white/5 hover:border-primary/30 transition-all hover:translate-x-1"
                 >
                   <div className="size-10 rounded-2xl bg-gray-50 dark:bg-white/5 flex items-center justify-center text-gray-navy font-bold text-xs shrink-0">
                     {idx + 1}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div 
+                    <div
                       className="text-sm font-medium leading-relaxed line-clamp-2 break-words"
                       dangerouslySetInnerHTML={{ __html: renderMathInHTML(q.content.substring(0, 150)) }}
                     />
@@ -153,9 +153,9 @@ export default function StepQuestions({ selectedIds, onChange }: Props) {
                       ))}
                     </div>
                   </div>
-                  <button 
+                  <button
                     onClick={() => addQuestion(q.id)}
-                    className="size-10 rounded-2xl bg-purple/10 text-purple flex items-center justify-center hover:bg-purple hover:text-white transition-all shrink-0"
+                    className="size-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-all shrink-0"
                   >
                     <Plus className="size-5" />
                   </button>
@@ -167,7 +167,7 @@ export default function StepQuestions({ selectedIds, onChange }: Props) {
 
         {/* Right: Selected Questions & Ordering */}
         <div className="w-full lg:w-96 flex flex-col gap-4">
-          <div className="p-6 rounded-[2.5rem] bg-purple text-white shadow-xl shadow-purple-500/20">
+          <div className="p-6 rounded-[2.5rem] bg-primary text-white shadow-xl shadow-primary/20">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-black uppercase tracking-[0.2em] text-[10px] opacity-80">Đề thi hiện tại</h3>
               <Sparkles className="size-4 opacity-60" />
@@ -179,7 +179,7 @@ export default function StepQuestions({ selectedIds, onChange }: Props) {
           <div className="flex-1 bg-gray-50 dark:bg-white/5 rounded-[2.5rem] p-4 flex flex-col h-[400px]">
             <div className="flex items-center justify-between px-2 mb-4">
               <span className="text-[10px] font-black text-gray-navy opacity-40 uppercase tracking-widest italic">Sắp xếp đề</span>
-              <button 
+              <button
                 onClick={() => onChange([])}
                 className="text-[10px] font-bold text-red hover:underline"
               >
@@ -187,15 +187,15 @@ export default function StepQuestions({ selectedIds, onChange }: Props) {
               </button>
             </div>
 
-            <Reorder.Group 
-              axis="y" 
-              values={selectedIds} 
+            <Reorder.Group
+              axis="y"
+              values={selectedIds}
               onReorder={onChange}
               className="flex-1 overflow-y-auto pr-1 space-y-2 custom-scrollbar"
             >
               {selectedQuestions.map((q) => (
-                <Reorder.Item 
-                  key={q.id} 
+                <Reorder.Item
+                  key={q.id}
                   value={q.id}
                   className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-navy-blue shadow-sm border border-black/5 cursor-grab active:cursor-grabbing group"
                 >
@@ -203,7 +203,7 @@ export default function StepQuestions({ selectedIds, onChange }: Props) {
                   <div className="flex-1 min-w-0">
                     <p className="text-[11px] font-bold truncate">{q.content}</p>
                   </div>
-                  <button 
+                  <button
                     onClick={() => removeQuestion(q.id)}
                     className="size-6 rounded-lg hover:bg-red/10 text-red opacity-30 hover:opacity-100 transition-all flex items-center justify-center shrink-0"
                   >

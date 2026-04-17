@@ -29,7 +29,7 @@ export default function ReviewPage() {
     if (isLoading) {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen space-y-4">
-                <Loader2 className="size-12 animate-spin text-purple" />
+                <Loader2 className="size-12 animate-spin text-primary" />
                 <p className="text-gray-navy font-bold">Đang phân tích kết quả bài thi...</p>
             </div>
         );
@@ -42,7 +42,7 @@ export default function ReviewPage() {
                 <h2 className="text-2xl font-black text-dark-blue">Không tìm thấy dữ liệu bài thi</h2>
                 <button
                     onClick={() => router.push("/history")}
-                    className="px-8 py-3 bg-purple text-white rounded-2xl font-black shadow-xl"
+                    className="px-8 py-3 bg-primary text-white rounded-2xl font-black shadow-xl"
                 >
                     QUAY LẠI LỊCH SỬ
                 </button>
@@ -58,7 +58,7 @@ export default function ReviewPage() {
             {/* Back Button */}
             <button
                 onClick={() => router.push("/history")}
-                className="group flex items-center gap-2 text-gray-navy hover:text-purple transition-all font-black text-sm uppercase tracking-tighter"
+                className="group flex items-center gap-2 text-gray-navy hover:text-primary transition-all font-black text-sm uppercase tracking-tighter"
             >
                 <ArrowLeft className="size-4 group-hover:-translate-x-1 transition-transform" />
                 Quay lại Lịch sử
@@ -81,7 +81,7 @@ export default function ReviewPage() {
                                 initial={{ strokeDashoffset: 440 }}
                                 animate={{ strokeDashoffset: 440 - (440 * scorePercentage) / 100 }}
                                 transition={{ duration: 1.5, ease: "easeOut" }}
-                                className="text-purple-400"
+                                className="text-primary"
                             />
                         </svg>
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -93,7 +93,7 @@ export default function ReviewPage() {
                     <div className="space-y-4 text-center md:text-left flex-1">
                         <div className="space-y-1">
                             <h1 className="text-3xl font-black tracking-tighter leading-tight">Phân tích Chi tiết Kết quả</h1>
-                            <p className="text-purple-200 font-bold opacity-80">
+                            <p className="text-primary font-bold opacity-80">
                                 {format(new Date(attempt.started_at), "HH:mm, dd/MM/yyyy", { locale: vi })}
                             </p>
                         </div>
@@ -109,7 +109,7 @@ export default function ReviewPage() {
             {/* Question Review List */}
             <div className="space-y-8">
                 <h2 className="text-2xl font-black text-dark-blue flex items-center gap-3">
-                    <BookOpen className="size-6 text-purple" />
+                    <BookOpen className="size-6 text-primary" />
                     Chi tiết Đáp án
                 </h2>
 
@@ -171,7 +171,7 @@ export default function ReviewPage() {
                                                         borderWidth: '2px',
                                                         borderStyle: 'solid'
                                                     }}
-                                                    className={`relative p-6 rounded-[2rem] transition-all duration-300 ${isUserChoice ? 'ring-4 ring-purple/30' : ''}`}
+                                                    className={`relative p-6 rounded-[2rem] transition-all duration-300 ${isUserChoice ? 'ring-4 ring-primary/30' : ''}`}
                                                 >
                                                     <div className="flex items-start gap-4">
                                                         <div
@@ -184,7 +184,7 @@ export default function ReviewPage() {
                                                         </div>
                                                     </div>
                                                     {isUserChoice && (
-                                                        <div className="absolute -top-3 left-6 px-4 py-1.5 bg-purple text-white text-[10px] font-black rounded-full uppercase shadow-xl z-20">
+                                                        <div className="absolute -top-3 left-6 px-4 py-1.5 bg-primary text-white text-[10px] font-black rounded-full uppercase shadow-xl z-20">
                                                             ✨ Lựa chọn của bạn
                                                         </div>
                                                     )}
@@ -202,8 +202,8 @@ export default function ReviewPage() {
 
                                     {/* Solution / Explanation */}
                                     {q.solution && (
-                                        <div className="p-6 rounded-3xl bg-purple/5 border border-purple/10 space-y-3">
-                                            <div className="flex items-center gap-2 text-purple font-black text-xs uppercase tracking-widest">
+                                        <div className="p-6 rounded-3xl bg-primary/5 border border-primary/10 space-y-3">
+                                            <div className="flex items-center gap-2 text-primary font-black text-xs uppercase tracking-widest">
                                                 <Info className="size-4" />
                                                 Lời giải chi tiết
                                             </div>

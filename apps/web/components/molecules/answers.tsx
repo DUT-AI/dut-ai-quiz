@@ -73,7 +73,7 @@ const Answers = ({ options, questionId, goNextQuestion }: AnswersProps) => {
         type="button"
         onClick={() => void handlePrimary()}
         className={cn(
-          "w-full bg-purple py-4 px-5 rounded-xl shadow-lg text-white font-semibold text-lg text-center"
+          "w-full bg-primary py-4 px-5 rounded-xl shadow-lg text-white font-semibold text-lg text-center"
         )}
       >
         {submitted

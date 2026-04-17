@@ -34,7 +34,7 @@ const SwitchTheme = () => {
           className="peer sr-only"
         />
         <label htmlFor="switch" className="hidden"></label>
-        <div className="peer h-6 w-11 rounded-full border-none bg-silver bg-purple after:absolute after:left-[2px] after:top-0.5 after:h-5 after:w-5 after:rounded-full  after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
+        <div className="peer h-6 w-11 rounded-full border-none bg-silver bg-primary after:absolute after:left-[2px] after:top-0.5 after:h-5 after:w-5 after:rounded-full  after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
       </label>
       <Image
         src={

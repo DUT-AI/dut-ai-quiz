@@ -124,7 +124,7 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
           {/* Header */}
           <div className="p-8 border-b border-gray-100 dark:border-white/10 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-4 text-left">
-              <div className="size-12 rounded-2xl bg-gradient-to-br from-purple to-pink-500 flex items-center justify-center text-white shadow-lg shadow-purple/20">
+              <div className="size-12 rounded-2xl bg-gradient-to-br from-primary to-pink-500 flex items-center justify-center text-white shadow-lg shadow-primary/20">
                 <Plus className="size-6" />
               </div>
               <div>
@@ -159,11 +159,11 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
                         onPaste={(e) => handlePasteImage(e, (file) => handleUpload(file, "content"))}
                         placeholder="Nhập nội dung câu học, $...$ cho LaTeX, hỗ trợ dán ảnh trực tiếp (Ctrl+V)..."
                         rows={6}
-                        className="w-full px-8 py-6 rounded-3xl bg-gray-50 dark:bg-white/5 border-2 border-transparent focus:border-purple/30 outline-none transition-all font-medium text-lg leading-relaxed resize-none"
+                        className="w-full px-8 py-6 rounded-3xl bg-gray-50 dark:bg-white/5 border-2 border-transparent focus:border-primary/30 outline-none transition-all font-medium text-lg leading-relaxed resize-none"
                       />
                       <div className="absolute right-4 bottom-4 flex items-center gap-3">
-                         {uploading === "content" && <Loader2 className="size-5 animate-spin text-purple" />}
-                         <label className="cursor-pointer p-2 rounded-xl bg-white dark:bg-white/10 shadow-sm hover:scale-110 active:scale-95 transition-all text-purple">
+                         {uploading === "content" && <Loader2 className="size-5 animate-spin text-primary" />}
+                         <label className="cursor-pointer p-2 rounded-xl bg-white dark:bg-white/10 shadow-sm hover:scale-110 active:scale-95 transition-all text-primary">
                             <ImageIcon className="size-5" />
                             <input 
                               type="file" 
@@ -190,7 +190,7 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
                             className={cn(
                               "mt-4 size-8 rounded-xl flex items-center justify-center border-2 transition-all font-black text-xs shrink-0",
                               opt.is_correct 
-                                ? "bg-purple border-purple text-white shadow-lg shadow-purple/20" 
+                                ? "bg-primary border-primary text-white shadow-lg shadow-primary/20" 
                                 : "bg-transparent border-gray-200 dark:border-white/10 text-gray-navy"
                             )}
                           >
@@ -205,11 +205,11 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
                                 onPaste={(e) => handlePasteImage(e, (file) => handleUpload(file, opt.id))}
                                 placeholder={`Đáp án ${String.fromCharCode(65 + idx)}...`}
                                 rows={1}
-                                className="w-full px-6 py-4 rounded-2xl bg-gray-50/50 dark:bg-white/5 border border-transparent focus:border-purple/30 outline-none transition-all font-medium min-h-[56px] resize-none overflow-hidden"
+                                className="w-full px-6 py-4 rounded-2xl bg-gray-50/50 dark:bg-white/5 border border-transparent focus:border-primary/30 outline-none transition-all font-medium min-h-[56px] resize-none overflow-hidden"
                               />
                             </div>
                             <div className="flex items-center gap-1 shrink-0 pt-2">
-                               <label className="cursor-pointer p-2 rounded-xl text-gray-navy hover:text-purple hover:bg-purple/10 transition-all opacity-40 hover:opacity-100 flex items-center justify-center">
+                               <label className="cursor-pointer p-2 rounded-xl text-gray-navy hover:text-primary hover:bg-primary/10 transition-all opacity-40 hover:opacity-100 flex items-center justify-center">
                                   {uploading === opt.id ? <Loader2 className="size-4 animate-spin" /> : <ImageIcon className="size-4" />}
                                   <input 
                                     type="file" 
@@ -237,7 +237,7 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
                           type="button"
                           variant="ghost"
                           onClick={() => setOptions(prev => [...prev, EMPTY_OPTION()])}
-                          className="w-fit text-purple font-bold flex items-center gap-2 mt-2 px-6"
+                          className="w-fit text-primary font-bold flex items-center gap-2 mt-2 px-6"
                         >
                           <Plus className="size-4" /> Thêm đáp án
                         </Button>
@@ -257,10 +257,10 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
                         onPaste={(e) => handlePasteImage(e, (file) => handleUpload(file, "solution"))}
                         placeholder="Hướng dẫn giải bài tập..."
                         rows={3}
-                        className="w-full px-8 py-6 rounded-3xl bg-gray-50 dark:bg-white/5 border border-transparent focus:border-purple/30 outline-none transition-all font-medium text-sm resize-none"
+                        className="w-full px-8 py-6 rounded-3xl bg-gray-50 dark:bg-white/5 border border-transparent focus:border-primary/30 outline-none transition-all font-medium text-sm resize-none"
                       />
                       <div className="absolute right-4 bottom-4">
-                        <label className="cursor-pointer p-2 rounded-xl bg-white dark:bg-white/10 shadow-sm hover:scale-110 transition-all text-purple opacity-40 hover:opacity-100 block">
+                        <label className="cursor-pointer p-2 rounded-xl bg-white dark:bg-white/10 shadow-sm hover:scale-110 transition-all text-primary opacity-40 hover:opacity-100 block">
                             <ImageIcon className="size-5" />
                             <input 
                               type="file" 
@@ -276,7 +276,7 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
 
                 {/* Right side: Tips */}
                 <div className="md:col-span-1 space-y-8">
-                   <div className="p-8 rounded-[32px] bg-purple/5 dark:bg-white/5 border border-purple/10 space-y-6">
+                   <div className="p-8 rounded-[32px] bg-primary/5 dark:bg-white/5 border border-primary/10 space-y-6">
                       <div className="space-y-2">
                          <div className="p-4 rounded-2xl bg-white dark:bg-navy-blue text-[10px] leading-relaxed opacity-60">
                            <p className="font-bold mb-1">💡 Tips:</p>
@@ -303,7 +303,7 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
               form="question-form"
               type="submit"
               disabled={!content.trim() || createMut.isPending || updateMut.isPending}
-              className="py-6 px-12 rounded-2xl bg-purple text-white font-bold flex items-center gap-2 shadow-xl shadow-purple/20 transition-all hover:scale-105 active:scale-95"
+              className="py-6 px-12 rounded-2xl bg-primary text-white font-bold flex items-center gap-2 shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95"
             >
               {(createMut.isPending || updateMut.isPending) ? (
                 <Loader2 className="size-5 animate-spin" />

@@ -36,7 +36,7 @@ export function TabOutWarningModal() {
           <button
             type="button"
             onClick={() => setWarnModal(false)}
-            className="w-full bg-purple py-3 px-5 rounded-xl text-white font-semibold text-base hover:opacity-90 transition-opacity"
+            className="w-full bg-primary py-3 px-5 rounded-xl text-white font-semibold text-base hover:opacity-90 transition-opacity"
           >
             Tôi hiểu, tiếp tục làm bài
           </button>

@@ -46,6 +46,7 @@ from app.application.use_cases.lessons.lesson_use_case import (
     CreateLessonUseCase,
     UpdateLessonUseCase,
     DeleteLessonUseCase,
+    GetLessonDetailUseCase,
 )
 from app.application.use_cases.auth.auth_use_case import ProxyLoginUseCase, LogoutUseCase
 from app.application.use_cases.me.me_use_case import GetProfileUseCase
@@ -103,6 +104,7 @@ class UseCaseProvider(Provider):
     create_lesson_use_case = provide(CreateLessonUseCase, scope=Scope.REQUEST)
     update_lesson_use_case = provide(UpdateLessonUseCase, scope=Scope.REQUEST)
     delete_lesson_use_case = provide(DeleteLessonUseCase, scope=Scope.REQUEST)
+    get_lesson_detail_use_case = provide(GetLessonDetailUseCase, scope=Scope.REQUEST)
 
     # auth & me
     proxy_login_use_case = provide(ProxyLoginUseCase, scope=Scope.REQUEST)

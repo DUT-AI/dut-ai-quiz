@@ -115,7 +115,7 @@ export default function ExamStatsDetailPage() {
           icon={Trophy} 
           label="Điểm cao nhất" 
           value={summary.max_score} 
-          color="purple"
+          color="primary"
         />
         <MetricCard 
           icon={Activity} 
@@ -265,12 +265,12 @@ function MetricCard({ icon: Icon, label, value, color }: {
   icon: any, 
   label: string, 
   value: string | number, 
-  color: "blue" | "green" | "purple" | "orange" 
+  color: "blue" | "green" | "primary" | "orange" 
 }) {
   const colors = {
     blue: "bg-blue-500/10 text-blue-500",
     green: "bg-green-500/10 text-green-500",
-    purple: "bg-purple/10 text-purple",
+    primary: "bg-primary/10 text-primary",
     orange: "bg-orange/10 text-orange",
   };
 

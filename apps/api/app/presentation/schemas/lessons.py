@@ -1,6 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 from pydantic import BaseModel
+from app.presentation.schemas.questions import QuestionOut
 
 class LessonCreate(BaseModel):
     name: str
@@ -20,3 +21,6 @@ class LessonOut(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+class LessonDetailOut(LessonOut):
+    questions: list[QuestionOut] = []

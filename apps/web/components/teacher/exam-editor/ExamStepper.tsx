@@ -109,13 +109,13 @@ export default function ExamStepper({ initialData }: Props) {
                   onClick={() => idx < currentStep && setCurrentStep(idx)}
                   className={cn(
                     "flex items-center gap-3 px-6 py-3 rounded-[2rem] transition-all",
-                    isActive ? "bg-white dark:bg-navy-blue shadow-lg text-purple scale-105" : 
+                    isActive ? "bg-white dark:bg-navy-blue shadow-lg text-primary scale-105" : 
                     isDone ? "text-green" : "text-gray-navy opacity-40"
                   )}
                 >
                   <div className={cn(
                     "size-8 rounded-xl flex items-center justify-center transition-all",
-                    isActive ? "bg-purple text-white shadow-lg shadow-purple/30" : 
+                    isActive ? "bg-primary text-white shadow-lg shadow-primary/30" : 
                     isDone ? "bg-green text-white" : "bg-gray-200 dark:bg-white/10"
                   )}>
                     {isDone ? <CheckCircle2 className="size-5" /> : <Icon className="size-4" />}
@@ -171,7 +171,7 @@ export default function ExamStepper({ initialData }: Props) {
               <button
                 onClick={handleSave}
                 disabled={isSaving || !formData.title || questionIds.length === 0}
-                className="px-10 py-5 rounded-[2rem] bg-gradient-to-br from-purple to-pink-500 text-white font-black uppercase tracking-widest text-xs flex items-center gap-3 shadow-xl shadow-purple/30 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:grayscale"
+                className="px-10 py-5 rounded-[2rem] bg-gradient-to-br from-primary to-pink-500 text-white font-black uppercase tracking-widest text-xs flex items-center gap-3 shadow-xl shadow-primary/30 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:grayscale"
               >
                 {isSaving ? "Đang lưu..." : "Lưu kỳ thi"}
                 <Save className="size-5" />

@@ -312,7 +312,7 @@ export default function TestEnvironmentPage() {
           </div>
           <button 
             onClick={() => window.location.reload()}
-            className="w-full py-4 bg-purple text-white rounded-2xl font-black text-sm shadow-xl shadow-purple-500/20 active:scale-95 transition-all"
+            className="w-full py-4 bg-primary text-white rounded-2xl font-black text-sm shadow-xl shadow-primary/20 active:scale-95 transition-all"
           >
             THỬ LẠI
           </button>
@@ -329,8 +329,8 @@ export default function TestEnvironmentPage() {
   if (loadingAttempt || timeLeft === null) {
      return <div className="h-screen w-full flex items-center justify-center bg-[#F8FAFC] dark:bg-black">
        <div className="flex flex-col items-center gap-4">
-         <div className="size-16 border-4 border-purple border-t-transparent animate-spin rounded-full" />
-         <p className="font-bold text-purple animate-pulse">Hệ thống đang nạp dữ liệu...</p>
+         <div className="size-16 border-4 border-primary border-t-transparent animate-spin rounded-full" />
+         <p className="font-bold text-primary animate-pulse">Hệ thống đang nạp dữ liệu...</p>
        </div>
      </div>;
   }
@@ -343,8 +343,8 @@ export default function TestEnvironmentPage() {
       {/* Top Header */}
       <header className="h-20 bg-white dark:bg-navy-blue border-b border-gray-100 dark:border-white/5 flex items-center justify-between px-6 md:px-12 z-50 shadow-sm shrink-0">
         <div className="flex items-center gap-4">
-           <div className="size-10 rounded-xl bg-purple/10 flex items-center justify-center">
-              <span className="text-purple font-black text-xs">AI</span>
+           <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <span className="text-primary font-black text-xs">AI</span>
            </div>
            <div className="hidden md:block">
              <h2 className="text-sm font-black text-dark-blue dark:text-white uppercase tracking-wider line-clamp-1 max-w-[300px]">
@@ -365,7 +365,7 @@ export default function TestEnvironmentPage() {
         <button 
           onClick={handleSubmit}
           disabled={isSubmitting}
-          className="bg-purple hover:bg-purple/90 text-white px-8 py-3 rounded-2xl font-black text-sm shadow-xl shadow-purple-500/20 active:scale-95 transition-all flex items-center gap-2"
+          className="bg-primary hover:bg-primary/90 text-white px-8 py-3 rounded-2xl font-black text-sm shadow-xl shadow-primary/20 active:scale-95 transition-all flex items-center gap-2"
         >
           <Send className="size-4" />
           NỘP BÀI
@@ -396,9 +396,9 @@ export default function TestEnvironmentPage() {
                     className={cn(
                       "size-10 rounded-xl flex items-center justify-center text-xs font-black transition-all border",
                       currentIndex === i 
-                        ? "bg-purple text-white border-purple shadow-lg shadow-purple-500/20" 
+                        ? "bg-primary text-white border-primary shadow-lg shadow-primary/20" 
                         : answers[questions[i].question_id] 
-                          ? "bg-purple/10 text-purple border-purple/30" 
+                          ? "bg-primary/10 text-primary border-primary/30" 
                           : "bg-gray-50 dark:bg-white/5 text-gray-navy border-transparent"
                     )}
                   >
@@ -415,7 +415,7 @@ export default function TestEnvironmentPage() {
               </div>
               <div className="h-1.5 w-full bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden">
                  <div 
-                   className="h-full bg-purple transition-all duration-500" 
+                   className="h-full bg-primary transition-all duration-500" 
                    style={{ width: `${(Object.keys(answers).filter(id => answers[id]).length / questions.length) * 100}%` }}
                  />
               </div>
@@ -442,10 +442,10 @@ export default function TestEnvironmentPage() {
                {/* Question Header */}
                <div className="space-y-4">
                   <div className="flex items-center gap-3">
-                     <span className="size-8 rounded-lg bg-purple text-white font-black text-xs flex items-center justify-center">
+                     <span className="size-8 rounded-lg bg-primary text-white font-black text-xs flex items-center justify-center">
                         {currentIndex + 1}
                      </span>
-                     <h3 className="text-[10px] font-black uppercase text-purple tracking-[0.2em]">CÂU HỎI TRẮC NGHIỆM</h3>
+                     <h3 className="text-[10px] font-black uppercase text-primary tracking-[0.2em]">CÂU HỎI TRẮC NGHIỆM</h3>
                   </div>
                   <div 
                     className="text-xl md:text-2xl font-bold text-dark-blue dark:text-white leading-relaxed question-content select-none"
@@ -462,15 +462,15 @@ export default function TestEnvironmentPage() {
                       className={cn(
                         "group flex items-center gap-6 p-6 md:p-8 rounded-[2rem] border-2 transition-all text-left",
                         answers[currentQuestion.question_id] === opt.id
-                          ? "bg-purple/10 border-purple text-purple shadow-lg shadow-purple-500/10"
-                          : "bg-white dark:bg-navy-blue border-gray-100 dark:border-white/5 text-gray-navy hover:border-purple/30"
+                          ? "bg-primary/10 border-primary text-primary shadow-lg shadow-primary/10"
+                          : "bg-white dark:bg-navy-blue border-gray-100 dark:border-white/5 text-gray-navy hover:border-primary/30"
                       )}
                     >
                        <div className={cn(
                          "size-8 rounded-full border-2 flex items-center justify-center shrink-0 transition-all font-black text-xs",
                          answers[currentQuestion.question_id] === opt.id
-                           ? "border-purple bg-purple text-white"
-                           : "border-gray-200 dark:border-white/10 group-hover:border-purple/50"
+                           ? "border-primary bg-primary text-white"
+                           : "border-gray-200 dark:border-white/10 group-hover:border-primary/50"
                        )}>
                          {String.fromCharCode(65 + currentQuestion.options.indexOf(opt))}
                        </div>
@@ -528,8 +528,8 @@ export default function TestEnvironmentPage() {
       {!isFullScreen && !isSubmitting && data?.attempt?.status === "IN_PROGRESS" && (
         <div className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-xl flex items-center justify-center p-6 text-center">
             <div className="max-w-md space-y-8">
-                <div className="size-24 rounded-3xl bg-purple/10 flex items-center justify-center mx-auto border border-purple/20">
-                    <AlertCircle className="size-12 text-purple" />
+                <div className="size-24 rounded-3xl bg-primary/10 flex items-center justify-center mx-auto border border-primary/20">
+                    <AlertCircle className="size-12 text-primary" />
                 </div>
                 <div className="space-y-4">
                     <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Yêu cầu Toàn màn hình</h2>
@@ -540,7 +540,7 @@ export default function TestEnvironmentPage() {
                 </div>
                 <button 
                   onClick={enterFullScreen}
-                  className="w-full py-5 bg-purple text-white rounded-2xl font-black text-lg shadow-2xl shadow-purple-500/20 active:scale-95 transition-all"
+                  className="w-full py-5 bg-primary text-white rounded-2xl font-black text-lg shadow-2xl shadow-primary/20 active:scale-95 transition-all"
                 >
                   VÀO CHẾ ĐỘ TOÀN MÀN HÌNH
                 </button>

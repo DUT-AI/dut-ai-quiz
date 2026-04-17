@@ -14,7 +14,7 @@ export default function EditExamPage() {
 
   if (loadingExam || loadingQuestions) {
     return (
-      <div className="h-[60vh] flex flex-col items-center justify-center text-purple">
+      <div className="h-[60vh] flex flex-col items-center justify-center text-primary">
         <Loader2 className="size-10 animate-spin mb-4" />
         <p className="font-bold animate-pulse">Đang tải dữ liệu kỳ thi...</p>
       </div>
@@ -25,7 +25,7 @@ export default function EditExamPage() {
     return (
       <div className="text-center py-20">
         <h1 className="text-2xl font-bold mb-4">Không tìm thấy kỳ thi</h1>
-        <button onClick={() => router.push("/teacher/exams")} className="text-purple font-bold">
+        <button onClick={() => router.push("/teacher/exams")} className="text-primary font-bold">
           Quay lại danh sách
         </button>
       </div>
@@ -42,7 +42,7 @@ export default function EditExamPage() {
     <div className="w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
       <button
         onClick={() => router.push("/teacher/exams")}
-        className="flex items-center gap-2 text-purple font-bold hover:gap-3 transition-all mb-4 group"
+        className="flex items-center gap-2 text-primary font-bold hover:gap-3 transition-all mb-4 group"
       >
         <ArrowLeft className="size-5" />
         Quay lại danh sách kỳ thi
@@ -54,7 +54,7 @@ export default function EditExamPage() {
             CHỈNH SỬA
           </span>
           <h1 className="text-4xl md:text-5xl font-bold text-dark-blue dark:text-white mb-4">
-            Cập nhật <span className="text-purple">{exam.title}</span>
+            Cập nhật <span className="text-primary">{exam.title}</span>
           </h1>
           <p className="text-lg text-gray-navy dark:text-light-blue max-w-2xl opacity-70">
             Bạn đang chỉnh sửa cấu hình kỳ thi. Hãy nhớ kiểm tra lại danh sách thí sinh và bộ câu hỏi trước khi lưu.

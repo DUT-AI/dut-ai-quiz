@@ -43,11 +43,11 @@ export const SidebarNav = () => {
   return (
     <div className="hidden lg:flex flex-col w-72 bg-white dark:bg-navy-blue border-r border-gray-100 dark:border-white/5 h-screen sticky top-0 py-8 px-4 overflow-y-auto">
       <div className="flex items-center gap-3 px-4 mb-10">
-        <div className="size-10 rounded-xl bg-purple flex items-center justify-center text-white shadow-lg shadow-purple/30">
+        <div className="size-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/30">
           <Rocket className="size-6" />
         </div>
         <div className="leading-none">
-          <p className="text-xs font-black text-purple tracking-[0.2em] uppercase">DUT AI</p>
+          <p className="text-xs font-black text-primary tracking-[0.2em] uppercase">DUT AI</p>
           <p className="text-lg font-bold text-dark-blue dark:text-white uppercase tracking-tighter">Quiz Master</p>
         </div>
       </div>
@@ -66,8 +66,8 @@ export const SidebarNav = () => {
                   className={cn(
                     "w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-sm font-bold transition-all duration-200 group",
                     isActive
-                      ? "bg-purple text-white shadow-md shadow-purple/20"
-                      : "text-gray-navy dark:text-light-blue hover:bg-purple/5 hover:text-purple"
+                      ? "bg-primary text-white shadow-md shadow-primary/20"
+                      : "text-gray-navy dark:text-light-blue hover:bg-primary/5 hover:text-primary"
                   )}
                 >
                   <item.icon className={cn(
@@ -84,7 +84,7 @@ export const SidebarNav = () => {
         {/* Teacher Section (Conditional) */}
         {isTeacher && (
           <div className="pt-4 border-t border-gray-100 dark:border-white/5">
-            <p className="px-4 text-[10px] font-black text-purple uppercase tracking-[0.2em] mb-4">Giảng viên / Admin</p>
+            <p className="px-4 text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-4">Giảng viên / Admin</p>
             <nav className="space-y-1">
               {TEACHER_NAV_ITEMS.map((item, idx) => {
                 const isActive = pathname.startsWith(item.href);
@@ -95,13 +95,13 @@ export const SidebarNav = () => {
                     className={cn(
                       "w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-sm font-bold transition-all duration-200 group",
                       isActive
-                        ? "bg-purple/10 text-purple"
-                        : "text-gray-navy dark:text-light-blue hover:bg-purple/5 hover:text-purple"
+                        ? "bg-primary/10 text-primary"
+                        : "text-gray-navy dark:text-light-blue hover:bg-primary/5 hover:text-primary"
                     )}
                   >
                     <item.icon className={cn(
                       "size-5 transition-transform duration-200 group-hover:scale-110",
-                      isActive ? "text-purple" : "opacity-60"
+                      isActive ? "text-primary" : "opacity-60"
                     )} />
                     {item.label}
                   </Link>
@@ -116,8 +116,8 @@ export const SidebarNav = () => {
       <div className="mt-auto pt-10 px-2">
         <div className="p-4 rounded-3xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 flex flex-col gap-4">
           <div className="flex items-center gap-3">
-            <div className="size-10 rounded-full bg-purple/10 flex items-center justify-center">
-              <UserCircle className="size-6 text-purple" />
+            <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <UserCircle className="size-6 text-primary" />
             </div>
             <div className="overflow-hidden flex-1">
               <p className="text-sm font-bold text-dark-blue dark:text-white truncate">{user?.name || "Người dùng"}</p>

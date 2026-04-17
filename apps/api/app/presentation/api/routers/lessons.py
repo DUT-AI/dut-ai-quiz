@@ -4,9 +4,11 @@ from app.application.use_cases.lessons.lesson_use_case import (
     ListLessonsUseCase, 
     CreateLessonUseCase, 
     UpdateLessonUseCase, 
-    DeleteLessonUseCase
+    DeleteLessonUseCase,
+    GetLessonDetailUseCase
 )
-from app.presentation.schemas.lessons import LessonCreate, LessonUpdate, LessonOut
+from app.presentation.api.deps import CurrentUser
+from app.presentation.schemas.lessons import LessonCreate, LessonUpdate, LessonOut, LessonDetailOut
 
 router = APIRouter(prefix="/lessons", tags=["lessons"])
 
@@ -14,6 +16,18 @@ router = APIRouter(prefix="/lessons", tags=["lessons"])
 @inject
 async def list_lessons(use_case: FromDishka[ListLessonsUseCase]):
     return await use_case.execute()
+
+@router.get("/{lesson_id}", response_model=LessonDetailOut)
+@inject
+async def get_lesson(
+    lesson_id: str,
+    user: CurrentUser,
+    use_case: FromDishka[GetLessonDetailUseCase]
+):
+    res = await use_case.execute(lesson_id, is_teacher=user.quiz_role == "teacher")
+    if not res:
+        raise HTTPException(status_code=404, detail="Lesson not found")
+    return res
 
 @router.post("", response_model=LessonOut)
 @inject

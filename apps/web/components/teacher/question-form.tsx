@@ -151,7 +151,7 @@ export default function QuestionForm({
                 name="correct"
                 checked={opt.is_correct}
                 onChange={() => setCorrect(i)}
-                className="accent-purple"
+                className="accent-primary"
               />
               <input
                 type="text"
@@ -174,7 +174,7 @@ export default function QuestionForm({
           <button
             type="button"
             onClick={addOption}
-            className="mt-2 text-xs text-purple hover:underline"
+            className="mt-2 text-xs text-primary hover:underline"
           >
             + Thêm đáp án
           </button>
@@ -209,7 +209,7 @@ export default function QuestionForm({
         <button
           type="submit"
           disabled={saving}
-          className="px-4 py-2 rounded text-sm font-medium bg-purple text-white hover:bg-purple/80 disabled:opacity-50 transition"
+          className="px-4 py-2 rounded text-sm font-medium bg-primary text-white hover:bg-primary/80 disabled:opacity-50 transition"
         >
           {saving ? "Đang lưu…" : initial ? "Cập nhật" : "Tạo mới"}
         </button>

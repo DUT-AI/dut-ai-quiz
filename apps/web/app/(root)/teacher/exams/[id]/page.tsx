@@ -116,7 +116,7 @@ export default function ExamQuestionsPage() {
                 <button
                   onClick={() => addQuestion(q)}
                   disabled={setMut.isPending}
-                  className="text-purple text-xs hover:underline shrink-0"
+                  className="text-primary text-xs hover:underline shrink-0"
                 >
                   + Thêm
                 </button>

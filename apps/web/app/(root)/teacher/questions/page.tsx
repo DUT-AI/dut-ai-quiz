@@ -51,7 +51,7 @@ export default function QuestionsPage() {
           </Link>
           <button
             onClick={() => setEditing("new")}
-            className="px-4 py-2 bg-purple text-white rounded-lg text-sm font-medium hover:bg-purple/80 transition"
+            className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/80 transition"
           >
             + Thêm câu hỏi
           </button>
@@ -130,7 +130,7 @@ export default function QuestionsPage() {
                       {badge.label}
                     </span>
                     {lessonName && (
-                      <span className="text-xs bg-purple/10 text-purple px-2 py-0.5 rounded-full">
+                      <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
                         {lessonName}
                       </span>
                     )}

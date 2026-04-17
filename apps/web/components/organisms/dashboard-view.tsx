@@ -51,7 +51,7 @@ export const DashboardView = ({
           animate={{ opacity: 1, x: 0 }}
         >
           <h1 className="text-4xl md:text-5xl font-bold text-dark-blue dark:text-white">
-            Xin chào, <span className="text-purple">{user?.name || "Nguyễn"}</span> 👋
+            Xin chào, <span className="text-primary">{user?.name || "Nguyễn"}</span> 👋
           </h1>
           <p className="text-gray-navy dark:text-light-blue mt-2">
             Hôm nay bạn muốn rèn luyện gì nào?
@@ -60,7 +60,7 @@ export const DashboardView = ({
 
         <div className="flex items-center gap-3">
           <Badge variant="outline" className="px-4 py-2 bg-white dark:bg-navy-blue shadow-sm rounded-xl border-gray-200 dark:border-white/10">
-            <Clock className="size-4 mr-2 text-purple" />
+            <Clock className="size-4 mr-2 text-primary" />
             {new Date().toLocaleDateString('vi-VN', { day: 'numeric', month: 'long', year: 'numeric' })}
           </Badge>
         </div>
@@ -77,7 +77,7 @@ export const DashboardView = ({
         <StatCard
           title="ĐỀ THI HIỆN CÓ"
           value={exams.length.toString()}
-          icon={<GraduationCap className="text-purple" />}
+          icon={<GraduationCap className="text-primary" />}
           delay={0.2}
         />
         <StatCard
@@ -103,7 +103,7 @@ export const DashboardView = ({
               className={cn(
                 "px-8 py-3 rounded-xl text-sm font-bold transition flex items-center gap-2",
                 activeTab === "lessons"
-                  ? "bg-white dark:bg-purple text-purple dark:text-white shadow-sm"
+                  ? "bg-white dark:bg-primary text-primary dark:text-white shadow-sm"
                   : "text-gray-navy dark:text-light-blue hover:text-dark-blue"
               )}
             >
@@ -115,7 +115,7 @@ export const DashboardView = ({
               className={cn(
                 "px-8 py-3 rounded-xl text-sm font-bold transition flex items-center gap-2",
                 activeTab === "exams"
-                  ? "bg-white dark:bg-purple text-purple dark:text-white shadow-sm"
+                  ? "bg-white dark:bg-primary text-primary dark:text-white shadow-sm"
                   : "text-gray-navy dark:text-light-blue hover:text-dark-blue"
               )}
             >
@@ -128,13 +128,13 @@ export const DashboardView = ({
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-xl flex items-center gap-3">
                 {activeTab === "exams" ? (
-                  <GraduationCap className="text-purple" />
+                  <GraduationCap className="text-primary" />
                 ) : (
-                  <BookOpen className="text-purple" />
+                  <BookOpen className="text-primary" />
                 )}
                 {activeTab === "exams" ? "Đề thi mới nhất" : "Bài tập cần làm"}
               </CardTitle>
-              <Button variant="ghost" className="text-purple font-bold text-xs" asChild>
+              <Button variant="ghost" className="text-primary font-bold text-xs" asChild>
                 <a href={activeTab === "exams" ? "/exams" : "/lessons"}>Xem tất cả <ArrowRight className="size-3 ml-1" /></a>
               </Button>
             </CardHeader>
@@ -147,16 +147,16 @@ export const DashboardView = ({
                     <Link
                       key={lesson.id}
                       href={`/lessons/${lesson.id}`}
-                      className="group flex items-center gap-4 p-4 rounded-3xl bg-white dark:bg-navy-blue/40 border border-transparent hover:border-purple/30 transition cursor-pointer shadow-sm"
+                      className="group flex items-center gap-4 p-4 rounded-3xl bg-white dark:bg-navy-blue/40 border border-transparent hover:border-primary/30 transition cursor-pointer shadow-sm"
                     >
-                      <div className="size-14 rounded-2xl bg-purple/10 flex items-center justify-center text-purple font-black text-xl group-hover:bg-purple group-hover:text-white transition">
+                      <div className="size-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black text-xl group-hover:bg-primary group-hover:text-white transition">
                         {lesson.order}
                       </div>
                       <div className="flex-1">
                         <h4 className="font-bold text-dark-blue dark:text-white text-lg">{lesson.name}</h4>
                         <p className="text-sm text-gray-navy dark:text-light-blue opacity-70">Bài học tích hợp AI • 15 phút</p>
                       </div>
-                      <div className="rounded-full bg-purple/10 text-purple group-hover:bg-purple group-hover:text-white transition-all size-10 flex items-center justify-center">
+                      <div className="rounded-full bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-all size-10 flex items-center justify-center">
                         <Play className="size-4" />
                       </div>
                     </Link>
@@ -189,7 +189,7 @@ export const DashboardView = ({
           <Card className="border-none shadow-xl bg-white/60 dark:bg-navy-blue/40 overflow-hidden">
             <CardHeader className="bg-gray-50/50 dark:bg-white/5 border-b border-gray-100 dark:border-white/5">
               <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-tighter">
-                <History className="size-4 text-purple" />
+                <History className="size-4 text-primary" />
                 Kết quả gần đây
               </CardTitle>
             </CardHeader>
@@ -200,7 +200,7 @@ export const DashboardView = ({
           </Card>
 
           {/* Achievements */}
-          <Card className="border-none shadow-xl bg-purple dark:bg-purple/80 text-white overflow-hidden relative">
+          <Card className="border-none shadow-xl bg-primary dark:bg-primary/80 text-white overflow-hidden relative">
             <div className="absolute -right-4 -bottom-4 opacity-20 transform rotate-12">
               <Trophy className="size-32" />
             </div>
@@ -230,7 +230,7 @@ const StatCard = ({ title, value, icon, delay }: { title: string, value: string,
         <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition duration-500">
           {icon}
         </div>
-        <div className="size-14 rounded-2xl bg-gray-50 dark:bg-white/5 flex items-center justify-center text-2xl shadow-inner group-hover:bg-purple/10 group-hover:text-purple transition duration-300">
+        <div className="size-14 rounded-2xl bg-gray-50 dark:bg-white/5 flex items-center justify-center text-2xl shadow-inner group-hover:bg-primary/10 group-hover:text-primary transition duration-300">
           {icon}
         </div>
         <div>
@@ -243,9 +243,9 @@ const StatCard = ({ title, value, icon, delay }: { title: string, value: string,
 );
 
 const ResultItem = ({ title, score, date }: { title: string, score: number, date: string }) => (
-  <div className="flex items-center justify-between p-3 rounded-2xl bg-white/50 dark:bg-white/5 border border-transparent hover:border-purple/20 transition group">
+  <div className="flex items-center justify-between p-3 rounded-2xl bg-white/50 dark:bg-white/5 border border-transparent hover:border-primary/20 transition group">
     <div className="flex items-center gap-3">
-      <div className="size-10 rounded-xl bg-purple/10 flex items-center justify-center text-purple font-bold">
+      <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold">
         {score}
       </div>
       <div>
@@ -253,7 +253,7 @@ const ResultItem = ({ title, score, date }: { title: string, score: number, date
         <p className="text-[10px] text-gray-navy dark:text-light-blue opacity-50">{date}</p>
       </div>
     </div>
-    <ArrowRight className="size-4 text-purple opacity-0 group-hover:opacity-100 transition translate-x-1 group-hover:translate-x-0" />
+    <ArrowRight className="size-4 text-primary opacity-0 group-hover:opacity-100 transition translate-x-1 group-hover:translate-x-0" />
   </div>
 );
 
@@ -277,15 +277,15 @@ const ExamCard = ({ exam, delay }: { exam: any, delay: number }) => {
       <Link 
         href={`/exams/${exam.id}`}
         className={cn(
-          "relative flex flex-col h-full p-6 rounded-[2.5rem] bg-white dark:bg-navy-blue border-2 border-transparent hover:border-purple/40 transition-all duration-300 shadow-xl group overflow-hidden",
+          "relative flex flex-col h-full p-6 rounded-[2.5rem] bg-white dark:bg-navy-blue border-2 border-transparent hover:border-primary/40 transition-all duration-300 shadow-xl group overflow-hidden",
           isExpired && "grayscale opacity-80"
         )}
       >
          {/* Background pattern */}
-         <div className="absolute -right-4 -top-4 size-32 bg-purple/5 rounded-full blur-3xl group-hover:bg-purple/10 transition-colors" />
+         <div className="absolute -right-4 -top-4 size-32 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors" />
          
          <div className="flex justify-between items-start mb-4">
-            <div className="size-12 rounded-2xl bg-purple/10 flex items-center justify-center text-purple group-hover:bg-purple group-hover:text-white transition-all duration-300 shadow-inner">
+            <div className="size-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300 shadow-inner">
                <GraduationCap className="size-6" />
             </div>
             <div className="flex flex-col items-end gap-1.5">
@@ -301,7 +301,7 @@ const ExamCard = ({ exam, delay }: { exam: any, delay: number }) => {
 
          <div className="flex-1 space-y-4">
            <div>
-             <h4 className="font-black text-dark-blue dark:text-white text-xl leading-snug group-hover:text-purple transition-colors line-clamp-2">
+             <h4 className="font-black text-dark-blue dark:text-white text-xl leading-snug group-hover:text-primary transition-colors line-clamp-2">
                {exam.title}
              </h4>
              <p className="text-sm text-gray-navy/60 dark:text-light-blue/40 font-medium mt-1 line-clamp-1">
@@ -313,14 +313,14 @@ const ExamCard = ({ exam, delay }: { exam: any, delay: number }) => {
               <div className="space-y-1">
                  <p className="text-[10px] font-black uppercase text-gray-navy opacity-40">Thời lượng</p>
                  <div className="flex items-center gap-2 font-bold text-dark-blue dark:text-white">
-                    <Clock className="size-4 text-purple" />
+                    <Clock className="size-4 text-primary" />
                     <span>{exam.duration_minutes ?? 0} phút</span>
                  </div>
               </div>
               <div className="space-y-1">
                  <p className="text-[10px] font-black uppercase text-gray-navy opacity-40">Lượt thi</p>
                  <div className="flex items-center gap-2 font-bold text-dark-blue dark:text-white">
-                    <Target className="size-4 text-purple" />
+                    <Target className="size-4 text-primary" />
                     <span>{exam.max_attempts || "—"} lần</span>
                  </div>
               </div>
@@ -339,7 +339,7 @@ const ExamCard = ({ exam, delay }: { exam: any, delay: number }) => {
            </div>
          </div>
 
-         <div className="mt-6 flex items-center justify-center gap-2 w-full py-4 bg-purple text-white rounded-2xl font-black shadow-lg shadow-purple/30 group-hover:scale-[1.02] group-hover:shadow-purple/40 transition-all active:scale-95">
+         <div className="mt-6 flex items-center justify-center gap-2 w-full py-4 bg-primary text-white rounded-2xl font-black shadow-lg shadow-primary/30 group-hover:scale-[1.02] group-hover:shadow-primary/40 transition-all active:scale-95">
             BẮT ĐẦU THI
             <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
          </div>

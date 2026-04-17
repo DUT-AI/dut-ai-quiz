@@ -29,8 +29,8 @@ export default function ExamsPage() {
     <div className="space-y-10">
       <header className="space-y-2">
         <div className="flex items-center gap-4">
-            <div className="size-12 rounded-2xl bg-purple/10 dark:bg-purple/20 flex items-center justify-center">
-                <BookOpen className="size-6 text-purple" />
+            <div className="size-12 rounded-2xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
+                <BookOpen className="size-6 text-primary" />
             </div>
             <h1 className="text-4xl font-black text-dark-blue dark:text-white">
                 Kỳ thi của tôi
@@ -64,12 +64,12 @@ export default function ExamsPage() {
                 transition={{ delay: idx * 0.1 }}
                 className="group relative"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-purple/20 to-indigo-500/20 rounded-[3rem] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-indigo-500/20 rounded-[3rem] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 
-                <div className="relative h-full bg-white dark:bg-navy-blue/40 border border-gray-100 dark:border-white/5 rounded-[3rem] p-8 flex flex-col transition-all duration-300 group-hover:translate-y-[-8px] group-hover:border-purple/30 shadow-sm backdrop-blur-xl">
+                <div className="relative h-full bg-white dark:bg-navy-blue/40 border border-gray-100 dark:border-white/5 rounded-[3rem] p-8 flex flex-col transition-all duration-300 group-hover:translate-y-[-8px] group-hover:border-primary/30 shadow-sm backdrop-blur-xl">
                   <div className="flex justify-between items-start mb-6 text-black dark:text-white">
                     <div className="size-14 rounded-2xl bg-gray-50 dark:bg-white/5 flex items-center justify-center">
-                      <BookOpen className="size-7 text-purple" />
+                      <BookOpen className="size-7 text-primary" />
                     </div>
                     <div className={cn(
                       "px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest",
@@ -107,7 +107,7 @@ export default function ExamsPage() {
                     className={cn(
                       "w-full py-4 rounded-2xl flex items-center justify-center gap-3 font-bold transition-all",
                       isOpen 
-                        ? "bg-purple text-white shadow-lg shadow-purple-500/20 hover:scale-[1.02]" 
+                        ? "bg-primary text-white shadow-lg shadow-primary/20 hover:scale-[1.02]" 
                         : isUpcoming 
                             ? "bg-gray-100 dark:bg-white/5 text-gray-navy opacity-50 cursor-not-allowed"
                             : "bg-gray-100 dark:bg-white/5 text-gray-navy opacity-50"

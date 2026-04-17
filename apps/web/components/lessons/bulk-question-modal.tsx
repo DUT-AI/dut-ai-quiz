@@ -72,7 +72,7 @@ export default function BulkQuestionModal({ lessonId, onClose, onSuccess }: Prop
           {/* Header */}
           <div className="p-8 border-b border-gray-100 dark:border-white/10 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-4 text-left">
-              <div className="size-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
+              <div className="size-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-primary flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
                 <FileJson className="size-6" />
               </div>
               <div>
@@ -108,7 +108,7 @@ export default function BulkQuestionModal({ lessonId, onClose, onSuccess }: Prop
   }
 ]'
                     rows={15}
-                    className="w-full px-6 py-6 rounded-3xl bg-gray-50 dark:bg-white/5 border-2 border-transparent focus:border-purple/30 outline-none transition-all font-mono text-sm leading-relaxed resize-none"
+                    className="w-full px-6 py-6 rounded-3xl bg-gray-50 dark:bg-white/5 border-2 border-transparent focus:border-primary/30 outline-none transition-all font-mono text-sm leading-relaxed resize-none"
                   />
                 </div>
               </div>

@@ -20,7 +20,7 @@ const Subjects = ({ data }: SubjectsProps) => {
           type="button"
           disabled={sessionLoading}
           onClick={() => void selectExam(exam)}
-          className="flex items-center gap-x-4 bg-[#fff] dark:bg-slate py-3 px-4 xl:py-5 rounded-2xl shadow-lg ring-1 hover:ring-purple transition-all disabled:opacity-60"
+          className="flex items-center gap-x-4 bg-[#fff] dark:bg-slate py-3 px-4 xl:py-5 rounded-2xl shadow-lg ring-1 hover:ring-primary transition-all disabled:opacity-60"
         >
           <div
             className="p-2 rounded-lg"

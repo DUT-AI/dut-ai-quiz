@@ -31,17 +31,17 @@ const Answer = ({
         type="button"
         onClick={() => handleSelectOption(optionId)}
         className={cn(
-          selected && "ring-purple ring-1",
+          selected && "ring-primary ring-1",
           showGraded && isCorrect === true && selected && "ring-green",
           showGraded && isCorrect === false && selected && "ring-red",
-          "w-full flex items-center gap-x-4 group bg-[#fff] dark:bg-slate py-4 px-5 rounded-xl shadow-lg hover:ring-1 hover:ring-purple transition-all font-semibold text-sm text-dark-blue dark:text-white text-center"
+          "w-full flex items-center gap-x-4 group bg-[#fff] dark:bg-slate py-4 px-5 rounded-xl shadow-lg hover:ring-1 hover:ring-primary transition-all font-semibold text-sm text-dark-blue dark:text-white text-center"
         )}
       >
         <span
           className={cn(
             selected
-              ? "bg-purple text-white"
-              : "bg-white dark:text-dark-blue group-hover:text-purple group-hover:bg-[#F6E7FF] transition-all",
+              ? "bg-primary text-white"
+              : "bg-white dark:text-dark-blue group-hover:text-primary group-hover:bg-[#F6E7FF] transition-all",
             "text-lg rounded-lg py-2 px-4  ",
             showGraded && isCorrect === false && selected && "bg-red",
             showGraded && isCorrect === true && selected && "bg-green"

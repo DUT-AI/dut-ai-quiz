@@ -16,8 +16,8 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
     return (
       <div className="h-screen w-full flex items-center justify-center bg-[#F8FAFC] dark:bg-black">
         <div className="flex flex-col items-center gap-4">
-          <div className="size-12 border-4 border-purple border-t-transparent animate-spin rounded-full" />
-          <p className="font-bold text-purple animate-pulse">Portal đang khởi động...</p>
+          <div className="size-12 border-4 border-primary border-t-transparent animate-spin rounded-full" />
+          <p className="font-bold text-primary animate-pulse">Portal đang khởi động...</p>
         </div>
       </div>
     );
@@ -36,7 +36,7 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
           >
             <h1 className="text-5xl md:text-7xl font-bold text-dark-blue dark:text-white leading-tight font-serif">
               Welcome to the <br />
-              <span className="text-purple">DUT AI Quiz Portal</span>
+              <span className="text-primary">DUT AI Quiz Portal</span>
             </h1>
             <p className="text-xl text-gray-navy dark:text-light-blue max-w-lg mx-auto opacity-70">
               Hệ thống quản lý học tập và đánh giá năng lực tích hợp trí tuệ nhân tạo.
@@ -44,7 +44,7 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
             <div className="pt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
                 href="/login"
-                className="px-10 py-5 bg-purple hover:bg-purple/90 text-white rounded-2xl text-xl font-bold shadow-xl transition transform hover:scale-105 inline-block"
+                className="px-10 py-5 bg-primary hover:bg-primary/90 text-white rounded-2xl text-xl font-bold shadow-xl transition transform hover:scale-105 inline-block"
               >
                 Đăng nhập Portal
               </Link>

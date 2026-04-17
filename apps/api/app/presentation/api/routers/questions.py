@@ -12,7 +12,7 @@ from app.application.use_cases.questions.question_use_case import (
     BulkCreateQuestionsUseCase,
 )
 from app.infrastructure.persistence.models import PoolType
-from app.presentation.api.deps import TeacherUser
+from app.presentation.api.deps import TeacherUser, CurrentUser
 from app.presentation.schemas.questions import (
     QuestionCreate,
     QuestionListQuery,
@@ -27,7 +27,7 @@ router = APIRouter(prefix="/questions", tags=["questions"])
 @router.get("", response_model=list[QuestionOut])
 @inject
 async def list_questions_route(
-    user: TeacherUser,
+    user: CurrentUser,
     use_case: FromDishka[ListQuestionsUseCase],
     pool_type: PoolType | None = None,
     lesson_id: UUID | None = None,
@@ -35,6 +35,10 @@ async def list_questions_route(
     offset: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=200),
 ):
+    # For students, we only allow viewing PRACTICE questions
+    if user.quiz_role != "teacher":
+        pool_type = PoolType.PRACTICE
+
     q = QuestionListQuery(
         pool_type=pool_type,
         lesson_id=lesson_id,

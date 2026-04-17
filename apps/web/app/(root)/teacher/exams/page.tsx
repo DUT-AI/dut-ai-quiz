@@ -22,7 +22,7 @@ export default function ExamsPage() {
         </h1>
         <button
           onClick={() => router.push("/teacher/exams/new")}
-          className="px-6 py-3 bg-gradient-to-br from-purple to-indigo-600 text-white rounded-[2rem] text-xs font-black uppercase tracking-widest shadow-lg shadow-purple/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+          className="px-6 py-3 bg-gradient-to-br from-primary to-indigo-600 text-white rounded-[2rem] text-xs font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
         >
           <Sparkles className="size-4" />
           + Tạo kỳ thi mới
