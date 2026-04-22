@@ -53,8 +53,11 @@ async def list_questions_route(
 @router.post("", response_model=QuestionOut)
 @inject
 async def create_question_route(
-    user: TeacherUser, body: QuestionCreate, use_case: FromDishka[CreateQuestionUseCase]
+    user: CurrentUser, body: QuestionCreate, use_case: FromDishka[CreateQuestionUseCase]
 ):
+    if user.quiz_role != "teacher":
+        body.pool_type = PoolType.PRACTICE
+    body.created_by = user.id
     return await use_case.execute(body)
 
 
@@ -97,8 +100,11 @@ async def delete_question_route(
 @router.post("/bulk", response_model=list[QuestionOut])
 @inject
 async def bulk_create_questions_route(
-    user: TeacherUser, 
+    user: CurrentUser, 
     body: QuestionBulkCreate, 
     use_case: FromDishka[BulkCreateQuestionsUseCase]
 ):
+    if user.quiz_role != "teacher":
+        body.pool_type = PoolType.PRACTICE
+    body.created_by = user.id
     return await use_case.execute(body)

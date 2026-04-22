@@ -116,4 +116,43 @@ export const apiClient = {
     }
     return { data };
   },
+  post: async <T>(path: string, body?: any, options?: any): Promise<{ data: T }> => {
+    const isJson =
+      body !== null &&
+      typeof body === "object" &&
+      !(typeof FormData !== "undefined" && body instanceof FormData) &&
+      !(typeof Blob !== "undefined" && body instanceof Blob);
+
+    const headers: Record<string, string> = { ...options?.headers };
+    if (isJson && !headers["Content-Type"]) {
+      headers["Content-Type"] = "application/json";
+    }
+
+    const init: RequestInit = {
+      method: "POST",
+      headers,
+      body: isJson ? JSON.stringify(body) : body,
+    };
+
+    const res = await apiFetch(path, init);
+
+    if (!res.ok) {
+      let detail = res.statusText;
+      try {
+        const rspBody = await res.json();
+        if (rspBody?.detail) detail = String(rspBody.detail);
+      } catch {
+        /* ignore */
+      }
+      throw new Error(detail || `HTTP ${res.status}`);
+    }
+
+    let data;
+    try {
+      data = await res.json();
+    } catch {
+      data = {};
+    }
+    return { data };
+  },
 };

@@ -28,6 +28,7 @@ class CreateQuestionUseCase:
             options=payload.options,
             solution=payload.solution,
             tags=payload.tags,
+            created_by=payload.created_by or 1,
             created_at=now_ict(),
         )
         return await self._question_repo.add(entity)
@@ -126,6 +127,7 @@ class BulkCreateQuestionsUseCase:
                 options=options,
                 solution=item.solution,
                 tags=payload.tags,
+                created_by=payload.created_by or 1,
                 created_at=created_at,
             ))
         

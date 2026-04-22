@@ -13,6 +13,7 @@ class QuestionCreate(BaseModel):
     solution: str | None = None
     lesson_id: UUID | None = None
     tags: list[str] = Field(default_factory=list)
+    created_by: int | None = None
 
 
 class QuestionUpdate(BaseModel):
@@ -22,6 +23,7 @@ class QuestionUpdate(BaseModel):
     solution: str | None = None
     lesson_id: UUID | None = None
     tags: list[str] | None = None
+    created_by: int | None = None
 
 
 class QuestionOut(BaseModel):
@@ -32,6 +34,7 @@ class QuestionOut(BaseModel):
     solution: str | None
     lesson_id: UUID | None
     tags: list[str]
+    created_by: int
     created_at: datetime
 
     model_config = {"from_attributes": True}

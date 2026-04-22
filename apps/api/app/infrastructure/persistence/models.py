@@ -39,6 +39,7 @@ class Question(SQLModel, table=True):
         default_factory=list, sa_column=Column(ARRAY(String()), nullable=False)
     )
     lesson_id: UUID | None = Field(default=None, foreign_key="lessons.id", index=True)
+    created_by: int = Field(index=True)
     created_at: datetime = Field(default_factory=now_ict)
 
     def to_entity(self) -> "QuestionEntity":
@@ -52,6 +53,7 @@ class Question(SQLModel, table=True):
             solution=self.solution,
             lesson_id=self.lesson_id,
             tags=self.tags,
+            created_by=self.created_by,
             created_at=self.created_at,
         )
 
@@ -65,6 +67,7 @@ class Question(SQLModel, table=True):
             solution=entity.solution,
             lesson_id=entity.lesson_id,
             tags=entity.tags,
+            created_by=entity.created_by,
             created_at=entity.created_at,
         )
 

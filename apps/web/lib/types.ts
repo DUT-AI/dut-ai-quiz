@@ -88,6 +88,7 @@ export interface QuestionCreate {
   lesson_id?: string | null;
   pool_type?: PoolType;
   solution?: string;
+  created_by?: number;
 }
 
 export type PoolType = "PRACTICE" | "EXAM";
@@ -101,6 +102,7 @@ export interface QuestionOut {
   lesson_id?: string;
   pool_type?: PoolType;
   solution?: string | null;
+  created_by: number;
 }
 
 export interface ExamCreate {
@@ -204,4 +206,17 @@ export interface ExternalUser {
   name: string;
   email: string;
   avatar_url?: string | null;
+}
+
+export interface ParsedQuestionPreview {
+  content: string;
+  options: { text: string; is_correct: boolean; id?: string }[];
+  solution: string | null;
+  confidence: number;
+}
+
+export interface PDFParseResponse {
+  questions: ParsedQuestionPreview[];
+  total_pages: number;
+  warnings: string[];
 }

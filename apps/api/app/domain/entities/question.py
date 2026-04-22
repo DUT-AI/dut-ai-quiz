@@ -14,4 +14,5 @@ class QuestionEntity:
     solution: str | None
     lesson_id: UUID | None
     tags: list[str]
+    created_by: int
     created_at: datetime

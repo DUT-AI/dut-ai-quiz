@@ -37,7 +37,7 @@ api-sync:
 	cd $(API_DIR) && uv sync --group dev
 
 api-dev: api-sync
-	cd $(API_DIR) && uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+	cd $(API_DIR) && uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8001
 
 api-lint:
 	cd $(API_DIR) && uv run ruff check app

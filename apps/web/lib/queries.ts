@@ -21,6 +21,7 @@ import type {
   QuizQuestion,
   ExamStats,
   StartAttemptResponse,
+  PDFParseResponse,
 } from "./types";
 
 const ICONS = [
@@ -244,6 +245,19 @@ export function useBulkCreateQuestions() {
       apiPost<QuestionOut[]>("/api/v1/questions/bulk", body),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["questions"] });
+    },
+  });
+}
+
+export function useParsePDF() {
+  return useMutation({
+    mutationFn: async (formData: FormData) => {
+      const res = await apiClient.post<PDFParseResponse>(
+        "/api/v1/questions/parse-pdf",
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+      return res.data;
     },
   });
 }

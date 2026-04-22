@@ -116,3 +116,8 @@ class UseCaseProvider(Provider):
     @provide(scope=Scope.REQUEST)
     def get_profile_use_case(self, cache: ProfileCache) -> GetProfileUseCase:
         return GetProfileUseCase(cache)
+
+    @provide(scope=Scope.REQUEST)
+    def pdf_parser_service(self) -> "PDFParserService":
+        from app.application.services.pdf_parser import PDFParserService
+        return PDFParserService()

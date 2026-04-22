@@ -9,6 +9,7 @@ import {
   useLessons,
 } from "@/lib/queries";
 import QuestionForm from "@/components/teacher/question-form";
+import { ImportModal } from "@/components/teacher/import-modal";
 import type { PoolType, QuestionCreate, QuestionOut } from "@/lib/types";
 
 type FilterPoolType = PoolType | "";
@@ -25,6 +26,7 @@ export default function QuestionsPage() {
   const [poolType, setPoolType] = useState<FilterPoolType>("");
   const [lessonFilter, setLessonFilter] = useState("");
   const [editing, setEditing] = useState<QuestionOut | null | "new">(null);
+  const [isImportOpen, setIsImportOpen] = useState(false);
 
   const { data: lessons = [] } = useLessons();
   const { data: questions, isLoading, error } = useQuestions({
@@ -50,6 +52,12 @@ export default function QuestionsPage() {
             Quản lý bài học
           </Link>
           <button
+            onClick={() => setIsImportOpen(true)}
+            className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg text-sm font-medium hover:opacity-90 transition shadow-md"
+          >
+            Import
+          </button>
+          <button
             onClick={() => setEditing("new")}
             className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/80 transition"
           >
@@ -57,6 +65,11 @@ export default function QuestionsPage() {
           </button>
         </div>
       </div>
+
+      <ImportModal 
+        open={isImportOpen} 
+        onOpenChange={setIsImportOpen} 
+      />
 
       {/* Filters */}
       <div className="flex gap-2 flex-wrap mb-4">
