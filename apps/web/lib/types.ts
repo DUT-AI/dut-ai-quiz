@@ -12,17 +12,6 @@ export interface ExamOut {
   participant_ids: number[];
 }
 
-export interface ExamCreate {
-  title: string;
-  description?: string;
-  start_time?: string;
-  end_time?: string;
-  duration_minutes?: number;
-  max_attempts?: number;
-  is_published?: boolean;
-  participant_ids: number[];
-}
-
 export interface QuizOption {
   id: string;
   text: string;
@@ -51,6 +40,7 @@ export interface StartAttemptResponse {
     question_id: string;
     content: string;
     options: QuizOption[];
+    difficulty: string;
     tags: string[];
   }[];
 }
@@ -67,92 +57,110 @@ export interface AttemptOut {
   tab_out_count: number;
 }
 
-export interface AttemptHistoryItem {
-  attempt: AttemptOut;
-  exam_title: string;
-}
-
-export interface AttemptAnswer {
-  id: string;
-  attempt_id: string;
-  question_id: string;
-  selected_option_id: string | null;
-}
-
-export interface AttemptReviewResponse {
-  attempt: AttemptOut;
-  answers: AttemptAnswer[];
-  questions: QuestionOut[];
-}
-
 export interface Lesson {
   id: string;
   name: string;
-  description: string;
+  description?: string;
   order: number;
-  created_at: string;
+}
+
+export type PracticeMode = "practice" | "test" | "study";
+
+export interface PracticeSnapshotItem {
+  question_id: string;
+  content: string;
+  options: QuizOption[];
+  difficulty?: string;
+  tags?: string[];
+}
+
+export interface PracticeSnapshot {
+  session_id: string;
+  presentation: PracticeSnapshotItem[];
+  current_index: number;
+}
+
+export interface QuestionCreate {
+  content: string;
+  options: any[];
+  difficulty?: string;
+  tags?: string[];
+  lesson_id?: string | null;
+  pool_type?: PoolType;
+  solution?: string;
+}
+
+export type PoolType = "PRACTICE" | "EXAM";
+
+export interface QuestionOut {
+  id: string;
+  content: string;
+  options: any[];
+  difficulty: string;
+  tags: string[];
+  lesson_id?: string;
+  pool_type?: PoolType;
+  solution?: string | null;
+}
+
+export interface ExamCreate {
+  title: string;
+  description: string;
+  start_time?: string | null;
+  end_time?: string | null;
+  duration_minutes?: number;
+  max_attempts?: number;
+  is_published?: boolean;
+  participant_ids?: number[];
+}
+
+export interface LeaderboardEntry {
+  user_id: number;
+  username: string;
+  score: number;
+  best_score: number;
+  completed_at: string;
 }
 
 export interface UserMe {
   id: number;
-  email: string;
+  username: string;
+  fullname: string;
   name: string;
-  role: string;
+  role_name: string;
   quiz_role: string;
 }
 
-export interface QuestionOut {
-  id: string;
-  pool_type: string;
-  content: string;
-  options: {
+export interface AttemptReviewResponse {
+  attempt: AttemptOut;
+  answers: {
+    question_id: string;
+    selected_option_id: string | null;
+  }[];
+  questions: {
     id: string;
-    text: string;
-    is_correct: boolean;
+    content: string;
+    options: {
+      id: string;
+      text: string;
+      is_correct: boolean | string | number;
+    }[];
+    solution?: string | null;
   }[];
-  solution: string | null;
-  tags: string[];
-  created_at: string;
 }
 
-export interface QuestionCreate {
-  pool_type: string;
-  content: string;
-  options: {
-    text: string;
-    is_correct: boolean;
-  }[];
-  solution?: string;
-  tags?: string[];
-  lesson_id?: string;
-}
-
-export interface LeaderboardEntry {
-  user_name: string;
-  score: number;
-  completed_at: string;
-}
-
-export interface ExternalTeamMember {
-  user_id: number;
-  user_name: string;
-  email: string;
-  user_avatar: string | null;
-}
-
-export interface ExternalTeam {
-  id: number;
-  team_name: string;
-  member_count: number;
-  members: ExternalTeamMember[];
-}
-
-export interface ExternalUser {
-  id: number;
-  name: string;
-  email: string;
-  avatar_url: string | null;
-  role_name: string;
+export interface AttemptHistoryItem {
+  exam_title: string;
+  attempt: {
+    id: string;
+    exam_id: string;
+    started_at: string;
+    completed_at: string | null;
+    score: number | null;
+    status: string;
+    tab_out_count: number;
+    expires_at: string;
+  };
 }
 
 export interface ExamStats {
@@ -163,12 +171,14 @@ export interface ExamStats {
     average_score: number;
     max_score: number;
   };
-  score_distribution: { range: string; count: number }[];
+  score_distribution: {
+    range: string;
+    count: number;
+  }[];
   participants: {
     user_id: number;
-    best_score: number | null;
     attempts_count: number;
-    last_status: string;
+    best_score: number | null;
     max_tab_out: number;
   }[];
   question_stats: {
@@ -176,4 +186,22 @@ export interface ExamStats {
     content: string;
     correct_rate: number;
   }[];
+}
+
+export interface ExternalTeam {
+  id: number;
+  team_name: string;
+  member_count: number;
+  members: {
+    user_id: number;
+    username: string;
+  }[];
+}
+
+export interface ExternalUser {
+  id: number;
+  username: string;
+  name: string;
+  email: string;
+  avatar_url?: string | null;
 }

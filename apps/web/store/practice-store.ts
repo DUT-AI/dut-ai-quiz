@@ -114,7 +114,7 @@ export const usePracticeStore = create<PracticeState>((set, get) => ({
     if (!sessionId) return;
     set({ loading: true });
     try {
-      await apiPost(`/api/v1/practice/sessions/${sessionId}/finish`);
+      await apiPost(`/api/v1/practice/sessions/${sessionId}/finish`, {});
       set({ hasFinished: true, loading: false });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Lỗi khi nộp bài";

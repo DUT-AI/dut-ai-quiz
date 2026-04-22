@@ -19,6 +19,7 @@ import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import { motion } from "framer-motion";
 import { renderMathInHTML } from "@/lib/render-math";
+import { AttemptReviewResponse } from "@/lib/types";
 
 export default function ReviewPage() {
     const params = useParams();
@@ -50,7 +51,7 @@ export default function ReviewPage() {
         );
     }
 
-    const { attempt, answers, questions } = reviewData;
+    const { attempt, answers, questions } = reviewData as AttemptReviewResponse;
     const scorePercentage = (attempt.score !== null ? (attempt.score / questions.length) * 100 : 0);
 
     return (
@@ -117,7 +118,6 @@ export default function ReviewPage() {
                     {questions.map((q, idx) => {
                         const answer = answers.find(a => String(a.question_id).toLowerCase() === String(q.id).toLowerCase());
                         const userChoiceId = answer?.selected_option_id;
-                        const correctOption = q.options.find(o => o.is_correct === true || o.is_correct === "true" || o.is_correct === 1);
 
                         return (
                             <motion.div
@@ -223,7 +223,14 @@ export default function ReviewPage() {
     );
 }
 
-function Badge({ icon: Icon, label, value, color }: any) {
+interface BadgeProps {
+    icon: React.ElementType;
+    label: string;
+    value: string;
+    color: string;
+}
+
+function Badge({ icon: Icon, label, value, color }: BadgeProps) {
     return (
         <div className={`flex items-center gap-2.5 px-4 py-2 rounded-xl border border-white/5 ${color}`}>
             <Icon className="size-4" />
@@ -235,6 +242,6 @@ function Badge({ icon: Icon, label, value, color }: any) {
     );
 }
 
-function Clock({ className }: any) {
+function Clock({ className }: { className?: string }) {
     return <Timer className={className} />;
 }

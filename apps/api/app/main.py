@@ -40,7 +40,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(health.router)
+app.include_router(health.router, prefix="/api")
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(me.router, prefix="/api/v1")
 app.include_router(lessons.router, prefix="/api/v1")

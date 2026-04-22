@@ -18,21 +18,20 @@ export default function StepParticipants({ selectedIds, onChange }: Props) {
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState<"users" | "teams">("users");
 
-  const users = usersData?.data ?? [];
-  const teams = teamsData?.data ?? [];
-
   const filteredUsers = useMemo(() => {
-    return users.filter(u => 
+    const list = usersData?.data ?? [];
+    return list.filter(u => 
       u.name.toLowerCase().includes(search.toLowerCase()) || 
       u.email.toLowerCase().includes(search.toLowerCase())
     );
-  }, [users, search]);
+  }, [usersData?.data, search]);
 
   const filteredTeams = useMemo(() => {
-    return teams.filter(t => 
+    const list = teamsData?.data ?? [];
+    return list.filter(t => 
       t.team_name.toLowerCase().includes(search.toLowerCase())
     );
-  }, [teams, search]);
+  }, [teamsData?.data, search]);
 
   const toggleUser = (userId: number) => {
     if (selectedIds.includes(userId)) {
@@ -43,7 +42,8 @@ export default function StepParticipants({ selectedIds, onChange }: Props) {
   };
 
   const addTeam = (teamId: number) => {
-    const team = teams.find(t => t.id === teamId);
+    const list = teamsData?.data ?? [];
+    const team = list.find(t => t.id === teamId);
     if (!team) return;
     const memberIds = team.members.map(m => m.user_id);
     const newIds = Array.from(new Set([...selectedIds, ...memberIds]));
@@ -53,8 +53,9 @@ export default function StepParticipants({ selectedIds, onChange }: Props) {
   const removeAll = () => onChange([]);
 
   const selectedUsers = useMemo(() => {
-    return users.filter(u => selectedIds.includes(u.id));
-  }, [users, selectedIds]);
+    const list = usersData?.data ?? [];
+    return list.filter(u => selectedIds.includes(u.id));
+  }, [usersData?.data, selectedIds]);
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">

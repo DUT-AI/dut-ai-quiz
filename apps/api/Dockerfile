@@ -16,13 +16,13 @@ ENV TZ=Asia/Ho_Chi_Minh
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Copy project files
-COPY pyproject.toml uv.lock ./
+COPY pyproject.toml uv.lock README.md ./
 RUN uv sync --frozen --no-cache
 
 COPY . .
 
 # Expose port
-EXPOSE 8000
+EXPOSE 8076
 
 # Run the application
-CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8076"]

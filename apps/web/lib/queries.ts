@@ -20,6 +20,7 @@ import type {
   AttemptReviewResponse,
   QuizQuestion,
   ExamStats,
+  StartAttemptResponse,
 } from "./types";
 
 const ICONS = [
@@ -369,6 +370,8 @@ export function usePresignUpload() {
       content_type: string;
     }) =>
       apiPost<{ presigned_url: string; key: string; public_url: string }>(
+        "/api/v1/uploads/presign",
+        { key, content_type }
       ),
   });
 }

@@ -46,6 +46,9 @@ interface State {
   lessons: any[];
   lessonsLoading: boolean;
 
+  showWarnModal: boolean;
+  setWarnModal: (open: boolean) => void;
+
   fetchExams: () => Promise<void>;
   fetchLessons: () => Promise<void>;
   selectExam: (exam: ExamTile) => Promise<void>;
@@ -71,6 +74,7 @@ const initialQuizSlice = {
   sessionLoading: false,
   lessons: [],
   lessonsLoading: false,
+  showWarnModal: false,
 };
 
 export const useQuestionStore = create<State>()((set, get) => ({
@@ -195,6 +199,10 @@ export const useQuestionStore = create<State>()((set, get) => ({
       attemptResult: attempt,
       currentQuestion: 0,
     });
+  },
+
+  setWarnModal: (open: boolean) => {
+    set({ showWarnModal: open });
   },
 
   reset: () => {

@@ -36,12 +36,18 @@ services:
             context: ./apps/api
             dockerfile: Dockerfile
         container_name: dut-ai-quiz-api
+        env_file:
+            - .env
         environment:
             - TZ=Asia/Ho_Chi_Minh
+            - POSTGRES_HOST=postgres
+            - POSTGRES_PORT=5432
             - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-dut_ai_quiz}
             - REDIS_URL=redis://redis:6379/0
+            - REDIS_HOST=redis
+            - REDIS_PORT=6379
         ports:
-            - "8000:8000"
+            - "8076:8076"
         depends_on:
             postgres:
                 condition: service_healthy
@@ -50,12 +56,17 @@ services:
         build:
             context: ./apps/web
             dockerfile: Dockerfile
+            args:
+                - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://quiz.dutai.site}
+                - NEXT_PUBLIC_MANAGE_LOGIN_URL=${NEXT_PUBLIC_MANAGE_LOGIN_URL:-https://manage.dutai.site}
         container_name: dut-ai-quiz-web
+        env_file:
+            - .env
         environment:
             - TZ=Asia/Ho_Chi_Minh
-            - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+            - INTERNAL_API_URL=http://api:8076
         ports:
-            - "3000:3000"
+            - "4040:4040"
         depends_on:
             - api
 

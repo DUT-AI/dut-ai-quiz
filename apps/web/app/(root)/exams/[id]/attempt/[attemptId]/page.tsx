@@ -46,6 +46,29 @@ export default function TestEnvironmentPage() {
 
   const prevAnswersRef = useRef<Record<string, string | null>>({});
 
+  const handleAutoSubmit = useCallback(async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      // Final sync of answers before submit
+      const changedIds = Object.keys(answers).filter(id => answers[id] !== prevAnswersRef.current[id]);
+      if (changedIds.length > 0) {
+        const payload = changedIds.map(id => ({
+          question_id: id,
+          selected_option_id: answers[id]
+        }));
+        await patchAnswers.mutateAsync({ attemptId, answers: payload });
+      }
+
+      await submitAttempt.mutateAsync(attemptId);
+      alert("Hết giờ làm bài. Bài thi đã được nộp tự động.");
+      router.push("/exams");
+    } catch (err) {
+      console.error(err);
+      router.push("/exams");
+    }
+  }, [attemptId, isSubmitting, router, submitAttempt, answers, patchAnswers]);
+
   // Initialize answers and timer from data
   useEffect(() => {
     if (data?.attempt) {
@@ -80,7 +103,7 @@ export default function TestEnvironmentPage() {
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [timeLeft, isSubmitting]);
+  }, [timeLeft, isSubmitting, handleAutoSubmit]);
 
   // Strict Mode: FullScreen & Focus Polling
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -246,28 +269,7 @@ export default function TestEnvironmentPage() {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [isSubmitting]);
 
-  const handleAutoSubmit = useCallback(async () => {
-    if (isSubmitting) return;
-    setIsSubmitting(true);
-    try {
-      // Final sync of answers before submit
-      const changedIds = Object.keys(answers).filter(id => answers[id] !== prevAnswersRef.current[id]);
-      if (changedIds.length > 0) {
-        const payload = changedIds.map(id => ({
-          question_id: id,
-          selected_option_id: answers[id]
-        }));
-        await patchAnswers.mutateAsync({ attemptId, answers: payload });
-      }
 
-      await submitAttempt.mutateAsync(attemptId);
-      alert("Hết giờ làm bài. Bài thi đã được nộp tự động.");
-      router.push("/exams");
-    } catch (err) {
-      console.error(err);
-      router.push("/exams");
-    }
-  }, [attemptId, isSubmitting, router, submitAttempt, answers, patchAnswers]);
 
   const handleSubmit = async () => {
     if (!confirm("Bạn có chắc chắn muốn nộp bài?")) return;

@@ -1,6 +1,5 @@
 "use client";
 import React from "react";
-import { Input } from "@/components/ui/button"; // Not really input, I'll use standard inputs
 
 export interface ExamInfoData {
   title: string;

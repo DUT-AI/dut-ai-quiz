@@ -15,7 +15,7 @@ export default function ExamQuestionsPage() {
   const { data: exam } = useExam(id);
   const { data: assigned = [], isLoading } = useExamQuestions(id);
   const { data: allQuestions = [] } = useQuestions({ pool_type: "EXAM", limit: 200 });
-  const setMut = useSetExamQuestions(id);
+  const setMut = useSetExamQuestions();
 
   const [search, setSearch] = useState("");
 
@@ -31,12 +31,12 @@ export default function ExamQuestionsPage() {
 
   async function addQuestion(q: QuestionOut) {
     const next = [...assigned.map((a) => a.id), q.id];
-    await setMut.mutateAsync(next);
+    await setMut.mutateAsync({ examId: id, questionIds: next });
   }
 
   async function removeQuestion(qId: string) {
     const next = assigned.filter((a) => a.id !== qId).map((a) => a.id);
-    await setMut.mutateAsync(next);
+    await setMut.mutateAsync({ examId: id, questionIds: next });
   }
 
   return (

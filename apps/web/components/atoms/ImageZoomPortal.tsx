@@ -58,6 +58,7 @@ export function ImageZoomPortal() {
             className="relative max-w-full max-h-full flex items-center justify-center"
             onClick={(e) => e.stopPropagation()}
           >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={selectedImg}
               alt="Zoomed"

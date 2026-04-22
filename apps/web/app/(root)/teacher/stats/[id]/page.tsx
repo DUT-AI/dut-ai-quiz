@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import NextImage from "next/image";
 
 export default function ExamStatsDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -37,12 +37,12 @@ export default function ExamStatsDetailPage() {
   const { data: stats, isLoading: loadingStats } = useExamStats(id);
   const { data: externalUsersData } = useExternalUsers();
   
-  const externalUsers = externalUsersData?.data || [];
   const userMap = React.useMemo(() => {
     const map = new Map();
-    externalUsers.forEach(u => map.set(u.id, u));
+    const list = externalUsersData?.data || [];
+    list.forEach(u => map.set(u.id, u));
     return map;
-  }, [externalUsers]);
+  }, [externalUsersData?.data]);
 
   if (loadingExam || loadingStats) {
     return (
@@ -220,7 +220,7 @@ export default function ExamStatsDetailPage() {
                     <div className="flex items-center gap-4 mb-3">
                       <div className="size-10 rounded-full bg-blue-500/10 flex items-center justify-center font-black text-blue-500 overflow-hidden">
                         {user?.avatar_url ? (
-                          <img src={user.avatar_url} alt="" className="size-full object-cover" />
+                          <NextImage src={user.avatar_url} alt="" width={40} height={40} className="size-full object-cover" />
                         ) : (
                           user?.name?.charAt(0) || p.user_id
                         )}

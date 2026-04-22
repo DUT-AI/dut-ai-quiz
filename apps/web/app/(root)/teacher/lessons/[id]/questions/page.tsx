@@ -99,7 +99,7 @@ export default function LessonQuestionsPage() {
           </p>
         )}
         {questions?.map((q, i) => {
-          const badge = POOL_BADGE[q.pool_type];
+          const badge = q.pool_type ? POOL_BADGE[q.pool_type] : { label: "Chưa phân loại", cls: "bg-gray-100 text-gray-500" };
           return (
             <div
               key={q.id}

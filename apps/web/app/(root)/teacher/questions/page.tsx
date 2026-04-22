@@ -114,7 +114,7 @@ export default function QuestionsPage() {
             </p>
           )}
           {questions.map((q) => {
-            const badge = POOL_BADGE[q.pool_type];
+            const badge = q.pool_type ? POOL_BADGE[q.pool_type] : { label: "Chưa phân loại", cls: "bg-gray-100 text-gray-500" };
             const lessonName = q.lesson_id ? lessonMap.get(q.lesson_id) : null;
             return (
               <div
