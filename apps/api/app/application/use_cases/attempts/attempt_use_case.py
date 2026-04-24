@@ -118,15 +118,12 @@ class GetAttemptUseCase:
             return None
 
         if not att.shuffle_snapshot:
-            return {"attempt": att, "questions": []}
+            return {"attempt": att, "questions": [], "saved_answers": []}
 
         ids = [UUID(x) for x in att.shuffle_snapshot.get("question_order", [])]
         if not ids:
-            return {"attempt": att, "questions": []}
+            return {"attempt": att, "questions": [], "saved_answers": []}
 
-        # Optimization: load all questions in one go if possible
-        # Since we use Entity pattern, we'll use the repo list_all equivalent if needed,
-        # but here we specific IDs. Let's assume QuestionRepository can get by list of IDs or Loop (less efficient but maintains pattern)
         ordered = []
         for i in ids:
             q = await self._question_repo.get(i)
@@ -136,7 +133,11 @@ class GetAttemptUseCase:
         questions = presentation_from_snapshot(
             {q.id: q for q in ordered}, att.shuffle_snapshot
         )
-        return {"attempt": att, "questions": questions}
+
+        # Load saved answers so frontend can restore progress on reconnect
+        saved_answers = await self._att_repo.list_answers(attempt_id)
+
+        return {"attempt": att, "questions": questions, "saved_answers": saved_answers}
 
 
 class GetAttemptDetailUseCase:
@@ -208,13 +209,19 @@ class RecordFocusEventUseCase:
             return None
         if now_ict() > att.expires_at:
             return None
-        allowed_events = [
+        # Events that count toward auto-submit threshold
+        violation_events = [
             "visibility_hidden",
             "window_blur",
-            "mouse_leave",
             "exit_fullscreen",
             "poll_loss_focus",
+            "timer_throttled",  # RAF-based detection: extension bypass detected
+            "mouse_leave",
+            "devtools_detected",  # DevTools opened (window size diff)
         ]
+        # Events that are logged but don't increment tab_out_count
+        warning_events = []
+        allowed_events = violation_events + warning_events
         if body.event not in allowed_events:
             return {"tab_out_count": att.tab_out_count, "action": "IGNORED"}
 
@@ -233,8 +240,10 @@ class RecordFocusEventUseCase:
         )
         await self._fe_repo.add(fe_entity)
 
-        att.tab_out_count += 1
-        await self._att_repo.save(att)
+        # Only violation events count toward auto-submit
+        if body.event in violation_events:
+            att.tab_out_count += 1
+            await self._att_repo.save(att)
 
         if att.tab_out_count >= ERROR_LIMIT:
             await self._event_bus.publish(
@@ -255,6 +264,10 @@ class RecordFocusEventUseCase:
                     ),
                 },
             }
+
+        if body.event in warning_events:
+            return {"tab_out_count": att.tab_out_count, "action": "LOGGED"}
+
         return {"tab_out_count": att.tab_out_count, "action": "WARN"}
 
 
@@ -279,9 +292,11 @@ class ReviewAttemptUseCase:
         self,
         att_repo: AttemptRepository,
         eq_repo: ExamQuestionRepository,
+        exam_repo: ExamRepository,
     ):
         self._att_repo = att_repo
         self._eq_repo = eq_repo
+        self._exam_repo = exam_repo
 
     async def execute(self, attempt_id: UUID, user_id: int):
         att = await self._att_repo.get(attempt_id)
@@ -292,13 +307,18 @@ class ReviewAttemptUseCase:
         if att.status != AttemptStatus.COMPLETED:
             return None
 
+        # Block review until exam window fully closes (end_time + duration)
+        exam = await self._exam_repo.get(att.exam_id)
+        if exam and exam.end_time:
+            review_unlock_at = exam.end_time + timedelta(minutes=exam.duration_minutes)
+            if now_ict() < review_unlock_at:
+                return None, "review_locked"
+
         answers = await self._att_repo.list_answers(attempt_id)
         questions = await self._eq_repo.load_questions_ordered(att.exam_id)
-        
+
         return {
             "attempt": att,
             "answers": answers,
             "questions": questions,
         }
-
-

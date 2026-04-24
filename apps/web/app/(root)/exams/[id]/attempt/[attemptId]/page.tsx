@@ -5,8 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { 
   useAttempt, 
   usePatchAnswers, 
-  useSubmitAttempt, 
-  useRecordFocusEvent 
+  useSubmitAttempt,
 } from "@/lib/queries";
 import { parseICT } from "@/lib/utils";
 import { 
@@ -17,12 +16,13 @@ import {
   AlertCircle,
   Menu,
   X,
-  AlertTriangle
+  AlertTriangle,
+  Shield
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { renderMathInHTML } from "@/lib/render-math";
 import { cn } from "@/lib/utils";
-import { v4 as uuidv4 } from "uuid";
+import { useAntiCheat, VIOLATION_MESSAGES } from "@/hooks/use-anti-cheat";
 
 export default function TestEnvironmentPage() {
   const params = useParams();
@@ -34,23 +34,23 @@ export default function TestEnvironmentPage() {
   const { data, isLoading: loadingAttempt, error } = useAttempt(attemptId);
   const patchAnswers = usePatchAnswers();
   const submitAttempt = useSubmitAttempt();
-  const recordFocusEvent = useRecordFocusEvent();
 
   // Local state
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string | null>>({});
-  const [timeLeft, setTimeLeft] = useState<number | null>(null); // in seconds
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [showNavigator, setShowNavigator] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showViolationModal, setShowViolationModal] = useState(false);
+
+  // Modal states (replacing native confirm/alert)
+  const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
+  const [notification, setNotification] = useState<{ title: string; message: string; type: "info" | "error" | "warning" } | null>(null);
 
   const prevAnswersRef = useRef<Record<string, string | null>>({});
 
-  const handleAutoSubmit = useCallback(async () => {
-    if (isSubmitting) return;
+  const doSubmit = useCallback(async () => {
     setIsSubmitting(true);
     try {
-      // Final sync of answers before submit
       const changedIds = Object.keys(answers).filter(id => answers[id] !== prevAnswersRef.current[id]);
       if (changedIds.length > 0) {
         const payload = changedIds.map(id => ({
@@ -59,22 +59,68 @@ export default function TestEnvironmentPage() {
         }));
         await patchAnswers.mutateAsync({ attemptId, answers: payload });
       }
-
       await submitAttempt.mutateAsync(attemptId);
-      alert("Hết giờ làm bài. Bài thi đã được nộp tự động.");
       router.push("/exams");
+    } catch (err: any) {
+      setNotification({ title: "Lỗi nộp bài", message: err.message || "Nộp bài thất bại. Vui lòng thử lại.", type: "error" });
+      setIsSubmitting(false);
+      antiCheat.enterFullScreen();
+    }
+  }, [attemptId, answers, patchAnswers, submitAttempt, router]);
+
+  const handleAutoSubmit = useCallback(async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      const changedIds = Object.keys(answers).filter(id => answers[id] !== prevAnswersRef.current[id]);
+      if (changedIds.length > 0) {
+        const payload = changedIds.map(id => ({
+          question_id: id,
+          selected_option_id: answers[id]
+        }));
+        await patchAnswers.mutateAsync({ attemptId, answers: payload });
+      }
+      await submitAttempt.mutateAsync(attemptId);
+      setNotification({ title: "Hết giờ", message: "Hết giờ làm bài. Bài thi đã được nộp tự động.", type: "warning" });
     } catch (err) {
       console.error(err);
       router.push("/exams");
     }
   }, [attemptId, isSubmitting, router, submitAttempt, answers, patchAnswers]);
 
+  // ─── Anti-cheat hook (7 layers) ───
+  const antiCheat = useAntiCheat({
+    attemptId,
+    isActive: !!data && data.attempt?.status === "IN_PROGRESS" && timeLeft !== null,
+    isSubmitting,
+    onAutoSubmitted: async () => {
+      if (isSubmitting) return;
+      setIsSubmitting(true);
+      try {
+        // Sync any unsaved answers before the attempt is finalized
+        const changedIds = Object.keys(answers).filter(id => answers[id] !== prevAnswersRef.current[id]);
+        if (changedIds.length > 0) {
+          const payload = changedIds.map(id => ({
+            question_id: id,
+            selected_option_id: answers[id]
+          }));
+          await patchAnswers.mutateAsync({ attemptId, answers: payload });
+        }
+        // Submit the attempt (scores it server-side)
+        await submitAttempt.mutateAsync(attemptId);
+      } catch {
+        // Attempt may already be submitted by the backend event handler — that's OK
+      }
+      setNotification({ title: "Tự động nộp bài", message: "Bạn đã phạm quy quá số lần cho phép. Bài thi đã được tự động nộp.", type: "error" });
+    },
+  });
+
   // Initialize answers and timer from data
   useEffect(() => {
     if (data?.attempt) {
       // If already completed, redirect to results (TBD) or home
       if (data.attempt.status === "COMPLETED") {
-        router.push("/exams"); // For now, we'll implement result page later
+        router.push("/exams");
         return;
       }
 
@@ -84,8 +130,19 @@ export default function TestEnvironmentPage() {
       const diff = Math.max(0, Math.floor((expiresAt - now) / 1000));
       setTimeLeft(diff);
 
-      // Populate existing answers if any (backend stores them, but we might want to sync local state)
-      // For now, we'll just use what the user clicks during the session
+      // Restore saved answers from server (reconnect / page reload)
+      if (data.saved_answers && data.saved_answers.length > 0) {
+        const restored: Record<string, string | null> = {};
+        for (const a of data.saved_answers) {
+          restored[a.question_id] = a.selected_option_id ?? null;
+        }
+        setAnswers(prev => {
+          // Merge: keep any local answers that are newer, fill in from server
+          const merged = { ...restored, ...prev };
+          prevAnswersRef.current = { ...merged };
+          return merged;
+        });
+      }
     }
   }, [data, router]);
 
@@ -105,140 +162,7 @@ export default function TestEnvironmentPage() {
     return () => clearInterval(timer);
   }, [timeLeft, isSubmitting, handleAutoSubmit]);
 
-  // Strict Mode: FullScreen & Focus Polling
-  const [isFullScreen, setIsFullScreen] = useState(false);
-  const [violationType, setViolationType] = useState<string | null>(null);
-  const [hasEnteredFirstTime, setHasEnteredFirstTime] = useState(false);
-  const [stabilizedAt, setStabilizedAt] = useState<number | null>(null);
-  const isViolatingRef = useRef(false);
-
-  const violationMessages: Record<string, string> = {
-    "poll_loss_focus": "Mất tiêu điểm (có thể do chuyển tab hoặc mở ứng dụng khác đè lên).",
-    "exit_fullscreen": "Thoát chế độ toàn màn hình.",
-    "visibility_hidden": "Chuyển sang tab khác (ẩn cửa sổ bài thi).",
-    "window_blur": "Mất tiêu điểm cửa sổ (Alt+Tab hoặc click ra ngoài).",
-    "mouse_leave": "Rời chuột khỏi vùng làm bài."
-  };
-
-  const enterFullScreen = useCallback(async () => {
-    try {
-      const doc = document.documentElement;
-      if (doc.requestFullscreen) {
-        await doc.requestFullscreen();
-        setHasEnteredFirstTime(true);
-        setStabilizedAt(Date.now());
-      }
-    } catch (err) {
-      console.error("Failed to enter fullscreen:", err);
-    }
-  }, []);
-
-  useEffect(() => {
-    const handleViolation = (eventType: string) => {
-      // 1. Initial Start Rule: They must have entered fullscreen at least once
-      if (!hasEnteredFirstTime || !stabilizedAt) return;
-
-      // 2. Grace period: Skip if within 3 seconds of entering fullscreen
-      if (Date.now() - stabilizedAt < 3000) return;
-
-      if (isViolatingRef.current || isSubmitting) return;
-
-      isViolatingRef.current = true;
-      setViolationType(eventType);
-      
-      // Optimistic UI: Show modal immediately to block content
-      setShowViolationModal(true);
-
-      recordFocusEvent.mutate({
-        attemptId,
-        event: eventType,
-        clientEventId: uuidv4()
-      }, {
-        onSuccess: (res) => {
-          if (res.action === "AUTO_SUBMITTED") {
-            alert("Bạn đã phạm quy quá số lần cho phép. Bài thi đã được tự động nộp.");
-            router.push("/exams");
-          }
-        }
-      });
-    };
-
-    const handleFocusBack = () => {
-      // Don't reset violating if modal is still up?
-      // Actually reset it so we can catch the NEXT one after they close modal
-    };
-
-    // 1. FullScreen Listener
-    const onFullScreenChange = () => {
-      const active = !!document.fullscreenElement;
-      setIsFullScreen(active);
-      if (active) {
-          setHasEnteredFirstTime(true);
-          setStabilizedAt(Date.now());
-      }
-
-      if (!active && !isSubmitting && hasEnteredFirstTime) {
-        handleViolation("exit_fullscreen");
-      }
-    };
-
-    // 2. Event Listeners
-    const onVisibilityChange = () => {
-      if (document.visibilityState === "hidden" && hasEnteredFirstTime) {
-        handleViolation("visibility_hidden");
-      }
-    };
-    const onBlur = () => {
-       if (hasEnteredFirstTime) handleViolation("window_blur");
-    }
-    const onMouseLeave = () => {
-       if (hasEnteredFirstTime) handleViolation("mouse_leave");
-    }
-
-    document.addEventListener("visibilitychange", onVisibilityChange);
-    window.addEventListener("blur", onBlur);
-    document.addEventListener("mouseleave", onMouseLeave);
-    document.addEventListener("fullscreenchange", onFullScreenChange);
-
-    // 3. Heartbeat Polling (The ultimate check)
-    const heartbeat = setInterval(() => {
-      if (isSubmitting || !data || timeLeft === null) return;
-      
-      // Check Focus
-      if (!document.hasFocus() && hasEnteredFirstTime) {
-         handleViolation("poll_loss_focus");
-      }
-      
-      // Check FullScreen (Must be active if attempt is in progress)
-      if (data?.attempt?.status === "IN_PROGRESS" && !document.fullscreenElement) {
-        setIsFullScreen(false);
-        if (hasEnteredFirstTime) {
-           handleViolation("exit_fullscreen");
-        }
-      }
-    }, 500);
-
-    return () => {
-      document.removeEventListener("visibilitychange", onVisibilityChange);
-      window.removeEventListener("blur", onBlur);
-      document.removeEventListener("mouseleave", onMouseLeave);
-      document.removeEventListener("fullscreenchange", onFullScreenChange);
-      clearInterval(heartbeat);
-    };
-  }, [attemptId, recordFocusEvent, router, isSubmitting, data, timeLeft, hasEnteredFirstTime, stabilizedAt]);
-
-  // Copy & Right-click protection
-  useEffect(() => {
-    const prevent = (e: any) => e.preventDefault();
-    document.addEventListener("contextmenu", prevent);
-    document.addEventListener("copy", prevent);
-    document.addEventListener("cut", prevent);
-    return () => {
-      document.removeEventListener("contextmenu", prevent);
-      document.removeEventListener("copy", prevent);
-      document.removeEventListener("cut", prevent);
-    };
-  }, []);
+  // Anti-cheat is now handled by the useAntiCheat hook above
 
   // Auto-save logic (Debounced)
   useEffect(() => {
@@ -271,26 +195,8 @@ export default function TestEnvironmentPage() {
 
 
 
-  const handleSubmit = async () => {
-    if (!confirm("Bạn có chắc chắn muốn nộp bài?")) return;
-    setIsSubmitting(true);
-    try {
-      // Final sync of answers before submit
-      const changedIds = Object.keys(answers).filter(id => answers[id] !== prevAnswersRef.current[id]);
-      if (changedIds.length > 0) {
-        const payload = changedIds.map(id => ({
-          question_id: id,
-          selected_option_id: answers[id]
-        }));
-        await patchAnswers.mutateAsync({ attemptId, answers: payload });
-      }
-
-      await submitAttempt.mutateAsync(attemptId);
-      router.push("/exams");
-    } catch (err: any) {
-      alert(err.message || "Nộp bài thất bại. Vui lòng thử lại.");
-      setIsSubmitting(false);
-    }
+  const handleSubmit = () => {
+    setShowConfirmSubmit(true);
   };
 
   const formatTime = (seconds: number) => {
@@ -527,11 +433,11 @@ export default function TestEnvironmentPage() {
       </div>
 
       {/* FullScreen Enforcement Overlay */}
-      {!isFullScreen && !isSubmitting && data?.attempt?.status === "IN_PROGRESS" && (
+      {!antiCheat.isFullScreen && !isSubmitting && data?.attempt?.status === "IN_PROGRESS" && (
         <div className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-xl flex items-center justify-center p-6 text-center">
             <div className="max-w-md space-y-8">
                 <div className="size-24 rounded-3xl bg-primary/10 flex items-center justify-center mx-auto border border-primary/20">
-                    <AlertCircle className="size-12 text-primary" />
+                    <Shield className="size-12 text-primary" />
                 </div>
                 <div className="space-y-4">
                     <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Yêu cầu Toàn màn hình</h2>
@@ -539,9 +445,16 @@ export default function TestEnvironmentPage() {
                         Để đảm bảo tính công bằng, bài thi yêu cầu hoạt động ở chế độ toàn màn hình. 
                         Vui lòng quay lại để tiếp tục làm bài.
                     </p>
+                    <div className="text-xs text-gray-500 space-y-1 text-left bg-white/5 p-4 rounded-2xl border border-white/10">
+                       <p className="font-bold text-white/70">⚠️ Hệ thống giám sát 7 lớp bảo vệ:</p>
+                       <p>• Phát hiện chuyển tab / ẩn cửa sổ</p>
+                       <p>• Phát hiện extension gian lận (Always Active Tab)</p>
+                       <p>• Phát hiện mở Developer Tools</p>
+                       <p>• Chặn phím tắt, copy, chuột phải</p>
+                    </div>
                 </div>
                 <button 
-                  onClick={enterFullScreen}
+                  onClick={antiCheat.enterFullScreen}
                   className="w-full py-5 bg-primary text-white rounded-2xl font-black text-lg shadow-2xl shadow-primary/20 active:scale-95 transition-all"
                 >
                   VÀO CHẾ ĐỘ TOÀN MÀN HÌNH
@@ -552,7 +465,7 @@ export default function TestEnvironmentPage() {
 
       {/* Violation Modal */}
       <AnimatePresence>
-        {showViolationModal && (
+        {antiCheat.showViolationModal && (
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -570,7 +483,7 @@ export default function TestEnvironmentPage() {
                  <div className="space-y-2">
                     <h2 className="text-2xl font-black text-red uppercase tracking-tighter">PHÁT HIỆN VI PHẠM!</h2>
                     <p className="text-dark-blue dark:text-white font-bold text-sm bg-red/5 py-3 px-4 rounded-2xl border border-red/10">
-                       Lỗi: {violationType ? violationMessages[violationType] : "Phát hiện hành động bất thường."}
+                       Lỗi: {antiCheat.violationType ? VIOLATION_MESSAGES[antiCheat.violationType] : "Phát hiện hành động bất thường."}
                     </p>
                     <p className="text-gray-navy dark:text-light-blue/60 text-xs">
                        Hành động này được hệ thống ghi nhận là vi phạm nghiêm trọng. <br/>
@@ -578,16 +491,122 @@ export default function TestEnvironmentPage() {
                     </p>
                  </div>
                 <button 
-                  onClick={() => {
-                      setShowViolationModal(false);
-                      isViolatingRef.current = false;
-                      enterFullScreen(); // Re-enforce on acknowledge
-                  }}
+                  onClick={antiCheat.dismissViolation}
                   className="w-full py-5 bg-red text-white rounded-[2rem] font-black text-lg shadow-xl shadow-red-500/20 active:scale-95 transition-all"
                 >
                   XÁC NHẬN VÀ QUAY LẠI
                 </button>
              </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Submit Confirmation Modal */}
+      <AnimatePresence>
+        {showConfirmSubmit && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[220] flex items-center justify-center p-6 bg-black/70 backdrop-blur-xl"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              className="bg-white dark:bg-navy-blue rounded-[3rem] p-10 max-w-lg w-full text-center space-y-6 shadow-2xl border border-primary/20"
+            >
+              <div className="size-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                <Send className="size-10 text-primary" />
+              </div>
+              <div className="space-y-2">
+                <h2 className="text-2xl font-black text-dark-blue dark:text-white uppercase tracking-tighter">Xác nhận nộp bài</h2>
+                <p className="text-gray-navy dark:text-light-blue/60 text-sm">
+                  Bạn có chắc chắn muốn nộp bài? Sau khi nộp, bạn sẽ không thể chỉnh sửa câu trả lời.
+                </p>
+                <p className="text-xs text-gray-navy/50 dark:text-light-blue/40">
+                  Đã trả lời: <span className="font-bold text-primary">{Object.keys(answers).filter(id => answers[id]).length}</span> / {questions.length} câu
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowConfirmSubmit(false)}
+                  className="flex-1 py-4 bg-gray-100 dark:bg-white/5 text-gray-navy dark:text-white rounded-[2rem] font-black text-sm active:scale-95 transition-all"
+                >
+                  TIẾP TỤC LÀM BÀI
+                </button>
+                <button
+                  onClick={() => {
+                    setShowConfirmSubmit(false);
+                    doSubmit();
+                  }}
+                  disabled={isSubmitting}
+                  className="flex-1 py-4 bg-primary text-white rounded-[2rem] font-black text-sm shadow-xl shadow-primary/20 active:scale-95 transition-all disabled:opacity-50"
+                >
+                  {isSubmitting ? "ĐANG NỘP..." : "NỘP BÀI NGAY"}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Notification Modal (replaces alert) */}
+      <AnimatePresence>
+        {notification && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[230] flex items-center justify-center p-6 bg-black/70 backdrop-blur-xl"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              className={cn(
+                "rounded-[3rem] p-10 max-w-lg w-full text-center space-y-6 shadow-2xl border",
+                notification.type === "error"
+                  ? "bg-white dark:bg-navy-blue border-red/20"
+                  : notification.type === "warning"
+                    ? "bg-white dark:bg-navy-blue border-yellow-500/20"
+                    : "bg-white dark:bg-navy-blue border-primary/20"
+              )}
+            >
+              <div className={cn(
+                "size-20 rounded-full flex items-center justify-center mx-auto",
+                notification.type === "error" ? "bg-red/10" : notification.type === "warning" ? "bg-yellow-500/10" : "bg-primary/10"
+              )}>
+                {notification.type === "error" ? (
+                  <AlertTriangle className="size-10 text-red" />
+                ) : notification.type === "warning" ? (
+                  <Clock className="size-10 text-yellow-500" />
+                ) : (
+                  <AlertCircle className="size-10 text-primary" />
+                )}
+              </div>
+              <div className="space-y-2">
+                <h2 className={cn(
+                  "text-2xl font-black uppercase tracking-tighter",
+                  notification.type === "error" ? "text-red" : notification.type === "warning" ? "text-yellow-600 dark:text-yellow-400" : "text-dark-blue dark:text-white"
+                )}>
+                  {notification.title}
+                </h2>
+                <p className="text-gray-navy dark:text-light-blue/60 text-sm font-medium">
+                  {notification.message}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setNotification(null);
+                  router.push("/exams");
+                }}
+                className={cn(
+                  "w-full py-5 text-white rounded-[2rem] font-black text-lg shadow-xl active:scale-95 transition-all",
+                  notification.type === "error" ? "bg-red shadow-red/20" : notification.type === "warning" ? "bg-yellow-500 shadow-yellow-500/20" : "bg-primary shadow-primary/20"
+                )}
+              >
+                QUAY VỀ DANH SÁCH
+              </button>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

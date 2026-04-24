@@ -210,7 +210,7 @@ export interface ExternalUser {
 
 export interface ParsedQuestionPreview {
   content: string;
-  options: { text: string; is_correct: boolean; id?: string }[];
+  options: { text: string; is_correct: boolean; id?: string; fixed?: boolean }[];
   solution: string | null;
   confidence: number;
 }

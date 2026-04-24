@@ -26,7 +26,9 @@ export async function apiJson<T>(
     } catch {
       /* ignore */
     }
-    throw new Error(detail || `HTTP ${res.status}`);
+    const error = new Error(detail || `HTTP ${res.status}`);
+    (error as any).status = res.status;
+    throw error;
   }
   return res.json() as Promise<T>;
 }

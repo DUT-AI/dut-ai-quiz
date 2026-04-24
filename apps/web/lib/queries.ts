@@ -254,8 +254,7 @@ export function useParsePDF() {
     mutationFn: async (formData: FormData) => {
       const res = await apiClient.post<PDFParseResponse>(
         "/api/v1/questions/parse-pdf",
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
+        formData
       );
       return res.data;
     },
@@ -315,7 +314,11 @@ export function useAttempt(attemptId: string | null) {
   return useQuery({
     queryKey: ["attempt", attemptId],
     queryFn: () =>
-      apiGet<{ attempt: AttemptOut; questions: QuizQuestion[] }>(
+      apiGet<{
+        attempt: AttemptOut;
+        questions: QuizQuestion[];
+        saved_answers: { question_id: string; selected_option_id: string | null }[];
+      }>(
         `/api/v1/attempts/${attemptId!}`
       ),
     enabled: !!attemptId,

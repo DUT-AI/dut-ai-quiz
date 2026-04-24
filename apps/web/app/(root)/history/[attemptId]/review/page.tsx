@@ -36,6 +36,29 @@ export default function ReviewPage() {
         );
     }
 
+    const isLocked = error && (error as any)?.status === 403;
+
+    if (isLocked) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen space-y-6 p-6 text-center">
+                <div className="relative">
+                    <div className="absolute inset-0 bg-amber-400/20 rounded-full blur-2xl animate-pulse" />
+                    <Timer className="relative size-20 text-amber-500" />
+                </div>
+                <h2 className="text-2xl font-black text-dark-blue">Chưa đến thời gian xem đáp án</h2>
+                <p className="text-gray-navy max-w-md">
+                    Đáp án sẽ được mở sau khi kỳ thi kết thúc hoàn toàn. Vui lòng quay lại sau.
+                </p>
+                <button
+                    onClick={() => router.push("/history")}
+                    className="px-8 py-3 bg-primary text-white rounded-2xl font-black shadow-xl hover:shadow-2xl transition-all"
+                >
+                    QUAY LẠI LỊCH SỬ
+                </button>
+            </div>
+        );
+    }
+
     if (error || !reviewData) {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen space-y-4 p-6 text-center">

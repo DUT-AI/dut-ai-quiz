@@ -37,3 +37,21 @@ export function parseICT(dateStr: string): Date {
   }
   return new Date(dateStr);
 }
+
+/**
+ * Định dạng Date hoặc string sang định dạng dùng cho input datetime-local (YYYY-MM-DDTHH:mm).
+ * Sử dụng local time của trình duyệt để hiển thị đúng như người dùng mong đợi.
+ */
+export function formatToLocalDatetime(date: Date | string | null | undefined): string {
+    if (!date) return "";
+    const d = typeof date === "string" ? parseICT(date) : date;
+    if (isNaN(d.getTime())) return "";
+    
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+}

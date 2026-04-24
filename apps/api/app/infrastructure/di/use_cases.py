@@ -51,6 +51,7 @@ from app.application.use_cases.lessons.lesson_use_case import (
 from app.application.use_cases.auth.auth_use_case import ProxyLoginUseCase, LogoutUseCase
 from app.application.use_cases.me.me_use_case import GetProfileUseCase
 from app.infrastructure.cache.redis_client import ProfileCache
+from app.application.services.pdf_parser import PDFParserService
 
 class UseCaseProvider(Provider):
     create_exam_use_case = provide(CreateExamUseCase, scope=Scope.REQUEST)
@@ -118,6 +119,5 @@ class UseCaseProvider(Provider):
         return GetProfileUseCase(cache)
 
     @provide(scope=Scope.REQUEST)
-    def pdf_parser_service(self) -> "PDFParserService":
-        from app.application.services.pdf_parser import PDFParserService
+    def pdf_parser_service(self) -> PDFParserService:
         return PDFParserService()

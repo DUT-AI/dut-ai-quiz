@@ -10,7 +10,7 @@ def now_ict() -> datetime:
 
 
 def utc_to_ict(dt: datetime) -> datetime:
-    """Converts a UTC datetime to ICT."""
+    """Converts a UTC datetime to ICT. If naive, assumes it's already ICT."""
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
+        return dt.replace(tzinfo=VIETNAM_TZ)
     return dt.astimezone(VIETNAM_TZ)

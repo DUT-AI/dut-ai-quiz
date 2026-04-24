@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, ArrowLeft, CheckCircle2, Save, FileText, Users, ListChecks } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { cn, formatToLocalDatetime } from "@/lib/utils";
 import StepInfo, { ExamInfoData } from "./StepInfo";
 import StepParticipants from "./StepParticipants";
 import StepQuestions from "./StepQuestions";
@@ -25,8 +25,8 @@ export default function ExamStepper({ initialData }: Props) {
   const [formData, setFormData] = useState<ExamInfoData>({
     title: initialData?.title ?? "",
     description: initialData?.description ?? "",
-    start_time: initialData?.start_time ? new Date(initialData.start_time).toISOString().slice(0, 16) : "",
-    end_time: initialData?.end_time ? new Date(initialData.end_time).toISOString().slice(0, 16) : "",
+    start_time: formatToLocalDatetime(initialData?.start_time),
+    end_time: formatToLocalDatetime(initialData?.end_time),
     duration_minutes: initialData?.duration_minutes ?? 60,
     max_attempts: initialData?.max_attempts ?? 1,
     is_published: initialData?.is_published ?? false,
@@ -56,8 +56,8 @@ export default function ExamStepper({ initialData }: Props) {
     try {
       const payload = {
         ...formData,
-        start_time: formData.start_time ? new Date(formData.start_time).toISOString() : null,
-        end_time: formData.end_time ? new Date(formData.end_time).toISOString() : null,
+        start_time: formData.start_time || null,
+        end_time: formData.end_time || null,
         participant_ids: participantIds,
       } as any;
 

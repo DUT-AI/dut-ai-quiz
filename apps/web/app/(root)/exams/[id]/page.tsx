@@ -128,8 +128,8 @@ export default function ExamEntrancePage() {
             <div className="grid grid-cols-1 gap-4">
                {[
                  { icon: FileText, text: "Bài thi được cấu trúc theo dạng trắc nghiệm một đáp án đúng." },
-                 { icon: UserCheck, text: "Hệ thống sẽ ghi nhận nếu bạn thoát khỏi trình duyệt hoặc chuyển tab." },
-                 { icon: AlertTriangle, text: "Phạm quy quá 2 lần sẽ khiến bài thi bị tự động nộp và chấm điểm." },
+                 { icon: UserCheck, text: "Hệ thống giám sát 7 lớp: chuyển tab, mở cửa sổ, extension gian lận, Developer Tools, phím tắt, copy, và chuột phải." },
+                 { icon: AlertTriangle, text: "Phạm quy quá 2 lần sẽ khiến bài thi bị tự động nộp và chấm điểm. Extension 'Always Active Tab' cũng bị phát hiện." },
                  { icon: Clock, text: "Kết quả sẽ được công bố ngay sau khi bạn kết thúc bài thi." },
                ].map((item, i) => (
                  <div key={i} className="flex gap-4 p-4 rounded-2xl bg-white dark:bg-white/5 border border-gray-100 dark:border-white/5 shadow-sm">

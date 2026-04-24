@@ -68,6 +68,10 @@ async def get_attempt_route(
     return {
         "attempt": AttemptOut.model_validate(att),
         "questions": data["questions"],
+        "saved_answers": [
+            {"question_id": str(a.question_id), "selected_option_id": a.selected_option_id}
+            for a in data.get("saved_answers", [])
+        ],
     }
 
 
@@ -156,10 +160,21 @@ async def review_attempt_student(
     attempt_id: UUID,
     use_case: FromDishka[ReviewAttemptUseCase],
 ):
-    data = await use_case.execute(attempt_id, user.id)
-    if not data:
+    result = await use_case.execute(attempt_id, user.id)
+
+    # Handle tuple return (None, "review_locked")
+    if isinstance(result, tuple):
+        _, code = result
+        if code == "review_locked":
+            raise HTTPException(
+                status_code=403,
+                detail="Chưa đến thời gian xem đáp án. Vui lòng chờ đến khi kỳ thi kết thúc.",
+            )
+
+    if not result:
         raise HTTPException(status_code=404, detail="Not found or not completed")
-    
+
+    data = result
     return {
         "attempt": AttemptOut.model_validate(data["attempt"]),
         "answers": [AttemptAnswerOut.model_validate(a) for a in data["answers"]],

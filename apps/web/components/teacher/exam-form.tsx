@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import type { ExamCreate, ExamOut } from "@/lib/types";
+import { formatToLocalDatetime } from "@/lib/utils";
 
 interface Props {
   initial?: ExamOut;
@@ -9,18 +10,13 @@ interface Props {
   saving?: boolean;
 }
 
-function toDatetimeLocal(iso: string | null | undefined) {
-  if (!iso) return "";
-  return iso.slice(0, 16);
-}
-
 export default function ExamForm({ initial, onSave, onCancel, saving }: Props) {
   const [title, setTitle] = useState(initial?.title ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [startTime, setStartTime] = useState(
-    toDatetimeLocal(initial?.start_time)
+    formatToLocalDatetime(initial?.start_time)
   );
-  const [endTime, setEndTime] = useState(toDatetimeLocal(initial?.end_time));
+  const [endTime, setEndTime] = useState(formatToLocalDatetime(initial?.end_time));
   const [duration, setDuration] = useState(
     initial?.duration_minutes ?? 60
   );
@@ -38,8 +34,8 @@ export default function ExamForm({ initial, onSave, onCancel, saving }: Props) {
       await onSave({
         title,
         description,
-        start_time: startTime ? new Date(startTime).toISOString() : null,
-        end_time: endTime ? new Date(endTime).toISOString() : null,
+        start_time: startTime || null,
+        end_time: endTime || null,
         duration_minutes: duration,
         max_attempts: maxAttempts,
         is_published: isPublished,
