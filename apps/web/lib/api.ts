@@ -1,4 +1,5 @@
 import { API_BASE } from "./config";
+import { z } from "zod";
 
 const jsonHeaders = { "Content-Type": "application/json" };
 
@@ -15,7 +16,8 @@ export async function apiFetch(
 
 export async function apiJson<T>(
   path: string,
-  init?: RequestInit
+  init?: RequestInit,
+  schema?: z.ZodTypeAny
 ): Promise<T> {
   const res = await apiFetch(path, init);
   if (!res.ok) {
@@ -30,33 +32,87 @@ export async function apiJson<T>(
     (error as any).status = res.status;
     throw error;
   }
-  return res.json() as Promise<T>;
+
+  const data = await res.json();
+  if (schema) {
+    const result = schema.safeParse(data);
+    if (!result.success) {
+      console.error(`[API Validation Error] Path: ${path}`, result.error.format());
+      throw new Error(`Dữ liệu từ máy chủ không đúng định dạng tại đường dẫn: ${path}`);
+    }
+    return result.data as T;
+  }
+  return data as T;
 }
 
-export function apiPostJson<T>(path: string, body: unknown): Promise<T> {
-  return apiJson<T>(path, {
-    method: "POST",
-    headers: jsonHeaders,
-    body: JSON.stringify(body),
-  });
+export function apiPostJson<T>(
+  path: string,
+  body: unknown,
+  schema?: z.ZodTypeAny
+): Promise<T> {
+  return apiJson<T>(
+    path,
+    {
+      method: "POST",
+      headers: jsonHeaders,
+      body: JSON.stringify(body),
+    },
+    schema
+  );
 }
 
-export function apiPatchJson<T>(path: string, body: unknown): Promise<T> {
-  return apiJson<T>(path, {
-    method: "PATCH",
-    headers: jsonHeaders,
-    body: JSON.stringify(body),
-  });
+export function apiPatchJson<T>(
+  path: string,
+  body: unknown,
+  schema?: z.ZodTypeAny
+): Promise<T> {
+  return apiJson<T>(
+    path,
+    {
+      method: "PATCH",
+      headers: jsonHeaders,
+      body: JSON.stringify(body),
+    },
+    schema
+  );
 }
 
-// Aliases for compatibility
-export const apiGet = apiJson;
-export const apiPost = apiPostJson;
-export const apiPatch = apiPatchJson;
+// Aliases and helpers for validation compatibility
+export function apiGet<T>(
+  path: string,
+  schema?: z.ZodTypeAny,
+  init?: RequestInit
+): Promise<T> {
+  return apiJson<T>(path, init, schema);
+}
+
+export function apiPost<T>(
+  path: string,
+  body: unknown,
+  schema?: z.ZodTypeAny
+): Promise<T> {
+  return apiPostJson<T>(path, body, schema);
+}
+
+export function apiPatch<T>(
+  path: string,
+  body: unknown,
+  schema?: z.ZodTypeAny
+): Promise<T> {
+  return apiPatchJson<T>(path, body, schema);
+}
+
+// Helper to distinguish options and Zod schemas in apiClient
+function parseClientArgs(arg3: any, arg4: any): { schema?: z.ZodTypeAny; options?: any } {
+  if (arg3 && (arg3 instanceof z.ZodType || typeof arg3.safeParse === "function")) {
+    return { schema: arg3, options: arg4 };
+  }
+  return { schema: arg4, options: arg3 };
+}
 
 // Polyfill for apiClient backward compatibility
 export const apiClient = {
-  delete: async (path: string) => {
+  delete: async <T = any>(path: string, schema?: z.ZodTypeAny): Promise<{ data: T }> => {
     const res = await apiFetch(path, { method: "DELETE" });
     if (!res.ok) {
       let detail = res.statusText;
@@ -74,9 +130,25 @@ export const apiClient = {
     } catch {
       data = {};
     }
-    return { data };
+
+    if (schema) {
+      const result = schema.safeParse(data);
+      if (!result.success) {
+        console.error(`[API Validation Error] DELETE ${path}`, result.error.format());
+        throw new Error(`Dữ liệu từ máy chủ không đúng định dạng: DELETE ${path}`);
+      }
+      return { data: result.data as T };
+    }
+    return { data: data as T };
   },
-  put: async (path: string, body?: any, options?: any) => {
+
+  put: async <T = any>(
+    path: string,
+    body?: any,
+    arg3?: any,
+    arg4?: any
+  ): Promise<{ data: T }> => {
+    const { schema, options } = parseClientArgs(arg3, arg4);
     const isJson =
       body !== null &&
       typeof body === "object" &&
@@ -116,9 +188,25 @@ export const apiClient = {
     } catch {
       data = {};
     }
-    return { data };
+
+    if (schema) {
+      const result = schema.safeParse(data);
+      if (!result.success) {
+        console.error(`[API Validation Error] PUT ${path}`, result.error.format());
+        throw new Error(`Dữ liệu từ máy chủ không đúng định dạng: PUT ${path}`);
+      }
+      return { data: result.data as T };
+    }
+    return { data: data as T };
   },
-  post: async <T>(path: string, body?: any, options?: any): Promise<{ data: T }> => {
+
+  post: async <T = any>(
+    path: string,
+    body?: any,
+    arg3?: any,
+    arg4?: any
+  ): Promise<{ data: T }> => {
+    const { schema, options } = parseClientArgs(arg3, arg4);
     const isJson =
       body !== null &&
       typeof body === "object" &&
@@ -155,6 +243,15 @@ export const apiClient = {
     } catch {
       data = {};
     }
-    return { data };
+
+    if (schema) {
+      const result = schema.safeParse(data);
+      if (!result.success) {
+        console.error(`[API Validation Error] POST ${path}`, result.error.format());
+        throw new Error(`Dữ liệu từ máy chủ không đúng định dạng: POST ${path}`);
+      }
+      return { data: result.data as T };
+    }
+    return { data: data as T };
   },
 };

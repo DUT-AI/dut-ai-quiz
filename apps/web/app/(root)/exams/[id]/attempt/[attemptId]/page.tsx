@@ -48,46 +48,6 @@ export default function TestEnvironmentPage() {
 
   const prevAnswersRef = useRef<Record<string, string | null>>({});
 
-  const doSubmit = useCallback(async () => {
-    setIsSubmitting(true);
-    try {
-      const changedIds = Object.keys(answers).filter(id => answers[id] !== prevAnswersRef.current[id]);
-      if (changedIds.length > 0) {
-        const payload = changedIds.map(id => ({
-          question_id: id,
-          selected_option_id: answers[id]
-        }));
-        await patchAnswers.mutateAsync({ attemptId, answers: payload });
-      }
-      await submitAttempt.mutateAsync(attemptId);
-      router.push("/exams");
-    } catch (err: any) {
-      setNotification({ title: "Lỗi nộp bài", message: err.message || "Nộp bài thất bại. Vui lòng thử lại.", type: "error" });
-      setIsSubmitting(false);
-      antiCheat.enterFullScreen();
-    }
-  }, [attemptId, answers, patchAnswers, submitAttempt, router]);
-
-  const handleAutoSubmit = useCallback(async () => {
-    if (isSubmitting) return;
-    setIsSubmitting(true);
-    try {
-      const changedIds = Object.keys(answers).filter(id => answers[id] !== prevAnswersRef.current[id]);
-      if (changedIds.length > 0) {
-        const payload = changedIds.map(id => ({
-          question_id: id,
-          selected_option_id: answers[id]
-        }));
-        await patchAnswers.mutateAsync({ attemptId, answers: payload });
-      }
-      await submitAttempt.mutateAsync(attemptId);
-      setNotification({ title: "Hết giờ", message: "Hết giờ làm bài. Bài thi đã được nộp tự động.", type: "warning" });
-    } catch (err) {
-      console.error(err);
-      router.push("/exams");
-    }
-  }, [attemptId, isSubmitting, router, submitAttempt, answers, patchAnswers]);
-
   // ─── Anti-cheat hook (7 layers) ───
   const antiCheat = useAntiCheat({
     attemptId,
@@ -114,6 +74,46 @@ export default function TestEnvironmentPage() {
       setNotification({ title: "Tự động nộp bài", message: "Bạn đã phạm quy quá số lần cho phép. Bài thi đã được tự động nộp.", type: "error" });
     },
   });
+
+  const doSubmit = useCallback(async () => {
+    setIsSubmitting(true);
+    try {
+      const changedIds = Object.keys(answers).filter(id => answers[id] !== prevAnswersRef.current[id]);
+      if (changedIds.length > 0) {
+        const payload = changedIds.map(id => ({
+          question_id: id,
+          selected_option_id: answers[id]
+        }));
+        await patchAnswers.mutateAsync({ attemptId, answers: payload });
+      }
+      await submitAttempt.mutateAsync(attemptId);
+      router.push("/exams");
+    } catch (err: any) {
+      setNotification({ title: "Lỗi nộp bài", message: err.message || "Nộp bài thất bại. Vui lòng thử lại.", type: "error" });
+      setIsSubmitting(false);
+      antiCheat.enterFullScreen();
+    }
+  }, [attemptId, answers, patchAnswers, submitAttempt, router, antiCheat]);
+
+  const handleAutoSubmit = useCallback(async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      const changedIds = Object.keys(answers).filter(id => answers[id] !== prevAnswersRef.current[id]);
+      if (changedIds.length > 0) {
+        const payload = changedIds.map(id => ({
+          question_id: id,
+          selected_option_id: answers[id]
+        }));
+        await patchAnswers.mutateAsync({ attemptId, answers: payload });
+      }
+      await submitAttempt.mutateAsync(attemptId);
+      setNotification({ title: "Hết giờ", message: "Hết giờ làm bài. Bài thi đã được nộp tự động.", type: "warning" });
+    } catch (err) {
+      console.error(err);
+      router.push("/exams");
+    }
+  }, [attemptId, isSubmitting, router, submitAttempt, answers, patchAnswers]);
 
   // Initialize answers and timer from data
   useEffect(() => {
