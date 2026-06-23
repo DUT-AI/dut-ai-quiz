@@ -3,6 +3,13 @@ import { z } from "zod";
 
 const jsonHeaders = { "Content-Type": "application/json" };
 
+export type ApiBody = object | string | number | boolean | null | undefined;
+
+export interface ApiClientOptions extends RequestInit {
+  withCredentials?: boolean;
+  baseURL?: string;
+}
+
 export async function apiFetch(
   path: string,
   init?: RequestInit
@@ -47,7 +54,7 @@ export async function apiJson<T>(
 
 export function apiPostJson<T>(
   path: string,
-  body: any,
+  body: ApiBody,
   schema?: z.ZodType<T>
 ): Promise<T> {
   return apiJson<T>(
@@ -63,7 +70,7 @@ export function apiPostJson<T>(
 
 export function apiPatchJson<T>(
   path: string,
-  body: any,
+  body: ApiBody,
   schema?: z.ZodType<T>
 ): Promise<T> {
   return apiJson<T>(
@@ -88,7 +95,7 @@ export function apiGet<T>(
 
 export function apiPost<T>(
   path: string,
-  body: any,
+  body: ApiBody,
   schema?: z.ZodType<T>
 ): Promise<T> {
   return apiPostJson<T>(path, body, schema);
@@ -96,23 +103,26 @@ export function apiPost<T>(
 
 export function apiPatch<T>(
   path: string,
-  body: any,
+  body: ApiBody,
   schema?: z.ZodType<T>
 ): Promise<T> {
   return apiPatchJson<T>(path, body, schema);
 }
 
 // Helper to distinguish options and Zod schemas in apiClient
-function parseClientArgs<T>(arg3: any, arg4: any): { schema?: z.ZodType<T>; options?: any } {
-  if (arg3 && (arg3 instanceof z.ZodType || typeof arg3.safeParse === "function")) {
-    return { schema: arg3, options: arg4 };
+function parseClientArgs<T>(
+  arg3: z.ZodType<T> | ApiClientOptions | undefined,
+  arg4: ApiClientOptions | undefined
+): { schema?: z.ZodType<T>; options?: ApiClientOptions } {
+  if (arg3 && (arg3 instanceof z.ZodType || typeof (arg3 as any).safeParse === "function")) {
+    return { schema: arg3 as z.ZodType<T>, options: arg4 };
   }
-  return { schema: arg4, options: arg3 };
+  return { schema: arg4 as z.ZodType<T>, options: arg3 as ApiClientOptions };
 }
 
 // Polyfill for apiClient backward compatibility
 export const apiClient = {
-  delete: async <T = any>(path: string, schema?: z.ZodType<T>): Promise<{ data: T }> => {
+  delete: async <T = unknown>(path: string, schema?: z.ZodType<T>): Promise<{ data: T }> => {
     const res = await apiFetch(path, { method: "DELETE" });
     if (!res.ok) {
       let detail = res.statusText;
@@ -142,11 +152,11 @@ export const apiClient = {
     return { data: data as T };
   },
 
-  put: async <T = any>(
+  put: async <T = unknown>(
     path: string,
-    body?: any,
-    arg3?: any,
-    arg4?: any
+    body?: ApiBody,
+    arg3?: z.ZodType<T> | ApiClientOptions,
+    arg4?: ApiClientOptions
   ): Promise<{ data: T }> => {
     const { schema, options } = parseClientArgs(arg3, arg4);
     const isJson =
@@ -154,7 +164,7 @@ export const apiClient = {
       typeof body === "object" &&
       !(typeof Blob !== "undefined" && body instanceof Blob);
 
-    const headers: Record<string, string> = { ...options?.headers };
+    const headers: Record<string, string> = { ...(options?.headers as Record<string, string>) };
     if (isJson && !headers["Content-Type"]) {
       headers["Content-Type"] = "application/json";
     }
@@ -162,7 +172,7 @@ export const apiClient = {
     const init: RequestInit = {
       method: "PUT",
       headers,
-      body: isJson ? JSON.stringify(body) : body,
+      body: isJson ? JSON.stringify(body) : (body as BodyInit | null),
     };
 
     if (options?.withCredentials === false) {
@@ -200,11 +210,11 @@ export const apiClient = {
     return { data: data as T };
   },
 
-  post: async <T = any>(
+  post: async <T = unknown>(
     path: string,
-    body?: any,
-    arg3?: any,
-    arg4?: any
+    body?: ApiBody,
+    arg3?: z.ZodType<T> | ApiClientOptions,
+    arg4?: ApiClientOptions
   ): Promise<{ data: T }> => {
     const { schema, options } = parseClientArgs(arg3, arg4);
     const isJson =
@@ -213,7 +223,7 @@ export const apiClient = {
       !(typeof FormData !== "undefined" && body instanceof FormData) &&
       !(typeof Blob !== "undefined" && body instanceof Blob);
 
-    const headers: Record<string, string> = { ...options?.headers };
+    const headers: Record<string, string> = { ...(options?.headers as Record<string, string>) };
     if (isJson && !headers["Content-Type"]) {
       headers["Content-Type"] = "application/json";
     }
@@ -221,7 +231,7 @@ export const apiClient = {
     const init: RequestInit = {
       method: "POST",
       headers,
-      body: isJson ? JSON.stringify(body) : body,
+      body: isJson ? JSON.stringify(body) : (body as BodyInit | null),
     };
 
     const res = await apiFetch(path, init);
