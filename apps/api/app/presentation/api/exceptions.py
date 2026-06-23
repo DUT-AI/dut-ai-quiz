@@ -1,15 +1,15 @@
-from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import JSONResponse
-from fastapi.exceptions import RequestValidationError
-from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
-import logging
 import traceback
 
-logger = logging.getLogger(__name__)
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from loguru import logger
+from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
+
+from app.domain.exceptions.exceptions import AppException
 
 
 def setup_exception_handlers(app: FastAPI):
-    from app.core.exceptions import AppException
 
     @app.exception_handler(AppException)
     async def app_exception_handler(request: Request, exc: AppException):

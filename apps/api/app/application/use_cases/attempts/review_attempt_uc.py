@@ -1,10 +1,9 @@
+from app.domain.exceptions.exceptions import ReviewLockedException
+from app.domain.exceptions.exceptions import AttemptNotCompletedException
+from app.domain.exceptions.exceptions import AttemptNotFoundException
 from uuid import UUID
 
-from app.core.exceptions import (
-    AttemptNotCompletedException,
-    AttemptNotFoundException,
-    ReviewLockedException,
-)
+
 from app.infrastructure.persistence.models import AttemptStatus
 from app.infrastructure.repositories.attempts import AttemptRepository
 from app.infrastructure.repositories.exam_questions import ExamQuestionRepository

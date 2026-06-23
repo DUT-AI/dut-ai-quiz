@@ -16,7 +16,7 @@ import {
   FileText,
   Play
 } from "lucide-react";
-import { UserMe } from "@/lib/types";
+import { UserMe, ExamOut, Lesson } from "@/lib/types";
 import { cn, parseICT } from "@/lib/utils";
 import { MotionDiv } from "@/components/animated/motion-div";
 import Link from "next/link";
@@ -27,8 +27,8 @@ interface DashboardViewProps {
   user: UserMe | null;
   activeTab: "lessons" | "exams";
   onTabChange: (tab: "lessons" | "exams") => void;
-  exams: any[];
-  lessons: any[];
+  exams: ExamOut[];
+  lessons: Lesson[];
   isLoadingExams: boolean;
   isLoadingLessons: boolean;
 }
@@ -264,85 +264,85 @@ const EmptyState = ({ text, className }: { text: string, className?: string }) =
   </div>
 );
 
-const ExamCard = ({ exam, delay }: { exam: any, delay: number }) => {
+const ExamCard = ({ exam, delay }: { exam: ExamOut, delay: number }) => {
   const isExpired = exam.end_time && parseICT(exam.end_time) < new Date();
   const isStarted = !exam.start_time || parseICT(exam.start_time) <= new Date();
-  
+
   return (
     <MotionDiv
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay }}
     >
-      <Link 
+      <Link
         href={`/exams/${exam.id}`}
         className={cn(
           "relative flex flex-col h-full p-6 rounded-[2.5rem] bg-white dark:bg-navy-blue border-2 border-transparent hover:border-primary/40 transition-all duration-300 shadow-xl group overflow-hidden",
           isExpired && "grayscale opacity-80"
         )}
       >
-         {/* Background pattern */}
-         <div className="absolute -right-4 -top-4 size-32 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors" />
-         
-         <div className="flex justify-between items-start mb-4">
-            <div className="size-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300 shadow-inner">
-               <GraduationCap className="size-6" />
+        {/* Background pattern */}
+        <div className="absolute -right-4 -top-4 size-32 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors" />
+
+        <div className="flex justify-between items-start mb-4">
+          <div className="size-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300 shadow-inner">
+            <GraduationCap className="size-6" />
+          </div>
+          <div className="flex flex-col items-end gap-1.5">
+            {isExpired ? (
+              <Badge variant="outline" className="bg-red-500/10 text-red-600 border-red-500/20 text-[10px] font-bold py-0.5">Hết hạn</Badge>
+            ) : !isStarted ? (
+              <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/20 text-[10px] font-bold py-0.5">Sắp diễn ra</Badge>
+            ) : (
+              <Badge variant="outline" className="bg-green/10 text-green border-green/20 text-[10px] font-bold py-0.5">Đang mở</Badge>
+            )}
+          </div>
+        </div>
+
+        <div className="flex-1 space-y-4">
+          <div>
+            <h4 className="font-black text-dark-blue dark:text-white text-xl leading-snug group-hover:text-primary transition-colors line-clamp-2">
+              {exam.title}
+            </h4>
+            <p className="text-sm text-gray-navy/60 dark:text-light-blue/40 font-medium mt-1 line-clamp-1">
+              {exam.description || "Hệ thống luyện tập thông minh"}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <p className="text-[10px] font-black uppercase text-gray-navy opacity-40">Thời lượng</p>
+              <div className="flex items-center gap-2 font-bold text-dark-blue dark:text-white">
+                <Clock className="size-4 text-primary" />
+                <span>{exam.duration_minutes ?? 0} phút</span>
+              </div>
             </div>
-            <div className="flex flex-col items-end gap-1.5">
-               {isExpired ? (
-                 <Badge variant="outline" className="bg-red-500/10 text-red-600 border-red-500/20 text-[10px] font-bold py-0.5">Hết hạn</Badge>
-               ) : !isStarted ? (
-                 <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/20 text-[10px] font-bold py-0.5">Sắp diễn ra</Badge>
-               ) : (
-                 <Badge variant="outline" className="bg-green/10 text-green border-green/20 text-[10px] font-bold py-0.5">Đang mở</Badge>
-               )}
+            <div className="space-y-1">
+              <p className="text-[10px] font-black uppercase text-gray-navy opacity-40">Lượt thi</p>
+              <div className="flex items-center gap-2 font-bold text-dark-blue dark:text-white">
+                <Target className="size-4 text-primary" />
+                <span>{exam.max_attempts || "—"} lần</span>
+              </div>
             </div>
-         </div>
+          </div>
 
-         <div className="flex-1 space-y-4">
-           <div>
-             <h4 className="font-black text-dark-blue dark:text-white text-xl leading-snug group-hover:text-primary transition-colors line-clamp-2">
-               {exam.title}
-             </h4>
-             <p className="text-sm text-gray-navy/60 dark:text-light-blue/40 font-medium mt-1 line-clamp-1">
-               {exam.description || "Hệ thống luyện tập thông minh"}
-             </p>
-           </div>
+          <div className="pt-4 border-t border-gray-100 dark:border-white/5 space-y-2">
+            <div className="flex justify-between text-[10px] items-center">
+              <span className="font-bold text-gray-navy/50 dark:text-light-blue/30 uppercase">Thời hạn</span>
+              <span className="font-black text-dark-blue dark:text-white">
+                {exam.end_time
+                  ? format(parseICT(exam.end_time), "dd/MM/yyyy", { locale: vi })
+                  : "Vô thời hạn"
+                }
+              </span>
+            </div>
+          </div>
+        </div>
 
-           <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                 <p className="text-[10px] font-black uppercase text-gray-navy opacity-40">Thời lượng</p>
-                 <div className="flex items-center gap-2 font-bold text-dark-blue dark:text-white">
-                    <Clock className="size-4 text-primary" />
-                    <span>{exam.duration_minutes ?? 0} phút</span>
-                 </div>
-              </div>
-              <div className="space-y-1">
-                 <p className="text-[10px] font-black uppercase text-gray-navy opacity-40">Lượt thi</p>
-                 <div className="flex items-center gap-2 font-bold text-dark-blue dark:text-white">
-                    <Target className="size-4 text-primary" />
-                    <span>{exam.max_attempts || "—"} lần</span>
-                 </div>
-              </div>
-           </div>
-
-           <div className="pt-4 border-t border-gray-100 dark:border-white/5 space-y-2">
-              <div className="flex justify-between text-[10px] items-center">
-                 <span className="font-bold text-gray-navy/50 dark:text-light-blue/30 uppercase">Thời hạn</span>
-                 <span className="font-black text-dark-blue dark:text-white">
-                    {exam.end_time 
-                      ? format(parseICT(exam.end_time), "dd/MM/yyyy", { locale: vi })
-                      : "Vô thời hạn"
-                    }
-                 </span>
-              </div>
-           </div>
-         </div>
-
-         <div className="mt-6 flex items-center justify-center gap-2 w-full py-4 bg-primary text-white rounded-2xl font-black shadow-lg shadow-primary/30 group-hover:scale-[1.02] group-hover:shadow-primary/40 transition-all active:scale-95">
-            BẮT ĐẦU THI
-            <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
-         </div>
+        <div className="mt-6 flex items-center justify-center gap-2 w-full py-4 bg-primary text-white rounded-2xl font-black shadow-lg shadow-primary/30 group-hover:scale-[1.02] group-hover:shadow-primary/40 transition-all active:scale-95">
+          BẮT ĐẦU THI
+          <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
+        </div>
       </Link>
     </MotionDiv>
   );

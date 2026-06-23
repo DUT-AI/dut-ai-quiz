@@ -5,6 +5,7 @@ import ThemeProvider from "@/components/providers/theme-provider";
 import { Providers } from "./providers";
 import { ImageZoomPortal } from "@/components/atoms/ImageZoomPortal";
 import NextTopLoader from "nextjs-toploader";
+import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
   title: "DUT AI Quiz Portal",
@@ -24,6 +25,7 @@ export default function RootLayout({
             <NextTopLoader color="#7C3AED" showSpinner={true} height={3} />
             {children}
             <ImageZoomPortal />
+            <Toaster position="top-right" />
           </ThemeProvider>
         </Providers>
       </body>

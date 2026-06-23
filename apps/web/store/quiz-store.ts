@@ -1,34 +1,13 @@
 import { create } from "zustand";
-import { apiJson, apiPatchJson, apiPostJson } from "@/lib/api";
+import { apiPatchJson, apiPostJson } from "@/lib/api";
 import type {
   AttemptOut,
-  ExamOut,
   ExamTile,
   QuizQuestion,
   StartAttemptResponse,
 } from "@/lib/types";
 
-const ICONS = [
-  "/assets/images/icon-html.svg",
-  "/assets/images/icon-css.svg",
-  "/assets/images/icon-js.svg",
-  "/assets/images/icon-accessibility.svg",
-];
-
-function toExamTiles(exams: ExamOut[]): ExamTile[] {
-  return exams.map((e, i) => ({
-    id: e.id,
-    title: e.title,
-    icon: ICONS[i % ICONS.length],
-  }));
-}
-
 interface State {
-  exams: ExamTile[];
-  examsRaw: ExamOut[];
-  listError: string | null;
-  listLoading: boolean;
-
   selectedExam: ExamTile | null;
   attemptId: string | null;
   expiresAt: string | null;
@@ -43,14 +22,9 @@ interface State {
   sessionError: string | null;
   sessionLoading: boolean;
 
-  lessons: any[];
-  lessonsLoading: boolean;
-
   showWarnModal: boolean;
   setWarnModal: (open: boolean) => void;
 
-  fetchExams: () => Promise<void>;
-  fetchLessons: () => Promise<void>;
   selectExam: (exam: ExamTile) => Promise<void>;
   selectAnswer: (questionId: string, optionId: string) => Promise<void>;
   goNextQuestion: () => void;
@@ -72,44 +46,11 @@ const initialQuizSlice = {
   attemptResult: null,
   sessionError: null,
   sessionLoading: false,
-  lessons: [],
-  lessonsLoading: false,
   showWarnModal: false,
 };
 
 export const useQuestionStore = create<State>()((set, get) => ({
-  exams: [],
-  examsRaw: [],
-  listError: null,
-  listLoading: false,
   ...initialQuizSlice,
-
-  fetchExams: async () => {
-    set({ listLoading: true, listError: null });
-    try {
-      const rows = await apiJson<ExamOut[]>("/api/v1/exams");
-      set({
-        examsRaw: rows,
-        exams: toExamTiles(rows),
-        listLoading: false,
-      });
-    } catch (e) {
-      set({
-        listError: e instanceof Error ? e.message : "Không tải được danh sách đề",
-        listLoading: false,
-      });
-    }
-  },
-  
-  fetchLessons: async () => {
-    set({ lessonsLoading: true });
-    try {
-      const rows = await apiJson<any[]>("/api/v1/lessons");
-      set({ lessons: rows, lessonsLoading: false });
-    } catch (e) {
-      set({ lessonsLoading: false });
-    }
-  },
 
   selectExam: async (exam: ExamTile) => {
     set({ sessionLoading: true, sessionError: null });
@@ -211,3 +152,4 @@ export const useQuestionStore = create<State>()((set, get) => ({
     });
   },
 }));
+

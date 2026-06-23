@@ -40,11 +40,12 @@ function toExamTiles(exams: ExamOut[]): ExamTile[] {
 }
 
 /* ──────────── Lessons ──────────── */
-export function useLessons() {
-  return useQuery({
+export function useLessons(options?: any) {
+  return useQuery<Lesson[]>({
     queryKey: ["lessons"],
     queryFn: () => apiGet<Lesson[]>("/api/v1/lessons"),
     staleTime: 60_000,
+    ...options,
   });
 }
 
@@ -98,11 +99,12 @@ export function useExams() {
   });
 }
 
-export function useExamsFull() {
-  return useQuery({
+export function useExamsFull(options?: any) {
+  return useQuery<ExamOut[]>({
     queryKey: ["exams-full"],
     queryFn: () => apiGet<ExamOut[]>("/api/v1/exams"),
     staleTime: 60_000,
+    ...options,
   });
 }
 

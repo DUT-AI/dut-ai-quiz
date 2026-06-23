@@ -1,32 +1,21 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { useAuth } from "@/context/auth-context";
 import { useRouter } from "next/navigation";
 import { API_BASE } from "@/lib/config";
+import { useLogin } from "./use-login";
+import { Loader2 } from "lucide-react";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const { login, isLoading, isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
+  const { register, handleSubmit, errors, isPending } = useLogin();
 
   if (isAuthenticated && !isLoading) {
     router.push("/");
     return null;
   }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    const success = await login(email, password);
-    if (success) {
-      router.push("/");
-    } else {
-      setError("Invalid credentials or Manage service error");
-    }
-  };
 
   const handleGoogleLogin = () => {
     window.location.href = `${API_BASE}/api/v1/auth/google/login`;
@@ -44,42 +33,51 @@ export default function LoginPage() {
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="-space-y-px rounded-md shadow-sm">
+          <div className="space-y-4 rounded-md shadow-sm">
             <div>
               <input
                 type="email"
-                required
-                className="relative block w-full appearance-none rounded-none rounded-t-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                {...register("email")}
+                className={`relative block w-full appearance-none rounded-md border px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-emerald-500 focus:outline-none focus:ring-emerald-500 sm:text-sm transition-colors duration-200 ${
+                  errors.email ? "border-red focus:border-red focus:ring-red" : "border-gray-300"
+                }`}
                 placeholder="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                disabled={isPending}
               />
+              {errors.email && (
+                <p className="mt-1.5 text-xs text-red font-medium">{errors.email.message}</p>
+              )}
             </div>
             <div>
               <input
                 type="password"
-                required
-                className="relative block w-full appearance-none rounded-none rounded-b-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                {...register("password")}
+                className={`relative block w-full appearance-none rounded-md border px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-emerald-500 focus:outline-none focus:ring-emerald-500 sm:text-sm transition-colors duration-200 ${
+                  errors.password ? "border-red focus:border-red focus:ring-red" : "border-gray-300"
+                }`}
                 placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                disabled={isPending}
               />
+              {errors.password && (
+                <p className="mt-1.5 text-xs text-red font-medium">{errors.password.message}</p>
+              )}
             </div>
           </div>
-
-          {error && (
-            <div className="text-sm text-red-600">
-              {error}
-            </div>
-          )}
 
           <div>
             <button
               type="submit"
-              disabled={isLoading}
-              className="group relative flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:bg-indigo-400"
+              disabled={isPending}
+              className="group relative flex w-full justify-center items-center rounded-md border border-transparent bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:bg-emerald-400 transition-colors duration-200"
             >
-              {isLoading ? "Signing in..." : "Sign in"}
+              {isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                "Sign in"
+              )}
             </button>
           </div>
         </form>
@@ -98,7 +96,7 @@ export default function LoginPage() {
             <button
               onClick={handleGoogleLogin}
               type="button"
-              className="flex w-full items-center justify-center gap-3 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors duration-200"
+              className="flex w-full items-center justify-center gap-3 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-colors duration-200"
             >
               <svg className="h-5 w-5" viewBox="0 0 24 24">
                 <path
@@ -126,4 +124,3 @@ export default function LoginPage() {
     </div>
   );
 }
-

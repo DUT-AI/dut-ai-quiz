@@ -1,7 +1,6 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { useQuestionStore } from "@/store/quiz-store";
 import { useThemeStore } from "@/store/theme-store";
 import React, { ReactNode } from "react";
 

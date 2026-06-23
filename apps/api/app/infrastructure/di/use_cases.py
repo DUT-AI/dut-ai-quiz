@@ -46,7 +46,7 @@ from app.application.use_cases.practice.practice_use_case import (
     PatchPracticeAnswersUseCase,
     StartPracticeSessionUseCase,
 )
-from app.application.use_cases.questions.question_use_case import (
+from app.application.use_cases.questions import (
     BulkCreateQuestionsUseCase,
     CreateQuestionUseCase,
     DeleteQuestionUseCase,

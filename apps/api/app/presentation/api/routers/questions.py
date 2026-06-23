@@ -3,7 +3,7 @@ from uuid import UUID
 from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import APIRouter, HTTPException, Query
 
-from app.application.use_cases.questions.question_use_case import (
+from app.application.use_cases.questions import (
     BulkCreateQuestionsUseCase,
     CreateQuestionUseCase,
     DeleteQuestionUseCase,

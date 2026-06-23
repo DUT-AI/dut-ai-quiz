@@ -21,7 +21,7 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 
 const STUDENT_NAV_ITEMS = [
-  { icon: LayoutDashboard, label: "Tổng quan", href: "/" },
+  { icon: LayoutDashboard, label: "Tổng quan", href: "/dashboard" },
   { icon: BookOpen, label: "Bài học", href: "/lessons" },
   { icon: GraduationCap, label: "Đề thi", href: "/exams" },
   { icon: History, label: "Lịch sử làm bài", href: "/history" },

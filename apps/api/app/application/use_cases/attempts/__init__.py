@@ -4,11 +4,11 @@ from .attempt_use_case import (
     PatchAttemptAnswersUseCase,
     RecordFocusEventUseCase,
     ListUserAttemptsUseCase,
-    ReviewAttemptUseCase,
     GetAttemptUseCase,
 )
 from .start_attempt_use_case import StartAttemptUseCase
 from .submit_attempt_use_case import SubmitAttemptUseCase
+from .review_attempt_uc import ReviewAttemptUseCase
 
 __all__ = [
     "StartAttemptUseCase",
