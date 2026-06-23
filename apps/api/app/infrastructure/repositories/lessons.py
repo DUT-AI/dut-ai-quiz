@@ -1,9 +1,11 @@
+from app.core.datetime_utils import now_ict
 from typing import Protocol
-from uuid import UUID
+from uuid import UUID, uuid4
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.domain.entities.lesson import LessonEntity
 from app.infrastructure.persistence.models import Lesson
+
 
 class LessonRepository(Protocol):
     async def list_all(self) -> list[LessonEntity]: ...
@@ -11,6 +13,20 @@ class LessonRepository(Protocol):
     async def add(self, entity: LessonEntity) -> LessonEntity: ...
     async def update(self, entity: LessonEntity) -> LessonEntity: ...
     async def delete(self, entity: LessonEntity) -> None: ...
+
+
+class MockRepository(LessonRepository):
+    async def list_all(self) -> list[LessonEntity]:
+        return [
+            LessonEntity(
+                id=uuid4(),
+                name="Topic 1",
+                description="Topic 1 description",
+                order=1,
+                created_at=now_ict(),
+            )
+        ]
+
 
 class SqlLessonRepository:
     def __init__(self, session: AsyncSession) -> None:

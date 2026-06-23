@@ -6,29 +6,23 @@ import asyncio
 from logging.config import fileConfig
 
 from alembic import context
+from app.config import settings
+from app.infrastructure.persistence.models import Base
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import create_async_engine
-from sqlmodel import SQLModel
-
-import app.infrastructure.persistence.models  # noqa: F401
-from app.config import settings
 
 config = context.config
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-target_metadata = SQLModel.metadata
-
-
-def get_url() -> str:
-    return settings.database_url
+target_metadata = [Base.metadata]
 
 
 def run_migrations_offline() -> None:
     context.configure(
-        url=get_url(),
+        url=settings.database_url,
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
@@ -40,14 +34,16 @@ def run_migrations_offline() -> None:
 
 
 def do_run_migrations(connection: Connection) -> None:
-    context.configure(connection=connection, target_metadata=target_metadata, compare_type=True)
+    context.configure(
+        connection=connection, target_metadata=target_metadata, compare_type=True
+    )
 
     with context.begin_transaction():
         context.run_migrations()
 
 
 async def run_async_migrations() -> None:
-    connectable = create_async_engine(get_url(), poolclass=pool.NullPool)
+    connectable = create_async_engine(settings.database_url, poolclass=pool.NullPool)
 
     async with connectable.connect() as connection:
         await connection.run_sync(do_run_migrations)

@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.domain.entities.exam import ExamEntity
 from app.infrastructure.persistence.models import Exam
 
+
 class ExamRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._s = session
@@ -18,22 +19,24 @@ class ExamRepository:
 
     async def list_for_teacher(self, user_id: int) -> list[ExamEntity]:
         stmt = select(Exam).where(
-            (Exam.created_by == user_id) | 
-            ((Exam.participant_ids.any(user_id)) & (Exam.is_published.is_(True)))
+            (Exam.created_by == user_id)
+            | ((Exam.participant_ids.any(user_id)) & (Exam.is_published.is_(True)))
         )
         r = await self._s.execute(stmt.order_by(Exam.title))
         return [m.to_entity() for m in r.scalars().all()]
 
-    async def list_published_for_student(self, user_id: int, now: datetime) -> list[ExamEntity]:
+    async def list_published_for_student(
+        self, user_id: int, now: datetime
+    ) -> list[ExamEntity]:
         # Condition for exams where the user is a participant
         participant_cond = (
-            (Exam.is_published.is_(True)) &
-            ((Exam.start_time.is_(None)) | (Exam.start_time <= now)) &
-            ((Exam.end_time.is_(None)) | (Exam.end_time >= now)) &
-            (Exam.participant_ids.any(user_id))
+            (Exam.is_published.is_(True))
+            & ((Exam.start_time.is_(None)) | (Exam.start_time <= now))
+            & ((Exam.end_time.is_(None)) | (Exam.end_time >= now))
+            & (Exam.participant_ids.any(user_id))
         )
         # Condition for exams created by the user (allows teachers to see/test all their exams)
-        creator_cond = (Exam.created_by == user_id)
+        creator_cond = Exam.created_by == user_id
 
         stmt = select(Exam).where(participant_cond | creator_cond)
         r = await self._s.execute(stmt.order_by(Exam.title))

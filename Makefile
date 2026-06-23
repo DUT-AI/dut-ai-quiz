@@ -24,15 +24,6 @@ help:
 	@echo "  alembic-current  - revision hiện tại trên DB"
 	@echo "  dev-web          - chạy Next.js dev server cho frontend (apps/web)"
 
-db-up:
-	$(COMPOSE) up -d postgres
-
-db-down:
-	$(COMPOSE) down
-
-db-logs:
-	$(COMPOSE) logs -f postgres
-
 api-sync:
 	cd $(API_DIR) && uv sync --group dev
 

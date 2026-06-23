@@ -1,8 +1,23 @@
 from dishka import Provider, Scope, provide
-from app.infrastructure.repositories.attempts import AttemptRepository
-from app.infrastructure.repositories.focus_events import FocusEventRepository
-from app.domain.events.bus import EventBus
 
+from app.application.services.pdf_parser import PDFParserService
+from app.application.use_cases.attempts import (
+    GetAttemptDetailUseCase,
+    GetAttemptUseCase,
+    ListExamAttemptsUseCase,
+    ListUserAttemptsUseCase,
+    PatchAttemptAnswersUseCase,
+    RecordFocusEventUseCase,
+    ReviewAttemptUseCase,
+    StartAttemptUseCase,
+    SubmitAttemptUseCase,
+)
+from app.application.use_cases.attempts.rescore_use_case import RescoreAttemptUseCase
+from app.application.use_cases.auth.auth_use_case import (
+    GoogleAuthUseCase,
+    LogoutUseCase,
+    ProxyLoginUseCase,
+)
 from app.application.use_cases.exams.exam_use_case import (
     CreateExamUseCase,
     DeleteExamUseCase,
@@ -13,51 +28,47 @@ from app.application.use_cases.exams.exam_use_case import (
     UpdateExamUseCase,
 )
 from app.application.use_cases.exams.stats_use_case import GetExamStatsUseCase
+from app.application.use_cases.leaderboard.leaderboard_use_case import (
+    GetLeaderboardUseCase,
+)
+from app.application.use_cases.lessons.lesson_use_case import (
+    CreateLessonUseCase,
+    DeleteLessonUseCase,
+    GetLessonDetailUseCase,
+    ListLessonsUseCase,
+    UpdateLessonUseCase,
+)
+from app.application.use_cases.me.me_use_case import GetProfileUseCase
+from app.application.use_cases.practice.practice_use_case import (
+    FinishPracticeSessionUseCase,
+    GetPracticeSessionUseCase,
+    ListPracticeHistoryUseCase,
+    PatchPracticeAnswersUseCase,
+    StartPracticeSessionUseCase,
+)
 from app.application.use_cases.questions.question_use_case import (
+    BulkCreateQuestionsUseCase,
     CreateQuestionUseCase,
     DeleteQuestionUseCase,
     GetQuestionUseCase,
     ListQuestionsUseCase,
     UpdateQuestionUseCase,
-    BulkCreateQuestionsUseCase,
 )
-from app.application.use_cases.attempts.attempt_use_case import (
-    StartAttemptUseCase,
-    SubmitAttemptUseCase,
-    GetAttemptUseCase,
-    GetAttemptDetailUseCase,
-    ListExamAttemptsUseCase,
-    PatchAttemptAnswersUseCase,
-    RecordFocusEventUseCase,
-    ListUserAttemptsUseCase,
-    ReviewAttemptUseCase,
-)
-from app.application.use_cases.attempts.rescore_use_case import RescoreAttemptUseCase
-from app.application.use_cases.leaderboard.leaderboard_use_case import GetLeaderboardUseCase
-from app.application.use_cases.practice.practice_use_case import (
-    StartPracticeSessionUseCase,
-    GetPracticeSessionUseCase,
-    PatchPracticeAnswersUseCase,
-    FinishPracticeSessionUseCase,
-    ListPracticeHistoryUseCase,
-)
-from app.application.use_cases.lessons.lesson_use_case import (
-    ListLessonsUseCase,
-    CreateLessonUseCase,
-    UpdateLessonUseCase,
-    DeleteLessonUseCase,
-    GetLessonDetailUseCase,
-)
-from app.application.use_cases.auth.auth_use_case import ProxyLoginUseCase, LogoutUseCase
-from app.application.use_cases.me.me_use_case import GetProfileUseCase
+from app.domain.events.bus import EventBus
 from app.infrastructure.cache.redis_client import ProfileCache
-from app.application.services.pdf_parser import PDFParserService
+from app.infrastructure.clients import ManageServiceClient
+from app.infrastructure.repositories.attempts import AttemptRepository
+from app.infrastructure.repositories.focus_events import FocusEventRepository
+from app.infrastructure.repositories.users import UserRepository
+
 
 class UseCaseProvider(Provider):
     create_exam_use_case = provide(CreateExamUseCase, scope=Scope.REQUEST)
     delete_exam_use_case = provide(DeleteExamUseCase, scope=Scope.REQUEST)
     get_exam_use_case = provide(GetExamUseCase, scope=Scope.REQUEST)
-    list_exam_questions_use_case = provide(ListExamQuestionsUseCase, scope=Scope.REQUEST)
+    list_exam_questions_use_case = provide(
+        ListExamQuestionsUseCase, scope=Scope.REQUEST
+    )
     list_exams_use_case = provide(ListExamsUseCase, scope=Scope.REQUEST)
     set_exam_questions_use_case = provide(SetExamQuestionsUseCase, scope=Scope.REQUEST)
     update_exam_use_case = provide(UpdateExamUseCase, scope=Scope.REQUEST)
@@ -69,7 +80,9 @@ class UseCaseProvider(Provider):
     get_question_use_case = provide(GetQuestionUseCase, scope=Scope.REQUEST)
     list_questions_use_case = provide(ListQuestionsUseCase, scope=Scope.REQUEST)
     update_question_use_case = provide(UpdateQuestionUseCase, scope=Scope.REQUEST)
-    bulk_create_questions_use_case = provide(BulkCreateQuestionsUseCase, scope=Scope.REQUEST)
+    bulk_create_questions_use_case = provide(
+        BulkCreateQuestionsUseCase, scope=Scope.REQUEST
+    )
 
     # attempts
     start_attempt_use_case = provide(StartAttemptUseCase, scope=Scope.REQUEST)
@@ -77,29 +90,41 @@ class UseCaseProvider(Provider):
     get_attempt_use_case = provide(GetAttemptUseCase, scope=Scope.REQUEST)
     get_attempt_detail_use_case = provide(GetAttemptDetailUseCase, scope=Scope.REQUEST)
     list_exam_attempts_use_case = provide(ListExamAttemptsUseCase, scope=Scope.REQUEST)
-    patch_attempt_answers_use_case = provide(PatchAttemptAnswersUseCase, scope=Scope.REQUEST)
+    patch_attempt_answers_use_case = provide(
+        PatchAttemptAnswersUseCase, scope=Scope.REQUEST
+    )
     list_user_attempts_use_case = provide(ListUserAttemptsUseCase, scope=Scope.REQUEST)
     review_attempt_use_case = provide(ReviewAttemptUseCase, scope=Scope.REQUEST)
     rescore_attempt_use_case = provide(RescoreAttemptUseCase, scope=Scope.REQUEST)
-    
+
     @provide(scope=Scope.REQUEST)
     def record_focus_event_use_case(
         self,
-        att_repo: AttemptRepository,
-        fe_repo: FocusEventRepository,
-        event_bus: EventBus,
+        attempt_repo: AttemptRepository,
+        focus_repo: FocusEventRepository,
+        bus: EventBus,
     ) -> RecordFocusEventUseCase:
-        return RecordFocusEventUseCase(att_repo, fe_repo, event_bus)
+        return RecordFocusEventUseCase(attempt_repo, focus_repo, bus)
 
     # leaderboard
     get_leaderboard_use_case = provide(GetLeaderboardUseCase, scope=Scope.REQUEST)
 
     # practice
-    start_practice_session_use_case = provide(StartPracticeSessionUseCase, scope=Scope.REQUEST)
-    get_practice_session_use_case = provide(GetPracticeSessionUseCase, scope=Scope.REQUEST)
-    patch_practice_answers_use_case = provide(PatchPracticeAnswersUseCase, scope=Scope.REQUEST)
-    finish_practice_session_use_case = provide(FinishPracticeSessionUseCase, scope=Scope.REQUEST)
-    list_practice_history_use_case = provide(ListPracticeHistoryUseCase, scope=Scope.REQUEST)
+    start_practice_session_use_case = provide(
+        StartPracticeSessionUseCase, scope=Scope.REQUEST
+    )
+    get_practice_session_use_case = provide(
+        GetPracticeSessionUseCase, scope=Scope.REQUEST
+    )
+    patch_practice_answers_use_case = provide(
+        PatchPracticeAnswersUseCase, scope=Scope.REQUEST
+    )
+    finish_practice_session_use_case = provide(
+        FinishPracticeSessionUseCase, scope=Scope.REQUEST
+    )
+    list_practice_history_use_case = provide(
+        ListPracticeHistoryUseCase, scope=Scope.REQUEST
+    )
 
     list_lessons_use_case = provide(ListLessonsUseCase, scope=Scope.REQUEST)
     create_lesson_use_case = provide(CreateLessonUseCase, scope=Scope.REQUEST)
@@ -109,14 +134,20 @@ class UseCaseProvider(Provider):
 
     # auth & me
     proxy_login_use_case = provide(ProxyLoginUseCase, scope=Scope.REQUEST)
-    
+    google_auth_use_case = provide(GoogleAuthUseCase, scope=Scope.REQUEST)
+
     @provide(scope=Scope.REQUEST)
     def logout_use_case(self, cache: ProfileCache) -> LogoutUseCase:
         return LogoutUseCase(cache)
 
     @provide(scope=Scope.REQUEST)
-    def get_profile_use_case(self, cache: ProfileCache) -> GetProfileUseCase:
-        return GetProfileUseCase(cache)
+    def get_profile_use_case(
+        self,
+        cache: ProfileCache,
+        user_repo: UserRepository,
+        manage_client: ManageServiceClient,
+    ) -> GetProfileUseCase:
+        return GetProfileUseCase(cache, user_repo, manage_client)
 
     @provide(scope=Scope.REQUEST)
     def pdf_parser_service(self) -> PDFParserService:

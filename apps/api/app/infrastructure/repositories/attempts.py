@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.domain.entities.attempt import AttemptEntity, AttemptAnswerEntity
 from app.infrastructure.persistence.models import Attempt, AttemptAnswer, AttemptStatus
 
+
 class AttemptRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._s = session
@@ -55,14 +56,20 @@ class AttemptRepository:
             model.status = entity.status
             model.tab_out_count = entity.tab_out_count
             model.shuffle_seed = entity.shuffle_seed
-            model.shuffle_snapshot = entity.shuffle_snapshot
+            model.shuffle_snapshot = (
+                entity.shuffle_snapshot.to_dict()
+                if entity.shuffle_snapshot
+                else None
+            )
             await self._s.flush()
             await self._s.refresh(model)
             return model.to_entity()
         raise ValueError("Attempt not found")
 
     async def list_answers(self, attempt_id: UUID) -> list[AttemptAnswerEntity]:
-        r = await self._s.execute(select(AttemptAnswer).where(AttemptAnswer.attempt_id == attempt_id))
+        r = await self._s.execute(
+            select(AttemptAnswer).where(AttemptAnswer.attempt_id == attempt_id)
+        )
         return [m.to_entity() for m in r.scalars().all()]
 
     async def upsert_answer(
@@ -80,28 +87,42 @@ class AttemptRepository:
             await self._s.flush()
             await self._s.refresh(model)
             return model.to_entity()
-        
+
         from uuid import uuid4
-        a = AttemptAnswer(id=uuid4(), attempt_id=attempt_id, question_id=question_id, selected_option_id=selected_option_id)
+
+        a = AttemptAnswer(
+            id=uuid4(),
+            attempt_id=attempt_id,
+            question_id=question_id,
+            selected_option_id=selected_option_id,
+        )
         self._s.add(a)
         await self._s.flush()
         await self._s.refresh(a)
         return a.to_entity()
 
-    async def list_for_exam(self, exam_id: UUID, offset: int = 0, limit: int = 100) -> list[AttemptEntity]:
+    async def list_for_exam(
+        self, exam_id: UUID, offset: int = 0, limit: int = 100
+    ) -> list[AttemptEntity]:
         r = await self._s.execute(
-            select(Attempt).where(Attempt.exam_id == exam_id).offset(offset).limit(limit)
+            select(Attempt)
+            .where(Attempt.exam_id == exam_id)
+            .offset(offset)
+            .limit(limit)
         )
         return [m.to_entity() for m in r.scalars().all()]
 
     async def list_all_for_exam(self, exam_id: UUID) -> list[AttemptEntity]:
         r = await self._s.execute(
-            select(Attempt).where(Attempt.exam_id == exam_id).order_by(Attempt.started_at)
+            select(Attempt)
+            .where(Attempt.exam_id == exam_id)
+            .order_by(Attempt.started_at)
         )
         return [m.to_entity() for m in r.scalars().all()]
 
     async def list_for_user(self, user_id: int) -> list[tuple[AttemptEntity, str]]:
         from app.infrastructure.persistence.models import Exam
+
         r = await self._s.execute(
             select(Attempt, Exam.title)
             .join(Exam, Attempt.exam_id == Exam.id)
@@ -110,7 +131,9 @@ class AttemptRepository:
         )
         return [(row[0].to_entity(), str(row[1])) for row in r.all()]
 
-    async def leaderboard_best_per_user(self, exam_id: UUID, limit: int = 100) -> list[tuple[int, float]]:
+    async def leaderboard_best_per_user(
+        self, exam_id: UUID, limit: int = 100
+    ) -> list[tuple[int, float]]:
         r = await self._s.execute(
             select(Attempt.user_id, func.max(Attempt.score))
             .where(
@@ -130,19 +153,20 @@ class AttemptRepository:
             .join(AttemptAnswer, Attempt.id == AttemptAnswer.attempt_id)
             .where(
                 AttemptAnswer.question_id == question_id,
-                Attempt.status == AttemptStatus.COMPLETED
+                Attempt.status == AttemptStatus.COMPLETED,
             )
             .distinct()
         )
         return [UUID(str(row)) for row in r.scalars().all()]
 
-    async def list_all_answers_for_exam(self, exam_id: UUID) -> list[AttemptAnswerEntity]:
+    async def list_all_answers_for_exam(
+        self, exam_id: UUID
+    ) -> list[AttemptAnswerEntity]:
         r = await self._s.execute(
             select(AttemptAnswer)
             .join(Attempt, Attempt.id == AttemptAnswer.attempt_id)
             .where(
-                Attempt.exam_id == exam_id,
-                Attempt.status == AttemptStatus.COMPLETED
+                Attempt.exam_id == exam_id, Attempt.status == AttemptStatus.COMPLETED
             )
         )
         return [m.to_entity() for m in r.scalars().all()]
@@ -153,5 +177,7 @@ class AttemptAnswerRepository:
         self._s = session
 
     async def list_for_attempt(self, attempt_id: UUID) -> list[AttemptAnswerEntity]:
-        r = await self._s.execute(select(AttemptAnswer).where(AttemptAnswer.attempt_id == attempt_id))
+        r = await self._s.execute(
+            select(AttemptAnswer).where(AttemptAnswer.attempt_id == attempt_id)
+        )
         return [m.to_entity() for m in r.scalars().all()]

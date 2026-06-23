@@ -1,8 +1,10 @@
+from app.domain.entities.question import QuestionEntity
 import dataclasses
 from datetime import datetime
-from typing import Any
 from uuid import UUID
 from app.infrastructure.persistence.models import AttemptStatus
+from app.domain.value_objects import ShuffledSnapshot
+
 
 @dataclasses.dataclass
 class AttemptEntity:
@@ -16,7 +18,29 @@ class AttemptEntity:
     status: AttemptStatus
     tab_out_count: int
     shuffle_seed: int | None
-    shuffle_snapshot: dict[str, Any] | None
+    shuffle_snapshot: ShuffledSnapshot | None
+
+    def score_attempt(
+        self,
+        questions: list[QuestionEntity],
+        answers_by_question_id: dict[UUID, str | None],
+    ) -> float:
+        n = len(questions)
+        if n == 0:
+            return 0.0
+        per = 10.0 / n
+        correct = 0
+        for q in questions:
+            sel = answers_by_question_id.get(q.id)
+            if sel is None:
+                continue
+            for opt in q.options:
+                if opt.id == sel and opt.is_correct:
+                    correct += 1
+                    break
+        total = correct * per
+        return round(min(total, 10.0), 2)
+
 
 @dataclasses.dataclass
 class AttemptAnswerEntity:
@@ -24,6 +48,7 @@ class AttemptAnswerEntity:
     attempt_id: UUID
     question_id: UUID
     selected_option_id: str | None
+
 
 @dataclasses.dataclass
 class FocusEventEntity:

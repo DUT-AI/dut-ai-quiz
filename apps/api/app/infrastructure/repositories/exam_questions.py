@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.domain.entities.question import QuestionEntity
 from app.infrastructure.persistence.models import ExamQuestion, Question
 
+
 class ExamQuestionRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._s = session
@@ -19,7 +20,9 @@ class ExamQuestionRepository:
         return [row[0] for row in r.all()]
 
     async def replace_all(self, exam_id: UUID, question_ids: list[UUID]) -> None:
-        await self._s.execute(delete(ExamQuestion).where(ExamQuestion.exam_id == exam_id))
+        await self._s.execute(
+            delete(ExamQuestion).where(ExamQuestion.exam_id == exam_id)
+        )
         for pos, qid in enumerate(question_ids):
             self._s.add(ExamQuestion(exam_id=exam_id, question_id=qid, position=pos))
         await self._s.flush()

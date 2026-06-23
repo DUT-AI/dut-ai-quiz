@@ -16,7 +16,7 @@ def score_attempt(
         if sel is None:
             continue
         for opt in q.options:
-            if opt.get("id") == sel and opt.get("is_correct"):
+            if opt.id == sel and opt.is_correct:
                 correct += 1
                 break
     total = correct * per

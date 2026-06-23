@@ -9,6 +9,22 @@ logger = logging.getLogger(__name__)
 
 
 def setup_exception_handlers(app: FastAPI):
+    from app.core.exceptions import AppException
+
+    @app.exception_handler(AppException)
+    async def app_exception_handler(request: Request, exc: AppException):
+        logger.warning(
+            f"AppException: {exc.status_code} {exc.message} | "
+            f"Path: {request.url.path} | Method: {request.method}"
+        )
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={
+                "is_success": False,
+                "status_code": exc.status_code,
+                "detail": exc.message,
+            },
+        )
 
     @app.exception_handler(HTTPException)
     async def http_exception_handler(request: Request, exc: HTTPException):

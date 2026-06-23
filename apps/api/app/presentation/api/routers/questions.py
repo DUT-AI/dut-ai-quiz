@@ -1,24 +1,24 @@
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Query
 from dishka.integrations.fastapi import FromDishka, inject
+from fastapi import APIRouter, HTTPException, Query
 
 from app.application.use_cases.questions.question_use_case import (
+    BulkCreateQuestionsUseCase,
     CreateQuestionUseCase,
     DeleteQuestionUseCase,
     GetQuestionUseCase,
     ListQuestionsUseCase,
     UpdateQuestionUseCase,
-    BulkCreateQuestionsUseCase,
 )
 from app.infrastructure.persistence.models import PoolType
-from app.presentation.api.deps import TeacherUser, CurrentUser
+from app.presentation.api.deps import CurrentUser, TeacherUser
 from app.presentation.schemas.questions import (
+    QuestionBulkCreate,
     QuestionCreate,
     QuestionListQuery,
     QuestionOut,
     QuestionUpdate,
-    QuestionBulkCreate,
 )
 
 router = APIRouter(prefix="/questions", tags=["questions"])
@@ -100,9 +100,9 @@ async def delete_question_route(
 @router.post("/bulk", response_model=list[QuestionOut])
 @inject
 async def bulk_create_questions_route(
-    user: CurrentUser, 
-    body: QuestionBulkCreate, 
-    use_case: FromDishka[BulkCreateQuestionsUseCase]
+    user: CurrentUser,
+    body: QuestionBulkCreate,
+    use_case: FromDishka[BulkCreateQuestionsUseCase],
 ):
     if user.quiz_role != "teacher":
         body.pool_type = PoolType.PRACTICE

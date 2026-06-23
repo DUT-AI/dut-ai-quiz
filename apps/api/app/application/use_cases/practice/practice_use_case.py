@@ -1,5 +1,4 @@
 import random
-from datetime import datetime
 from uuid import UUID, uuid4
 
 from app.core.datetime_utils import now_ict
@@ -36,7 +35,7 @@ class StartPracticeSessionUseCase:
                 {
                     "id": str(q.id),
                     "content": q.content,
-                    "options": q.options,
+                    "options": [opt.to_dict() for opt in q.options],
                     "solution": q.solution,
                 }
                 for q in selected

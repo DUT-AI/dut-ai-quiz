@@ -1,10 +1,18 @@
 from fastapi import APIRouter, HTTPException, Response, Request
+from fastapi.responses import RedirectResponse
 from dishka.integrations.fastapi import FromDishka, inject
 
-from app.application.use_cases.auth.auth_use_case import ProxyLoginUseCase, LogoutUseCase, LoginPayload
+from app.application.use_cases.auth.auth_use_case import (
+    ProxyLoginUseCase,
+    LogoutUseCase,
+    LoginPayload,
+    GoogleAuthUseCase,
+)
 from app.config import settings
+from app.infrastructure.clients import GoogleOAuthClient
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
 
 def _set_auth_cookies(response: Response, access_token: str, refresh_token: str):
     # Set Access Token Cookie
@@ -15,7 +23,7 @@ def _set_auth_cookies(response: Response, access_token: str, refresh_token: str)
         secure=True,
         samesite="lax",
         domain=".dutai.site" if ".dutai.site" in settings.cors_origins else None,
-        max_age=3600 * 24, # 1 day, adjust as needed
+        max_age=3600 * 24,  # 1 day
     )
     # Set Refresh Token Cookie
     response.set_cookie(
@@ -25,36 +33,60 @@ def _set_auth_cookies(response: Response, access_token: str, refresh_token: str)
         secure=True,
         samesite="lax",
         domain=".dutai.site" if ".dutai.site" in settings.cors_origins else None,
-        max_age=3600 * 24 * 7, # 7 days, adjust as needed
+        max_age=3600 * 24 * 7,  # 7 days
     )
+
 
 @router.post("/login")
 @inject
 async def login(
-    payload: LoginPayload,
-    response: Response,
-    use_case: FromDishka[ProxyLoginUseCase]
+    payload: LoginPayload, response: Response, use_case: FromDishka[ProxyLoginUseCase]
 ):
     tokens = await use_case.execute(payload)
     if not tokens:
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    
+
     _set_auth_cookies(response, tokens.access_token, tokens.refresh_token)
     return {"is_success": True}
+
+
+@router.get("/google/login")
+@inject
+async def google_login(google_oauth_client: FromDishka[GoogleOAuthClient]):
+    return RedirectResponse(url=google_oauth_client.get_authorization_url())
+
+
+@router.get("/google/callback")
+@inject
+async def google_callback(
+    code: str,
+    response: Response,
+    use_case: FromDishka[GoogleAuthUseCase],
+):
+    tokens = await use_case.execute(code)
+    if not tokens:
+        # Redirect back to frontend login with error query param
+        return RedirectResponse(
+            url=f"{settings.frontend_url.rstrip('/')}/login?error=GoogleAuthFailed"
+        )
+
+    # Set cookies in the redirect response
+    redirect_res = RedirectResponse(url=settings.frontend_url)
+    _set_auth_cookies(redirect_res, tokens.access_token, tokens.refresh_token)
+    return redirect_res
+
 
 @router.post("/logout")
 @inject
 async def logout(
-    request: Request,
-    response: Response,
-    use_case: FromDishka[LogoutUseCase]
+    request: Request, response: Response, use_case: FromDishka[LogoutUseCase]
 ):
     access_token = request.cookies.get("access_token")
     await use_case.execute(access_token)
-    
+
     # Clear cookies
     domain = ".dutai.site" if ".dutai.site" in settings.cors_origins else None
     response.delete_cookie("access_token", domain=domain)
     response.delete_cookie("refresh_token", domain=domain)
-    
+
     return {"is_success": True}

@@ -6,10 +6,24 @@ from pydantic import BaseModel, Field
 from app.infrastructure.persistence.models import PoolType
 
 
+class QuestionOptionIn(BaseModel):
+    id: str | None = None
+    text: str
+    is_correct: bool
+    fixed: bool = False
+
+
+class QuestionOptionOut(BaseModel):
+    id: str
+    text: str
+    is_correct: bool
+    fixed: bool
+
+
 class QuestionCreate(BaseModel):
     pool_type: PoolType
     content: str = ""
-    options: list[dict] = Field(default_factory=list)
+    options: list[QuestionOptionIn] = Field(default_factory=list)
     solution: str | None = None
     lesson_id: UUID | None = None
     tags: list[str] = Field(default_factory=list)
@@ -19,7 +33,7 @@ class QuestionCreate(BaseModel):
 class QuestionUpdate(BaseModel):
     pool_type: PoolType | None = None
     content: str | None = None
-    options: list[dict] | None = None
+    options: list[QuestionOptionIn] | None = None
     solution: str | None = None
     lesson_id: UUID | None = None
     tags: list[str] | None = None
@@ -30,7 +44,7 @@ class QuestionOut(BaseModel):
     id: UUID
     pool_type: PoolType
     content: str
-    options: list[dict]
+    options: list[QuestionOptionOut]
     solution: str | None
     lesson_id: UUID | None
     tags: list[str]
@@ -50,7 +64,7 @@ class QuestionListQuery(BaseModel):
 
 class QuestionBulkItem(BaseModel):
     question: str
-    options: list[dict]
+    options: list[QuestionOptionIn]
     solution: str | None = None
 
 

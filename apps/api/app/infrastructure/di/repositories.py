@@ -7,6 +7,7 @@ from app.infrastructure.repositories.focus_events import FocusEventRepository
 from app.infrastructure.repositories.practice_sessions import PracticeSessionRepository
 from app.infrastructure.repositories.attempts import AttemptRepository
 from app.infrastructure.repositories.lessons import SqlLessonRepository, LessonRepository
+from app.infrastructure.repositories.users import UserRepository
 
 
 class RepositoryProvider(Provider):
@@ -16,6 +17,7 @@ class RepositoryProvider(Provider):
     lesson_repo = provide(SqlLessonRepository, provides=LessonRepository)
 
     # These are currently concrete classes in your implementation
+    user_repo = provide(UserRepository)
     exam_repo = provide(ExamRepository)
     exam_question_repo = provide(ExamQuestionRepository)
     question_repo = provide(QuestionRepository)

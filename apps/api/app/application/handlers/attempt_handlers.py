@@ -1,5 +1,6 @@
 from app.domain.events.attempts import AttemptViolationEvent
-from app.application.use_cases.attempts.attempt_use_case import SubmitAttemptUseCase
+from app.application.use_cases.attempts import SubmitAttemptUseCase
+
 
 class AttemptViolationHandler:
     def __init__(self, submit_use_case: SubmitAttemptUseCase):

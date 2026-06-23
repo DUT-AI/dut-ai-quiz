@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File, Depends, Form
+from fastapi import APIRouter, UploadFile, File, Form
 from dishka.integrations.fastapi import FromDishka, inject
 from app.application.services.pdf_parser import PDFParserService
 from app.presentation.api.deps import CurrentUser

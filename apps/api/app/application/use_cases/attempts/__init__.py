@@ -1,12 +1,14 @@
 from .attempt_use_case import (
-    StartAttemptUseCase,
-    SubmitAttemptUseCase,
-    GetAttemptUseCase,
     GetAttemptDetailUseCase,
     ListExamAttemptsUseCase,
     PatchAttemptAnswersUseCase,
     RecordFocusEventUseCase,
+    ListUserAttemptsUseCase,
+    ReviewAttemptUseCase,
+    GetAttemptUseCase,
 )
+from .start_attempt_use_case import StartAttemptUseCase
+from .submit_attempt_use_case import SubmitAttemptUseCase
 
 __all__ = [
     "StartAttemptUseCase",
@@ -16,4 +18,7 @@ __all__ = [
     "ListExamAttemptsUseCase",
     "PatchAttemptAnswersUseCase",
     "RecordFocusEventUseCase",
+    "ListUserAttemptsUseCase",
+    "ReviewAttemptUseCase",
+    "GetAttemptUseCase",
 ]

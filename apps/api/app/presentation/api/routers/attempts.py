@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, HTTPException
 from dishka.integrations.fastapi import FromDishka, inject
 
-from app.application.use_cases.attempts.attempt_use_case import (
+from app.application.use_cases.attempts import (
     StartAttemptUseCase,
     SubmitAttemptUseCase,
     GetAttemptUseCase,
@@ -14,7 +14,7 @@ from app.application.use_cases.attempts.attempt_use_case import (
     ReviewAttemptUseCase,
 )
 from app.application.use_cases.exams.exam_use_case import GetExamUseCase
-from app.presentation.api.deps import StudentUser, TeacherUser, CurrentUser
+from app.presentation.api.deps import TeacherUser, CurrentUser
 from app.presentation.schemas.attempts import (
     AttemptAnswersPatch,
     AttemptOut,
@@ -34,17 +34,7 @@ async def start_attempt_route(
     exam_id: UUID,
     use_case: FromDishka[StartAttemptUseCase],
 ):
-    result, code = await use_case.execute(exam_id, user.id)
-    if code == "not_found":
-        raise HTTPException(status_code=404, detail="Exam not found")
-    if code == "not_started":
-        raise HTTPException(status_code=403, detail="Exam not started yet")
-    if code == "ended":
-        raise HTTPException(status_code=403, detail="Exam ended")
-    if code == "max_attempts":
-        raise HTTPException(status_code=403, detail="Max attempts reached")
-    if code == "no_questions":
-        raise HTTPException(status_code=400, detail="No questions in exam")
+    result = await use_case.execute(exam_id, user.id)
     att = result["attempt"]
     return StartAttemptOut(
         attempt_id=att.id,
@@ -69,7 +59,10 @@ async def get_attempt_route(
         "attempt": AttemptOut.model_validate(att),
         "questions": data["questions"],
         "saved_answers": [
-            {"question_id": str(a.question_id), "selected_option_id": a.selected_option_id}
+            {
+                "question_id": str(a.question_id),
+                "selected_option_id": a.selected_option_id,
+            }
             for a in data.get("saved_answers", [])
         ],
     }
@@ -160,23 +153,9 @@ async def review_attempt_student(
     attempt_id: UUID,
     use_case: FromDishka[ReviewAttemptUseCase],
 ):
-    result = await use_case.execute(attempt_id, user.id)
-
-    # Handle tuple return (None, "review_locked")
-    if isinstance(result, tuple):
-        _, code = result
-        if code == "review_locked":
-            raise HTTPException(
-                status_code=403,
-                detail="Chưa đến thời gian xem đáp án. Vui lòng chờ đến khi kỳ thi kết thúc.",
-            )
-
-    if not result:
-        raise HTTPException(status_code=404, detail="Not found or not completed")
-
-    data = result
+    data = await use_case.execute(attempt_id, user.id)
     return {
         "attempt": AttemptOut.model_validate(data["attempt"]),
         "answers": [AttemptAnswerOut.model_validate(a) for a in data["answers"]],
-        "questions": [QuestionOut.model_validate(q) for q in data["questions"]]
+        "questions": [QuestionOut.model_validate(q) for q in data["questions"]],
     }

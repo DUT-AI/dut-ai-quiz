@@ -6,11 +6,36 @@ from app.infrastructure.persistence.models import PoolType
 
 
 @dataclasses.dataclass
+class QuestionOptionEntity:
+    id: str
+    text: str
+    is_correct: bool
+    fixed: bool = False
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "id": self.id,
+            "text": self.text,
+            "is_correct": self.is_correct,
+            "fixed": self.fixed,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "QuestionOptionEntity":
+        return cls(
+            id=data["id"],
+            text=data["text"],
+            is_correct=data["is_correct"],
+            fixed=data.get("fixed", False),
+        )
+
+
+@dataclasses.dataclass
 class QuestionEntity:
     id: UUID
     pool_type: PoolType
     content: str
-    options: list[dict[str, Any]]
+    options: list[QuestionOptionEntity]
     solution: str | None
     lesson_id: UUID | None
     tags: list[str]

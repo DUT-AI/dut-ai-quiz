@@ -22,6 +22,17 @@ class Settings(BaseSettings):
 
     auth_cache_ttl: int = 600  # 10 minutes
 
+    # JWT Configs
+    jwt_secret_key: str = "fallback-secret-key-for-jwt-signing-change-in-prod"
+    jwt_algorithm: str = "HS256"
+    jwt_expire_minutes: int = 1440  # 24 hours
+
+    # Google OAuth Configs
+    google_client_id: str = ""
+    google_client_secret: str = ""
+    google_redirect_uri: str = "http://localhost:8000/api/v1/auth/google/callback"
+    frontend_url: str = "http://localhost:3000"
+
     api_host: str = "0.0.0.0"
     api_port: int = 8000
 

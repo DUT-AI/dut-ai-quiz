@@ -1,10 +1,10 @@
-from uuid import UUID
 from pydantic import BaseModel, Field
-from app.infrastructure.persistence.models import PoolType
+
+from app.presentation.schemas.questions import QuestionOptionIn
 
 class ParsedQuestionPreview(BaseModel):
     content: str
-    options: list[dict] = Field(default_factory=list) # {text, is_correct}
+    options: list[QuestionOptionIn] = Field(default_factory=list)
     solution: str | None = None
     confidence: float = 1.0 # Static for now since not using AI
 

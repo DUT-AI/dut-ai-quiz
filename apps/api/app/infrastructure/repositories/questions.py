@@ -59,7 +59,7 @@ class QuestionRepository:
         if model:
             model.pool_type = entity.pool_type
             model.content = entity.content
-            model.options = entity.options
+            model.options = [opt.to_dict() for opt in entity.options]
             model.solution = entity.solution
             model.lesson_id = entity.lesson_id
             model.tags = entity.tags
