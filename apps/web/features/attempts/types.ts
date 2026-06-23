@@ -25,7 +25,7 @@ export const StartAttemptResponseSchema = z.object({
       question_id: z.string(),
       content: z.string(),
       options: z.array(QuizOptionSchema),
-      difficulty: z.string(),
+      difficulty: z.string().optional(),
       tags: z.array(z.string()),
     })
   ),

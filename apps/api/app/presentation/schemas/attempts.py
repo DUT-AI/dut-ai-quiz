@@ -34,7 +34,24 @@ class AttemptAnswerOut(BaseModel):
     attempt_id: UUID
     question_id: UUID
     selected_option_id: str | None
-    
+
+    model_config = {"from_attributes": True}
+
+
+class ShuffledOptionOut(BaseModel):
+    id: str
+    text: str
+    fixed: bool
+
+    model_config = {"from_attributes": True}
+
+
+class ShuffledQuestionOut(BaseModel):
+    question_id: str
+    content: str
+    options: list[ShuffledOptionOut]
+    tags: list[str] = Field(default_factory=list)
+
     model_config = {"from_attributes": True}
 
 
@@ -42,7 +59,7 @@ class StartAttemptOut(BaseModel):
     attempt_id: UUID
     expires_at: datetime
     tab_out_count: int
-    questions: list[dict]
+    questions: list[ShuffledQuestionOut]
 
 
 class FocusEventOut(BaseModel):
