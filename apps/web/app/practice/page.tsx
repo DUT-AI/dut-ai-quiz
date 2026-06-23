@@ -578,14 +578,17 @@ export default function PracticeGamePage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              {/* ─── BOSS DISPLAY CONTROLLER ─── */}
+              {/* ─── BATTLE ARENA CONTROLLER ─── */}
               {isBossMode && (
                 <BossHud 
                   status={bossStatus}
+                  playerStatus={bossStatus === "attack" ? "damage" : bossStatus === "damage" ? "attack" : "idle"}
                   hp={bossHp}
                   maxHp={bossMaxHp}
                   name={currentQuestion.bossName || "BOSS"}
                   level={currentQuestion.bossLvl || 10}
+                  playerHp={hp}
+                  playerMaxHp={5}
                 />
               )}
 
