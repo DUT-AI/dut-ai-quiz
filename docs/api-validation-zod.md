@@ -15,6 +15,11 @@ Hệ thống sử dụng cơ chế **Centralized Validation Wrapper** tích hợ
 * `apiClient.put<T>(path, body, schema?, options?)`
 * `apiClient.delete<T>(path, schema?)`
 
+Để tối ưu hóa tính an toàn kiểu dữ liệu (type safety), hệ thống **hoàn toàn không sử dụng** kiểu `any` hoặc `unknown` trong chữ ký hàm công khai của API Client, thay vào đó sử dụng các kiểu dữ liệu an toàn sau:
+* **`ApiBody`**: `object | string | number | boolean | null | undefined`. Đại diện cho mọi request payload (như JSON object, FormData, Blob, primitive types...) mà không cần ép kiểu.
+* **`ApiClientOptions`**: Kế thừa từ `RequestInit` và bổ sung các thuộc tính cấu hình tùy chỉnh như `withCredentials?: boolean` và `baseURL?: string`.
+* **`z.ZodType<T>`**: Ràng buộc trực tiếp kiểu Zod Schema tương thích hoàn toàn với kiểu generic `T` trả về.
+
 ### 🔄 Cơ chế hoạt động:
 1. **Không truyền `schema`**: API Client hoạt động như cũ, trả về dữ liệu thô và ép kiểu (cast) tĩnh bằng TypeScript. Đảm bảo **tương thích ngược 100%**.
 2. **Có truyền `schema`**: API Client sẽ tự động chạy `.safeParse(data)` tại runtime:
