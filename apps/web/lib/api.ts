@@ -17,7 +17,7 @@ export async function apiFetch(
 export async function apiJson<T>(
   path: string,
   init?: RequestInit,
-  schema?: z.ZodTypeAny
+  schema?: z.ZodType<T>
 ): Promise<T> {
   const res = await apiFetch(path, init);
   if (!res.ok) {
@@ -47,8 +47,8 @@ export async function apiJson<T>(
 
 export function apiPostJson<T>(
   path: string,
-  body: unknown,
-  schema?: z.ZodTypeAny
+  body: any,
+  schema?: z.ZodType<T>
 ): Promise<T> {
   return apiJson<T>(
     path,
@@ -63,8 +63,8 @@ export function apiPostJson<T>(
 
 export function apiPatchJson<T>(
   path: string,
-  body: unknown,
-  schema?: z.ZodTypeAny
+  body: any,
+  schema?: z.ZodType<T>
 ): Promise<T> {
   return apiJson<T>(
     path,
@@ -80,7 +80,7 @@ export function apiPatchJson<T>(
 // Aliases and helpers for validation compatibility
 export function apiGet<T>(
   path: string,
-  schema?: z.ZodTypeAny,
+  schema?: z.ZodType<T>,
   init?: RequestInit
 ): Promise<T> {
   return apiJson<T>(path, init, schema);
@@ -88,22 +88,22 @@ export function apiGet<T>(
 
 export function apiPost<T>(
   path: string,
-  body: unknown,
-  schema?: z.ZodTypeAny
+  body: any,
+  schema?: z.ZodType<T>
 ): Promise<T> {
   return apiPostJson<T>(path, body, schema);
 }
 
 export function apiPatch<T>(
   path: string,
-  body: unknown,
-  schema?: z.ZodTypeAny
+  body: any,
+  schema?: z.ZodType<T>
 ): Promise<T> {
   return apiPatchJson<T>(path, body, schema);
 }
 
 // Helper to distinguish options and Zod schemas in apiClient
-function parseClientArgs(arg3: any, arg4: any): { schema?: z.ZodTypeAny; options?: any } {
+function parseClientArgs<T>(arg3: any, arg4: any): { schema?: z.ZodType<T>; options?: any } {
   if (arg3 && (arg3 instanceof z.ZodType || typeof arg3.safeParse === "function")) {
     return { schema: arg3, options: arg4 };
   }
@@ -112,7 +112,7 @@ function parseClientArgs(arg3: any, arg4: any): { schema?: z.ZodTypeAny; options
 
 // Polyfill for apiClient backward compatibility
 export const apiClient = {
-  delete: async <T = any>(path: string, schema?: z.ZodTypeAny): Promise<{ data: T }> => {
+  delete: async <T = any>(path: string, schema?: z.ZodType<T>): Promise<{ data: T }> => {
     const res = await apiFetch(path, { method: "DELETE" });
     if (!res.ok) {
       let detail = res.statusText;
