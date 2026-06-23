@@ -10,6 +10,25 @@ export interface ApiClientOptions extends RequestInit {
   baseURL?: string;
 }
 
+function validateData<T>(data: unknown, schema: z.ZodType<T>, path: string, method = "GET"): T {
+  const result = schema.safeParse(data);
+  if (!result.success) {
+    const errMsg = `Dữ liệu từ máy chủ không đúng định dạng tại đường dẫn: ${path}`;
+    console.error(`[API Validation Error] ${method} ${path}`, result.error.format());
+
+    if (typeof window !== "undefined") {
+      import("sonner").then(({ toast }) => {
+        toast.error(errMsg);
+      }).catch(() => {
+        /* ignore toast load error */
+      });
+    }
+
+    throw new Error(errMsg);
+  }
+  return result.data;
+}
+
 export async function apiFetch(
   path: string,
   init?: RequestInit
@@ -42,12 +61,7 @@ export async function apiJson<T>(
 
   const data = await res.json();
   if (schema) {
-    const result = schema.safeParse(data);
-    if (!result.success) {
-      console.error(`[API Validation Error] Path: ${path}`, result.error.format());
-      throw new Error(`Dữ liệu từ máy chủ không đúng định dạng tại đường dẫn: ${path}`);
-    }
-    return result.data as T;
+    return validateData<T>(data, schema, path, init?.method || "GET");
   }
   return data as T;
 }
@@ -142,12 +156,8 @@ export const apiClient = {
     }
 
     if (schema) {
-      const result = schema.safeParse(data);
-      if (!result.success) {
-        console.error(`[API Validation Error] DELETE ${path}`, result.error.format());
-        throw new Error(`Dữ liệu từ máy chủ không đúng định dạng: DELETE ${path}`);
-      }
-      return { data: result.data as T };
+      const validated = validateData<T>(data, schema, path, "DELETE");
+      return { data: validated };
     }
     return { data: data as T };
   },
@@ -200,12 +210,8 @@ export const apiClient = {
     }
 
     if (schema) {
-      const result = schema.safeParse(data);
-      if (!result.success) {
-        console.error(`[API Validation Error] PUT ${path}`, result.error.format());
-        throw new Error(`Dữ liệu từ máy chủ không đúng định dạng: PUT ${path}`);
-      }
-      return { data: result.data as T };
+      const validated = validateData<T>(data, schema, path, "PUT");
+      return { data: validated };
     }
     return { data: data as T };
   },
@@ -255,12 +261,8 @@ export const apiClient = {
     }
 
     if (schema) {
-      const result = schema.safeParse(data);
-      if (!result.success) {
-        console.error(`[API Validation Error] POST ${path}`, result.error.format());
-        throw new Error(`Dữ liệu từ máy chủ không đúng định dạng: POST ${path}`);
-      }
-      return { data: result.data as T };
+      const validated = validateData<T>(data, schema, path, "POST");
+      return { data: validated };
     }
     return { data: data as T };
   },

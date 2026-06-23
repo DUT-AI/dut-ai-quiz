@@ -20,7 +20,7 @@ export const QuestionOutSchema = z.object({
   id: z.string(),
   content: z.string(),
   options: z.array(z.any()),
-  difficulty: z.string(),
+  difficulty: z.string().optional(),
   tags: z.array(z.string()),
   lesson_id: z.string().optional(),
   pool_type: PoolTypeSchema.optional(),

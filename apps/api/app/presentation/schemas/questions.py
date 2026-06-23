@@ -19,6 +19,8 @@ class QuestionOptionOut(BaseModel):
     is_correct: bool
     fixed: bool
 
+    model_config = {"from_attributes": True}
+
 
 class QuestionCreate(BaseModel):
     pool_type: PoolType
