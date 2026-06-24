@@ -2,18 +2,263 @@
 
 import React, { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Skull, Swords, Flame } from "lucide-react";
+import { Skull, Swords, Heart } from "lucide-react";
+import dynamic from "next/dynamic";
 
 interface BossHudProps {
-  status: "idle" | "attack" | "damage" | "defeat"; // Boss status
+  status: "idle" | "attack" | "damage" | "defeat"; // Enemy status
   playerStatus: "idle" | "attack" | "damage"; // Player status
-  hp: number; // Boss current HP
-  maxHp: number; // Boss max HP
-  name: string; // Boss Name
-  level: number; // Boss Level
+  hp: number; // Enemy current HP
+  maxHp: number; // Enemy max HP
+  name: string; // Enemy Name
+  level: number; // Enemy Level
   playerHp: number; // Player current HP
   playerMaxHp: number; // Player max HP
+  monsterType: "slime" | "spider" | "bat" | "golem" | "eye";
+  playerLvl: number; // Player character level (1 to 4)
 }
+
+// Client-only Rive Player to avoid Next.js SSR document/window issues
+const RivePlayer = dynamic(
+  () => import("../molecules/rive-player"),
+  { ssr: false }
+);
+
+const getMonsterBg = (type: "slime" | "spider" | "bat" | "golem" | "eye") => {
+  switch (type) {
+    case "slime":
+      // Vibrant grassy hills under sky blue
+      return "linear-gradient(to bottom, #7dd3fc 0%, #bae6fd 55%, #86efac 55%, #4ade80 100%)";
+    case "spider":
+    case "golem":
+      // Night mystic forest
+      return "linear-gradient(to bottom, #0f172a 0%, #1e293b 55%, #166534 55%, #15803d 100%)";
+    case "bat":
+    case "eye":
+    default:
+      // Lava volcanic cavern
+      return "linear-gradient(to bottom, #2d0606 0%, #450a0a 55%, #991b1b 55%, #dc2626 100%)";
+  }
+};
+
+const renderMonsterSvg = (type: "slime" | "spider" | "bat" | "golem" | "eye", status: string) => {
+  switch (type) {
+    case "slime":
+      return (
+        <svg
+          width="160"
+          height="160"
+          viewBox="0 0 120 120"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="relative z-10"
+        >
+          {/* Green Slime */}
+          <motion.path
+            d="M30 85 C20 85, 15 55, 40 48 C45 34, 75 34, 80 48 C105 55, 100 85, 90 85 Z"
+            fill="#10b981"
+            stroke="#1e293b"
+            strokeWidth="3.5"
+            animate={status === "damage" ? {
+              scaleY: [1, 0.7, 1.1, 1],
+              scaleX: [1, 1.25, 0.9, 1],
+            } : status === "attack" ? {
+              scaleY: [1, 1.2, 0.85, 1],
+              scaleX: [1, 0.85, 1.15, 1],
+            } : {
+              scaleY: [1, 1.05, 0.95, 1],
+              scaleX: [1, 0.96, 1.04, 1],
+            }}
+            transition={{
+              repeat: status === "idle" ? Infinity : 0,
+              duration: status === "idle" ? 2.5 : 0.4,
+              ease: "easeInOut"
+            }}
+          />
+          {/* Big Cartoon Eyes */}
+          <circle cx="48" cy="58" r="7.5" fill="#ffffff" stroke="#1e293b" strokeWidth="2.5" />
+          <circle cx="49" cy="57" r="3.5" fill="#000000" />
+          <circle cx="51" cy="55" r="1.5" fill="#ffffff" />
+
+          <circle cx="72" cy="58" r="7.5" fill="#ffffff" stroke="#1e293b" strokeWidth="2.5" />
+          <circle cx="73" cy="57" r="3.5" fill="#000000" />
+          <circle cx="75" cy="55" r="1.5" fill="#ffffff" />
+
+          {/* Rosy cheeks */}
+          <circle cx="40" cy="65" r="3" fill="#f43f5e" opacity="0.6" />
+          <circle cx="80" cy="65" r="3" fill="#f43f5e" opacity="0.6" />
+
+          {/* Happy smile */}
+          <path d="M56 65 Q60 69 64 65" stroke="#1e293b" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      );
+    case "spider":
+      return (
+        <svg
+          width="160"
+          height="160"
+          viewBox="0 0 120 120"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="relative z-10"
+        >
+          {/* Leg shadows / Legs */}
+          <path d="M45 55 Q20 35 12 50" stroke="#f59e0b" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M45 62 Q15 62 8 72" stroke="#f59e0b" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M45 70 Q20 85 15 95" stroke="#f59e0b" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M75 55 Q100 35 108 50" stroke="#f59e0b" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M75 62 Q105 62 112 72" stroke="#f59e0b" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M75 70 Q100 85 105 95" stroke="#f59e0b" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+
+          {/* Abdomen */}
+          <circle cx="60" cy="72" r="18" fill="#d97706" stroke="#1e293b" strokeWidth="3.5" />
+          <path d="M52 62 Q60 70 68 62" stroke="#1e293b" strokeWidth="2" fill="none" />
+
+          {/* Head */}
+          <circle cx="60" cy="52" r="11" fill="#b45309" stroke="#1e293b" strokeWidth="3" />
+
+          {/* Big Goofy Eyes */}
+          <circle cx="55" cy="49" r="4.5" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+          <circle cx="56" cy="49" r="2.2" fill="#000" />
+          <circle cx="65" cy="49" r="4.5" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+          <circle cx="64" cy="49" r="2.2" fill="#000" />
+        </svg>
+      );
+    case "bat":
+      return (
+        <svg
+          width="160"
+          height="160"
+          viewBox="0 0 120 120"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="relative z-10"
+        >
+          {/* Wings */}
+          <motion.path
+            d="M48 60 Q15 35 8 60 L28 68 Z"
+            fill="#475569"
+            stroke="#1e293b"
+            strokeWidth="3"
+            animate={{ rotate: status === "attack" ? [-25, 20, -25] : [-10, 10, -10] }}
+            style={{ originX: "48px", originY: "60px" }}
+            transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }}
+          />
+          <motion.path
+            d="M72 60 Q105 35 112 60 L92 68 Z"
+            fill="#475569"
+            stroke="#1e293b"
+            strokeWidth="3"
+            animate={{ rotate: [10, -10, 10] }}
+            style={{ originX: "72px", originY: "60px" }}
+            transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }}
+          />
+
+          {/* Body */}
+          <circle cx="60" cy="62" r="15" fill="#334155" stroke="#1e293b" strokeWidth="3.5" />
+
+          {/* Cute fangs */}
+          <path d="M55 64 Q60 67 65 64" stroke="#1e293b" strokeWidth="2" strokeLinecap="round" />
+          <polygon points="56,65 58,69 60,65" fill="#ffffff" />
+          <polygon points="64,65 62,69 60,65" fill="#ffffff" />
+
+          {/* Glowing Red Eyes */}
+          <circle cx="54" cy="56" r="3.5" fill="#ef4444" stroke="#1e293b" strokeWidth="1" />
+          <circle cx="66" cy="56" r="3.5" fill="#ef4444" stroke="#1e293b" strokeWidth="1" />
+        </svg>
+      );
+    case "golem":
+      return (
+        <svg
+          width="160"
+          height="160"
+          viewBox="0 0 120 120"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="relative z-10"
+        >
+          {/* Rock fists */}
+          <motion.circle
+            cx="18"
+            cy="70"
+            r="12"
+            fill="#78716c"
+            stroke="#1e293b"
+            strokeWidth="3.5"
+            animate={status === "attack" ? { y: [0, -20, 0] } : { y: [0, -6, 0] }}
+            transition={{ repeat: status === "idle" ? Infinity : 0, duration: 1.5 }}
+          />
+          <motion.circle
+            cx="102"
+            cy="70"
+            r="12"
+            fill="#78716c"
+            stroke="#1e293b"
+            strokeWidth="3.5"
+            animate={status === "attack" ? { y: [0, -20, 0] } : { y: [0, -6, 0] }}
+            transition={{ repeat: status === "idle" ? Infinity : 0, duration: 1.5 }}
+          />
+
+          {/* Main rock body */}
+          <rect x="30" y="38" width="60" height="50" rx="10" fill="#a8a29e" stroke="#1e293b" strokeWidth="3.5" />
+          {/* Mossy head patch */}
+          <rect x="38" y="44" width="12" height="6" rx="2" fill="#10b981" />
+          <rect x="70" y="70" width="14" height="8" rx="2" fill="#10b981" />
+
+          {/* Big Glowing Cyan Eyes */}
+          <circle cx="48" cy="54" r="6" fill="#06b6d4" stroke="#1e293b" strokeWidth="2.5" />
+          <circle cx="49" cy="53" r="2.2" fill="#ffffff" />
+          <circle cx="72" cy="54" r="6" fill="#06b6d4" stroke="#1e293b" strokeWidth="2.5" />
+          <circle cx="73" cy="53" r="2.2" fill="#ffffff" />
+        </svg>
+      );
+    case "eye":
+    default:
+      return (
+        <svg
+          width="160"
+          height="160"
+          viewBox="0 0 120 120"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="relative z-10"
+        >
+          {/* Demon wings */}
+          <motion.path
+            d="M10 50 Q30 20 45 55 T20 70 Z"
+            fill="#450a0a"
+            stroke="#1e293b"
+            strokeWidth="3"
+            animate={{ rotate: status === "attack" ? [-12, 6, -12] : 0 }}
+          />
+          <motion.path
+            d="M110 50 Q90 20 75 55 T100 70 Z"
+            fill="#450a0a"
+            stroke="#1e293b"
+            strokeWidth="3"
+            animate={{ rotate: status === "attack" ? [12, -6, 12] : 0 }}
+          />
+
+          {/* Central Body Eye */}
+          <circle cx="60" cy="60" r="28" fill="#e2e8f0" stroke="#1e293b" strokeWidth="3.5" />
+          <circle cx="60" cy="60" r="16" fill="#ef4444" stroke="#7f1d1d" strokeWidth="2.5" />
+          <motion.circle
+            cx="60"
+            cy="60"
+            r="8"
+            fill="#000000"
+            animate={{ scale: status === "attack" ? [1, 1.3, 1] : [1, 1.1, 1] }}
+            transition={{ repeat: Infinity, duration: 1.8 }}
+          />
+          <circle cx="63" cy="57" r="2.5" fill="#ffffff" />
+
+          {/* Angry eyebrows */}
+          <path d="M35 38 L58 46" stroke="#1e293b" strokeWidth="4.5" strokeLinecap="round" />
+          <path d="M85 38 L62 46" stroke="#1e293b" strokeWidth="4.5" strokeLinecap="round" />
+        </svg>
+      );
+  }
+};
 
 export default function BossHud({
   status,
@@ -24,15 +269,15 @@ export default function BossHud({
   level,
   playerHp,
   playerMaxHp,
+  monsterType,
+  playerLvl,
 }: BossHudProps) {
-  const bossHpPercentage = Math.max(0, Math.min(100, (hp / maxHp) * 100));
-  const playerHpPercentage = Math.max(0, Math.min(100, (playerHp / playerMaxHp) * 100));
-
   const [activeProjectile, setActiveProjectile] = useState<"player-slash" | "boss-fireball" | null>(null);
   const [playerParticles, setPlayerParticles] = useState<{ id: number; x: number; y: number }[]>([]);
   const [bossParticles, setBossParticles] = useState<{ id: number; x: number; y: number }[]>([]);
 
   const prevStatusRef = useRef(status);
+  const arenaBg = getMonsterBg(monsterType);
 
   // Trigger projectile and particle animations based on state changes
   useEffect(() => {
@@ -72,162 +317,126 @@ export default function BossHud({
   }, [status]);
 
   return (
-    <div className="relative w-full flex flex-col items-center select-none py-2 font-mono">
+    <div className="relative w-full flex flex-col items-center select-none font-mono text-zinc-900">
       {/* CSS Animations style tag */}
       <style jsx global>{`
         @keyframes float-slow {
           0%, 100% { transform: translateY(0px); }
           50% { transform: translateY(-8px); }
         }
-        @keyframes orbit-cw {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        @keyframes orbit-ccw {
-          0% { transform: rotate(360deg); }
-          100% { transform: rotate(0deg); }
-        }
-        @keyframes aura-pulse {
-          0%, 100% { filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.3)); }
-          50% { filter: drop-shadow(0 0 18px rgba(16, 185, 129, 0.5)); }
-        }
-        @keyframes boss-pulse {
-          0%, 100% { filter: drop-shadow(0 0 12px rgba(239, 68, 68, 0.3)); }
-          50% { filter: drop-shadow(0 0 20px rgba(239, 68, 68, 0.6)); }
+        @keyframes bounce-slow {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-6px); }
         }
         .arena-animate-float {
           animation: float-slow 4s ease-in-out infinite;
         }
-        .arena-animate-orbit-cw {
-          animation: orbit-cw 20s linear infinite;
-        }
-        .arena-animate-orbit-ccw {
-          animation: orbit-ccw 15s linear infinite;
-        }
-        .player-glow-green {
-          animation: aura-pulse 2s infinite;
-        }
-        .boss-glow-red {
-          animation: boss-pulse 2s infinite;
+        .arena-animate-bounce-slow {
+          animation: bounce-slow 3s ease-in-out infinite;
         }
       `}</style>
 
-      {/* ─── HP STATS HUD PANELS ─── */}
-      <div className="w-full max-w-3xl grid grid-cols-2 gap-6 mb-6">
-        {/* Left Side: Player HP Stats */}
-        <div className="bg-zinc-950/90 border border-emerald-500/20 px-3 py-1.5 rounded-none shadow-[0_0_10px_rgba(16,185,129,0.03)] relative overflow-hidden">
-          <div className="flex justify-between items-center text-[10px] text-emerald-400 font-bold tracking-wider mb-1">
-            <span className="flex items-center gap-1">🛡️ DŨNG SĨ</span>
-            <span>CẤP 5</span>
+      {/* ─── HP STATS HUD PANELS (Rounded, Cartoon 2D Outlined - Split 2 sides with hearts) ─── */}
+      <div className="w-full bg-white border-3 border-zinc-900 p-3.5 shadow-md shadow-stone-800/10 grid grid-cols-12 gap-2 mb-4 items-center">
+        {/* Left Column: Player Stats (5 cols) */}
+        <div className="col-span-5 flex flex-col items-start">
+          <div className="text-xs md:text-sm text-zinc-900 font-extrabold tracking-wider mb-1 flex items-center gap-1">
+            🛡️ DŨNG SĨ (CẤP {playerLvl})
           </div>
-          <div className="relative w-full h-3 bg-zinc-900 border border-emerald-950 rounded-none overflow-hidden">
-            <motion.div
-              className="h-full bg-gradient-to-r from-emerald-600 to-green-500 shadow-[0_0_6px_rgba(16,185,129,0.4)]"
-              initial={{ width: `${playerHpPercentage}%` }}
-              animate={{ width: `${playerHpPercentage}%` }}
-              transition={{ duration: 0.3 }}
-            />
-            <div className="absolute inset-0 flex items-center justify-center text-[8px] text-white font-extrabold drop-shadow-[0_1px_1px_rgba(0,0,0,1)]">
-              {playerHp} / {playerMaxHp} HP
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <div className="flex gap-0.5">
+              {Array.from({ length: playerMaxHp }).map((_, index) => {
+                const isFilled = index < playerHp;
+                return (
+                  <motion.div
+                    key={index}
+                    initial={false}
+                    animate={isFilled ? { scale: [1, 1.2, 1] } : { scale: 1 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Heart
+                      className={`w-4 h-4 ${isFilled
+                        ? "text-red-500 fill-red-500 stroke-zinc-900 stroke-2 filter drop-shadow-[0.5px_1px_0px_rgba(24,24,27,1)]"
+                        : "text-zinc-300 fill-zinc-100 stroke-zinc-400 stroke-1.5"
+                        }`}
+                    />
+                  </motion.div>
+                );
+              })}
             </div>
+            <span className="text-[11px] md:text-xs text-emerald-600 font-extrabold font-mono ml-1">{playerHp}/{playerMaxHp} HP</span>
           </div>
         </div>
 
-        {/* Right Side: Boss HP Stats */}
-        <div className="bg-zinc-950/90 border border-red-500/20 px-3 py-1.5 rounded-none shadow-[0_0_10px_rgba(239,68,68,0.03)] relative overflow-hidden">
-          <div className="flex justify-between items-center text-[10px] text-red-400 font-bold tracking-wider mb-1">
-            <span className="flex items-center gap-1"><Skull className="w-3 h-3 text-red-500 animate-pulse" /> {name}</span>
-            <span>LVL {level}</span>
+        {/* Middle Column: Vertical Dash Divider (2 cols) */}
+        <div className="col-span-2 flex justify-center h-8">
+          <div className="w-[1.5px] h-full border-l-2 border-dashed border-zinc-300" />
+        </div>
+
+        {/* Right Column: Boss Stats (5 cols) */}
+        <div className="col-span-5 flex flex-col items-end">
+          <div className="text-xs md:text-sm text-zinc-900 font-extrabold tracking-wider mb-1 flex items-center gap-1 justify-end">
+            {monsterType === "golem" || monsterType === "eye" ? (
+              <Skull className="w-3 h-3 text-red-500" />
+            ) : (
+              <Swords className="w-3 h-3 text-zinc-700" />
+            )}
+            {name} (CẤP {level})
           </div>
-          <div className="relative w-full h-3 bg-zinc-900 border border-red-950 rounded-none overflow-hidden">
-            <motion.div
-              className="h-full bg-gradient-to-r from-red-600 via-orange-500 to-red-500 shadow-[0_0_6px_rgba(239,68,68,0.4)]"
-              initial={{ width: `${bossHpPercentage}%` }}
-              animate={{ width: `${bossHpPercentage}%` }}
-              transition={{ duration: 0.3 }}
-            />
-            <div className="absolute inset-0 flex items-center justify-center text-[8px] text-white font-extrabold drop-shadow-[0_1px_1px_rgba(0,0,0,1)]">
-              {hp} / {maxHp} HP
+          <div className="flex items-center gap-1.5 justify-end flex-wrap">
+            <span className="text-[11px] md:text-xs text-rose-600 font-extrabold font-mono mr-1">{hp}/{maxHp} HP</span>
+            <div className="flex gap-0.5 justify-end">
+              {Array.from({ length: maxHp }).map((_, index) => {
+                const isFilled = index < hp;
+                return (
+                  <motion.div
+                    key={index}
+                    initial={false}
+                    animate={isFilled ? { scale: [1, 1.2, 1] } : { scale: 1 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Heart
+                      className={`w-4 h-4 ${isFilled
+                        ? "text-rose-500 fill-rose-500 stroke-zinc-900 stroke-2 filter drop-shadow-[0.5px_1px_0px_rgba(24,24,27,1)]"
+                        : "text-zinc-300 fill-zinc-100 stroke-zinc-400 stroke-1.5"
+                        }`}
+                    />
+                  </motion.div>
+                );
+              })}
             </div>
           </div>
         </div>
       </div>
 
-      {/* ─── RPG BATTLE ARENA (PLAYER VS BOSS) ─── */}
-      <div className="w-full max-w-3xl h-64 border border-zinc-800 bg-zinc-950/40 rounded-none relative flex justify-between items-center px-8 overflow-hidden shadow-[0_0_20px_rgba(0,0,0,0.6)]">
-        
+      {/* ─── RPG BATTLE ARENA (PLAYER VS MONSTER/BOSS) ─── */}
+      <div
+        className="w-full h-80 border-4 border-zinc-900 rounded-none relative flex justify-between items-end px-8 pb-4 overflow-hidden shadow-lg shadow-stone-800/12"
+        style={{ background: arenaBg }}
+      >
+        {/* Cartoon cloud decoration (Only in slime stage) */}
+        {monsterType === "slime" && (
+          <div className="absolute top-4 left-1/4 w-12 h-6 bg-white/70 rounded-full blur-[1px] pointer-events-none animate-[float-slow_12s_infinite_linear]" />
+        )}
+
         {/* Decorative Grid Line in middle */}
-        <div className="absolute left-1/2 top-0 bottom-0 w-[1px] bg-zinc-900/60 border-l border-dashed border-zinc-800/20 pointer-events-none" />
+        <div className="absolute left-1/2 top-0 bottom-0 w-[2px] bg-zinc-900/10 border-l border-dashed border-zinc-900/20 pointer-events-none" />
 
         {/* ─── 1. PLAYER VISUAL MODEL (LEFT) ─── */}
-        <div className="relative flex flex-col items-center w-36 h-full justify-center">
+        <div className="relative flex flex-col items-center w-48">
           <motion.div
-            className="arena-animate-float flex flex-col items-center relative"
+            className="arena-animate-bounce-slow flex flex-col items-center relative"
             animate={{
-              scale: playerStatus === "damage" ? [1, 0.85, 1.05, 1] : playerStatus === "attack" ? [1, 1.1, 1] : 1,
-              x: playerStatus === "attack" ? [0, 30, 0] : 0,
-              filter: playerStatus === "damage" ? "brightness(2.5) contrast(1.2)" : "none",
+              scale: playerStatus === "damage" ? [1, 0.8, 1.1, 1] : playerStatus === "attack" ? [1, 1.2, 1] : 1,
+              x: playerStatus === "attack" ? [0, 45, 0] : 0,
+              filter: playerStatus === "damage" ? "brightness(1.8) contrast(1.2)" : "none",
             }}
             transition={{ duration: 0.4 }}
           >
-            {/* Player Aura Orbit */}
-            <div className="absolute w-24 h-24 border border-emerald-500/10 rounded-full arena-animate-orbit-cw flex items-center justify-center">
-              <div className="absolute top-0 w-1.5 h-1.5 bg-emerald-400 shadow-[0_0_5px_#34d399]" />
-            </div>
+            {/* Rive Animated Character */}
+            <RivePlayer playerLvl={playerLvl} />
 
-            {/* Player Character SVG */}
-            <svg
-              width="96"
-              height="96"
-              viewBox="0 0 120 120"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="player-glow-green relative z-10"
-            >
-              {/* Helmet Crest / Plume */}
-              <path d="M60 8 L60 30" stroke="#34d399" strokeWidth="4" strokeLinecap="round" />
-              <path d="M50 15 L60 8 L70 15" stroke="#34d399" strokeWidth="3" />
-
-              {/* Main Knight Shield-Face */}
-              <polygon
-                points="60,20 92,38 92,82 60,105 28,82 28,38"
-                fill="#0c0a09"
-                stroke={playerStatus === "damage" ? "#ffffff" : "#10b981"}
-                strokeWidth="2.5"
-              />
-
-              {/* Visor Area */}
-              <polygon
-                points="38,48 82,48 74,68 46,68"
-                fill="#1c1917"
-                stroke="#059669"
-                strokeWidth="1.5"
-              />
-
-              {/* Glowing Eyes */}
-              <motion.circle
-                cx="50"
-                cy="58"
-                r="2"
-                fill="#22d3ee"
-                animate={{ scale: [1, 1.3, 1] }}
-                transition={{ repeat: Infinity, duration: 1.5 }}
-              />
-              <motion.circle
-                cx="70"
-                cy="58"
-                r="2"
-                fill="#22d3ee"
-                animate={{ scale: [1, 1.3, 1] }}
-                transition={{ repeat: Infinity, duration: 1.5 }}
-              />
-
-              {/* Crossed Sword Behind */}
-              <path d="M22 98 L40 80" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" />
-              <path d="M98 98 L80 80" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" />
-            </svg>
-
-            <span className="text-[9px] font-bold text-emerald-400 mt-2 bg-emerald-950/40 border border-emerald-900/60 px-1.5 py-0.5 tracking-wider">
+            <span className="text-[11px] md:text-xs font-extrabold text-zinc-900 mt-2 bg-white border-2 border-zinc-900 px-1.5 py-0.5 tracking-wider shadow-sm shadow-stone-800/10">
               DŨNG SĨ
             </span>
           </motion.div>
@@ -237,7 +446,7 @@ export default function BossHud({
             {playerParticles.map((p) => (
               <motion.div
                 key={p.id}
-                className="absolute w-1.5 h-1.5 bg-red-500 rounded-none z-20"
+                className="absolute w-2 h-2 bg-red-500 rounded-full border border-zinc-900 z-20"
                 initial={{ x: 0, y: 0, scale: 1, opacity: 1 }}
                 animate={{ x: p.x, y: p.y, scale: 0.1, opacity: 0 }}
                 transition={{ duration: 0.5, ease: "easeOut" }}
@@ -246,50 +455,58 @@ export default function BossHud({
           </AnimatePresence>
         </div>
 
-        {/* ─── 2. MID-ZONE: CLASH & PROJECTILES ─── */}
+        {/* ─── 2. MID-ZONE: CARTOON PROJECTILES ─── */}
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-20">
           <AnimatePresence>
-            {/* Player to Boss Projectile (Slash Wave) */}
+            {/* Player to Boss Projectile (Cute Flying Sword) */}
             {activeProjectile === "player-slash" && (
               <motion.div
                 className="absolute flex items-center justify-center"
-                initial={{ x: -140, y: 0, scale: 0.5, opacity: 0.8 }}
-                animate={{ x: 140, y: 0, scale: [0.5, 1, 0.8], opacity: [1, 1, 0] }}
+                initial={{ x: -140, y: 0, scale: 0.7, opacity: 0.9 }}
+                animate={{ x: 140, y: 0, scale: [0.7, 1.3, 0.9], opacity: [1, 1, 0] }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.35, ease: "easeOut" }}
               >
-                <Swords className="w-8 h-8 text-cyan-400 filter drop-shadow-[0_0_10px_#22d3ee] rotate-45" />
-                <div className="w-12 h-2 bg-gradient-to-r from-cyan-500 to-white filter blur-[1px] ml-2" />
+                <svg width="40" height="40" viewBox="0 0 40 40" className="filter drop-shadow-[0_0_8px_rgba(56,189,248,0.5)] -rotate-90">
+                  <path d="M5 35 L35 5" stroke="#1e293b" strokeWidth="4.5" strokeLinecap="round" />
+                  <path d="M5 35 L35 5" stroke="#38bdf8" strokeWidth="2.5" strokeLinecap="round" />
+                  <path d="M12 28 L28 12" stroke="#ffffff" strokeWidth="1" strokeLinecap="round" />
+                </svg>
+                <div className="w-16 h-2.5 bg-gradient-to-r from-sky-400 to-white/95 filter blur-[1px] ml-1 rounded-full" />
               </motion.div>
             )}
 
-            {/* Boss to Player Projectile (Crimson Fireball) */}
+            {/* Boss to Player Projectile (Cute Fireball) */}
             {activeProjectile === "boss-fireball" && (
               <motion.div
                 className="absolute flex items-center justify-center"
-                initial={{ x: 140, y: 0, scale: 0.6, opacity: 0.8 }}
-                animate={{ x: -140, y: 0, scale: [0.6, 1.2, 0.9], opacity: [1, 1, 0] }}
+                initial={{ x: 140, y: 0, scale: 0.7, opacity: 0.9 }}
+                animate={{ x: -140, y: 0, scale: [0.7, 1.3, 0.9], opacity: [1, 1, 0] }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.35, ease: "easeOut" }}
               >
-                <div className="w-10 h-1.5 bg-gradient-to-l from-red-500 to-white filter blur-[1px] mr-2" />
-                <Flame className="w-8 h-8 text-red-500 filter drop-shadow-[0_0_10px_#ef4444] animate-pulse" />
+                <div className="w-16 h-2.5 bg-gradient-to-l from-red-500 to-amber-300 filter blur-[1px] mr-1 rounded-full" />
+                <svg width="40" height="40" viewBox="0 0 40 40" className="filter drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]">
+                  <circle cx="20" cy="20" r="10" fill="#f97316" stroke="#1e293b" strokeWidth="3.5" />
+                  <circle cx="20" cy="20" r="5" fill="#fde047" />
+                  <path d="M28 14 L36 12 L32 20 L38 24 L28 26 Z" fill="#ef4444" stroke="#1e293b" strokeWidth="2" />
+                </svg>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
-        {/* ─── 3. BOSS VISUAL MODEL (RIGHT) ─── */}
-        <div className="relative flex flex-col items-center w-36 h-full justify-center">
+        {/* ─── 3. ENEMY VISUAL MODEL (RIGHT) ─── */}
+        <div className="relative flex flex-col items-center w-48">
           <AnimatePresence>
             {status !== "defeat" && (
               <motion.div
-                className="arena-animate-float flex flex-col items-center relative"
+                className="arena-animate-bounce-slow flex flex-col items-center relative"
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{
-                  scale: status === "damage" ? [1, 0.85, 1.05, 1] : status === "attack" ? [1, 1.1, 1] : 1,
-                  x: status === "attack" ? [0, -30, 0] : 0,
-                  filter: status === "damage" ? "brightness(2.5) contrast(1.2)" : "none",
+                  scale: status === "damage" ? [1, 0.8, 1.1, 1] : status === "attack" ? [1, 1.2, 1] : 1,
+                  x: status === "attack" ? [0, -45, 0] : 0,
+                  filter: status === "damage" ? "brightness(1.8) contrast(1.2)" : "none",
                   opacity: 1,
                 }}
                 exit={{
@@ -300,73 +517,17 @@ export default function BossHud({
                 }}
                 transition={{ duration: 0.4 }}
               >
-                {/* Boss Outer Orbit */}
-                <div className="absolute w-24 h-24 border border-dashed border-red-500/20 rounded-full arena-animate-orbit-ccw flex items-center justify-center">
-                  <div className="absolute bottom-0 w-1.5 h-1.5 bg-red-400 shadow-[0_0_5px_#f87171]" />
-                </div>
+                {/* Render Monster Custom SVG */}
+                {renderMonsterSvg(monsterType, status)}
 
-                {/* Boss Core SVG */}
-                <svg
-                  width="96"
-                  height="96"
-                  viewBox="0 0 120 120"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="boss-glow-red relative z-10"
-                >
-                  {/* Wing - Left */}
-                  <motion.path
-                    d="M10 50 L35 25 L45 55 L20 70 Z"
-                    fill="#0f0f12"
-                    stroke="#ef4444"
-                    strokeWidth="1.5"
-                    animate={{ rotate: status === "attack" ? [-8, 4, -8] : 0 }}
-                  />
-
-                  {/* Wing - Right */}
-                  <motion.path
-                    d="M110 50 L85 25 L75 55 L100 70 Z"
-                    fill="#0f0f12"
-                    stroke="#ef4444"
-                    strokeWidth="1.5"
-                    animate={{ rotate: status === "attack" ? [8, -4, 8] : 0 }}
-                  />
-
-                  {/* Core Body Hexagon */}
-                  <polygon
-                    points="60,18 90,38 90,82 60,102 30,82 30,38"
-                    fill="#09090b"
-                    stroke={status === "damage" ? "#ffffff" : "#ea580c"}
-                    strokeWidth="2.5"
-                  />
-
-                  {/* Focus Target Ring */}
-                  <circle cx="60" cy="60" r="18" stroke="#ef4444" strokeWidth="1" strokeDasharray="3 3" />
-
-                  {/* Central Eye Core */}
-                  <motion.circle
-                    cx="60"
-                    cy="60"
-                    r="9"
-                    fill={status === "attack" ? "#ef4444" : status === "damage" ? "#ffffff" : "#ea580c"}
-                    animate={{
-                      scale: status === "attack" ? [1, 1.35, 1] : [1, 1.1, 1],
-                    }}
-                    transition={{ repeat: Infinity, duration: 1.5 }}
-                  />
-                  
-                  {/* Laser pupil dot */}
-                  <circle cx="60" cy="60" r="3" fill="#ffffff" />
-                </svg>
-
-                <span className="text-[9px] font-bold text-red-500 mt-2 bg-red-950/40 border border-red-900/60 px-1.5 py-0.5 tracking-wider">
+                <span className="text-[11px] md:text-xs font-extrabold text-zinc-900 mt-2 bg-white border-2 border-zinc-900 px-1.5 py-0.5 tracking-wider shadow-sm shadow-stone-800/10">
                   {name}
                 </span>
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* Boss Damage Particles */}
+          {/* Enemy Damage Particles */}
           <AnimatePresence>
             {bossParticles.map((p) => (
               <motion.div

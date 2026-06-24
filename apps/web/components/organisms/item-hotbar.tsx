@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Microscope, ShieldAlert, Snowflake, Trophy, Lock } from "lucide-react";
+import { Microscope, Snowflake, Trophy, Shield, Lock } from "lucide-react";
 import { motion } from "framer-motion";
 
 export type ItemType = "50-50" | "freeze" | "double" | "shield";
@@ -12,154 +12,132 @@ interface ItemDef {
   description: string;
   cost: number;
   icon: React.ReactNode;
-  color: string; // Tailwind neon color classes
+  color: string; // Cartoon color styles
 }
 
 interface ItemHotbarProps {
   gold: number;
-  ownedItems: Record<ItemType, number>;
-  onPurchase: (type: ItemType) => void;
   onUseItem: (type: ItemType) => void;
   disabled: boolean; // lock hotbar during boss battles or alerts
   maxShieldLimitReached: boolean;
+  isBossMode: boolean;
 }
 
 export default function ItemHotbar({
   gold,
-  ownedItems,
-  onPurchase,
   onUseItem,
   disabled,
   maxShieldLimitReached,
+  isBossMode,
 }: ItemHotbarProps) {
   const items: ItemDef[] = [
     {
       type: "50-50",
       name: "Kính Hiển Vi",
-      description: "Loại bỏ 2 đáp án sai",
+      description: "Loại bỏ 2 đáp án sai ngẫu nhiên",
       cost: 100,
       icon: <Microscope className="w-5 h-5" />,
-      color: "text-cyan-400 border-cyan-500/30 bg-cyan-950/20 hover:border-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.1)] hover:shadow-[0_0_15px_rgba(34,211,238,0.35)]",
+      color: "text-cyan-500 border-zinc-900 bg-cyan-100 shadow-sm shadow-stone-800/10 hover:bg-cyan-200",
     },
     {
       type: "freeze",
       name: "Đóng Băng",
-      description: "Ngừng thời gian đếm ngược",
+      description: "Ngừng thời gian đếm ngược suy nghĩ",
       cost: 150,
       icon: <Snowflake className="w-5 h-5" />,
-      color: "text-sky-400 border-sky-500/30 bg-sky-950/20 hover:border-sky-400 shadow-[0_0_10px_rgba(56,189,248,0.1)] hover:shadow-[0_0_15px_rgba(56,189,248,0.35)]",
+      color: "text-blue-500 border-zinc-900 bg-blue-100 shadow-sm shadow-stone-800/10 hover:bg-blue-200",
     },
     {
       type: "double",
       name: "Nhân Phẩm",
-      description: "Nhân đôi điểm số câu này",
+      description: "Nhân đôi số điểm nhận được câu này",
       cost: 200,
       icon: <Trophy className="w-5 h-5" />,
-      color: "text-yellow-400 border-yellow-500/30 bg-yellow-950/20 hover:border-yellow-400 shadow-[0_0_10px_rgba(234,179,8,0.1)] hover:shadow-[0_0_15px_rgba(234,179,8,0.35)]",
+      color: "text-amber-500 border-zinc-900 bg-amber-100 shadow-sm shadow-stone-800/10 hover:bg-amber-200",
     },
     {
       type: "shield",
       name: "Khiên Hộ Mệnh",
-      description: "Bảo toàn mạng khi chọn sai (Max 1/Tầng)",
+      description: "Bảo toàn sinh mệnh khi chọn sai (Max 1/Tầng)",
       cost: 250,
-      icon: <ShieldAlert className="w-5 h-5" />,
-      color: "text-emerald-400 border-emerald-500/30 bg-emerald-950/20 hover:border-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.1)] hover:shadow-[0_0_15px_rgba(52,211,153,0.35)]",
+      icon: <Shield className="w-5 h-5" />,
+      color: "text-emerald-500 border-zinc-900 bg-emerald-100 shadow-sm shadow-stone-800/10 hover:bg-emerald-200",
     },
   ];
 
   return (
-    <div className="relative w-full max-w-4xl mx-auto py-2 px-4 bg-zinc-950 border border-zinc-800 rounded-none shadow-2xl overflow-hidden select-none">
+    <div className="relative w-full py-3 px-4 bg-white border-3 border-zinc-900 rounded-none shadow-md shadow-stone-800/10 select-none text-zinc-900">
       {/* ─── LOCK / CHAIN OVERLAY WHEN DISABLED ─── */}
       {disabled && (
         <motion.div
-          className="absolute inset-0 bg-black/80 flex items-center justify-center gap-3 z-30 font-mono text-xs text-red-500 font-bold tracking-wider"
+          className="absolute inset-0 bg-zinc-900/90 flex items-center justify-center gap-3 z-30 font-mono text-sm text-red-500 font-bold tracking-wider border-2 border-red-500"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
         >
           <Lock className="w-4 h-4 text-red-500 animate-bounce" />
-          <span>VẬT PHẨM BỊ KHÓA TRONG TRẬN ĐẤU BOSS / CẢNH BÁO</span>
+          <span>VẬT PHẨM BỊ KHÓA KHI ĐẤU BOSS / CẢNH BÁO</span>
         </motion.div>
       )}
 
-      <div className="flex justify-between items-center text-xs font-mono text-zinc-400 mb-3 border-b border-zinc-800 pb-1.5">
+      <div className="flex justify-between items-center text-sm font-mono text-zinc-700 mb-3 border-b-2 border-zinc-900 pb-1.5 font-bold">
         <span className="flex items-center gap-1.5">
-          ⚔️ <span className="font-bold tracking-wide">QUẦY VẬT PHẨM HỖ TRỢ CHIẾN ĐẤU</span>
+          🎒 <span className="tracking-wide">QUẦY VẬT PHẨM HỖ TRỢ</span>
         </span>
         <span>
-          Số dư: <span className="text-yellow-400 font-bold">🪙 {gold} Vàng</span>
+          Số dư: <span className="text-amber-600 font-extrabold text-base">🪙 {gold} Vàng</span>
         </span>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-4 gap-2">
         {items.map((item) => {
-          const isAffordable = gold >= item.cost;
+          const actualCost = item.cost * (isBossMode ? 2 : 1);
+          const isAffordable = gold >= actualCost;
           const isShieldLimited = item.type === "shield" && maxShieldLimitReached;
-          const count = ownedItems[item.type];
-          
-          // Disable purchase if not affordable or shield limit reached
-          const canPurchase = isAffordable && !isShieldLimited;
+          const canUse = isAffordable && !isShieldLimited;
 
           return (
             <div
               key={item.type}
-              className={`flex flex-col border p-3 rounded-none relative transition-all duration-300 bg-zinc-900/60 ${
-                canPurchase ? "border-zinc-800" : "border-zinc-950 opacity-60 filter grayscale"
-              }`}
+              className="flex flex-col items-center border-2 border-zinc-900 p-2 rounded-none relative transition-all duration-300 bg-stone-50 group/item"
             >
-              {/* Owned Count Badge */}
-              {count > 0 && (
-                <div className="absolute -top-2 -right-2 bg-red-600 text-white font-extrabold font-mono text-[10px] w-5 h-5 flex items-center justify-center rounded-none border border-red-400 animate-pulse z-10 shadow-[0_0_8px_rgba(220,38,38,0.5)]">
-                  x{count}
-                </div>
-              )}
-
-              {/* Item Info Header */}
-              <div className="flex gap-2.5 items-center mb-1">
-                <div className={`p-1.5 border rounded-none ${item.color.split(" ")[0]} ${item.color.split(" ")[1]}`}>
+              {/* Icon Container with Custom Tooltip */}
+              <div className="relative flex items-center justify-center mb-2 mt-1">
+                <div className={`p-2 border-2 rounded-none ${item.color.split(" ")[0]} ${item.color.split(" ")[1]} ${item.color.split(" ")[2]} cursor-help transition-all duration-300 ${
+                  canUse ? "opacity-100" : "opacity-60 filter grayscale"
+                }`}>
                   {item.icon}
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-xs font-bold text-white font-mono">{item.name}</span>
-                  <span className="text-[9px] text-zinc-500 leading-tight font-mono">{item.description}</span>
+
+                {/* Tooltip Content */}
+                <div className="absolute bottom-full mb-2.5 left-1/2 -translate-x-1/2 w-56 opacity-0 scale-90 translate-y-1 pointer-events-none group-hover/item:opacity-100 group-hover/item:scale-100 group-hover/item:translate-y-0 transition-all duration-200 ease-out flex flex-col bg-white border-2 border-zinc-900 p-2.5 shadow-sm shadow-stone-800/10 z-40 font-mono text-zinc-900 rounded-none">
+                  {/* Arrow */}
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 border-x-4 border-x-transparent border-t-4 border-t-zinc-900" />
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 border-x-4 border-x-transparent border-t-4 border-t-white -mt-[2.5px]" />
+                  
+                  <span className="text-xs md:text-sm font-extrabold border-b border-zinc-200 pb-1 mb-1 text-zinc-900">{item.name}</span>
+                  <span className="text-[11px] md:text-xs text-zinc-500 leading-normal font-medium">{item.description}</span>
                 </div>
               </div>
 
-              {/* Action Buttons Grid */}
-              <div className="grid grid-cols-2 gap-2 mt-auto.5 pt-2 border-t border-zinc-800/40">
-                {/* 1. Mua vật phẩm (Buy Button) */}
-                <button
-                  type="button"
-                  disabled={!canPurchase}
-                  onClick={() => onPurchase(item.type)}
-                  className={`w-full py-1 text-[10px] font-mono font-bold tracking-wider rounded-none border transition-all ${
-                    canPurchase
-                      ? "text-yellow-400 bg-yellow-950/20 border-yellow-500/40 hover:border-yellow-400 active:scale-95"
-                      : "text-zinc-600 border-zinc-900 bg-zinc-950/40 cursor-not-allowed"
-                  }`}
-                >
-                  MUA 🪙{item.cost}
-                </button>
-
-                {/* 2. Sử dụng vật phẩm (Use Button) */}
-                <button
-                  type="button"
-                  disabled={count <= 0}
-                  onClick={() => onUseItem(item.type)}
-                  className={`w-full py-1 text-[10px] font-mono font-bold tracking-wider rounded-none border transition-all ${
-                    count > 0
-                      ? "text-emerald-400 bg-emerald-950/20 border-emerald-500/40 hover:border-emerald-400 active:scale-95 shadow-[0_0_5px_rgba(16,185,129,0.15)]"
-                      : "text-zinc-600 border-zinc-900 bg-zinc-950/40 cursor-not-allowed"
-                  }`}
-                >
-                  SỬ DỤNG
-                </button>
-              </div>
+              {/* Action Button */}
+              <button
+                type="button"
+                disabled={!canUse}
+                onClick={() => onUseItem(item.type)}
+                className={`w-full py-1.5 text-xs font-mono font-bold tracking-wider rounded-none border-2 border-zinc-900 transition-all ${
+                  canUse
+                    ? "text-white bg-emerald-500 hover:bg-emerald-400 shadow-sm shadow-stone-800/10 active:translate-x-[0.5px] active:translate-y-[0.5px] active:shadow-none"
+                    : "text-zinc-400 bg-zinc-100 cursor-not-allowed"
+                }`}
+              >
+                🪙{actualCost}
+              </button>
 
               {/* Shield Limit Overlay warning */}
               {isShieldLimited && (
-                <div className="absolute inset-0 bg-black/75 flex items-center justify-center p-2 text-center text-[10px] font-mono text-emerald-400 font-bold leading-tight">
-                  KHIÊN CHỈ MUA 1 CÁI / ẢI TẦNG
+                <div className="absolute inset-0 bg-white/95 flex items-center justify-center p-1 text-center text-xs font-mono text-red-500 font-extrabold border-2 border-red-500 font-bold leading-normal">
+                  ĐÃ DÙNG
                 </div>
               )}
             </div>
