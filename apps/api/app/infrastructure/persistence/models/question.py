@@ -10,7 +10,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.core.datetime_utils import now_ict
 from app.domain.entities.question import QuestionEntity, QuestionOptionEntity
 
-from .base import Base, PoolType
+from .base import Base, Difficulty, PoolType
 
 
 class Question(Base):
@@ -20,6 +20,11 @@ class Question(Base):
         pgUUID(as_uuid=True), primary_key=True, default=uuid4
     )
     pool_type: Mapped[PoolType] = mapped_column(index=True)
+    difficulty: Mapped[Difficulty] = mapped_column(
+        default=Difficulty.EASY,
+        server_default=Difficulty.EASY.value,
+        index=True,
+    )
     content: Mapped[str] = mapped_column(default="", server_default="")
     options: Mapped[list[dict[str, Any]]] = mapped_column(
         JSONB, nullable=False, default=list
@@ -38,6 +43,7 @@ class Question(Base):
         return QuestionEntity(
             id=self.id,
             pool_type=self.pool_type,
+            difficulty=self.difficulty,
             content=self.content,
             options=[QuestionOptionEntity.from_dict(opt) for opt in self.options],
             solution=self.solution,
@@ -52,6 +58,7 @@ class Question(Base):
         return cls(
             id=entity.id,
             pool_type=entity.pool_type,
+            difficulty=entity.difficulty,
             content=entity.content,
             options=[opt.to_dict() for opt in entity.options],
             solution=entity.solution,

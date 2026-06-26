@@ -1,9 +1,10 @@
-from uuid import uuid4, UUID
+from uuid import UUID, uuid4
+
+from app.core.datetime_utils import now_ict
+from app.domain.entities.lesson import LessonEntity
+from app.infrastructure.persistence.models import PoolType
 from app.infrastructure.repositories.lessons import LessonRepository
 from app.infrastructure.repositories.questions import QuestionRepository
-from app.infrastructure.persistence.models import PoolType
-from app.domain.entities.lesson import LessonEntity
-from app.core.datetime_utils import now_ict
 from app.presentation.schemas.lessons import LessonCreate, LessonUpdate
 
 
@@ -25,18 +26,19 @@ class GetLessonDetailUseCase:
         lesson = await self._lesson_repo.get(lid)
         if not lesson:
             return None
-            
-        # Only show PRACTICE questions for students
+
+        # Only show PRACTICE questions for students.
         pool_type = None if is_teacher else PoolType.PRACTICE
         questions = await self._question_repo.list_all(lesson_id=lid, pool_type=pool_type)
-        
+
         return {
             "id": lesson.id,
             "name": lesson.name,
             "description": lesson.description,
+            "content_md": lesson.content_md,
             "order": lesson.order,
             "created_at": lesson.created_at,
-            "questions": questions
+            "questions": questions,
         }
 
 
@@ -45,13 +47,13 @@ class CreateLessonUseCase:
         self._repo = repo
 
     async def execute(self, payload: LessonCreate) -> LessonEntity:
-        now = now_ict()
         entity = LessonEntity(
             id=uuid4(),
             name=payload.name,
             description=payload.description,
+            content_md=payload.content_md,
             order=payload.order,
-            created_at=now,
+            created_at=now_ict(),
         )
         return await self._repo.add(entity)
 
@@ -71,6 +73,8 @@ class UpdateLessonUseCase:
             entity.name = payload.name
         if payload.description is not None:
             entity.description = payload.description
+        if payload.content_md is not None:
+            entity.content_md = payload.content_md
         if payload.order is not None:
             entity.order = payload.order
 

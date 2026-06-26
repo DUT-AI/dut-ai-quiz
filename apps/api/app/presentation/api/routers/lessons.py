@@ -1,59 +1,97 @@
-from fastapi import APIRouter, HTTPException
-from dishka.integrations.fastapi import inject, FromDishka
+from uuid import UUID
+
+from dishka.integrations.fastapi import FromDishka, inject
+from fastapi import APIRouter, HTTPException, Query
+
 from app.application.use_cases.lessons.lesson_use_case import (
-    ListLessonsUseCase, 
-    CreateLessonUseCase, 
-    UpdateLessonUseCase, 
+    CreateLessonUseCase,
     DeleteLessonUseCase,
-    GetLessonDetailUseCase
+    GetLessonDetailUseCase,
+    ListLessonsUseCase,
+    UpdateLessonUseCase,
 )
+from app.application.use_cases.questions import ListQuestionsUseCase
+from app.infrastructure.persistence.models import Difficulty, PoolType
 from app.presentation.api.deps import CurrentUser
-from app.presentation.schemas.lessons import LessonCreate, LessonUpdate, LessonOut, LessonDetailOut
+from app.presentation.schemas.lessons import LessonCreate, LessonDetailOut, LessonOut, LessonUpdate
+from app.presentation.schemas.questions import QuestionListQuery, QuestionOut
 
 router = APIRouter(prefix="/lessons", tags=["lessons"])
+
 
 @router.get("", response_model=list[LessonOut])
 @inject
 async def list_lessons(use_case: FromDishka[ListLessonsUseCase]):
     return await use_case.execute()
 
+
+@router.get("/{lesson_id}/questions", response_model=list[QuestionOut])
+@inject
+async def list_lesson_questions(
+    lesson_id: UUID,
+    user: CurrentUser,
+    use_case: FromDishka[ListQuestionsUseCase],
+    pool_type: PoolType | None = None,
+    difficulty: Difficulty | None = None,
+    tag: str | None = None,
+    offset: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=200),
+):
+    # Students only see practice questions. Teachers can filter both PRACTICE and EXAM.
+    if user.quiz_role != "teacher":
+        pool_type = PoolType.PRACTICE
+
+    query = QuestionListQuery(
+        pool_type=pool_type,
+        difficulty=difficulty,
+        lesson_id=lesson_id,
+        tag=tag,
+        offset=offset,
+        limit=limit,
+    )
+    return await use_case.execute(query)
+
+
 @router.get("/{lesson_id}", response_model=LessonDetailOut)
 @inject
 async def get_lesson(
     lesson_id: str,
     user: CurrentUser,
-    use_case: FromDishka[GetLessonDetailUseCase]
+    use_case: FromDishka[GetLessonDetailUseCase],
 ):
     res = await use_case.execute(lesson_id, is_teacher=user.quiz_role == "teacher")
     if not res:
         raise HTTPException(status_code=404, detail="Lesson not found")
     return res
 
+
 @router.post("", response_model=LessonOut)
 @inject
 async def create_lesson(
-    body: LessonCreate, 
-    use_case: FromDishka[CreateLessonUseCase]
+    body: LessonCreate,
+    use_case: FromDishka[CreateLessonUseCase],
 ):
     return await use_case.execute(body)
+
 
 @router.patch("/{lesson_id}", response_model=LessonOut)
 @inject
 async def update_lesson(
     lesson_id: str,
     body: LessonUpdate,
-    use_case: FromDishka[UpdateLessonUseCase]
+    use_case: FromDishka[UpdateLessonUseCase],
 ):
     res = await use_case.execute(lesson_id, body)
     if not res:
         raise HTTPException(status_code=404, detail="Lesson not found")
     return res
 
+
 @router.delete("/{lesson_id}")
 @inject
 async def delete_lesson(
     lesson_id: str,
-    use_case: FromDishka[DeleteLessonUseCase]
+    use_case: FromDishka[DeleteLessonUseCase],
 ):
     ok = await use_case.execute(lesson_id)
     if not ok:
