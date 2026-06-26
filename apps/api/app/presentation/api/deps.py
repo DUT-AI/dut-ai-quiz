@@ -1,7 +1,7 @@
 from typing import Annotated
 
 from dishka.integrations.fastapi import inject
-from fastapi import Depends, HTTPException, Request
+from fastapi import Depends, Header, HTTPException, Request
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -23,11 +23,14 @@ SessionDep = Annotated[AsyncSession, Depends(get_session)]
 @inject
 async def get_current_user(
     request: Request,
+    x_dev_role_name: str | None = Header(default=None, alias="X-Dev-Role-Name"),
+    x_dev_user_id: int | None = Header(default=None, alias="X-Dev-User-Id"),
 ) -> UserContext:
     if settings.auth_dev_bypass:
-        rn = settings.auth_dev_role_name
+        rn = x_dev_role_name or settings.auth_dev_role_name
+        uid = x_dev_user_id if x_dev_user_id is not None else settings.auth_dev_user_id
         return UserContext(
-            id=settings.auth_dev_user_id,
+            id=uid,
             role_name=rn,
             quiz_role=quiz_role_from_manage(rn),
         )

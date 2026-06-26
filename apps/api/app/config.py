@@ -1,4 +1,5 @@
 from pathlib import Path
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # root/apps/api/app/config.py -> parent x 4 = root/
@@ -17,7 +18,7 @@ class Settings(BaseSettings):
 
     cors_origins: str = "http://localhost:3000,https://quiz.dutai.site"
 
-    redis_host: str = "redis://localhost:6379/0"
+    redis_host: str = "localhost"
     redis_port: int = 6379
 
     auth_cache_ttl: int = 600  # 10 minutes
@@ -45,6 +46,13 @@ class Settings(BaseSettings):
     minio_access_key: str = ""
     minio_secret_key: str = ""
     minio_bucket_name: str = ""
+
+    @field_validator("redis_port", mode="before")
+    @classmethod
+    def _default_redis_port(cls, value):
+        if value in (None, ""):
+            return 6379
+        return value
 
     @property
     def cors_origin_list(self) -> list[str]:

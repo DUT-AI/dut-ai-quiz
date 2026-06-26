@@ -2,6 +2,7 @@ from dishka import make_async_container, Scope
 from dishka.integrations.fastapi import setup_dishka
 
 from app.infrastructure.di.database import DatabaseProvider
+from app.infrastructure.di.hackathon import HackathonProvider
 from app.infrastructure.di.repositories import RepositoryProvider
 from app.infrastructure.di.clients import ClientProvider
 from app.infrastructure.di.use_cases import UseCaseProvider
@@ -16,6 +17,7 @@ from app.application.use_cases.attempts import SubmitAttemptUseCase
 def setup_di(app):
     container = make_async_container(
         DatabaseProvider(),
+        HackathonProvider(),
         RepositoryProvider(),
         ClientProvider(),
         UseCaseProvider(),
