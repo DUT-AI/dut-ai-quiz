@@ -1,8 +1,9 @@
 from dataclasses import dataclass, asdict
-from typing import Any
+from typing import Any, TYPE_CHECKING
 from uuid import UUID
 
-from app.domain.entities.question import QuestionEntity
+if TYPE_CHECKING:
+    from app.domain.entities.question import QuestionEntity
 
 
 @dataclass(frozen=True)
@@ -36,7 +37,7 @@ class ShuffledSnapshot:
         )
 
     def reconstruct_presentation(
-        self, questions_by_id: dict[UUID, QuestionEntity]
+        self, questions_by_id: dict[UUID, "QuestionEntity"]
     ) -> list[ShuffledQuestion]:
         out = []
         for qid_str in self.question_order:

@@ -4,7 +4,8 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities.attempt import AttemptEntity, AttemptAnswerEntity
-from app.infrastructure.persistence.models import Attempt, AttemptAnswer, AttemptStatus
+from app.domain.value_objects import AttemptStatus
+from app.infrastructure.persistence.models import Attempt, AttemptAnswer
 
 
 class AttemptRepository:

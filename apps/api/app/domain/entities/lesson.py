@@ -10,4 +10,6 @@ class LessonEntity:
     description: str
     content_md: str
     order: int
+    slug: str | None
+    blog_id: str | None
     created_at: datetime

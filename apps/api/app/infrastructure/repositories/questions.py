@@ -4,7 +4,8 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities.question import QuestionEntity
-from app.infrastructure.persistence.models import Difficulty, PoolType, Question
+from app.domain.value_objects import Difficulty, PoolType
+from app.infrastructure.persistence.models import Question
 
 
 class QuestionRepository:
