@@ -38,6 +38,9 @@ from app.application.use_cases.lessons.lesson_use_case import (
     ListLessonsUseCase,
     UpdateLessonUseCase,
 )
+from app.application.use_cases.lessons.get_lesson_from_blog_uc import (
+    GetLessonBySlugUseCase,
+)
 from app.application.use_cases.me.me_use_case import GetProfileUseCase
 from app.application.use_cases.practice.practice_use_case import (
     FinishPracticeSessionUseCase,
@@ -45,6 +48,11 @@ from app.application.use_cases.practice.practice_use_case import (
     ListPracticeHistoryUseCase,
     PatchPracticeAnswersUseCase,
     StartPracticeSessionUseCase,
+)
+from app.application.use_cases.practice.gamification_use_case import (
+    StartGamificationSessionUseCase,
+    UseItemGamificationUseCase,
+    PatchGamificationAnswerUseCase,
 )
 from app.application.use_cases.questions import (
     BulkCreateQuestionsUseCase,
@@ -113,6 +121,15 @@ class UseCaseProvider(Provider):
     start_practice_session_use_case = provide(
         StartPracticeSessionUseCase, scope=Scope.REQUEST
     )
+    start_gamification_session_use_case = provide(
+        StartGamificationSessionUseCase, scope=Scope.REQUEST
+    )
+    use_item_gamification_use_case = provide(
+        UseItemGamificationUseCase, scope=Scope.REQUEST
+    )
+    patch_gamification_answer_use_case = provide(
+        PatchGamificationAnswerUseCase, scope=Scope.REQUEST
+    )
     get_practice_session_use_case = provide(
         GetPracticeSessionUseCase, scope=Scope.REQUEST
     )
@@ -131,6 +148,7 @@ class UseCaseProvider(Provider):
     update_lesson_use_case = provide(UpdateLessonUseCase, scope=Scope.REQUEST)
     delete_lesson_use_case = provide(DeleteLessonUseCase, scope=Scope.REQUEST)
     get_lesson_detail_use_case = provide(GetLessonDetailUseCase, scope=Scope.REQUEST)
+    get_lesson_by_slug_use_case = provide(GetLessonBySlugUseCase, scope=Scope.REQUEST)
 
     # auth & me
     proxy_login_use_case = provide(ProxyLoginUseCase, scope=Scope.REQUEST)

@@ -3,7 +3,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from app.infrastructure.persistence.models import Difficulty, PoolType
+from app.domain.value_objects import Difficulty, PoolType
 
 
 class QuestionOptionIn(BaseModel):

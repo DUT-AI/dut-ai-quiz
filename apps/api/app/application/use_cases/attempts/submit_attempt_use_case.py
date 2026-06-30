@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from app.core.datetime_utils import now_ict
-from app.infrastructure.persistence.models import AttemptStatus
+from app.domain.value_objects import AttemptStatus
 from app.infrastructure.repositories.attempts import AttemptRepository
 from app.infrastructure.repositories.exam_questions import ExamQuestionRepository
 

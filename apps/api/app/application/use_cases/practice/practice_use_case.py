@@ -5,7 +5,7 @@ from app.core.datetime_utils import now_ict
 from app.domain.entities.practice import PracticeSessionEntity
 from app.infrastructure.repositories.practice_sessions import PracticeSessionRepository
 from app.infrastructure.repositories.questions import QuestionRepository
-from app.infrastructure.persistence.models import PoolType, PracticeSessionStatus
+from app.domain.value_objects import PoolType, PracticeSessionStatus
 from app.presentation.schemas.exams import PracticeStartIn
 from app.presentation.schemas.attempts import AttemptAnswersPatch
 
