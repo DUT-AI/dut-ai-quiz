@@ -4,17 +4,22 @@ from fastapi import APIRouter, HTTPException
 from dishka.integrations.fastapi import FromDishka, inject
 
 from app.application.use_cases.practice.practice_use_case import (
-    StartPracticeSessionUseCase,
     GetPracticeSessionUseCase,
-    PatchPracticeAnswersUseCase,
     FinishPracticeSessionUseCase,
     ListPracticeHistoryUseCase,
 )
-from app.application.use_cases.practice.gamification_use_case import StartGamificationSessionUseCase
+from app.application.use_cases.practice.gamification_use_case import (
+    StartGamificationSessionUseCase,
+    UseItemGamificationUseCase,
+    PatchGamificationAnswerUseCase,
+)
 from app.presentation.api.deps import StudentUser
-from app.presentation.schemas.attempts import AttemptAnswersPatch
-from app.presentation.schemas.exams import PracticeStartIn
-from app.presentation.schemas.practice import GamificationStartIn
+from app.presentation.schemas.practice import (
+    GamificationStartIn,
+    GamificationAnswerPatchIn,
+    GamificationUseItemIn,
+    GamificationAnswerResultOut,
+)
 
 router = APIRouter(prefix="/practice", tags=["practice"])
 
@@ -22,19 +27,6 @@ router = APIRouter(prefix="/practice", tags=["practice"])
 @router.post("/sessions")
 @inject
 async def start_practice(
-    user: StudentUser, 
-    body: PracticeStartIn, 
-    use_case: FromDishka[StartPracticeSessionUseCase]
-):
-    row = await use_case.execute(user.id, body)
-    if not row:
-        raise HTTPException(status_code=400, detail="No practice questions")
-    return {"session_id": str(row.id), "snapshot": row.snapshot}
-
-
-@router.post("/gamification")
-@inject
-async def start_gamification(
     user: StudentUser,
     body: GamificationStartIn,
     use_case: FromDishka[StartGamificationSessionUseCase]
@@ -58,18 +50,29 @@ async def get_practice(
     return row
 
 
-@router.patch("/sessions/{session_id}/answers")
+@router.patch("/sessions/{session_id}/answers", response_model=GamificationAnswerResultOut)
 @inject
-async def patch_practice(
-    user: StudentUser, 
-    session_id: UUID, 
-    body: AttemptAnswersPatch, 
-    use_case: FromDishka[PatchPracticeAnswersUseCase]
+async def patch_practice_answers(
+    user: StudentUser,
+    session_id: UUID,
+    body: GamificationAnswerPatchIn,
+    use_case: FromDishka[PatchGamificationAnswerUseCase]
 ):
-    ok = await use_case.execute(session_id, user.id, body)
-    if not ok:
-        raise HTTPException(status_code=400, detail="Cannot save")
-    return {"ok": True}
+    return await use_case.execute(session_id, user.id, body)
+
+
+@router.post("/sessions/{session_id}/use-item")
+@inject
+async def use_item_practice(
+    user: StudentUser,
+    session_id: UUID,
+    body: GamificationUseItemIn,
+    use_case: FromDishka[UseItemGamificationUseCase]
+):
+    result = await use_case.execute(session_id, user.id, body)
+    if result is None:
+        raise HTTPException(status_code=400, detail="Cannot use item")
+    return result
 
 
 @router.post("/sessions/{session_id}/finish")
