@@ -20,6 +20,8 @@ class Lesson(Base):
     description: Mapped[str] = mapped_column(default="", server_default="")
     content_md: Mapped[str] = mapped_column(default="", server_default="")
     order: Mapped[int] = mapped_column(default=0, server_default="0")
+    slug: Mapped[str | None] = mapped_column(default=None, nullable=True, unique=True, index=True)
+    blog_id: Mapped[str | None] = mapped_column(default=None, nullable=True)
     created_at: Mapped[datetime] = mapped_column(default=now_ict)
 
     def to_entity(self) -> LessonEntity:
@@ -29,6 +31,8 @@ class Lesson(Base):
             description=self.description,
             content_md=self.content_md,
             order=self.order,
+            slug=self.slug,
+            blog_id=self.blog_id,
             created_at=self.created_at,
         )
 
@@ -40,5 +44,7 @@ class Lesson(Base):
             description=entity.description,
             content_md=entity.content_md,
             order=entity.order,
+            slug=entity.slug,
+            blog_id=entity.blog_id,
             created_at=entity.created_at,
         )

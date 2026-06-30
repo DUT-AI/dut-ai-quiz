@@ -4,10 +4,20 @@ from .shuffled_exam import (
     ShuffledSnapshot,
     ShuffledExamResult,
 )
+from .enums import (
+    AttemptStatus,
+    Difficulty,
+    PoolType,
+    PracticeSessionStatus,
+)
 
 __all__ = [
     "ShuffledOption",
     "ShuffledQuestion",
     "ShuffledSnapshot",
     "ShuffledExamResult",
+    "AttemptStatus",
+    "Difficulty",
+    "PoolType",
+    "PracticeSessionStatus",
 ]

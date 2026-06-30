@@ -10,10 +10,18 @@ from app.application.use_cases.lessons.lesson_use_case import (
     ListLessonsUseCase,
     UpdateLessonUseCase,
 )
+from app.application.use_cases.lessons.get_lesson_from_blog_uc import (
+    GetLessonBySlugUseCase,
+)
 from app.application.use_cases.questions import ListQuestionsUseCase
-from app.infrastructure.persistence.models import Difficulty, PoolType
+from app.domain.value_objects import Difficulty, PoolType
 from app.presentation.api.deps import CurrentUser
-from app.presentation.schemas.lessons import LessonCreate, LessonDetailOut, LessonOut, LessonUpdate
+from app.presentation.schemas.lessons import (
+    LessonCreate,
+    LessonDetailOut,
+    LessonOut,
+    LessonUpdate,
+)
 from app.presentation.schemas.questions import QuestionListQuery, QuestionOut
 
 router = APIRouter(prefix="/lessons", tags=["lessons"])
@@ -23,6 +31,23 @@ router = APIRouter(prefix="/lessons", tags=["lessons"])
 @inject
 async def list_lessons(use_case: FromDishka[ListLessonsUseCase]):
     return await use_case.execute()
+
+
+@router.get("/by-slug/{slug}", response_model=LessonDetailOut)
+@inject
+async def get_lesson_by_slug(
+    slug: str,
+    user: CurrentUser,
+    use_case: FromDishka[GetLessonBySlugUseCase],
+):
+    """
+    Get lesson by slug.
+    If lesson not found locally, it will be fetched from blog service and created.
+    """
+    res = await use_case.execute(slug, is_teacher=user.quiz_role == "teacher")
+    if not res:
+        raise HTTPException(status_code=404, detail="Lesson not found")
+    return res
 
 
 @router.get("/{lesson_id}/questions", response_model=list[QuestionOut])
@@ -93,7 +118,10 @@ async def delete_lesson(
     lesson_id: str,
     use_case: FromDishka[DeleteLessonUseCase],
 ):
-    ok = await use_case.execute(lesson_id)
-    if not ok:
-        raise HTTPException(status_code=404, detail="Lesson not found")
-    return {"ok": True}
+    try:
+        ok = await use_case.execute(lesson_id)
+        if not ok:
+            raise HTTPException(status_code=404, detail="Lesson not found")
+        return {"ok": True}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))

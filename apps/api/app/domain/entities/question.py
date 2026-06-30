@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from app.infrastructure.persistence.models import Difficulty, PoolType
+from app.domain.value_objects import Difficulty, PoolType
 
 
 @dataclasses.dataclass

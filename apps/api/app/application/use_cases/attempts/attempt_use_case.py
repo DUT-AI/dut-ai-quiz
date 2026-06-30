@@ -4,7 +4,7 @@ from app.core.datetime_utils import now_ict
 from app.domain.entities.attempt import FocusEventEntity
 from app.domain.events.attempts import AttemptViolationEvent
 from app.domain.events.bus import EventBus
-from app.infrastructure.persistence.models import AttemptStatus
+from app.domain.value_objects import AttemptStatus
 from app.infrastructure.repositories.attempts import AttemptRepository
 from app.infrastructure.repositories.exam_questions import ExamQuestionRepository
 from app.infrastructure.repositories.focus_events import FocusEventRepository

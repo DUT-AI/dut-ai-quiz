@@ -4,7 +4,7 @@ from app.domain.exceptions.exceptions import AttemptNotFoundException
 from uuid import UUID
 
 
-from app.infrastructure.persistence.models import AttemptStatus
+from app.domain.value_objects import AttemptStatus
 from app.infrastructure.repositories.attempts import AttemptRepository
 from app.infrastructure.repositories.exam_questions import ExamQuestionRepository
 from app.infrastructure.repositories.exams import ExamRepository

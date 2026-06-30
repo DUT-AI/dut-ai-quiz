@@ -2,7 +2,7 @@ import dataclasses
 from datetime import datetime
 from typing import Any
 from uuid import UUID
-from app.infrastructure.persistence.models import PracticeSessionStatus
+from app.domain.value_objects import PracticeSessionStatus
 
 @dataclasses.dataclass
 class PracticeSessionEntity:

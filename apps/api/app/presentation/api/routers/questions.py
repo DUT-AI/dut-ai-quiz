@@ -11,7 +11,7 @@ from app.application.use_cases.questions import (
     ListQuestionsUseCase,
     UpdateQuestionUseCase,
 )
-from app.infrastructure.persistence.models import Difficulty, PoolType
+from app.domain.value_objects import Difficulty, PoolType
 from app.presentation.api.deps import CurrentUser, TeacherUser
 from app.presentation.schemas.questions import (
     QuestionBulkCreate,

@@ -8,7 +8,8 @@ sys.path.append(os.getcwd())
 
 from app.infrastructure.database import AsyncSessionLocal
 from app.infrastructure.repositories.attempts import AttemptRepository
-from app.infrastructure.persistence.models import Attempt, AttemptStatus
+from app.infrastructure.persistence.models import Attempt
+from app.domain.value_objects import AttemptStatus
 from app.core.datetime_utils import now_ict
 
 async def test_patch():
