@@ -46,6 +46,9 @@ from app.application.use_cases.practice.practice_use_case import (
     PatchPracticeAnswersUseCase,
     StartPracticeSessionUseCase,
 )
+from app.application.use_cases.practice.gamification_use_case import (
+    StartGamificationSessionUseCase,
+)
 from app.application.use_cases.questions import (
     BulkCreateQuestionsUseCase,
     CreateQuestionUseCase,
@@ -112,6 +115,9 @@ class UseCaseProvider(Provider):
     # practice
     start_practice_session_use_case = provide(
         StartPracticeSessionUseCase, scope=Scope.REQUEST
+    )
+    start_gamification_session_use_case = provide(
+        StartGamificationSessionUseCase, scope=Scope.REQUEST
     )
     get_practice_session_use_case = provide(
         GetPracticeSessionUseCase, scope=Scope.REQUEST
