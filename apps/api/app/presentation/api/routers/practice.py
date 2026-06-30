@@ -10,9 +10,11 @@ from app.application.use_cases.practice.practice_use_case import (
     FinishPracticeSessionUseCase,
     ListPracticeHistoryUseCase,
 )
+from app.application.use_cases.practice.gamification_use_case import StartGamificationSessionUseCase
 from app.presentation.api.deps import StudentUser
 from app.presentation.schemas.attempts import AttemptAnswersPatch
 from app.presentation.schemas.exams import PracticeStartIn
+from app.presentation.schemas.practice import GamificationStartIn
 
 router = APIRouter(prefix="/practice", tags=["practice"])
 
@@ -23,6 +25,19 @@ async def start_practice(
     user: StudentUser, 
     body: PracticeStartIn, 
     use_case: FromDishka[StartPracticeSessionUseCase]
+):
+    row = await use_case.execute(user.id, body)
+    if not row:
+        raise HTTPException(status_code=400, detail="No practice questions")
+    return {"session_id": str(row.id), "snapshot": row.snapshot}
+
+
+@router.post("/gamification")
+@inject
+async def start_gamification(
+    user: StudentUser,
+    body: GamificationStartIn,
+    use_case: FromDishka[StartGamificationSessionUseCase]
 ):
     row = await use_case.execute(user.id, body)
     if not row:
