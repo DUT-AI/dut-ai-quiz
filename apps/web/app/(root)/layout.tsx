@@ -44,19 +44,17 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
         />
       )}
 
+      {/* Sidebar Container */}
       <aside
         className={cn(
-          "h-full flex-shrink-0 bg-white dark:bg-navy-blue border-r border-gray-100 dark:border-white/5 transition-all duration-300 ease-in-out z-50 overflow-hidden",
+          "h-full flex-shrink-0 bg-white dark:bg-navy-blue border-r border-gray-100 dark:border-white/5 transition-all duration-300 ease-in-out z-50 overflow-hidden w-72",
           // Mobile Drawer
-          "fixed lg:static inset-y-0 left-0 lg:h-full transform transition-transform",
-          // Mobile transform (controlled by isMobileOpen)
-          isMobileOpen ? "translate-x-0" : "-translate-x-full",
-          // Desktop transform (controlled by isCollapsed for slide out effect)
-          isCollapsed ? "lg:-translate-x-full" : "lg:translate-x-0",
-          // Width & Opacity logic (unified for both desktop collapse and mobile drawer to avoid tailwind-merge override conflicts)
+          "fixed lg:static inset-y-0 left-0 lg:h-full transform transition-transform lg:transform-none",
+          isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+          // Desktop Collapsible (using margin-left transition instead of width collapse for super smooth sliding and high performance)
           isCollapsed
-            ? "w-72 lg:w-0 lg:opacity-0 lg:pointer-events-none lg:border-r-0"
-            : "w-72 lg:w-72 lg:opacity-100"
+            ? "lg:-ml-72 lg:opacity-0 lg:pointer-events-none lg:border-r-0"
+            : "lg:ml-0 lg:opacity-100"
         )}
       >
         <SidebarNav onCloseMobile={() => setIsMobileOpen(false)} />
@@ -65,7 +63,8 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
       {/* Right Column - Topbar + Main Content */}
       <div className="flex-1 flex flex-col h-full min-w-0 transition-all duration-300 ease-in-out">
         {/* Top Management Bar - Fixed at top */}
-        <header className="h-16 bg-white dark:bg-navy-blue flex-shrink-0 flex items-center justify-between px-6 text-dark-blue dark:text-white w-full border-b border-gray-100 dark:border-white/5 z-30 transition-all duration-300 ease-in-out">
+        <header className="h-16 bg-white dark:bg-navy-blue flex-shrink-0 flex items-center justify-between px-6 text-dark-blue dark:text-white 
+          w-full border-b border-gray-100 dark:border-white/5 z-30 transition-all duration-300 ease-in-out">
           <div className="flex items-center gap-4">
             {/* Toggle Button */}
             <button
@@ -79,8 +78,8 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
             {/* Brand Logo & Text in Header when Sidebar is collapsed (Desktop) */}
             <div
               className={cn(
-                "hidden lg:flex items-center gap-3 transition-all duration-300 ease-in-out transform origin-left",
-                isCollapsed ? "opacity-100 translate-x-0 scale-100" : "opacity-0 -translate-x-4 scale-95 pointer-events-none w-0 overflow-hidden"
+                "hidden lg:flex items-center gap-3 transition-all duration-300 ease-in-out transform origin-left overflow-hidden",
+                isCollapsed ? "w-48 opacity-100 translate-x-0 scale-100" : "w-0 opacity-0 -translate-x-4 scale-95 pointer-events-none"
               )}
             >
               <div className="size-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/30 flex-shrink-0">
