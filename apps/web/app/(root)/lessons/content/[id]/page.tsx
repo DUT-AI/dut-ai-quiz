@@ -116,7 +116,7 @@ export default function LessonDetailPage() {
     return (
       <div className="h-full flex flex-col items-center justify-center text-center py-20">
         <h2 className="text-2xl font-bold mb-4">Không tìm thấy bài học</h2>
-        <Button onClick={() => router.push("/lessons")}>Quay lại danh sách</Button>
+        <Button onClick={() => router.push("/lessons/content")}>Quay lại danh sách</Button>
       </div>
     );
   }
@@ -124,7 +124,7 @@ export default function LessonDetailPage() {
   return (
     <div className="w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
       <button
-        onClick={() => router.push("/lessons")}
+        onClick={() => router.push("/lessons/content")}
         className="flex items-center gap-2 text-primary font-bold hover:gap-3 transition-all mb-4 group"
       >
         <ArrowLeft className="size-5" />
