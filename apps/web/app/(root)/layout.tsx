@@ -1,9 +1,11 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { SidebarNav } from "@/components/molecules/sidebar-nav";
 import { useAuth } from "@/context/auth-context";
 import SwitchTheme from "@/components/atoms/switch-theme";
+import { cn } from "@/lib/utils";
+import { Menu, Rocket } from "lucide-react";
 
 const RootLayout = ({ children }: { children: React.ReactNode }) => {
   const { isLoading } = useAuth();
@@ -20,29 +22,96 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  const toggleSidebar = () => {
+    if (window.innerWidth >= 1024) {
+      setIsCollapsed(!isCollapsed);
+    } else {
+      setIsMobileOpen(!isMobileOpen);
+    }
+  };
+
   // 2. Authenticated State (Middleware ensures authentication for (root) group)
   return (
     <div className="flex h-screen w-full bg-slate-50 dark:bg-zinc-950 overflow-hidden text-slate-900 dark:text-zinc-50">
-      {/* Sidebar - Fixed/Sticky on the left, full height */}
-      <div className="h-full flex-shrink-0">
-        <SidebarNav />
-      </div>
+      {/* Mobile Backdrop */}
+      {isMobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden transition-all duration-300"
+          onClick={() => setIsMobileOpen(false)}
+        />
+      )}
+
+      <aside
+        className={cn(
+          "h-full flex-shrink-0 bg-white dark:bg-navy-blue border-r border-gray-100 dark:border-white/5 transition-all duration-300 ease-in-out z-50 overflow-hidden",
+          // Mobile Drawer
+          "fixed lg:static inset-y-0 left-0 lg:h-full transform transition-transform",
+          // Mobile transform (controlled by isMobileOpen)
+          isMobileOpen ? "translate-x-0" : "-translate-x-full",
+          // Desktop transform (controlled by isCollapsed for slide out effect)
+          isCollapsed ? "lg:-translate-x-full" : "lg:translate-x-0",
+          // Width & Opacity logic (unified for both desktop collapse and mobile drawer to avoid tailwind-merge override conflicts)
+          isCollapsed
+            ? "w-72 lg:w-0 lg:opacity-0 lg:pointer-events-none lg:border-r-0"
+            : "w-72 lg:w-72 lg:opacity-100"
+        )}
+      >
+        <SidebarNav onCloseMobile={() => setIsMobileOpen(false)} />
+      </aside>
 
       {/* Right Column - Topbar + Main Content */}
-      <div className="flex-1 flex flex-col h-full min-w-0">
+      <div className="flex-1 flex flex-col h-full min-w-0 transition-all duration-300 ease-in-out">
         {/* Top Management Bar - Fixed at top */}
-        <header className="h-16 bg-slate-900 dark:bg-zinc-900 flex-shrink-0 flex items-center justify-between px-8 text-white w-full backdrop-blur-md border-b border-white/5 z-50">
-          <div>
-            {/* Header Content Placeholder */}
+        <header className="h-16 bg-white dark:bg-navy-blue flex-shrink-0 flex items-center justify-between px-6 text-dark-blue dark:text-white w-full border-b border-gray-100 dark:border-white/5 z-30 transition-all duration-300 ease-in-out">
+          <div className="flex items-center gap-4">
+            {/* Toggle Button */}
+            <button
+              onClick={toggleSidebar}
+              className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 text-gray-navy dark:text-light-blue transition-colors focus:outline-none"
+              aria-label="Toggle Navigation"
+            >
+              <Menu className="size-5" />
+            </button>
+
+            {/* Brand Logo & Text in Header when Sidebar is collapsed (Desktop) */}
+            <div
+              className={cn(
+                "hidden lg:flex items-center gap-3 transition-all duration-300 ease-in-out transform origin-left",
+                isCollapsed ? "opacity-100 translate-x-0 scale-100" : "opacity-0 -translate-x-4 scale-95 pointer-events-none w-0 overflow-hidden"
+              )}
+            >
+              <div className="size-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/30 flex-shrink-0">
+                <Rocket className="size-6" />
+              </div>
+              <div className="leading-none whitespace-nowrap">
+                <p className="text-[10px] font-black text-primary tracking-[0.2em] uppercase">DUT AI</p>
+                <p className="text-base font-bold text-dark-blue dark:text-white uppercase tracking-tighter">Quiz Master</p>
+              </div>
+            </div>
+
+            {/* Brand Logo & Text in Header on Mobile (Always visible since sidebar is drawer) */}
+            <div className="flex lg:hidden items-center gap-3">
+              <div className="size-9 rounded-xl bg-primary flex items-center justify-center text-white shadow-md shadow-primary/30 flex-shrink-0">
+                <Rocket className="size-5" />
+              </div>
+              <div className="leading-none whitespace-nowrap">
+                <p className="text-[9px] font-black text-primary tracking-[0.2em] uppercase">DUT AI</p>
+                <p className="text-sm font-bold text-dark-blue dark:text-white uppercase tracking-tighter">Quiz Master</p>
+              </div>
+            </div>
           </div>
+
           <div className="flex items-center gap-4">
             <SwitchTheme />
           </div>
         </header>
 
         {/* This is the ONLY area that scrolls */}
-        <main className="flex-1 overflow-y-auto custom-scrollbar relative">
-          <div className="p-6 md:p-10 xl:p-14 w-full max-w-7xl mx-auto">
+        <main className="flex-1 overflow-y-auto custom-scrollbar relative transition-all duration-300 ease-in-out">
+          <div className="p-6 md:p-10 xl:p-14 w-full max-w-7xl mx-auto transition-all duration-300 ease-in-out">
             {children}
           </div>
         </main>

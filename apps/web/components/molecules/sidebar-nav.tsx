@@ -34,7 +34,7 @@ const TEACHER_NAV_ITEMS = [
   { icon: BarChart2, label: "Thống kê kết quả", href: "/teacher/stats" },
 ];
 
-export const SidebarNav = () => {
+export const SidebarNav = ({ onCloseMobile }: { onCloseMobile?: () => void }) => {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   console.log(user)
@@ -42,7 +42,7 @@ export const SidebarNav = () => {
   const isTeacher = user?.quiz_role === "teacher"
 
   return (
-    <div className="hidden lg:flex flex-col w-72 bg-white dark:bg-navy-blue border-r border-gray-100 dark:border-white/5 h-screen sticky top-0 py-8 px-4 overflow-y-auto">
+    <div className="flex flex-col h-full w-72 py-8 px-4 overflow-y-auto">
       <div className="flex items-center gap-3 px-4 mb-10">
         <div className="size-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/30">
           <Rocket className="size-6" />
@@ -59,11 +59,12 @@ export const SidebarNav = () => {
           <p className="px-4 text-[10px] font-black text-gray-navy/40 uppercase tracking-[0.2em] mb-4">Sinh viên</p>
           <nav className="space-y-1">
             {STUDENT_NAV_ITEMS.map((item, idx) => {
-              const isActive = pathname === item.href;
+              const isActive = pathname.startsWith(item.href);
               return (
                 <Link
                   key={idx}
                   href={item.href}
+                  onClick={onCloseMobile}
                   className={cn(
                     "w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-sm font-bold transition-all duration-200 group",
                     isActive
@@ -93,6 +94,7 @@ export const SidebarNav = () => {
                   <Link
                     key={idx}
                     href={item.href}
+                    onClick={onCloseMobile}
                     className={cn(
                       "w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-sm font-bold transition-all duration-200 group",
                       isActive
