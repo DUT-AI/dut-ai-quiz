@@ -3,15 +3,14 @@ from uuid import UUID, uuid4
 
 from app.core.datetime_utils import now_ict
 from app.domain.entities.practice import PracticeSessionEntity
-from app.infrastructure.repositories.practice_sessions import PracticeSessionRepository
-from app.infrastructure.repositories.questions import QuestionRepository
+from app.domain.interfaces import IPracticeSessionRepository, IQuestionRepository
 from app.domain.value_objects import PoolType, PracticeSessionStatus
 from app.presentation.schemas.exams import PracticeStartIn
 from app.presentation.schemas.attempts import AttemptAnswersPatch
 
 
 class StartPracticeSessionUseCase:
-    def __init__(self, ps_repo: PracticeSessionRepository, question_repo: QuestionRepository):
+    def __init__(self, ps_repo: IPracticeSessionRepository, question_repo: IQuestionRepository):
         self._ps_repo = ps_repo
         self._question_repo = question_repo
 
@@ -57,7 +56,7 @@ class StartPracticeSessionUseCase:
 
 
 class GetPracticeSessionUseCase:
-    def __init__(self, ps_repo: PracticeSessionRepository):
+    def __init__(self, ps_repo: IPracticeSessionRepository):
         self._ps_repo = ps_repo
 
     async def execute(self, session_id: UUID, user_id: int) -> PracticeSessionEntity | None:
@@ -68,7 +67,7 @@ class GetPracticeSessionUseCase:
 
 
 class PatchPracticeAnswersUseCase:
-    def __init__(self, ps_repo: PracticeSessionRepository):
+    def __init__(self, ps_repo: IPracticeSessionRepository):
         self._ps_repo = ps_repo
 
     async def execute(self, session_id: UUID, user_id: int, payload: AttemptAnswersPatch) -> bool:
@@ -92,7 +91,7 @@ class PatchPracticeAnswersUseCase:
 
 
 class FinishPracticeSessionUseCase:
-    def __init__(self, ps_repo: PracticeSessionRepository):
+    def __init__(self, ps_repo: IPracticeSessionRepository):
         self._ps_repo = ps_repo
 
     async def execute(self, session_id: UUID, user_id: int) -> PracticeSessionEntity | None:
@@ -109,7 +108,7 @@ class FinishPracticeSessionUseCase:
 
 
 class ListPracticeHistoryUseCase:
-    def __init__(self, ps_repo: PracticeSessionRepository):
+    def __init__(self, ps_repo: IPracticeSessionRepository):
         self._ps_repo = ps_repo
 
     async def execute(self, user_id: int) -> list[PracticeSessionEntity]:

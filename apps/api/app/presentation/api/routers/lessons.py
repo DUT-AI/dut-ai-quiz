@@ -3,16 +3,16 @@ from uuid import UUID
 from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import APIRouter, HTTPException, Query
 
-from app.application.use_cases.lessons.lesson_use_case import (
-    CreateLessonUseCase,
-    DeleteLessonUseCase,
+from app.application.use_cases.lessons.create_lesson_uc import CreateLessonUseCase
+from app.application.use_cases.lessons.delete_lesson_uc import DeleteLessonUseCase
+from app.application.use_cases.lessons.get_lesson_detail_uc import (
     GetLessonDetailUseCase,
-    ListLessonsUseCase,
-    UpdateLessonUseCase,
 )
 from app.application.use_cases.lessons.get_lesson_from_blog_uc import (
     GetLessonBySlugUseCase,
 )
+from app.application.use_cases.lessons.list_lessons_uc import ListLessonsUseCase
+from app.application.use_cases.lessons.update_lesson_uc import UpdateLessonUseCase
 from app.application.use_cases.questions import ListQuestionsUseCase
 from app.domain.value_objects import Difficulty, PoolType
 from app.presentation.api.deps import CurrentUser
@@ -44,7 +44,7 @@ async def get_lesson_by_slug(
     Get lesson by slug.
     If lesson not found locally, it will be fetched from blog service and created.
     """
-    res = await use_case.execute(slug, is_teacher=user.quiz_role == "teacher")
+    res = await use_case.execute(slug)
     if not res:
         raise HTTPException(status_code=404, detail="Lesson not found")
     return res

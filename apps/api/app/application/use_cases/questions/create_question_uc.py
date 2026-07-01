@@ -2,12 +2,12 @@ from uuid import uuid4
 
 from app.core.datetime_utils import now_ict
 from app.domain.entities.question import QuestionEntity, QuestionOptionEntity
-from app.infrastructure.repositories.questions import QuestionRepository
+from app.domain.interfaces import IQuestionRepository
 from app.presentation.schemas.questions import QuestionBulkCreate, QuestionCreate
 
 
 class CreateQuestionUseCase:
-    def __init__(self, question_repo: QuestionRepository):
+    def __init__(self, question_repo: IQuestionRepository):
         self._question_repo = question_repo
 
     async def execute(self, payload: QuestionCreate) -> QuestionEntity:
@@ -37,7 +37,7 @@ class CreateQuestionUseCase:
 
 
 class BulkCreateQuestionsUseCase:
-    def __init__(self, question_repo: QuestionRepository):
+    def __init__(self, question_repo: IQuestionRepository):
         self._question_repo = question_repo
 
     async def execute(self, payload: QuestionBulkCreate) -> list[QuestionEntity]:

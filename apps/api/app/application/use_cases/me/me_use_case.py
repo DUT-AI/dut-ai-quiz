@@ -5,14 +5,14 @@ from app.application.services.auth_roles import quiz_role_from_manage
 from app.infrastructure.cache.redis_client import ProfileCache
 from app.core.jwt import decode_access_token
 from app.infrastructure.clients import ManageServiceClient
-from app.infrastructure.repositories.users import UserRepository
+from app.domain.interfaces import IUserRepository
 
 
 class GetProfileUseCase:
     def __init__(
         self,
         cache: ProfileCache,
-        user_repo: UserRepository,
+        user_repo: IUserRepository,
         manage_client: ManageServiceClient,
     ) -> None:
         self._cache = cache

@@ -5,8 +5,8 @@ from app.infrastructure.cache.redis_client import ProfileCache
 from app.domain.entities.user import UserEntity
 from app.core.jwt import create_access_token
 from app.application.services.auth_roles import quiz_role_from_manage
+from app.domain.interfaces import IUserRepository
 from app.infrastructure.clients import GoogleOAuthClient, ManageServiceClient
-from app.infrastructure.repositories.users import UserRepository
 
 
 class LoginPayload(BaseModel):
@@ -70,7 +70,7 @@ class ProxyLoginUseCase:
 class GoogleAuthUseCase:
     def __init__(
         self,
-        user_repo: UserRepository,
+        user_repo: IUserRepository,
         google_client: GoogleOAuthClient,
         manage_client: ManageServiceClient,
     ) -> None:

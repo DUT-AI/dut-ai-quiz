@@ -1,4 +1,3 @@
-from enum import StrEnum
 from sqlalchemy.orm import DeclarativeBase
 
 # Import enums from domain layer

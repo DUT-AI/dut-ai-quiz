@@ -5,10 +5,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities.question import QuestionEntity
 from app.domain.value_objects import Difficulty, PoolType
+from app.domain.interfaces import IQuestionRepository
 from app.infrastructure.persistence.models import Question
 
 
-class QuestionRepository:
+class QuestionRepository(IQuestionRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._s = session
 

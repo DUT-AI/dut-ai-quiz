@@ -1,23 +1,36 @@
 import random
-from uuid import UUID, uuid4
 from typing import Any
+from uuid import UUID, uuid4
+
+from fastapi import HTTPException
 
 from app.core.datetime_utils import now_ict
 from app.domain.entities.practice import PracticeSessionEntity
-from app.domain.value_objects.gamification import GamificationItem, ITEM_PRICES
-from app.infrastructure.repositories.practice_sessions import PracticeSessionRepository
-from app.infrastructure.repositories.questions import QuestionRepository
-from app.infrastructure.repositories.lessons import LessonRepository
-from app.infrastructure.persistence.models import PoolType, PracticeSessionStatus, Difficulty
-from app.presentation.schemas.practice import GamificationStartIn
+from app.domain.interfaces import (
+    ILessonRepository,
+    IPracticeSessionRepository,
+    IQuestionRepository,
+)
+from app.domain.value_objects.gamification import ITEM_PRICES, GamificationItem
+from app.infrastructure.persistence.models import (
+    Difficulty,
+    PoolType,
+    PracticeSessionStatus,
+)
+from app.presentation.schemas.practice import (
+    GamificationAnswerPatchIn,
+    GamificationAnswerResultOut,
+    GamificationStartIn,
+    GamificationUseItemIn,
+)
 
 
 class StartGamificationSessionUseCase:
     def __init__(
         self, 
-        ps_repo: PracticeSessionRepository, 
-        question_repo: QuestionRepository,
-        lesson_repo: LessonRepository
+        ps_repo: IPracticeSessionRepository, 
+        question_repo: IQuestionRepository,
+        lesson_repo: ILessonRepository
     ):
         self._ps_repo = ps_repo
         self._question_repo = question_repo
@@ -70,20 +83,9 @@ class StartGamificationSessionUseCase:
         tier2_qs = prioritize_and_limit(med_qs, 5)
         tier3_qs = prioritize_and_limit(hard_qs, 5)
         
-        # Determine boss indices (middle and end of each tier list)
-        def get_boss_indices(qs_list):
-            indices = set()
-            n = len(qs_list)
-            if n >= 2:
-                indices.add(n // 2 - 1)
-            if n >= 1:
-                indices.add(n - 1)
-            return indices
+
             
-        t1_boss_idx = get_boss_indices(tier1_qs)
-        t2_boss_idx = get_boss_indices(tier2_qs)
-        t3_boss_idx = get_boss_indices(tier3_qs)
-        
+
         def clean_options(options):
             cleaned = []
             for opt in options:
@@ -161,13 +163,8 @@ class StartGamificationSessionUseCase:
         )
         return await self._ps_repo.add(entity)
 
-
-from fastapi import HTTPException
-from app.presentation.schemas.practice import GamificationAnswerPatchIn, GamificationUseItemIn, GamificationAnswerResultOut
-from app.domain.value_objects.gamification import ITEM_PRICES
-
 class UseItemGamificationUseCase:
-    def __init__(self, ps_repo: PracticeSessionRepository, question_repo: QuestionRepository):
+    def __init__(self, ps_repo: IPracticeSessionRepository, question_repo: IQuestionRepository):
         self._ps_repo = ps_repo
         self._question_repo = question_repo
 
@@ -248,7 +245,7 @@ class UseItemGamificationUseCase:
 
 
 class PatchGamificationAnswerUseCase:
-    def __init__(self, ps_repo: PracticeSessionRepository, question_repo: QuestionRepository):
+    def __init__(self, ps_repo: IPracticeSessionRepository, question_repo: IQuestionRepository):
         self._ps_repo = ps_repo
         self._question_repo = question_repo
 

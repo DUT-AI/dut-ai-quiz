@@ -5,11 +5,12 @@ from uuid import UUID
 
 @dataclass
 class LessonEntity:
+    """Domain entity representing a lesson."""
+
     id: UUID
     name: str
     description: str
-    content_md: str
     order: int
     slug: str | None
-    blog_id: str | None
     created_at: datetime
+    content_md: str | None = None

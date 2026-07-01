@@ -2,12 +2,12 @@ from uuid import uuid4
 
 from app.core.datetime_utils import utc_to_ict
 from app.domain.entities.exam import ExamEntity
-from app.infrastructure.repositories.exams import ExamRepository
+from app.domain.interfaces import IExamRepository
 from app.presentation.schemas.exams import ExamCreate
 
 
 class CreateExamUseCase:
-    def __init__(self, exam_repo: ExamRepository):
+    def __init__(self, exam_repo: IExamRepository):
         self._exam_repo = exam_repo
 
     async def execute(self, payload: ExamCreate, teacher_user_id: int) -> ExamEntity:

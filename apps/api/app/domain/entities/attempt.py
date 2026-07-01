@@ -1,7 +1,8 @@
-from app.domain.entities.question import QuestionEntity
 import dataclasses
 from datetime import datetime
 from uuid import UUID
+
+from app.domain.entities.question import QuestionEntity
 from app.domain.value_objects import AttemptStatus, ShuffledSnapshot
 
 

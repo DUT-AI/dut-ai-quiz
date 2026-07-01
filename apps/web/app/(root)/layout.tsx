@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { usePathname } from "next/navigation";
 import { SidebarNav } from "@/components/molecules/sidebar-nav";
 import { useAuth } from "@/context/auth-context";
 import SwitchTheme from "@/components/atoms/switch-theme";
@@ -9,6 +10,9 @@ import { Menu, Rocket } from "lucide-react";
 
 const RootLayout = ({ children }: { children: React.ReactNode }) => {
   const { isLoading } = useAuth();
+  const pathname = usePathname();
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   // 1. Loading state during hydration/auth validation
   if (isLoading) {
@@ -22,8 +26,15 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const isPracticeGame = pathname && pathname.includes("/practice") && pathname !== "/lessons/practice";
+
+  if (isPracticeGame) {
+    return (
+      <div className="w-full min-h-screen bg-slate-50 dark:bg-zinc-950 overflow-hidden">
+        {children}
+      </div>
+    );
+  }
 
   const toggleSidebar = () => {
     if (window.innerWidth >= 1024) {

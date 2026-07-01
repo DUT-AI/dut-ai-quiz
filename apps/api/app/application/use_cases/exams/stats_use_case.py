@@ -1,9 +1,11 @@
 from uuid import UUID
 
 from app.domain.value_objects import AttemptStatus
-from app.infrastructure.repositories.attempts import AttemptRepository
-from app.infrastructure.repositories.exam_questions import ExamQuestionRepository
-from app.infrastructure.repositories.exams import ExamRepository
+from app.domain.interfaces import (
+    IAttemptRepository,
+    IExamQuestionRepository,
+    IExamRepository,
+)
 from app.presentation.schemas.stats import (
     ExamStatsOut,
     ExamSummary,
@@ -16,9 +18,9 @@ from app.presentation.schemas.stats import (
 class GetExamStatsUseCase:
     def __init__(
         self,
-        exam_repo: ExamRepository,
-        att_repo: AttemptRepository,
-        eq_repo: ExamQuestionRepository,
+        exam_repo: IExamRepository,
+        att_repo: IAttemptRepository,
+        eq_repo: IExamQuestionRepository,
     ):
         self._exam_repo = exam_repo
         self._att_repo = att_repo

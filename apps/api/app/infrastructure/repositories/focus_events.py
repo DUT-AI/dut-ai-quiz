@@ -1,11 +1,11 @@
-
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities.attempt import FocusEventEntity
+from app.domain.interfaces import IFocusEventRepository
 from app.infrastructure.persistence.models import FocusEvent
 
-class FocusEventRepository:
+class FocusEventRepository(IFocusEventRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._s = session
 

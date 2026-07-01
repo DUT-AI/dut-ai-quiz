@@ -1,11 +1,12 @@
-from pydantic import BaseModel
-from uuid import UUID
 from typing import Any
+from uuid import UUID
+
+from pydantic import BaseModel, Field
+
 
 class GamificationStartIn(BaseModel):
     lesson_slug: str
 
-from pydantic import Field
 
 class GamificationAnswerPatchIn(BaseModel):
     question_id: UUID

@@ -5,17 +5,19 @@ from uuid import UUID
 
 
 from app.domain.value_objects import AttemptStatus
-from app.infrastructure.repositories.attempts import AttemptRepository
-from app.infrastructure.repositories.exam_questions import ExamQuestionRepository
-from app.infrastructure.repositories.exams import ExamRepository
+from app.domain.interfaces import (
+    IAttemptRepository,
+    IExamQuestionRepository,
+    IExamRepository,
+)
 
 
 class ReviewAttemptUseCase:
     def __init__(
         self,
-        att_repo: AttemptRepository,
-        eq_repo: ExamQuestionRepository,
-        exam_repo: ExamRepository,
+        att_repo: IAttemptRepository,
+        eq_repo: IExamQuestionRepository,
+        exam_repo: IExamRepository,
     ):
         self._att_repo = att_repo
         self._eq_repo = eq_repo

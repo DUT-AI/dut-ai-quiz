@@ -5,16 +5,18 @@ from app.domain.entities.attempt import FocusEventEntity
 from app.domain.events.attempts import AttemptViolationEvent
 from app.domain.events.bus import EventBus
 from app.domain.value_objects import AttemptStatus
-from app.infrastructure.repositories.attempts import AttemptRepository
-from app.infrastructure.repositories.exam_questions import ExamQuestionRepository
-from app.infrastructure.repositories.focus_events import FocusEventRepository
-from app.infrastructure.repositories.questions import QuestionRepository
+from app.domain.interfaces import (
+    IAttemptRepository,
+    IExamQuestionRepository,
+    IFocusEventRepository,
+    IQuestionRepository,
+)
 from app.presentation.schemas.attempts import AttemptAnswersPatch
 from app.presentation.schemas.common import FocusEventIn
 
 
 class GetAttemptUseCase:
-    def __init__(self, att_repo: AttemptRepository, question_repo: QuestionRepository):
+    def __init__(self, att_repo: IAttemptRepository, question_repo: IQuestionRepository):
         self._att_repo = att_repo
         self._question_repo = question_repo
 
@@ -49,8 +51,8 @@ class GetAttemptUseCase:
 class GetAttemptDetailUseCase:
     def __init__(
         self,
-        att_repo: AttemptRepository,
-        eq_repo: ExamQuestionRepository,
+        att_repo: IAttemptRepository,
+        eq_repo: IExamQuestionRepository,
     ):
         self._att_repo = att_repo
         self._eq_repo = eq_repo
@@ -65,7 +67,7 @@ class GetAttemptDetailUseCase:
 
 
 class ListExamAttemptsUseCase:
-    def __init__(self, att_repo: AttemptRepository):
+    def __init__(self, att_repo: IAttemptRepository):
         self._att_repo = att_repo
 
     async def execute(self, exam_id: UUID):
@@ -73,7 +75,7 @@ class ListExamAttemptsUseCase:
 
 
 class PatchAttemptAnswersUseCase:
-    def __init__(self, att_repo: AttemptRepository):
+    def __init__(self, att_repo: IAttemptRepository):
         self._att_repo = att_repo
 
     async def execute(
@@ -96,8 +98,8 @@ class PatchAttemptAnswersUseCase:
 class RecordFocusEventUseCase:
     def __init__(
         self,
-        att_repo: AttemptRepository,
-        fe_repo: FocusEventRepository,
+        att_repo: IAttemptRepository,
+        fe_repo: IFocusEventRepository,
         event_bus: EventBus,
     ):
         self._att_repo = att_repo
@@ -179,7 +181,7 @@ class RecordFocusEventUseCase:
 
 
 class ListUserAttemptsUseCase:
-    def __init__(self, att_repo: AttemptRepository):
+    def __init__(self, att_repo: IAttemptRepository):
         self._att_repo = att_repo
 
     async def execute(self, user_id: int):

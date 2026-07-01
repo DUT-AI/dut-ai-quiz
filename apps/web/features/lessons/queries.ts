@@ -38,3 +38,14 @@ export function useDeleteLesson() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["lessons"] }),
   });
 }
+
+export function useLessonBySlug(slug: string, options?: any) {
+  return useQuery<Lesson>({
+    queryKey: ["lessons", "by-slug", slug],
+    queryFn: () => apiGet<Lesson>(`/api/v1/lessons/by-slug/${slug}`, LessonSchema),
+    staleTime: 60_000,
+    enabled: !!slug,
+    ...options,
+  });
+}
+
