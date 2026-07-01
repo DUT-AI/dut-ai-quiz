@@ -7,11 +7,8 @@ from app.application.use_cases.auth.auth_use_case import (
     LogoutUseCase,
     LoginPayload,
     GoogleAuthUseCase,
-    AuthTokens,
 )
 from app.config import settings
-from app.core.jwt import create_access_token
-from app.application.services.auth_roles import quiz_role_from_manage
 from app.infrastructure.clients import GoogleOAuthClient
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -45,20 +42,7 @@ def _set_auth_cookies(response: Response, access_token: str, refresh_token: str)
 async def login(
     payload: LoginPayload, response: Response, use_case: FromDishka[ProxyLoginUseCase]
 ):
-    # Check dev bypass first
-    if settings.auth_dev_bypass:
-        # Dev mode: ignore credentials, use dev role
-        quiz_role = quiz_role_from_manage(settings.auth_dev_role_name)
-        local_jwt = create_access_token({
-            "user_id": settings.auth_dev_user_id,
-            "role": quiz_role,
-            "type": "dev_bypass"
-        })
-        tokens = AuthTokens(access_token=local_jwt, refresh_token="")
-    else:
-        # Production mode: proxy to Manage service
-        tokens = await use_case.execute(payload)
-    
+    tokens = await use_case.execute(payload)
     if not tokens:
         raise HTTPException(status_code=401, detail="Invalid credentials")
 

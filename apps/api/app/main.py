@@ -12,7 +12,6 @@ from app.presentation.api.routers import (
     exams,
     health,
     leaderboard,
-    hackathon,
     lessons,
     me,
     practice,
@@ -50,7 +49,6 @@ app.include_router(questions.router, prefix="/api/v1")
 app.include_router(exams.router, prefix="/api/v1")
 app.include_router(attempts.router, prefix="/api/v1")
 app.include_router(leaderboard.router, prefix="/api/v1")
-app.include_router(hackathon.router, prefix="/api/v1")
 app.include_router(practice.router, prefix="/api/v1")
 app.include_router(uploads.router, prefix="/api/v1")
 app.include_router(pdf_import.router, prefix="/api/v1")
