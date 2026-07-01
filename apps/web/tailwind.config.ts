@@ -61,6 +61,7 @@ const config: Config = {
         // Old Colors
         "light-blue": "#ABC1E1",
         "dark-blue": "#313E51",
+        "navy-blue": "#1E2A3A",
         slate: "#3B4D66",
         "gray-navy": "#626C7F",
         green: "#26D782",
