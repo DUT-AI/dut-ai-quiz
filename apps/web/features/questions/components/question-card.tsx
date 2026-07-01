@@ -14,8 +14,8 @@ interface QuestionCardProps {
   q: QuestionOut;
   idx: number;
   onExplain: (q: QuestionOut) => void;
-  onEdit: (q: QuestionOut) => void;
-  onDelete: (q: QuestionOut) => void;
+  onEdit?: (q: QuestionOut) => void;
+  onDelete?: (q: QuestionOut) => void;
 }
 
 export const QuestionCard = React.memo(
@@ -166,24 +166,30 @@ export const QuestionCard = React.memo(
                 </AnimatePresence>
 
                 <div className="flex items-center gap-4 pt-4 border-t border-gray-100 dark:border-white/5">
-                  <div className="flex items-center gap-1">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="text-gray-navy hover:text-primary hover:bg-primary/5 p-2 rounded-xl transition-all"
-                      onClick={() => onEdit(q)}
-                    >
-                      <Edit3 className="size-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="text-gray-navy hover:text-red hover:bg-red/5 p-2 rounded-xl transition-all"
-                      onClick={() => onDelete(q)}
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
-                  </div>
+                  {(onEdit || onDelete) && (
+                    <div className="flex items-center gap-1">
+                      {onEdit && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-gray-navy hover:text-primary hover:bg-primary/5 p-2 rounded-xl transition-all"
+                          onClick={() => onEdit(q)}
+                        >
+                          <Edit3 className="size-4" />
+                        </Button>
+                      )}
+                      {onDelete && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-gray-navy hover:text-red hover:bg-red/5 p-2 rounded-xl transition-all"
+                          onClick={() => onDelete(q)}
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      )}
+                    </div>
+                  )}
                   <div className="h-px flex-1" />
                   <Button
                     size="sm"

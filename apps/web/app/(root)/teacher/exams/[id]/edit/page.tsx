@@ -3,12 +3,12 @@ import React from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Sparkles, Loader2 } from "lucide-react";
 import { useExam, useExamQuestions } from "@/lib/queries";
-import ExamStepper from "@/components/teacher/exam-editor/ExamStepper";
+import ExamStepper from "@/features/exams/components/exam-editor/ExamStepper";
 
 export default function EditExamPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  
+
   const { data: exam, isLoading: loadingExam } = useExam(id);
   const { data: questions, isLoading: loadingQuestions } = useExamQuestions(id);
 

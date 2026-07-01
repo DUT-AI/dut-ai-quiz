@@ -9,7 +9,6 @@ import {
   Rocket,
   Settings,
   UserCircle,
-  FileText,
   ShieldCheck,
   PlusCircle,
   BarChart2,
@@ -30,7 +29,6 @@ const STUDENT_NAV_ITEMS = [
 const TEACHER_NAV_ITEMS = [
   { icon: ShieldCheck, label: "Quản lý Đề thi", href: "/teacher/exams" },
   { icon: PlusCircle, label: "Quản lý Bài học", href: "/teacher/lessons" },
-  { icon: FileText, label: "Quản lý Câu hỏi", href: "/teacher/questions" },
   { icon: BarChart2, label: "Thống kê kết quả", href: "/teacher/stats" },
 ];
 

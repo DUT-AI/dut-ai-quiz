@@ -5,14 +5,15 @@ import { Button } from "@/components/ui/button";
 import { useParsePDF, useBulkCreateQuestions, useLessons } from "@/lib/queries";
 import { ParsedQuestionPreview } from "@/lib/types";
 import { Card } from "@/components/ui/card";
-import { Check, Trash2, Upload, AlertCircle, Save, Loader2 } from "lucide-react";
+import { Check, Trash2, Upload, AlertCircle, Save, Loader2, X, FileText } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface PdfImportProps {
   onSuccess: () => void;
+  onClose?: () => void;
 }
 
-export function PdfImport({ onSuccess }: PdfImportProps) {
+export function PdfImport({ onSuccess, onClose }: PdfImportProps) {
   const [file, setFile] = useState<File | null>(null);
   const [delimiter, setDelimiter] = useState("Câu \\\\d+[:.]");
   const [prefixes, setPrefixes] = useState("A,B,C,D");
@@ -112,8 +113,7 @@ export function PdfImport({ onSuccess }: PdfImportProps) {
     }
   };
 
-  if (isPreviewing) {
-    return (
+  const content = isPreviewing ? (
       <div className="space-y-6">
         <div className="flex items-center justify-between sticky top-0 bg-white/95 dark:bg-dark-blue/95 backdrop-blur-md p-4 border-b border-slate/10 dark:border-white/10 z-50 -mx-6 -mt-6 mb-6">
           <div>
@@ -226,10 +226,7 @@ export function PdfImport({ onSuccess }: PdfImportProps) {
           </AnimatePresence>
         </div>
       </div>
-    );
-  }
-
-  return (
+  ) : (
     <div className="space-y-8">
       {/* Rule Section */}
       <div className="bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800 rounded-3xl p-6">
@@ -399,6 +396,50 @@ export function PdfImport({ onSuccess }: PdfImportProps) {
           )}
         </Button>
       </div>
+    </div>
+  );
+
+  if (!onClose) {
+    // Inline usage (e.g. inside ImportQuestionsPanel)
+    return <div className="space-y-8">{content}</div>;
+  }
+
+  // Self-contained modal
+  return (
+    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="fixed inset-0 bg-black/70 backdrop-blur-md"
+      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 30 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 30 }}
+        className="bg-white dark:bg-navy-blue w-full max-w-4xl rounded-[40px] shadow-2xl relative z-10 overflow-hidden border border-white/10"
+      >
+        {/* Header */}
+        <div className="p-8 border-b border-gray-100 dark:border-white/10 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-4">
+            <div className="size-12 rounded-2xl bg-gradient-to-br from-rose-500 to-orange-500 flex items-center justify-center text-white shadow-lg">
+              <FileText className="size-6" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-black text-dark-blue dark:text-white uppercase tracking-tight">Import PDF</h2>
+              <p className="text-sm text-gray-navy opacity-60">Trích xuất câu hỏi tự động từ file PDF</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-3 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">
+            <X className="size-6 text-gray-navy" />
+          </button>
+        </div>
+        {/* Body */}
+        <div className="overflow-y-auto max-h-[75vh] p-8 custom-scrollbar">
+          {content}
+        </div>
+      </motion.div>
     </div>
   );
 }
