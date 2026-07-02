@@ -9,8 +9,9 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.datetime_utils import now_ict
 from app.domain.entities.question import QuestionEntity, QuestionOptionEntity
+from app.domain.value_objects import Difficulty, PoolType
 
-from .base import Base, Difficulty, PoolType
+from .base import Base
 
 
 class Question(Base):

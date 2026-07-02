@@ -28,6 +28,13 @@ from app.application.use_cases.exams.exam_use_case import (
     UpdateExamUseCase,
 )
 from app.application.use_cases.exams.stats_use_case import GetExamStatsUseCase
+from app.application.use_cases.hackathon import (
+    CreateHackathonUseCase,
+    DeleteHackathonUseCase,
+    GetHackathonUseCase,
+    ListHackathonsUseCase,
+    UpdateHackathonUseCase,
+)
 from app.application.use_cases.leaderboard.leaderboard_use_case import (
     GetLeaderboardUseCase,
 )
@@ -42,12 +49,6 @@ from app.application.use_cases.lessons.get_lesson_from_blog_uc import (
 from app.application.use_cases.lessons.list_lessons_uc import ListLessonsUseCase
 from app.application.use_cases.lessons.update_lesson_uc import UpdateLessonUseCase
 from app.application.use_cases.me.me_use_case import GetProfileUseCase
-from app.application.use_cases.hackathon import (
-    CreateHackathonUseCase,
-    DeleteHackathonUseCase,
-    GetHackathonUseCase,
-    ListHackathonsUseCase,
-    UpdateHackathonUseCase,
 from app.application.use_cases.practice.gamification_use_case import (
     PatchGamificationAnswerUseCase,
     StartGamificationSessionUseCase,

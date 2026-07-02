@@ -24,15 +24,19 @@ from app.infrastructure.repositories.hackathons import HackathonRepository
 class RepositoryProvider(Provider):
     scope = Scope.REQUEST
 
-    # LessonRepository is a Protocol, so we provide the SQL implementation
-    lesson_repo = provide(SqlLessonRepository, provides=LessonRepository)
+    # Đăng ký kèm theo tham số provides để map concrete class với interface của nó
+    lesson_repo = provide(LessonRepository, provides=ILessonRepository)
+    user_repo = provide(UserRepository, provides=IUserRepository)
+    exam_repo = provide(ExamRepository, provides=IExamRepository)
+    exam_question_repo = provide(
+        ExamQuestionRepository, provides=IExamQuestionRepository
+    )
+    question_repo = provide(QuestionRepository, provides=IQuestionRepository)
+    focus_event_repo = provide(FocusEventRepository, provides=IFocusEventRepository)
+    practice_session_repo = provide(
+        PracticeSessionRepository, provides=IPracticeSessionRepository
+    )
+    attempt_repo = provide(AttemptRepository, provides=IAttemptRepository)
 
-    # These are currently concrete classes in your implementation
-    user_repo = provide(UserRepository)
-    exam_repo = provide(ExamRepository)
-    exam_question_repo = provide(ExamQuestionRepository)
-    question_repo = provide(QuestionRepository)
-    focus_event_repo = provide(FocusEventRepository)
-    practice_session_repo = provide(PracticeSessionRepository)
-    attempt_repo = provide(AttemptRepository)
+    # Riêng hackathon_repo không dùng interface thì giữ nguyên
     hackathon_repo = provide(HackathonRepository)

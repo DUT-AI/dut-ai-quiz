@@ -1,3 +1,4 @@
+from app.domain.value_objects import PracticeSessionStatus
 from datetime import datetime
 from typing import Any
 from uuid import UUID, uuid4
@@ -10,7 +11,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.core.datetime_utils import now_ict
 from app.domain.entities.practice import PracticeSessionEntity
 
-from .base import Base, PracticeSessionStatus
+from .base import Base
 
 
 class PracticeSession(Base):

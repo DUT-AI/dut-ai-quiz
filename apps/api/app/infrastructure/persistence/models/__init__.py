@@ -1,4 +1,3 @@
-from .base import Base, PoolType, Difficulty, AttemptStatus, PracticeSessionStatus
 from .question import Question
 from .exam import Exam, ExamQuestion
 from .attempt import Attempt, AttemptAnswer, FocusEvent
@@ -9,10 +8,6 @@ from .hackathon import Hackathon
 
 __all__ = [
     "Base",
-    "PoolType",
-    "Difficulty",
-    "AttemptStatus",
-    "PracticeSessionStatus",
     "Question",
     "Exam",
     "ExamQuestion",
