@@ -5,10 +5,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities.exam import ExamEntity
+from app.domain.interfaces import IExamRepository
 from app.infrastructure.persistence.models import Exam
 
 
-class ExamRepository:
+class ExamRepository(IExamRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._s = session
 

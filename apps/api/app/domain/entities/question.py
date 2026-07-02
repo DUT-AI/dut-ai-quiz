@@ -2,7 +2,8 @@ import dataclasses
 from datetime import datetime
 from typing import Any
 from uuid import UUID
-from app.infrastructure.persistence.models import PoolType
+
+from app.domain.value_objects import Difficulty, PoolType
 
 
 @dataclasses.dataclass
@@ -34,6 +35,7 @@ class QuestionOptionEntity:
 class QuestionEntity:
     id: UUID
     pool_type: PoolType
+    difficulty: Difficulty
     content: str
     options: list[QuestionOptionEntity]
     solution: str | None

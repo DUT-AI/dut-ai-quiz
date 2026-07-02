@@ -1,14 +1,13 @@
 from uuid import UUID
 
-from app.infrastructure.repositories.attempts import AttemptRepository
-from app.infrastructure.repositories.exam_questions import ExamQuestionRepository
+from app.domain.interfaces import IAttemptRepository, IExamQuestionRepository
 
 
 class RescoreAttemptUseCase:
     def __init__(
         self,
-        att_repo: AttemptRepository,
-        eq_repo: ExamQuestionRepository,
+        att_repo: IAttemptRepository,
+        eq_repo: IExamQuestionRepository,
     ):
         self._att_repo = att_repo
         self._eq_repo = eq_repo

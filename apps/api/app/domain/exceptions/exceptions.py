@@ -2,7 +2,9 @@ class AppException(Exception):
     status_code: int = 500
     message: str = "An unexpected error occurred"
 
-    def __init__(self, message: str | None = None, status_code: int | None = None) -> None:
+    def __init__(
+        self, message: str | None = None, status_code: int | None = None
+    ) -> None:
         super().__init__(message or self.message)
         if message is not None:
             self.message = message
@@ -13,6 +15,11 @@ class AppException(Exception):
 class AttemptNotFoundException(AppException):
     status_code = 404
     message = "Not found or not completed"
+
+
+class NotFoundException(AppException):
+    def __init__(self, message: str):
+        super().__init__(message, 404)
 
 
 class AttemptNotCompletedException(AppException):

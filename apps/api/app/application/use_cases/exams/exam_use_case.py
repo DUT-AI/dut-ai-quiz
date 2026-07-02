@@ -2,14 +2,13 @@ from datetime import datetime
 from uuid import UUID, uuid4
 
 from app.domain.entities.exam import ExamEntity
-from app.infrastructure.repositories.exams import ExamRepository
-from app.infrastructure.repositories.exam_questions import ExamQuestionRepository
+from app.domain.interfaces import IExamQuestionRepository, IExamRepository
 from app.presentation.schemas.exams import ExamCreate, ExamUpdate
 from app.core.datetime_utils import utc_to_ict
 
 
 class CreateExamUseCase:
-    def __init__(self, exam_repo: ExamRepository):
+    def __init__(self, exam_repo: IExamRepository):
         self._exam_repo = exam_repo
 
     async def execute(self, payload: ExamCreate, teacher_user_id: int) -> ExamEntity:
@@ -33,7 +32,7 @@ class CreateExamUseCase:
 
 
 class GetExamUseCase:
-    def __init__(self, exam_repo: ExamRepository):
+    def __init__(self, exam_repo: IExamRepository):
         self._exam_repo = exam_repo
 
     async def execute(
@@ -51,7 +50,7 @@ class GetExamUseCase:
 
 
 class ListExamsUseCase:
-    def __init__(self, exam_repo: ExamRepository):
+    def __init__(self, exam_repo: IExamRepository):
         self._exam_repo = exam_repo
 
     async def execute_for_teacher(self, user_id: int) -> list[ExamEntity]:
@@ -64,7 +63,7 @@ class ListExamsUseCase:
 
 
 class UpdateExamUseCase:
-    def __init__(self, exam_repo: ExamRepository):
+    def __init__(self, exam_repo: IExamRepository):
         self._exam_repo = exam_repo
 
     async def execute(
@@ -84,7 +83,7 @@ class UpdateExamUseCase:
 
 
 class DeleteExamUseCase:
-    def __init__(self, exam_repo: ExamRepository):
+    def __init__(self, exam_repo: IExamRepository):
         self._exam_repo = exam_repo
 
     async def execute(self, exam_id: UUID, teacher_user_id: int) -> bool:
@@ -98,7 +97,7 @@ class DeleteExamUseCase:
 
 class ListExamQuestionsUseCase:
     def __init__(
-        self, exam_repo: ExamRepository, exam_question_repo: ExamQuestionRepository
+        self, exam_repo: IExamRepository, exam_question_repo: IExamQuestionRepository
     ):
         self._exam_repo = exam_repo
         self._exam_question_repo = exam_question_repo
@@ -113,7 +112,7 @@ class ListExamQuestionsUseCase:
 
 class SetExamQuestionsUseCase:
     def __init__(
-        self, exam_repo: ExamRepository, exam_question_repo: ExamQuestionRepository
+        self, exam_repo: IExamRepository, exam_question_repo: IExamQuestionRepository
     ):
         self._exam_repo = exam_repo
         self._exam_question_repo = exam_question_repo

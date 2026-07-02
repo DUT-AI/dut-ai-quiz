@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { useLessons, useCreateLesson } from "@/lib/queries";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { 
-  FileText, 
+import {
+  FileText,
   ChevronRight,
   Plus,
   Sparkles,
@@ -16,89 +16,93 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-export default function LessonsPage() {
+export default function LessonsContentPage() {
   const router = useRouter();
   const { data: lessons = [], isLoading: isLoadingLessons } = useLessons();
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   return (
-    <div className="w-full">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-10">
-        <div className="text-left">
-          <h1 className="text-4xl md:text-5xl font-bold text-dark-blue dark:text-white">
-            Học tập & <span className="text-primary">Khám phá</span>
-          </h1>
-          <p className="text-gray-navy dark:text-light-blue mt-2">
-            Hệ thống lộ trình bài học giúp bạn nắm vững kiến thức từ cơ bản đến nâng cao.
-          </p>
-        </div>
-        
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => setShowCreateModal(true)}
-          className="px-6 py-3 rounded-2xl bg-gradient-to-r from-primary to-primary/80 text-white font-bold flex items-center gap-2 shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all group"
-        >
-          <Plus className="size-5 group-hover:rotate-90 transition-transform" />
-          Tạo bài học mới
-        </motion.button>
+    <div className="w-full space-y-8">
+      {/* Page Header */}
+      <div className="text-left">
+        <h1 className="text-4xl md:text-5xl font-bold text-dark-blue dark:text-white">
+          Học tập & <span className="text-primary">Khám phá</span>
+        </h1>
+        <p className="text-gray-navy dark:text-light-blue mt-2">
+          Hệ thống lộ trình bài học giúp bạn nắm vững kiến thức từ cơ bản đến nâng cao.
+        </p>
       </div>
 
-      {isLoadingLessons ? (
-        <div className="flex flex-col items-center py-20 opacity-30">
-          <div className="size-10 border-4 border-primary border-t-transparent animate-spin rounded-full mb-4" />
-          <p className="font-bold">Đang tải giáo trình...</p>
+      <div className="w-full">
+        {/* New Lesson creation button inside the tab panel */}
+        <div className="flex justify-end mb-6">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setShowCreateModal(true)}
+            className="px-6 py-3 rounded-2xl bg-gradient-to-r from-primary to-primary/80 text-white font-bold flex items-center gap-2 shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all group"
+          >
+            <Plus className="size-5 group-hover:rotate-90 transition-transform" />
+            Tạo bài học mới
+          </motion.button>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          <AnimatePresence>
-            {lessons.map((lesson, index) => (
-              <motion.div
-                key={lesson.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                whileHover={{ scale: 1.02 }}
-                onClick={() => router.push(`/lessons/${lesson.id}`)}
-                className="cursor-pointer"
-              >
-                <Card className="h-full border-none shadow-xl bg-white dark:bg-navy-blue/40 rounded-3xl overflow-hidden group">
-                  <div className="h-2 w-full bg-primary/10 group-hover:bg-primary transition-colors" />
-                  <CardContent className="p-8 text-left">
-                    <div className="flex justify-between items-start mb-6">
-                      <div className="size-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black text-2xl group-hover:bg-primary group-hover:text-white transition-all">
-                        {lesson.order}
-                      </div>
-                      <Badge className="bg-green/10 text-green border-none">Sẵn sàng</Badge>
-                    </div>
-                    
-                    <h3 className="text-2xl font-bold text-dark-blue dark:text-white mb-3 group-hover:text-primary transition-colors">
-                      {lesson.name}
-                    </h3>
-                    <p className="text-gray-navy dark:text-light-blue text-sm line-clamp-2 mb-6 opacity-70">
-                      {lesson.description || "Tìm hiểu sâu về các khái niệm và bài tập thực hành của chương học này."}
-                    </p>
 
-                    <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-white/5">
-                      <div className="flex items-center gap-2 text-xs text-gray-navy font-bold uppercase tracking-widest opacity-60">
-                         <FileText className="size-4" />
-                         Kiến thức trọng tâm
+        {isLoadingLessons ? (
+          <div className="flex flex-col items-center py-20 opacity-30">
+            <div className="size-10 border-4 border-primary border-t-transparent animate-spin rounded-full mb-4" />
+            <p className="font-bold">Đang tải giáo trình...</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            <AnimatePresence>
+              {lessons.map((lesson, index) => (
+                <motion.div
+                  key={lesson.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  whileHover={{ scale: 1.02 }}
+                  onClick={() => router.push(`/lessons/${lesson.slug || lesson.id}`)}
+                  className="cursor-pointer"
+                >
+                  <Card className="h-full border-none shadow-xl bg-white dark:bg-navy-blue/40 rounded-3xl overflow-hidden group">
+                    <div className="h-2 w-full bg-primary/10 group-hover:bg-primary transition-colors" />
+                    <CardContent className="p-8 text-left">
+                      <div className="flex justify-between items-start mb-6">
+                        <div className="size-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black text-2xl group-hover:bg-primary group-hover:text-white transition-all">
+                          {lesson.order}
+                        </div>
+                        <Badge className="bg-green/10 text-green border-none">Sẵn sàng</Badge>
                       </div>
-                      <ChevronRight className="size-5 text-primary group-hover:translate-x-1 transition-transform" />
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </div>
-      )}
 
-      <AnimatePresence>
-        {showCreateModal && (
-          <CreateLessonModal onClose={() => setShowCreateModal(false)} />
+                      <h3 className="text-2xl font-bold text-dark-blue dark:text-white mb-3 group-hover:text-primary transition-colors">
+                        {lesson.name}
+                      </h3>
+                      <p className="text-gray-navy dark:text-light-blue text-sm line-clamp-2 mb-6 opacity-70">
+                        {lesson.description || "Tìm hiểu sâu về các khái niệm và bài tập thực hành của chương học này."}
+                      </p>
+
+                      <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-white/5">
+                        <div className="flex items-center gap-2 text-xs text-gray-navy font-bold uppercase tracking-widest opacity-60">
+                          <FileText className="size-4" />
+                          Kiến thức trọng tâm
+                        </div>
+                        <ChevronRight className="size-5 text-primary group-hover:translate-x-1 transition-transform" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
         )}
-      </AnimatePresence>
+
+        <AnimatePresence>
+          {showCreateModal && (
+            <CreateLessonModal onClose={() => setShowCreateModal(false)} />
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
@@ -112,7 +116,7 @@ function CreateLessonModal({ onClose }: { onClose: () => void }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
-    
+
     await createMut.mutateAsync({
       name,
       description,
@@ -123,14 +127,14 @@ function CreateLessonModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
       />
-      
+
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -192,26 +196,26 @@ function CreateLessonModal({ onClose }: { onClose: () => void }) {
             </div>
 
             <div className="pt-4 flex gap-3">
-               <Button 
+              <Button
                 type="button"
-                variant="ghost" 
+                variant="ghost"
                 onClick={onClose}
                 className="flex-1 py-6 rounded-2xl font-bold"
-               >
-                 Hủy
-               </Button>
-               <Button 
+              >
+                Hủy
+              </Button>
+              <Button
                 type="submit"
                 disabled={!name.trim() || createMut.isPending}
                 className="flex-2 px-10 py-6 rounded-2xl bg-primary text-white font-bold flex items-center gap-2 shadow-lg shadow-primary/20"
-               >
-                 {createMut.isPending ? (
-                   <div className="size-4 border-2 border-white border-t-transparent animate-spin rounded-full" />
-                 ) : (
-                   <Sparkles className="size-4" />
-                 )}
-                 Tạo ngay
-               </Button>
+              >
+                {createMut.isPending ? (
+                  <div className="size-4 border-2 border-white border-t-transparent animate-spin rounded-full" />
+                ) : (
+                  <Sparkles className="size-4" />
+                )}
+                Tạo ngay
+              </Button>
             </div>
           </form>
         </div>

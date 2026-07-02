@@ -4,9 +4,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities.practice import PracticeSessionEntity
+from app.domain.interfaces import IPracticeSessionRepository
 from app.infrastructure.persistence.models import PracticeSession
 
-class PracticeSessionRepository:
+class PracticeSessionRepository(IPracticeSessionRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._s = session
 

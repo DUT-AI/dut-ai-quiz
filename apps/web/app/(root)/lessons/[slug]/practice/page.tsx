@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, Coins, RotateCcw, Home, Shield, Swords, Zap, Timer, Flame, Trophy, Skull, Lock } from "lucide-react";
+import { Heart, Coins, RotateCcw, Home, Shield, Swords, Zap, Timer, Flame, Trophy, Skull, Lock, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 
 import BossHud from "@/components/organisms/boss-hud";
 import ItemHotbar, { ItemType } from "@/components/organisms/item-hotbar";
+import { useLessons, useQuestions } from "@/lib/queries";
 
 const getBossName = (stageNum: number) => {
   if (stageNum === 1) return "SLIME CHÚA";
@@ -15,7 +16,7 @@ const getBossName = (stageNum: number) => {
   return "MA NHÃN TỐI THƯỢNG";
 };
 
-// Mock Questions List (10 questions representing a 3-stage game)
+// Mock Questions List (15 questions representing a 3-stage game)
 const MOCK_QUESTIONS = [
   // STAGE 1: Easy (Questions 1 - 5)
   {
@@ -173,14 +174,50 @@ const MOCK_QUESTIONS = [
 ];
 
 export default function PracticeGamePage() {
+  const { slug } = useParams<{ slug: string }>();
   const router = useRouter();
+
+  // Load all lessons list
+  const { data: lessons = [] } = useLessons();
+
+  // Find matching lesson
+  const resolvedLesson = useMemo(() => {
+    return (
+      lessons.find((l) => l.slug === slug) ||
+      lessons.find((l) => l.id === slug)
+    );
+  }, [lessons, slug]);
+
+  const lessonId = resolvedLesson?.id || "";
+
+  // Fetch real questions for this lesson
+  const { data: realQuestions = [], isLoading: isLoadingQuestions } = useQuestions({
+    lesson_id: lessonId,
+    pool_type: "PRACTICE",
+  });
+
+  // Combine & pad real questions up to 15
+  const gameQuestions = useMemo(() => {
+    if (realQuestions && realQuestions.length > 0) {
+      const combined: any[] = [...realQuestions];
+      while (combined.length < 15) {
+        const nextMock = MOCK_QUESTIONS[combined.length % MOCK_QUESTIONS.length];
+        combined.push({
+          ...nextMock,
+          id: `padded-${combined.length}-${nextMock.id}`,
+        });
+      }
+      return combined.slice(0, 15);
+    }
+    return MOCK_QUESTIONS;
+  }, [realQuestions]);
 
   // ─── CHARACTER GAME STATE ───
   const [stage, setStage] = useState(1); // Floor/Stage: 1, 2, 3
   const [hp, setHp] = useState(3); // Hearts/Health: 1 to 5 (Cap 5)
   const [gold, setGold] = useState(0); // Gold collected in match
   const [score, setScore] = useState(0); // Score collected
-  const [currentIdx, setCurrentIdx] = useState(0); // 0 to 9 questions
+  const [currentIdx, setCurrentIdx] = useState(0); // 0 to 14 questions
   const [stageProgress, setStageProgress] = useState<("correct" | "incorrect" | "idle")[]>(
     Array.from({ length: 15 }).map(() => "idle")
   );
@@ -215,11 +252,11 @@ export default function PracticeGamePage() {
   const [gameResult, setGameResult] = useState<"playing" | "victory" | "defeat">("playing");
   const [retryCounter, setRetryCounter] = useState(0);
 
-  const currentQuestion = MOCK_QUESTIONS[currentIdx];
+  const currentQuestion = gameQuestions[currentIdx];
 
   // Initialize and run time limit timer
   useEffect(() => {
-    if (gameResult !== "playing" || showBossWarning || isAnswered) {
+    if (gameResult !== "playing" || showBossWarning || isAnswered || isLoadingQuestions) {
       if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
       return;
     }
@@ -248,7 +285,7 @@ export default function PracticeGamePage() {
       if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentIdx, timerFrozen, showBossWarning, isAnswered, gameResult]);
+  }, [currentIdx, timerFrozen, showBossWarning, isAnswered, gameResult, isLoadingQuestions]);
 
   // Reset bossStatus to idle when question changes
   useEffect(() => {
@@ -280,7 +317,7 @@ export default function PracticeGamePage() {
     setSelectedOptionId(optionId);
     setIsAnswered(true);
 
-    const isCorrect = optionId !== null && currentQuestion.options.find(o => o.id === optionId)?.is_correct === true;
+    const isCorrect = optionId !== null && currentQuestion?.options.find((o: any) => o.id === optionId)?.is_correct === true;
 
     // Resolve answer check
     if (isCorrect) {
@@ -392,7 +429,7 @@ export default function PracticeGamePage() {
       setShowBossWarning(true);
     }
 
-    if (currentIdx + 1 >= MOCK_QUESTIONS.length) {
+    if (currentIdx + 1 >= gameQuestions.length) {
       setGameResult("victory");
       return;
     }
@@ -427,7 +464,7 @@ export default function PracticeGamePage() {
 
     if (type === "50-50") {
       // Eliminate 2 wrong answers
-      const incorrectOptions = currentQuestion.options.filter(o => !o.is_correct).map(o => o.id);
+      const incorrectOptions = currentQuestion.options.filter((o: any) => !o.is_correct).map((o: any) => o.id);
       // Pick 2 random incorrect options to hide
       const shuffled = [...incorrectOptions].sort(() => 0.5 - Math.random());
       setHiddenOptions([shuffled[0], shuffled[1]]);
@@ -468,9 +505,27 @@ export default function PracticeGamePage() {
     setRetryCounter((prev) => prev + 1);
   };
 
+  if (isLoadingQuestions) {
+    return (
+      <div className="min-h-screen text-zinc-955 flex flex-col items-center justify-center font-sans relative select-none p-4 md:p-6"
+        style={{
+          backgroundImage: `
+            radial-gradient(circle, rgba(139,92,26,0.05) 1.5px, transparent 1.5px),
+            linear-gradient(to bottom right, #f4eedb, #eae2c6)
+          `,
+          backgroundSize: "24px 24px, 100% 100%",
+          backgroundAttachment: "fixed"
+        }}
+      >
+        <div className="size-12 border-4 border-primary border-t-transparent animate-spin rounded-full mb-6" />
+        <p className="font-extrabold text-lg text-zinc-700 font-mono animate-pulse">ĐANG KHỞI TẠO ĐẤU TRƯỜNG...</p>
+      </div>
+    );
+  }
+
   return (
     <div
-      className={`min-h-screen text-zinc-950 flex flex-col font-sans relative overflow-hidden select-none p-4 md:p-6 transition-all duration-300 ${screenShake ? "animate-[shake_0.5s_infinite]" : ""
+      className={`min-h-screen text-zinc-955 flex flex-col font-sans relative overflow-hidden select-none p-4 md:p-6 transition-all duration-300 ${screenShake ? "animate-[shake_0.5s_infinite]" : ""
         }`}
       style={{
         backgroundImage: `
@@ -632,55 +687,59 @@ export default function PracticeGamePage() {
                    {/* Question Info Header */}
                   <div className="flex justify-between items-center text-sm text-zinc-500 font-mono tracking-wider mb-4 border-b-2 border-zinc-150 pb-2.5 font-bold">
                     <span className="text-cyan-600 font-extrabold">
-                      [ ẢI THỬ THÁCH CÂU HỎI {currentIdx + 1} / 10 ]
+                      [ ẢI THỬ THÁCH CÂU HỎI {currentIdx + 1} / 15 ]
                     </span>
                     <span>TẦNG ẢI {stage} / 3</span>
                   </div>
 
                   {/* Question Body Text */}
-                  <h3 className="text-base md:text-lg font-extrabold leading-relaxed text-zinc-900 font-mono mb-6 min-h-[50px]">
-                    {currentQuestion.content}
-                  </h3>
+                  {currentQuestion && (
+                    <>
+                      <h3 className="text-base md:text-lg font-extrabold leading-relaxed text-zinc-900 font-mono mb-6 min-h-[50px]">
+                        {currentQuestion.content}
+                      </h3>
 
-                  {/* Answers Options Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {currentQuestion.options.map((option) => {
-                      const isSelected = selectedOptionId === option.id;
-                      const isCorrect = option.is_correct;
-                      const isHidden = hiddenOptions.includes(option.id);
+                      {/* Answers Options Grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {currentQuestion.options.map((option: any) => {
+                          const isSelected = selectedOptionId === option.id;
+                          const isCorrect = option.is_correct;
+                          const isHidden = hiddenOptions.includes(option.id);
 
-                      let btnStyles = "border-zinc-900 hover:bg-amber-100 text-zinc-900 bg-stone-50 shadow-sm shadow-stone-800/10 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none";
-                      if (isAnswered) {
-                        if (isCorrect) {
-                          btnStyles = "border-emerald-500 bg-emerald-100 text-emerald-800 shadow-sm shadow-emerald-500/20";
-                        } else if (isSelected) {
-                          btnStyles = "border-red-500 bg-red-100 text-red-800 shadow-sm shadow-red-500/20";
-                        } else {
-                          btnStyles = "border-zinc-200 text-zinc-300 bg-zinc-50 opacity-20 cursor-default shadow-none";
-                        }
-                      } else if (isHidden) {
-                        btnStyles = "border-zinc-200 text-zinc-300 bg-zinc-50 opacity-5 cursor-not-allowed pointer-events-none shadow-none";
-                      }
+                          let btnStyles = "border-zinc-900 hover:bg-amber-100 text-zinc-900 bg-stone-50 shadow-sm shadow-stone-800/10 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none";
+                          if (isAnswered) {
+                            if (isCorrect) {
+                              btnStyles = "border-emerald-500 bg-emerald-100 text-emerald-800 shadow-sm shadow-emerald-500/20";
+                            } else if (isSelected) {
+                              btnStyles = "border-red-500 bg-red-100 text-red-800 shadow-sm shadow-red-500/20";
+                            } else {
+                              btnStyles = "border-zinc-200 text-zinc-300 bg-zinc-50 opacity-20 cursor-default shadow-none";
+                            }
+                          } else if (isHidden) {
+                            btnStyles = "border-zinc-200 text-zinc-300 bg-zinc-50 opacity-5 cursor-not-allowed pointer-events-none shadow-none";
+                          }
 
-                      return (
-                        <button
-                          key={option.id}
-                          type="button"
-                          disabled={isAnswered || isHidden}
-                          onClick={() => submitAnswer(option.id)}
-                          className={`w-full text-left p-3.5 border-2 transition-all duration-200 flex items-start gap-3 rounded-none relative group overflow-hidden ${btnStyles}`}
-                        >
-                          <span className="font-extrabold text-cyan-600 group-hover:text-zinc-900 transition-colors duration-200">
-                            {option.id.toUpperCase()}.
-                          </span>
+                          return (
+                            <button
+                              key={option.id}
+                              type="button"
+                              disabled={isAnswered || isHidden}
+                              onClick={() => submitAnswer(option.id)}
+                              className={`w-full text-left p-3.5 border-2 transition-all duration-200 flex items-start gap-3 rounded-none relative group overflow-hidden ${btnStyles}`}
+                            >
+                              <span className="font-extrabold text-cyan-600 group-hover:text-zinc-900 transition-colors duration-200">
+                                {option.id.toUpperCase()}.
+                              </span>
 
-                          <span className="text-sm font-bold leading-normal">
-                            {option.text}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
+                              <span className="text-sm font-bold leading-normal">
+                                {option.text}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
 
                   {/* Continue/Next Action Button */}
                   {isAnswered && (
@@ -748,7 +807,7 @@ export default function PracticeGamePage() {
                 </div>
                 <div className="flex justify-between items-center font-extrabold">
                   <span className="text-zinc-500">ẢI LỚN NHẤT VƯỢT QUA:</span>
-                  <span className="font-extrabold text-zinc-900">ẢI {currentIdx + 1} / 10</span>
+                  <span className="font-extrabold text-zinc-900">ẢI {currentIdx + 1} / 15</span>
                 </div>
               </div>
 
@@ -764,19 +823,17 @@ export default function PracticeGamePage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => router.push("/dashboard")}
-                  className="py-2.5 px-4 font-extrabold rounded-none bg-zinc-100 hover:bg-zinc-200 text-zinc-800 font-mono text-xs border-2 border-zinc-900 shadow-sm shadow-stone-800/10 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all flex items-center justify-center gap-2"
+                  onClick={() => router.push(`/lessons/${slug}`)}
+                  className="py-2.5 px-4 font-extrabold rounded-none bg-indigo-500 hover:bg-indigo-400 text-white font-mono text-xs border-2 border-zinc-900 shadow-sm shadow-stone-800/10 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all flex items-center justify-center gap-2"
                 >
-                  <Home className="w-4 h-4" />
-                  <span>VỀ SẢNH</span>
+                  <BookOpen className="w-4 h-4" />
+                  <span>VỀ BÀI HỌC</span>
                 </button>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
       </main>
-
-      {/* Footer removed because Hotbar is now in the 2-column grid */}
 
       {/* ─── SCREEN WARNING POPUP ALERTS ─── */}
       <AnimatePresence>

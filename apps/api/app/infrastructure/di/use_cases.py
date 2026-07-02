@@ -31,13 +31,16 @@ from app.application.use_cases.exams.stats_use_case import GetExamStatsUseCase
 from app.application.use_cases.leaderboard.leaderboard_use_case import (
     GetLeaderboardUseCase,
 )
-from app.application.use_cases.lessons.lesson_use_case import (
-    CreateLessonUseCase,
-    DeleteLessonUseCase,
+from app.application.use_cases.lessons.create_lesson_uc import CreateLessonUseCase
+from app.application.use_cases.lessons.delete_lesson_uc import DeleteLessonUseCase
+from app.application.use_cases.lessons.get_lesson_detail_uc import (
     GetLessonDetailUseCase,
-    ListLessonsUseCase,
-    UpdateLessonUseCase,
 )
+from app.application.use_cases.lessons.get_lesson_from_blog_uc import (
+    GetLessonBySlugUseCase,
+)
+from app.application.use_cases.lessons.list_lessons_uc import ListLessonsUseCase
+from app.application.use_cases.lessons.update_lesson_uc import UpdateLessonUseCase
 from app.application.use_cases.me.me_use_case import GetProfileUseCase
 from app.application.use_cases.hackathon import (
     CreateHackathonUseCase,
@@ -45,6 +48,10 @@ from app.application.use_cases.hackathon import (
     GetHackathonUseCase,
     ListHackathonsUseCase,
     UpdateHackathonUseCase,
+from app.application.use_cases.practice.gamification_use_case import (
+    PatchGamificationAnswerUseCase,
+    StartGamificationSessionUseCase,
+    UseItemGamificationUseCase,
 )
 from app.application.use_cases.practice.practice_use_case import (
     FinishPracticeSessionUseCase,
@@ -62,11 +69,13 @@ from app.application.use_cases.questions import (
     UpdateQuestionUseCase,
 )
 from app.domain.events.bus import EventBus
+from app.domain.interfaces import (
+    IAttemptRepository,
+    IFocusEventRepository,
+    IUserRepository,
+)
 from app.infrastructure.cache.redis_client import ProfileCache
 from app.infrastructure.clients import ManageServiceClient
-from app.infrastructure.repositories.attempts import AttemptRepository
-from app.infrastructure.repositories.focus_events import FocusEventRepository
-from app.infrastructure.repositories.users import UserRepository
 
 
 class UseCaseProvider(Provider):
@@ -112,8 +121,8 @@ class UseCaseProvider(Provider):
     @provide(scope=Scope.REQUEST)
     def record_focus_event_use_case(
         self,
-        attempt_repo: AttemptRepository,
-        focus_repo: FocusEventRepository,
+        attempt_repo: IAttemptRepository,
+        focus_repo: IFocusEventRepository,
         bus: EventBus,
     ) -> RecordFocusEventUseCase:
         return RecordFocusEventUseCase(attempt_repo, focus_repo, bus)
@@ -124,6 +133,15 @@ class UseCaseProvider(Provider):
     # practice
     start_practice_session_use_case = provide(
         StartPracticeSessionUseCase, scope=Scope.REQUEST
+    )
+    start_gamification_session_use_case = provide(
+        StartGamificationSessionUseCase, scope=Scope.REQUEST
+    )
+    use_item_gamification_use_case = provide(
+        UseItemGamificationUseCase, scope=Scope.REQUEST
+    )
+    patch_gamification_answer_use_case = provide(
+        PatchGamificationAnswerUseCase, scope=Scope.REQUEST
     )
     get_practice_session_use_case = provide(
         GetPracticeSessionUseCase, scope=Scope.REQUEST
@@ -143,6 +161,7 @@ class UseCaseProvider(Provider):
     update_lesson_use_case = provide(UpdateLessonUseCase, scope=Scope.REQUEST)
     delete_lesson_use_case = provide(DeleteLessonUseCase, scope=Scope.REQUEST)
     get_lesson_detail_use_case = provide(GetLessonDetailUseCase, scope=Scope.REQUEST)
+    get_lesson_by_slug_use_case = provide(GetLessonBySlugUseCase, scope=Scope.REQUEST)
 
     # auth & me
     proxy_login_use_case = provide(ProxyLoginUseCase, scope=Scope.REQUEST)
@@ -156,7 +175,7 @@ class UseCaseProvider(Provider):
     def get_profile_use_case(
         self,
         cache: ProfileCache,
-        user_repo: UserRepository,
+        user_repo: IUserRepository,
         manage_client: ManageServiceClient,
     ) -> GetProfileUseCase:
         return GetProfileUseCase(cache, user_repo, manage_client)

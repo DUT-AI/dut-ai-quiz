@@ -1,21 +1,21 @@
-from enum import StrEnum
 from sqlalchemy.orm import DeclarativeBase
 
+# Import enums from domain layer
+from app.domain.value_objects import (
+    AttemptStatus,
+    Difficulty,
+    PoolType,
+    PracticeSessionStatus,
+)
 
-class PoolType(StrEnum):
-    PRACTICE = "PRACTICE"
-    EXAM = "EXAM"
-
-
-class AttemptStatus(StrEnum):
-    IN_PROGRESS = "IN_PROGRESS"
-    COMPLETED = "COMPLETED"
-    ABANDONED = "ABANDONED"
-
-
-class PracticeSessionStatus(StrEnum):
-    IN_PROGRESS = "IN_PROGRESS"
-    COMPLETED = "COMPLETED"
+# Re-export for backward compatibility with existing model files
+__all__ = [
+    "Base",
+    "PoolType",
+    "Difficulty",
+    "AttemptStatus",
+    "PracticeSessionStatus",
+]
 
 
 class Base(DeclarativeBase):

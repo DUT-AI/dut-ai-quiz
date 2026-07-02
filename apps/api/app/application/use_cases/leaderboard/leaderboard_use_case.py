@@ -1,9 +1,9 @@
 from uuid import UUID
-from app.infrastructure.repositories.attempts import AttemptRepository
+from app.domain.interfaces import IAttemptRepository
 
 
 class GetLeaderboardUseCase:
-    def __init__(self, att_repo: AttemptRepository):
+    def __init__(self, att_repo: IAttemptRepository):
         self._att_repo = att_repo
 
     async def execute(self, exam_id: UUID, limit: int = 100) -> list[tuple[int, float]]:

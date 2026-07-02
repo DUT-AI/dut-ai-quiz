@@ -8,18 +8,20 @@ from app.domain.exceptions.exceptions import (
     ExamNoQuestionsException,
     ExamNotFoundException,
 )
-from app.infrastructure.persistence.models import AttemptStatus
-from app.infrastructure.repositories.attempts import AttemptRepository
-from app.infrastructure.repositories.exam_questions import ExamQuestionRepository
-from app.infrastructure.repositories.exams import ExamRepository
+from app.domain.interfaces import (
+    IAttemptRepository,
+    IExamQuestionRepository,
+    IExamRepository,
+)
+from app.domain.value_objects import AttemptStatus
 
 
 class StartAttemptUseCase:
     def __init__(
         self,
-        exam_repo: ExamRepository,
-        eq_repo: ExamQuestionRepository,
-        att_repo: AttemptRepository,
+        exam_repo: IExamRepository,
+        eq_repo: IExamQuestionRepository,
+        att_repo: IAttemptRepository,
     ):
         self._exam_repo = exam_repo
         self._eq_repo = eq_repo

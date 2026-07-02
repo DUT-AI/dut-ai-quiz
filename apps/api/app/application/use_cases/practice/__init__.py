@@ -5,6 +5,11 @@ from .practice_use_case import (
     FinishPracticeSessionUseCase,
     ListPracticeHistoryUseCase,
 )
+from .gamification_use_case import (
+    StartGamificationSessionUseCase,
+    UseItemGamificationUseCase,
+    PatchGamificationAnswerUseCase,
+)
 
 __all__ = [
     "StartPracticeSessionUseCase",
@@ -12,4 +17,8 @@ __all__ = [
     "PatchPracticeAnswersUseCase",
     "FinishPracticeSessionUseCase",
     "ListPracticeHistoryUseCase",
+    "StartGamificationSessionUseCase",
+    "UseItemGamificationUseCase",
+    "PatchGamificationAnswerUseCase",
 ]
+

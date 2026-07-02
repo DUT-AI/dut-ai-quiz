@@ -2,8 +2,7 @@ from uuid import UUID, uuid4
 
 from app.application.use_cases.attempts.rescore_use_case import RescoreAttemptUseCase
 from app.domain.entities.question import QuestionEntity, QuestionOptionEntity
-from app.infrastructure.repositories.attempts import AttemptRepository
-from app.infrastructure.repositories.questions import QuestionRepository
+from app.domain.interfaces import IAttemptRepository, IQuestionRepository
 from app.presentation.schemas.questions import (
     QuestionUpdate,
 )
@@ -12,8 +11,8 @@ from app.presentation.schemas.questions import (
 class UpdateQuestionUseCase:
     def __init__(
         self,
-        question_repo: QuestionRepository,
-        att_repo: AttemptRepository,
+        question_repo: IQuestionRepository,
+        att_repo: IAttemptRepository,
         rescore_use_case: RescoreAttemptUseCase,
     ):
         self._question_repo = question_repo

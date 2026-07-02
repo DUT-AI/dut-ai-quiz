@@ -1,9 +1,9 @@
-from app.domain.entities.question import QuestionEntity
 import dataclasses
 from datetime import datetime
 from uuid import UUID
-from app.infrastructure.persistence.models import AttemptStatus
-from app.domain.value_objects import ShuffledSnapshot
+
+from app.domain.entities.question import QuestionEntity
+from app.domain.value_objects import AttemptStatus, ShuffledSnapshot
 
 
 @dataclasses.dataclass

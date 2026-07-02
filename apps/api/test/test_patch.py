@@ -8,9 +8,13 @@ sys.path.append(os.getcwd())
 
 from app.infrastructure.database import AsyncSessionLocal
 from app.infrastructure.repositories.attempts import AttemptRepository
-from app.infrastructure.persistence.models import Attempt, AttemptStatus
+from app.infrastructure.persistence.models import Attempt
+from app.domain.value_objects import AttemptStatus
 from app.core.datetime_utils import now_ict
 
+import pytest
+
+@pytest.mark.asyncio
 async def test_patch():
     async with AsyncSessionLocal() as s:
         # 1. Create a dummy attempt
