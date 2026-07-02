@@ -27,11 +27,8 @@ RUN uv sync --frozen --no-cache
 COPY apps/api ./apps/api
 COPY apps/worker ./apps/worker
 
-# Set working directory to api app to run uvicorn
-WORKDIR /app/apps/api
+# Set working directory to worker app to run arq
+WORKDIR /app/apps/worker
 
-# Expose port
-EXPOSE 8076
-
-# Run the application
-CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8076"]
+# Run arq worker using worker.presentation.arq_tasks module path
+CMD ["uv", "run", "arq", "worker.presentation.arq_tasks.WorkerSettings"]

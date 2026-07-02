@@ -3,10 +3,11 @@
 
 .PHONY: help db-up db-down db-logs api-sync api-dev api-lint \
 	migrate migrate-down alembic-revision alembic-history alembic-current \
-	dev-web web-dev
+	dev-web web-dev worker-dev
 
 API_DIR := apps/api
 WEB_DIR := apps/web
+WORKER_DIR := apps/worker
 COMPOSE := docker compose
 
 help:
@@ -23,6 +24,7 @@ help:
 	@echo "  alembic-history  - lịch sử revision"
 	@echo "  alembic-current  - revision hiện tại trên DB"
 	@echo "  dev-web          - chạy Next.js dev server cho frontend (apps/web)"
+	@echo "  worker-dev       - chạy arq worker cho tác vụ chấm điểm (apps/worker)"
 
 api-sync:
 	cd $(API_DIR) && uv sync --group dev
@@ -52,3 +54,6 @@ alembic-current:
 
 dev-web web-dev:
 	cd $(WEB_DIR) && npm run dev
+
+worker-dev:
+	PYTHONPATH=$(WORKER_DIR) uv run arq worker.presentation.arq_tasks.WorkerSettings
