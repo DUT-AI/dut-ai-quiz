@@ -8,6 +8,7 @@ from app.infrastructure.repositories.practice_sessions import PracticeSessionRep
 from app.infrastructure.repositories.attempts import AttemptRepository
 from app.infrastructure.repositories.lessons import SqlLessonRepository, LessonRepository
 from app.infrastructure.repositories.users import UserRepository
+from app.infrastructure.repositories.hackathons import HackathonRepository
 
 
 class RepositoryProvider(Provider):
@@ -24,3 +25,4 @@ class RepositoryProvider(Provider):
     focus_event_repo = provide(FocusEventRepository)
     practice_session_repo = provide(PracticeSessionRepository)
     attempt_repo = provide(AttemptRepository)
+    hackathon_repo = provide(HackathonRepository)

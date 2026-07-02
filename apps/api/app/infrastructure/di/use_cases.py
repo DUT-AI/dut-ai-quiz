@@ -39,6 +39,13 @@ from app.application.use_cases.lessons.lesson_use_case import (
     UpdateLessonUseCase,
 )
 from app.application.use_cases.me.me_use_case import GetProfileUseCase
+from app.application.use_cases.hackathon import (
+    CreateHackathonUseCase,
+    DeleteHackathonUseCase,
+    GetHackathonUseCase,
+    ListHackathonsUseCase,
+    UpdateHackathonUseCase,
+)
 from app.application.use_cases.practice.practice_use_case import (
     FinishPracticeSessionUseCase,
     GetPracticeSessionUseCase,
@@ -73,6 +80,11 @@ class UseCaseProvider(Provider):
     set_exam_questions_use_case = provide(SetExamQuestionsUseCase, scope=Scope.REQUEST)
     update_exam_use_case = provide(UpdateExamUseCase, scope=Scope.REQUEST)
     get_exam_stats_use_case = provide(GetExamStatsUseCase, scope=Scope.REQUEST)
+    create_hackathon_use_case = provide(CreateHackathonUseCase, scope=Scope.REQUEST)
+    delete_hackathon_use_case = provide(DeleteHackathonUseCase, scope=Scope.REQUEST)
+    get_hackathon_use_case = provide(GetHackathonUseCase, scope=Scope.REQUEST)
+    list_hackathons_use_case = provide(ListHackathonsUseCase, scope=Scope.REQUEST)
+    update_hackathon_use_case = provide(UpdateHackathonUseCase, scope=Scope.REQUEST)
 
     # questions
     create_question_use_case = provide(CreateQuestionUseCase, scope=Scope.REQUEST)
