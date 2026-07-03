@@ -51,7 +51,7 @@ class GetProfileUseCase:
                 "email": user.email,
                 "name": user.name,
                 "avatar_url": user.avatar_url,
-                "role_name": "teammate",
+                "role_names": [user.role],
                 "quiz_role": user.role,
             }
             await self._cache.set(access_token, profile_data)
@@ -69,10 +69,10 @@ class GetProfileUseCase:
                     return None
 
                 # Map role
-                rn = str(data.get("role_name") or "")
+                role_names = data.get("role_names") or data.get("role_name") or []
                 try:
-                    data["quiz_role"] = quiz_role_from_manage(rn)
-                except ValueError:
+                    data["quiz_role"] = quiz_role_from_manage(role_names)
+                except Exception:
                     data["quiz_role"] = "guest"
 
                 # Store in Cache

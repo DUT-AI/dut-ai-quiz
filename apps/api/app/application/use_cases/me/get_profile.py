@@ -16,7 +16,7 @@ async def execute(request: Request) -> dict:
             "name": "Dev User",
         }
     raw = await fetch_me(request.headers.get("cookie"))
-    rn = str(raw.get("role_name") or "")
+    role_names = raw.get("role_names") or raw.get("role_name") or []
     out = {k: v for k, v in raw.items()}
-    out["quiz_role"] = quiz_role_from_manage(rn)
+    out["quiz_role"] = quiz_role_from_manage(role_names)
     return out

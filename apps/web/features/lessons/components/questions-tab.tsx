@@ -25,8 +25,8 @@ export function QuestionsTab({ lessonId }: QuestionsTabProps) {
     pool_type: "PRACTICE",
   });
 
-  const { user } = useAuth();
-  const isTeacher = user?.quiz_role === "teacher";
+  const { user, canManage } = useAuth();
+  const isTeacher = canManage;
 
   const [explainingQuestion, setExplainingQuestion] = useState<QuestionOut | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);

@@ -14,7 +14,7 @@ from app.application.use_cases.attempts import (
     ReviewAttemptUseCase,
 )
 from app.application.use_cases.exams.exam_use_case import GetExamUseCase
-from app.presentation.api.deps import TeacherUser, CurrentUser
+from app.presentation.api.deps import AdminOrMentorUser, CurrentUser
 from app.presentation.schemas.attempts import (
     AttemptAnswersPatch,
     AttemptOut,
@@ -116,7 +116,7 @@ async def focus_events_route(
 @router.get("/exams/{exam_id}/attempts")
 @inject
 async def list_attempts_teacher(
-    user: TeacherUser,
+    user: AdminOrMentorUser,
     exam_id: UUID,
     get_exam: FromDishka[GetExamUseCase],
     use_case: FromDishka[ListExamAttemptsUseCase],
@@ -131,7 +131,7 @@ async def list_attempts_teacher(
 @router.get("/attempts/{attempt_id}/detail")
 @inject
 async def attempt_detail_teacher(
-    user: TeacherUser,
+    user: AdminOrMentorUser,
     attempt_id: UUID,
     get_exam: FromDishka[GetExamUseCase],
     use_case: FromDishka[GetAttemptDetailUseCase],

@@ -10,6 +10,11 @@ export interface UserContextType {
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
+  isAdmin: boolean;
+  isMentor: boolean;
+  isTeammate: boolean;
+  isGuest: boolean;
+  canManage: boolean;
 }
 
 const AuthContext = createContext<UserContextType | undefined>(undefined);
@@ -59,6 +64,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const role = user?.quiz_role;
+  const isAdmin = role === "admin";
+  const isMentor = role === "MENTOR";
+  const isTeammate = role === "teammate";
+  const isGuest = !isAdmin && !isMentor && !isTeammate;
+  const canManage = isAdmin || isMentor;
+
   return (
     <AuthContext.Provider
       value={{
@@ -68,6 +80,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         logout,
         refresh: fetchUser,
+        isAdmin,
+        isMentor,
+        isTeammate,
+        isGuest,
+        canManage,
       }}
     >
       {children}

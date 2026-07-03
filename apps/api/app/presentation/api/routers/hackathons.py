@@ -10,7 +10,7 @@ from app.application.use_cases.hackathon import (
     ListHackathonsUseCase,
     UpdateHackathonUseCase,
 )
-from app.presentation.api.deps import TeacherUser
+from app.presentation.api.deps import AdminOrMentorUser
 from app.presentation.schemas.hackathons import (
     HackathonCreate,
     HackathonOut,
@@ -23,7 +23,7 @@ router = APIRouter(prefix="/hackathons", tags=["hackathons"])
 @router.get("", response_model=list[HackathonOut])
 @inject
 async def list_hackathons_route(
-    user: TeacherUser, use_case: FromDishka[ListHackathonsUseCase]
+    user: AdminOrMentorUser, use_case: FromDishka[ListHackathonsUseCase]
 ):
     return await use_case.execute(user.id)
 
@@ -31,7 +31,7 @@ async def list_hackathons_route(
 @router.post("", response_model=HackathonOut)
 @inject
 async def create_hackathon_route(
-    user: TeacherUser,
+    user: AdminOrMentorUser,
     body: HackathonCreate,
     use_case: FromDishka[CreateHackathonUseCase],
 ):
@@ -41,7 +41,7 @@ async def create_hackathon_route(
 @router.get("/{hackathon_id}", response_model=HackathonOut)
 @inject
 async def get_hackathon_route(
-    user: TeacherUser,
+    user: AdminOrMentorUser,
     hackathon_id: UUID,
     use_case: FromDishka[GetHackathonUseCase],
 ):
@@ -54,7 +54,7 @@ async def get_hackathon_route(
 @router.patch("/{hackathon_id}", response_model=HackathonOut)
 @inject
 async def update_hackathon_route(
-    user: TeacherUser,
+    user: AdminOrMentorUser,
     hackathon_id: UUID,
     body: HackathonUpdate,
     use_case: FromDishka[UpdateHackathonUseCase],
@@ -68,7 +68,7 @@ async def update_hackathon_route(
 @router.delete("/{hackathon_id}")
 @inject
 async def delete_hackathon_route(
-    user: TeacherUser,
+    user: AdminOrMentorUser,
     hackathon_id: UUID,
     use_case: FromDishka[DeleteHackathonUseCase],
 ):

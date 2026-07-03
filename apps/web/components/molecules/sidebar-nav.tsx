@@ -34,10 +34,10 @@ const TEACHER_NAV_ITEMS = [
 
 export const SidebarNav = ({ onCloseMobile }: { onCloseMobile?: () => void }) => {
   const pathname = usePathname();
-  const { user, logout } = useAuth();
+  const { user, logout, canManage } = useAuth();
   console.log(user)
 
-  const isTeacher = user?.quiz_role === "teacher"
+  const isTeacher = canManage
 
   return (
     <div className="flex flex-col h-full w-72 py-8 px-4 overflow-y-auto">

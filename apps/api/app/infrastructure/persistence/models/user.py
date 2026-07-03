@@ -13,7 +13,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(unique=True, index=True)
     name: Mapped[str | None] = mapped_column(nullable=True)
     avatar_url: Mapped[str | None] = mapped_column(nullable=True)
-    role: Mapped[str] = mapped_column(default="student", server_default="student")
+    role: Mapped[str] = mapped_column(default="guest", server_default="guest")
     google_id: Mapped[str] = mapped_column(index=True)
     created_at: Mapped[datetime] = mapped_column(default=now_ict)
 

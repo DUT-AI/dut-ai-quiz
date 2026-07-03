@@ -13,7 +13,7 @@ from app.application.use_cases.practice.gamification_use_case import (
     UseItemGamificationUseCase,
     PatchGamificationAnswerUseCase,
 )
-from app.presentation.api.deps import StudentUser
+from app.presentation.api.deps import CurrentUser
 from app.presentation.schemas.practice import (
     GamificationStartIn,
     GamificationAnswerPatchIn,
@@ -27,7 +27,7 @@ router = APIRouter(prefix="/practice", tags=["practice"])
 @router.post("/sessions")
 @inject
 async def start_practice(
-    user: StudentUser,
+    user: CurrentUser,
     body: GamificationStartIn,
     use_case: FromDishka[StartGamificationSessionUseCase]
 ):
@@ -40,7 +40,7 @@ async def start_practice(
 @router.get("/sessions/{session_id}")
 @inject
 async def get_practice(
-    user: StudentUser, 
+    user: CurrentUser, 
     session_id: UUID, 
     use_case: FromDishka[GetPracticeSessionUseCase]
 ):
@@ -53,7 +53,7 @@ async def get_practice(
 @router.patch("/sessions/{session_id}/answers", response_model=GamificationAnswerResultOut)
 @inject
 async def patch_practice_answers(
-    user: StudentUser,
+    user: CurrentUser,
     session_id: UUID,
     body: GamificationAnswerPatchIn,
     use_case: FromDishka[PatchGamificationAnswerUseCase]
@@ -64,7 +64,7 @@ async def patch_practice_answers(
 @router.post("/sessions/{session_id}/use-item")
 @inject
 async def use_item_practice(
-    user: StudentUser,
+    user: CurrentUser,
     session_id: UUID,
     body: GamificationUseItemIn,
     use_case: FromDishka[UseItemGamificationUseCase]
@@ -78,7 +78,7 @@ async def use_item_practice(
 @router.post("/sessions/{session_id}/finish")
 @inject
 async def finish_practice(
-    user: StudentUser, 
+    user: CurrentUser, 
     session_id: UUID, 
     use_case: FromDishka[FinishPracticeSessionUseCase]
 ):
@@ -91,7 +91,7 @@ async def finish_practice(
 @router.get("/history")
 @inject
 async def practice_history(
-    user: StudentUser, 
+    user: CurrentUser, 
     use_case: FromDishka[ListPracticeHistoryUseCase]
 ):
     return await use_case.execute(user.id)

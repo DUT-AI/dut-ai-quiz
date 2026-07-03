@@ -50,27 +50,25 @@ async def get_current_user(
 
     return UserContext(
         id=int(uid),
-        role_name="admin" if role == "teacher" else "teammate",
+        role_name=role,
         quiz_role=role,
     )
 
 
-async def require_teacher(
-    user: Annotated[UserContext, Depends(get_current_user)],
-) -> UserContext:
-    if user.quiz_role != "teacher":
-        raise HTTPException(status_code=403, detail="Teacher only")
-    return user
-
-
-async def require_student(
-    user: Annotated[UserContext, Depends(get_current_user)],
-) -> UserContext:
-    if user.quiz_role != "student":
-        raise HTTPException(status_code=403, detail="Student only")
-    return user
+def require_roles(*allowed_roles: str):
+    async def dependency(
+        user: Annotated[UserContext, Depends(get_current_user)]
+    ) -> UserContext:
+        if user.quiz_role not in allowed_roles:
+            raise HTTPException(status_code=403, detail="Permission denied")
+        return user
+    return dependency
 
 
 CurrentUser = Annotated[UserContext, Depends(get_current_user)]
-TeacherUser = Annotated[UserContext, Depends(require_teacher)]
-StudentUser = Annotated[UserContext, Depends(require_student)]
+AdminUser = Annotated[UserContext, Depends(require_roles("admin"))]
+AdminOrMentorUser = Annotated[UserContext, Depends(require_roles("admin", "MENTOR"))]
+# Keep these aliases temporarily to prevent syntax errors during migration
+TeacherUser = AdminOrMentorUser
+StudentUser = CurrentUser
+

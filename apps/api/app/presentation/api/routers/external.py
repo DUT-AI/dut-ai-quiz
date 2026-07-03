@@ -1,6 +1,6 @@
 import httpx
 from fastapi import APIRouter, HTTPException
-from app.presentation.api.deps import TeacherUser
+from app.presentation.api.deps import AdminOrMentorUser
 from app.config import settings
 from loguru import logger
 
@@ -8,7 +8,7 @@ router = APIRouter(prefix="/external", tags=["external"])
 
 
 @router.get("/teams")
-async def get_external_teams(user: TeacherUser):
+async def get_external_teams(user: AdminOrMentorUser):
     headers = {"Authorization": f"Bearer {settings.manage_api_key}"}
     url = f"{settings.manage_base_url}/api/v1/teams?skip=0&limit=100"
     async with httpx.AsyncClient() as client:
@@ -36,7 +36,7 @@ async def get_external_teams(user: TeacherUser):
 
 
 @router.get("/users")
-async def get_external_users(user: TeacherUser):
+async def get_external_users(user: AdminOrMentorUser):
     headers = {"Authorization": f"Bearer {settings.manage_api_key}"}
     url = f"{settings.manage_base_url}/api/v1/users"
     async with httpx.AsyncClient() as client:

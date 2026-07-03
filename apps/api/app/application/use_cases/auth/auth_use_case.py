@@ -49,9 +49,9 @@ class ProxyLoginUseCase:
                 return None
 
             manage_user_id = int(profile_data["id"])
-            rn = str(profile_data.get("role_name") or "")
+            role_names = profile_data.get("role_names") or profile_data.get("role_name") or []
 
-            quiz_role = quiz_role_from_manage(rn)
+            quiz_role = quiz_role_from_manage(role_names)
 
             # 3. Create unified JWT token
             local_jwt = create_access_token(
@@ -103,7 +103,7 @@ class GoogleAuthUseCase:
 
             # 3. Check if email exists in Manage Service (for Account Linking)
             service_a_user_id = None
-            service_a_role = "student"
+            service_a_role = "guest"
 
             logger.info(f"Checking email {email} on Manage Service")
             body = await self._manage_client.find_user_by_email(email)
@@ -117,11 +117,11 @@ class GoogleAuthUseCase:
                 for u in users_list:
                     if u.get("email") == email:
                         service_a_user_id = int(u["id"])
-                        rn = str(u.get("role_name") or "")
+                        role_names = u.get("role_names") or u.get("role_name") or []
                         try:
-                            service_a_role = quiz_role_from_manage(rn)
-                        except ValueError:
-                            service_a_role = "student"
+                            service_a_role = quiz_role_from_manage(role_names)
+                        except Exception:
+                            service_a_role = "guest"
                         break
 
             # 4. Handle linking or creation
@@ -146,7 +146,7 @@ class GoogleAuthUseCase:
                     logger.info(f"Creating new Google-only user locally: {email}")
                     db_user = UserEntity(
                         email=email,
-                        role="student",
+                        role="guest",
                         google_id=sub,
                         name=name,
                         avatar_url=picture,

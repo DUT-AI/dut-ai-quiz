@@ -15,7 +15,7 @@ from app.application.use_cases.lessons.list_lessons_uc import ListLessonsUseCase
 from app.application.use_cases.lessons.update_lesson_uc import UpdateLessonUseCase
 from app.application.use_cases.questions import ListQuestionsUseCase
 from app.domain.value_objects import Difficulty, PoolType
-from app.presentation.api.deps import CurrentUser
+from app.presentation.api.deps import CurrentUser, AdminOrMentorUser
 from app.presentation.schemas.lessons import (
     LessonCreate,
     LessonDetailOut,
@@ -62,8 +62,8 @@ async def list_lesson_questions(
     offset: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=200),
 ):
-    # Students only see practice questions. Teachers can filter both PRACTICE and EXAM.
-    if user.quiz_role != "teacher":
+    # Guests only see practice questions. Admin/Mentors can filter both PRACTICE and EXAM.
+    if user.quiz_role not in ("admin", "MENTOR"):
         pool_type = PoolType.PRACTICE
 
     query = QuestionListQuery(
@@ -84,7 +84,7 @@ async def get_lesson(
     user: CurrentUser,
     use_case: FromDishka[GetLessonDetailUseCase],
 ):
-    res = await use_case.execute(lesson_id, is_teacher=user.quiz_role == "teacher")
+    res = await use_case.execute(lesson_id, is_teacher=user.quiz_role in ("admin", "MENTOR"))
     if not res:
         raise HTTPException(status_code=404, detail="Lesson not found")
     return res
@@ -93,6 +93,7 @@ async def get_lesson(
 @router.post("", response_model=LessonOut)
 @inject
 async def create_lesson(
+    user: AdminOrMentorUser,
     body: LessonCreate,
     use_case: FromDishka[CreateLessonUseCase],
 ):
@@ -102,6 +103,7 @@ async def create_lesson(
 @router.patch("/{lesson_id}", response_model=LessonOut)
 @inject
 async def update_lesson(
+    user: AdminOrMentorUser,
     lesson_id: str,
     body: LessonUpdate,
     use_case: FromDishka[UpdateLessonUseCase],
@@ -115,6 +117,7 @@ async def update_lesson(
 @router.delete("/{lesson_id}")
 @inject
 async def delete_lesson(
+    user: AdminOrMentorUser,
     lesson_id: str,
     use_case: FromDishka[DeleteLessonUseCase],
 ):
