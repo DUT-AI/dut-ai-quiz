@@ -49,17 +49,16 @@ from app.application.use_cases.lessons.get_lesson_from_blog_uc import (
 from app.application.use_cases.lessons.list_lessons_uc import ListLessonsUseCase
 from app.application.use_cases.lessons.update_lesson_uc import UpdateLessonUseCase
 from app.application.use_cases.me.me_use_case import GetProfileUseCase
-from app.application.use_cases.practice.gamification_use_case import (
-    PatchGamificationAnswerUseCase,
-    StartGamificationSessionUseCase,
-    UseItemGamificationUseCase,
-)
 from app.application.use_cases.practice.practice_use_case import (
     FinishPracticeSessionUseCase,
+    GetActivePracticeSessionUseCase,
     GetPracticeSessionUseCase,
+    GetPracticeHistorySummaryUseCase,
+    GetPracticeLeaderboardUseCase,
     ListPracticeHistoryUseCase,
-    PatchPracticeAnswersUseCase,
     StartPracticeSessionUseCase,
+    PatchPracticeAnswerUseCase,
+    UseItemPracticeUseCase,
 )
 from app.application.use_cases.questions import (
     BulkCreateQuestionsUseCase,
@@ -135,26 +134,29 @@ class UseCaseProvider(Provider):
     start_practice_session_use_case = provide(
         StartPracticeSessionUseCase, scope=Scope.REQUEST
     )
-    start_gamification_session_use_case = provide(
-        StartGamificationSessionUseCase, scope=Scope.REQUEST
+    use_item_practice_use_case = provide(
+        UseItemPracticeUseCase, scope=Scope.REQUEST
     )
-    use_item_gamification_use_case = provide(
-        UseItemGamificationUseCase, scope=Scope.REQUEST
-    )
-    patch_gamification_answer_use_case = provide(
-        PatchGamificationAnswerUseCase, scope=Scope.REQUEST
+    patch_practice_answer_use_case = provide(
+        PatchPracticeAnswerUseCase, scope=Scope.REQUEST
     )
     get_practice_session_use_case = provide(
         GetPracticeSessionUseCase, scope=Scope.REQUEST
     )
-    patch_practice_answers_use_case = provide(
-        PatchPracticeAnswersUseCase, scope=Scope.REQUEST
-    )
     finish_practice_session_use_case = provide(
         FinishPracticeSessionUseCase, scope=Scope.REQUEST
     )
+    get_active_practice_session_use_case = provide(
+        GetActivePracticeSessionUseCase, scope=Scope.REQUEST
+    )
     list_practice_history_use_case = provide(
         ListPracticeHistoryUseCase, scope=Scope.REQUEST
+    )
+    get_practice_history_summary_use_case = provide(
+        GetPracticeHistorySummaryUseCase, scope=Scope.REQUEST
+    )
+    get_practice_leaderboard_use_case = provide(
+        GetPracticeLeaderboardUseCase, scope=Scope.REQUEST
     )
 
     list_lessons_use_case = provide(ListLessonsUseCase, scope=Scope.REQUEST)

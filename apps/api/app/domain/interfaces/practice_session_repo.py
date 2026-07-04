@@ -22,3 +22,15 @@ class IPracticeSessionRepository(Protocol):
     async def save(self, entity: PracticeSessionEntity) -> PracticeSessionEntity:
         """Save/update an existing practice session entity in the store."""
         ...
+
+    async def get_active_by_lesson(self, user_id: int, lesson_slug: str) -> PracticeSessionEntity | None:
+        """Get an active practice session for a specific user and lesson slug."""
+        ...
+
+    async def count_completed_by_lesson(self, user_id: int, lesson_slug: str) -> int:
+        """Count completed sessions for a specific user and lesson slug."""
+        ...
+
+    async def get_leaderboard_by_lesson(self, lesson_slug: str, limit: int = 100) -> list[dict]:
+        """Get the practice leaderboard for a specific lesson."""
+        ...
