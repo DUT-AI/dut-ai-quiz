@@ -8,7 +8,7 @@ export function renderHTMLTable(
     if (rows.length === 0) return "";
 
     let html =
-        '<div class="overflow-x-auto my-8 rounded-2xl border border-zinc-200 dark:border-[#2A3E5A] shadow-md shadow-zinc-200/30 dark:shadow-xl dark:shadow-black/30 bg-[#FFFFFF] dark:bg-[#1C2B40] transition-all duration-300 hover:shadow-lg hover:border-zinc-300 dark:hover:border-[#385175]"><table class="w-full border-collapse text-left text-lg md:text-xl">';
+        '<div class="overflow-x-auto theory-scrollbar my-8 rounded-2xl border border-zinc-200 dark:border-[#2A3E5A] shadow-md shadow-zinc-200/30 dark:shadow-xl dark:shadow-black/30 bg-[#FFFFFF] dark:bg-[#1C2B40] transition-all duration-300 hover:shadow-lg hover:border-zinc-300 dark:hover:border-[#385175]"><table class="w-full border-collapse text-left text-lg md:text-xl">';
 
     // Render Header
     const headers = rows[0];

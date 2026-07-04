@@ -113,7 +113,7 @@ export function renderTheoryMarkdown(raw: string): RenderResult {
     html = html.replace(/<code>/gi, '<code class="font-mono text-sm font-semibold text-pink-600 dark:text-pink-400 bg-slate-100 dark:bg-slate-800/80 border border-slate-200/50 dark:border-zinc-700/50 px-1.5 py-0.5 rounded-md">');
 
     // 8. Style KaTeX container spacing and size
-    html = html.replace(/class="katex-display"/g, 'class="katex-display my-6 p-2 overflow-x-auto overflow-y-hidden select-all"');
+    html = html.replace(/class="katex-display"/g, 'class="katex-display my-6 p-2 overflow-x-auto theory-scrollbar overflow-y-hidden select-all"');
     html = html.replace(/class="katex"/g, 'class="katex text-[1.05em] select-all"');
 
     // 9. Clean up any unnecessary <br /> tags between/around block elements
@@ -216,7 +216,7 @@ export function renderTheoryMarkdown(raw: string): RenderResult {
             <span class="copy-text">Copy</span>
         </button>
     </div>
-    <pre class="p-5 overflow-x-auto text-left m-0"><code class="block font-mono text-sm md:text-[15px] leading-relaxed text-zinc-100">${highlightedCode}</code></pre>
+    <pre class="p-5 overflow-x-auto theory-scrollbar text-left m-0"><code class="block font-mono text-sm md:text-[15px] leading-relaxed text-zinc-100">${highlightedCode}</code></pre>
 </div>
         `.trim();
     });
