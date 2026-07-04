@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import { Switch } from "@/components/ui/switch";
 
 export interface ExamInfoData {
   title: string;
@@ -9,6 +10,7 @@ export interface ExamInfoData {
   duration_minutes: number;
   max_attempts: number;
   is_published: boolean;
+  show_answers: boolean;
 }
 
 interface Props {
@@ -91,17 +93,40 @@ export default function StepInfo({ data, onChange }: Props) {
         </div>
       </div>
 
-      <div className="flex items-center gap-3 p-4 rounded-3xl bg-primary/5 border border-primary/10">
-        <input
-          type="checkbox"
-          id="is_published"
-          checked={data.is_published}
-          onChange={(e) => onChange({ is_published: e.target.checked })}
-          className="size-5 rounded-lg accent-primary"
-        />
-        <label htmlFor="is_published" className="text-sm font-bold text-primary cursor-pointer select-none">
-          Công khai kỳ thi cho học sinh tham gia ngay
-        </label>
+      <div className="flex flex-col gap-4">
+        {/* Công khai */}
+        <div className="flex items-center justify-between p-5 rounded-3xl bg-primary/5 border border-primary/10 transition-all">
+          <div className="space-y-1 text-left">
+            <label htmlFor="is_published" className="text-sm font-black text-primary cursor-pointer select-none">
+              Công khai kỳ thi
+            </label>
+            <p className="text-xs text-gray-navy opacity-75">
+              Cho phép học sinh nhìn thấy và tham gia thi ngay lập tức
+            </p>
+          </div>
+          <Switch
+            id="is_published"
+            checked={data.is_published}
+            onCheckedChange={(checked) => onChange({ is_published: checked })}
+          />
+        </div>
+
+        {/* Đáp án */}
+        <div className="flex items-center justify-between p-5 rounded-3xl bg-emerald-500/5 border border-emerald-500/10 transition-all">
+          <div className="space-y-1 text-left">
+            <label htmlFor="show_answers" className="text-sm font-black text-emerald-600 dark:text-emerald-400 cursor-pointer select-none">
+              Xem đáp án trong lịch sử
+            </label>
+            <p className="text-xs text-gray-navy opacity-75">
+              Cho phép học sinh xem đáp án và giải thích chi tiết trong lịch sử làm bài
+            </p>
+          </div>
+          <Switch
+            id="show_answers"
+            checked={data.show_answers}
+            onCheckedChange={(checked) => onChange({ show_answers: checked })}
+          />
+        </div>
       </div>
     </div>
   );

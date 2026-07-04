@@ -1,6 +1,6 @@
 import dataclasses
 import random
-from datetime import datetime, timedelta
+from datetime import datetime
 from uuid import UUID
 
 from app.core.datetime_utils import now_ict
@@ -30,6 +30,7 @@ class ExamEntity:
     is_published: bool
     created_by: int
     participant_ids: list[int]
+    show_answers: bool = False
 
     def check_can_start(self):
         if not self.is_published:
@@ -43,11 +44,7 @@ class ExamEntity:
             raise ExamEndedException()
 
     def check_review_lock_status(self) -> bool:
-        if not self.end_time:
-            return True
-
-        review_unlock_at = self.end_time + timedelta(minutes=self.duration_minutes)
-        return now_ict() < review_unlock_at
+        return not self.show_answers
 
     def build_shuffled_exam_payload(
         self,

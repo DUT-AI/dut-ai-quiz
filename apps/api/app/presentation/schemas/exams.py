@@ -12,6 +12,7 @@ class ExamCreate(BaseModel):
     max_attempts: int = 1
     is_published: bool = False
     participant_ids: list[int] = Field(default_factory=list)
+    show_answers: bool = False
 
 
 class ExamUpdate(BaseModel):
@@ -23,6 +24,7 @@ class ExamUpdate(BaseModel):
     max_attempts: int | None = None
     is_published: bool | None = None
     participant_ids: list[int] | None = None
+    show_answers: bool | None = None
 
 
 class ExamOut(BaseModel):
@@ -36,6 +38,7 @@ class ExamOut(BaseModel):
     is_published: bool
     created_by: int
     participant_ids: list[int]
+    show_answers: bool
 
     model_config = {"from_attributes": True}
 
