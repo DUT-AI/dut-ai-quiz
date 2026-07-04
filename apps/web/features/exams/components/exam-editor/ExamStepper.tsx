@@ -30,6 +30,7 @@ export default function ExamStepper({ initialData }: Props) {
     duration_minutes: initialData?.duration_minutes ?? 60,
     max_attempts: initialData?.max_attempts ?? 1,
     is_published: initialData?.is_published ?? false,
+    show_answers: initialData?.show_answers ?? false,
   });
   const [participantIds, setParticipantIds] = useState<number[]>(initialData?.participant_ids ?? []);
   const [questionIds, setQuestionIds] = useState<string[]>(initialData?.questions?.map((q: any) => q.id) ?? []);
@@ -72,6 +73,7 @@ export default function ExamStepper({ initialData }: Props) {
           max_attempts: payload.max_attempts,
           is_published: payload.is_published,
           participant_ids: payload.participant_ids,
+          show_answers: payload.show_answers,
         });
       } else {
         const newExam = await createExam.mutateAsync(payload);

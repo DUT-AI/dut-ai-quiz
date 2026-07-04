@@ -61,6 +61,7 @@ class ExamRepository(IExamRepository):
             model.duration_minutes = entity.duration_minutes
             model.max_attempts = entity.max_attempts
             model.is_published = entity.is_published
+            model.show_answers = entity.show_answers
             await self._s.flush()
             await self._s.refresh(model)
             return model.to_entity()

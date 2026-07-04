@@ -11,6 +11,7 @@ export const ExamOutSchema = z.object({
   is_published: z.boolean(),
   created_by: z.number(),
   participant_ids: z.array(z.number()),
+  show_answers: z.boolean(),
 });
 
 export type ExamOut = z.infer<typeof ExamOutSchema>;
@@ -32,6 +33,7 @@ export const ExamCreateSchema = z.object({
   max_attempts: z.number().optional(),
   is_published: z.boolean().optional(),
   participant_ids: z.array(z.number()).optional(),
+  show_answers: z.boolean().optional(),
 });
 
 export type ExamCreate = z.infer<typeof ExamCreateSchema>;

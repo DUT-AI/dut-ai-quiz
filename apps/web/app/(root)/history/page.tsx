@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { 
   History, 
   Search, 
@@ -17,6 +17,27 @@ import Link from "next/link";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import { motion } from "framer-motion";
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
+
+interface AttemptDetail {
+  id: string;
+  exam_id: string;
+  started_at: string;
+  status: string;
+  score: number | null;
+  tab_out_count: number;
+}
+
+interface AttemptItem {
+  exam_title: string;
+  attempt: AttemptDetail;
+}
+
+interface GroupedAttempt {
+  exam_id: string;
+  exam_title: string;
+  attempts: AttemptItem[];
+}
 
 export default function HistoryPage() {
   const { data: attempts, isLoading } = useMyAttempts();
@@ -28,6 +49,43 @@ export default function HistoryPage() {
     const matchesFilter = filter === "ALL" || item.attempt.status === filter;
     return matchesSearch && matchesFilter;
   });
+
+  // Group attempts by exam_id using useMemo
+  const groupedAttempts = useMemo(() => {
+    if (!filteredAttempts) return [];
+
+    const groups: Record<string, GroupedAttempt> = {};
+
+    filteredAttempts.forEach((item) => {
+      const examId = item.attempt.exam_id;
+      if (!groups[examId]) {
+        groups[examId] = {
+          exam_id: examId,
+          exam_title: item.exam_title,
+          attempts: [],
+        };
+      }
+      groups[examId].attempts.push(item);
+    });
+
+    const groupedList = Object.values(groups);
+
+    // Sort attempts inside each group by started_at desc
+    groupedList.forEach((group) => {
+      group.attempts.sort(
+        (a, b) => new Date(b.attempt.started_at).getTime() - new Date(a.attempt.started_at).getTime()
+      );
+    });
+
+    // Sort groups by the latest attempt's started_at desc
+    groupedList.sort((a, b) => {
+      const latestA = new Date(a.attempts[0].attempt.started_at).getTime();
+      const latestB = new Date(b.attempts[0].attempt.started_at).getTime();
+      return latestB - latestA;
+    });
+
+    return groupedList;
+  }, [filteredAttempts]);
 
   const stats = {
     total: attempts?.length || 0,
@@ -68,12 +126,12 @@ export default function HistoryPage() {
                 <motion.h1 
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="text-5xl font-black tracking-tighter"
+                  className="text-5xl font-black tracking-tighter text-left"
                 >
                     Hành trình Chinh phục Tri thức
                 </motion.h1>
             </div>
-
+ 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                 <StatCard icon={History} label="Tổng số bài" value={stats.total} color="bg-blue-500" delay={0.1} />
                 <StatCard icon={CheckCircle2} label="Đã hoàn thành" value={stats.completed} color="bg-green-500" delay={0.2} />
@@ -82,7 +140,7 @@ export default function HistoryPage() {
             </div>
         </div>
       </div>
-
+ 
       {/* Filters & Actions */}
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
         <div className="relative w-full md:w-96 group">
@@ -95,7 +153,7 @@ export default function HistoryPage() {
             className="w-full pl-12 pr-4 py-4 bg-white dark:bg-navy-blue rounded-2xl border border-gray-navy/10 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all shadow-sm"
           />
         </div>
-
+ 
         <div className="flex bg-gray-navy/5 p-1.5 rounded-2xl border border-gray-navy/10 w-full md:w-auto overflow-hidden">
             {["ALL", "COMPLETED", "IN_PROGRESS"].map((f) => (
                 <button
@@ -112,10 +170,10 @@ export default function HistoryPage() {
             ))}
         </div>
       </div>
-
-      {/* Efforts List */}
+ 
+      {/* Efforts List with Accordion */}
       <div className="space-y-4">
-        {filteredAttempts?.length === 0 ? (
+        {groupedAttempts.length === 0 ? (
           <div className="text-center py-24 bg-gray-navy/5 rounded-[3rem] border-2 border-dashed border-gray-navy/10">
             <div className="size-20 bg-gray-navy/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Search className="size-10 text-gray-navy/40" />
@@ -124,87 +182,130 @@ export default function HistoryPage() {
             <p className="text-gray-navy">Hãy thử thay đổi từ khóa hoặc bộ lọc của bạn.</p>
           </div>
         ) : (
-          filteredAttempts?.map((item, idx) => (
-            <motion.div 
-              key={item.attempt.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.05 }}
-              className="group relative bg-white dark:bg-navy-blue overflow-hidden rounded-[2.5rem] border border-gray-navy/10 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all"
-            >
-                {/* Visual Accent */}
-                <div className={`absolute top-0 left-0 w-2 h-full ${
-                  item.attempt.status === "COMPLETED" ? "bg-green-500" : "bg-primary"
-                }`} />
+          <Accordion type="single" collapsible className="w-full space-y-4">
+            {groupedAttempts.map((group, idx) => {
+              const scores = group.attempts.map(a => a.attempt.score).filter((s): s is number => s !== null);
+              const maxScore = scores.length > 0 ? Math.max(...scores) : null;
+              const totalAttempts = group.attempts.length;
 
-                <div className="p-8 flex flex-col md:flex-row items-center gap-8">
-                    {/* Icon/Date */}
-                    <div className="flex items-center gap-6 min-w-0 flex-1">
-                        <div className={`shrink-0 size-14 rounded-2xl flex items-center justify-center ${
-                          item.attempt.status === "COMPLETED" ? "bg-green-50 text-green-600" : "bg-primary text-primary"
-                        }`}>
+              return (
+                <motion.div
+                  key={group.exam_id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.05 }}
+                >
+                  <AccordionItem 
+                    value={group.exam_id} 
+                    className="bg-white dark:bg-navy-blue rounded-[2.5rem] border border-gray-navy/10 shadow-sm overflow-hidden px-8 py-2.5 data-[state=open]:shadow-md transition-all border-b-0"
+                  >
+                    <AccordionTrigger className="hover:no-underline py-4 w-full">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 w-full text-left pr-4">
+                        <div className="flex items-center gap-6 min-w-0 flex-1">
+                          <div className="shrink-0 size-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
                             <History className="size-6" />
-                        </div>
-                        <div className="min-w-0">
-                            <h3 className="text-xl font-black tracking-tight text-dark-blue truncate group-hover:text-primary transition-colors">
-                                {item.exam_title}
+                          </div>
+                          <div className="min-w-0">
+                            <h3 className="text-xl font-black tracking-tight text-dark-blue dark:text-white group-hover:text-primary transition-colors truncate">
+                              {group.exam_title}
                             </h3>
-                            <div className="flex flex-wrap items-center gap-4 mt-1">
-                                <span className="flex items-center gap-1.5 text-xs text-gray-navy font-bold">
-                                    <Clock className="size-3.5" />
-                                    {format(new Date(item.attempt.started_at), "HH:mm, dd/MM/yyyy", { locale: vi })}
-                                </span>
-                                <div className="size-1 bg-gray-navy/30 rounded-full" />
-                                <span className={`text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-wider ${
-                                  item.attempt.status === "COMPLETED" 
-                                    ? "bg-green-100 text-green-700" 
-                                    : "bg-primary text-primary"
-                                }`}>
-                                    {item.attempt.status === "COMPLETED" ? "Hoàn thành" : "Đang làm"}
-                                </span>
+                            <div className="flex flex-wrap items-center gap-3 mt-1.5 text-xs font-bold text-gray-navy/70 dark:text-light-blue/60">
+                              <span className="bg-primary/10 text-primary px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider">
+                                {totalAttempts} lượt làm
+                              </span>
+                              {maxScore !== null && (
+                                <>
+                                  <div className="size-1 bg-gray-navy/20 dark:bg-white/10 rounded-full" />
+                                  <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                                    <Trophy className="size-3.5" />
+                                    Điểm cao nhất: {maxScore}
+                                  </span>
+                                </>
+                              )}
                             </div>
+                          </div>
                         </div>
-                    </div>
+                      </div>
+                    </AccordionTrigger>
 
-                    {/* Stats */}
-                    <div className="flex items-center gap-8 px-8 border-x border-gray-navy/5">
-                        <div className="text-center">
-                            <p className="text-[10px] text-gray-navy font-black uppercase tracking-tighter mb-1">Điểm số</p>
-                            <p className="text-2xl font-black text-dark-blue">
-                                {item.attempt.score !== null ? item.attempt.score : "—"}
-                            </p>
-                        </div>
-                        <div className="text-center">
-                            <p className="text-[10px] text-gray-navy font-black uppercase tracking-tighter mb-1">Cảnh báo</p>
-                            <p className={`text-2xl font-black ${item.attempt.tab_out_count > 0 ? "text-red" : "text-green-500"}`}>
-                                {item.attempt.tab_out_count}
-                            </p>
-                        </div>
-                    </div>
+                    <AccordionContent className="pt-2 pb-4">
+                      <div className="divide-y divide-gray-navy/5 dark:divide-white/5 space-y-4">
+                        {group.attempts.map((item, index) => {
+                          const attemptNum = totalAttempts - index;
+                          return (
+                            <div 
+                              key={item.attempt.id} 
+                              className="flex flex-col md:flex-row items-center gap-6 pt-4 first:pt-0 first:border-t-0 border-t border-gray-navy/5 dark:border-white/5 text-left"
+                            >
+                              {/* Lượt thi */}
+                              <div className="flex-1 flex items-center gap-4 min-w-0 w-full">
+                                <span className="shrink-0 font-black text-sm text-gray-navy/55 dark:text-light-blue/40 w-16">
+                                  Lượt #{attemptNum}
+                                </span>
+                                <div className="min-w-0">
+                                  <div className="flex flex-wrap items-center gap-3">
+                                    <span className="flex items-center gap-1.5 text-xs text-gray-navy dark:text-light-blue font-bold">
+                                      <Clock className="size-3.5" />
+                                      {format(new Date(item.attempt.started_at), "HH:mm, dd/MM/yyyy", { locale: vi })}
+                                    </span>
+                                    <div className="size-1 bg-gray-navy/25 rounded-full" />
+                                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-wider ${
+                                      item.attempt.status === "COMPLETED" 
+                                        ? "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-500" 
+                                        : "bg-primary/15 text-primary"
+                                    }`}>
+                                      {item.attempt.status === "COMPLETED" ? "Hoàn thành" : "Đang làm"}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
 
-                    {/* Action */}
-                    <div className="shrink-0 flex gap-3">
-                        {item.attempt.status === "COMPLETED" ? (
-                          <Link 
-                            href={`/history/${item.attempt.id}/review`}
-                            className="flex items-center gap-2 px-6 py-3.5 bg-dark-blue text-white rounded-2xl font-black text-sm hover:bg-primary hover:scale-105 active:scale-95 transition-all shadow-lg shadow-dark-blue/10"
-                          >
-                            XEM CHI TIẾT
-                            <ChevronRight className="size-4" />
-                          </Link>
-                        ) : (
-                          <Link 
-                            href={`/exams/${item.attempt.exam_id}/attempt/${item.attempt.id}`}
-                            className="flex items-center gap-2 px-6 py-3.5 bg-primary text-white rounded-2xl font-black text-sm hover:bg-dark-blue hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/10"
-                          >
-                            TIẾP TỤC
-                            <Timer className="size-4" />
-                          </Link>
-                        )}
-                    </div>
-                </div>
-            </motion.div>
-          ))
+                              {/* Điểm & Cảnh báo */}
+                              <div className="flex items-center gap-6 md:px-6 w-full md:w-auto justify-start md:justify-center">
+                                <div className="text-center min-w-[70px]">
+                                  <p className="text-[10px] text-gray-navy font-black uppercase tracking-tighter mb-0.5">Điểm số</p>
+                                  <p className="text-xl font-black text-dark-blue dark:text-white">
+                                    {item.attempt.score !== null ? item.attempt.score : "—"}
+                                  </p>
+                                </div>
+                                <div className="text-center min-w-[70px]">
+                                  <p className="text-[10px] text-gray-navy font-black uppercase tracking-tighter mb-0.5">Cảnh báo</p>
+                                  <p className={`text-xl font-black ${item.attempt.tab_out_count > 0 ? "text-red" : "text-green-500"}`}>
+                                    {item.attempt.tab_out_count}
+                                  </p>
+                                </div>
+                              </div>
+
+                              {/* Nút hành động */}
+                              <div className="shrink-0 w-full md:w-auto text-right">
+                                {item.attempt.status === "COMPLETED" ? (
+                                  <Link 
+                                    href={`/history/${item.attempt.id}/review`}
+                                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-dark-blue dark:bg-white/5 border border-transparent dark:border-white/15 dark:hover:bg-white/10 text-white rounded-xl font-black text-xs hover:bg-primary transition-all cursor-pointer"
+                                  >
+                                    XEM CHI TIẾT
+                                    <ChevronRight className="size-3.5" />
+                                  </Link>
+                                ) : (
+                                  <Link 
+                                    href={`/exams/${item.attempt.exam_id}/attempt/${item.attempt.id}`}
+                                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl font-black text-xs hover:bg-dark-blue transition-all cursor-pointer"
+                                  >
+                                    TIẾP TỤC
+                                    <Timer className="size-3.5" />
+                                  </Link>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </motion.div>
+              );
+            })}
+          </Accordion>
         )}
       </div>
     </div>
@@ -222,7 +323,7 @@ function StatCard({ icon: Icon, label, value, color, delay }: any) {
             <div className={`shrink-0 size-10 rounded-xl flex items-center justify-center ${color}`}>
                 <Icon className="size-5 text-white" />
             </div>
-            <div>
+            <div className="text-left">
                 <p className="text-[10px] font-black uppercase tracking-widest text-white/60">{label}</p>
                 <p className="text-xl font-black">{value}</p>
             </div>

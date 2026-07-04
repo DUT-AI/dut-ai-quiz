@@ -45,13 +45,13 @@ export default function ReviewPage() {
                     <div className="absolute inset-0 bg-amber-400/20 rounded-full blur-2xl animate-pulse" />
                     <Timer className="relative size-20 text-amber-500" />
                 </div>
-                <h2 className="text-2xl font-black text-dark-blue">Chưa đến thời gian xem đáp án</h2>
+                <h2 className="text-2xl font-black text-dark-blue">Đáp án chưa được công bố</h2>
                 <p className="text-gray-navy max-w-md">
-                    Đáp án sẽ được mở sau khi kỳ thi kết thúc hoàn toàn. Vui lòng quay lại sau.
+                    Đáp án chi tiết sẽ được mở sau khi giảng viên cho phép. Vui lòng quay lại sau.
                 </p>
                 <button
                     onClick={() => router.push("/history")}
-                    className="px-8 py-3 bg-primary text-white rounded-2xl font-black shadow-xl hover:shadow-2xl transition-all"
+                    className="px-8 py-3 bg-primary text-white rounded-2xl font-black shadow-xl hover:shadow-2xl transition-all cursor-pointer"
                 >
                     QUAY LẠI LỊCH SỬ
                 </button>
