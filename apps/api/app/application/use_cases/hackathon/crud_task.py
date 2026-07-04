@@ -75,10 +75,13 @@ class ListHackathonTasksUseCase:
     async def execute(
         self,
         hackathon_id: UUID,
-        admin_user_id: int,
+        user_id: int,
+        quiz_role: str,
     ) -> list[HackathonTaskEntity] | None:
         hackathon = await self._hackathon_repo.get(hackathon_id)
-        if not hackathon or hackathon.created_by != admin_user_id:
+        if not hackathon:
+            return None
+        if quiz_role in ["admin", "MENTOR"] and hackathon.created_by != user_id:
             return None
         return await self._task_repo.list_for_hackathon(hackathon_id)
 
@@ -96,10 +99,13 @@ class GetHackathonTaskUseCase:
         self,
         hackathon_id: UUID,
         task_id: UUID,
-        admin_user_id: int,
+        user_id: int,
+        quiz_role: str,
     ) -> HackathonTaskEntity | None:
         hackathon = await self._hackathon_repo.get(hackathon_id)
-        if not hackathon or hackathon.created_by != admin_user_id:
+        if not hackathon:
+            return None
+        if quiz_role in ["admin", "MENTOR"] and hackathon.created_by != user_id:
             return None
 
         task = await self._task_repo.get(task_id)

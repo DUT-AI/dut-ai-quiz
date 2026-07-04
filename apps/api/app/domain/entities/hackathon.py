@@ -25,6 +25,7 @@ class HackathonEntity:
     participation_mode: ParticipationMode
     created_by: int
     created_at: datetime
+    max_team_members: int = 5
     updated_at: datetime | None = None
 
 
@@ -40,3 +41,33 @@ class HackathonTaskEntity:
     max_submissions: int
     created_at: datetime
     updated_at: datetime | None = None
+
+
+class RegistrationStatus(str, Enum):
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+    CANCELLED = "cancelled"
+
+
+@dataclasses.dataclass(slots=True)
+class HackathonTeamEntity:
+    id: UUID
+    hackathon_id: UUID
+    name: str
+    code: str
+    leader_id: int
+    member_ids: list[int]
+    created_at: datetime
+
+
+@dataclasses.dataclass(slots=True)
+class HackathonRegistrationEntity:
+    id: UUID
+    hackathon_id: UUID
+    user_id: int | None
+    team_id: UUID | None
+    status: RegistrationStatus
+    registered_at: datetime
+    reviewed_by: int | None = None
+    rejection_reason: str | None = None

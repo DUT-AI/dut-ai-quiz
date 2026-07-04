@@ -1,10 +1,12 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { type Hackathon } from "../types";
 import { useDeleteHackathon } from "@/lib/queries";
 import { Calendar, Users, Pencil, Trash2 } from "lucide-react";
 import { formatDateTime, getParticipationModeLabel } from "@/lib/utils";
+import { HackathonRegistrationsModal } from "./hackathon-registrations-modal";
+import { AnimatePresence } from "framer-motion";
 
 interface HackathonRowProps {
   hackathon: Hackathon;
@@ -13,6 +15,7 @@ interface HackathonRowProps {
 
 export function HackathonRow({ hackathon, onEdit }: HackathonRowProps) {
   const deleteMut = useDeleteHackathon();
+  const [showRegistrations, setShowRegistrations] = useState(false);
 
   const isExpired = hackathon.end_time ? new Date(hackathon.end_time) < new Date() : false;
   const isStarted = hackathon.start_time ? new Date(hackathon.start_time) <= new Date() : false;
@@ -71,6 +74,13 @@ export function HackathonRow({ hackathon, onEdit }: HackathonRowProps) {
         {/* Right Actions */}
         <div className="flex items-center gap-3 self-end md:self-center shrink-0">
           <button
+            onClick={() => setShowRegistrations(true)}
+            className="flex items-center gap-2 text-xs px-4 py-2.5 rounded-xl border border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary transition font-black"
+          >
+            <Users className="size-3.5" />
+            <span>Đăng ký</span>
+          </button>
+          <button
             onClick={onEdit}
             className="flex items-center gap-2 text-xs px-4 py-2.5 rounded-xl border border-gray-150 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 text-dark-blue dark:text-white transition font-black"
           >
@@ -91,6 +101,15 @@ export function HackathonRow({ hackathon, onEdit }: HackathonRowProps) {
         </div>
 
       </div>
+
+      <AnimatePresence>
+        {showRegistrations && (
+          <HackathonRegistrationsModal
+            hackathon={hackathon}
+            onClose={() => setShowRegistrations(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -18,8 +18,12 @@ from app.infrastructure.repositories.lessons import LessonRepository
 from app.infrastructure.repositories.practice_sessions import PracticeSessionRepository
 from app.infrastructure.repositories.questions import QuestionRepository
 from app.infrastructure.repositories.users import UserRepository
-from app.infrastructure.repositories.hackathons import HackathonRepository
-from app.infrastructure.repositories.hackathons import HackathonTaskRepository
+from app.infrastructure.repositories.hackathons import (
+    HackathonRepository,
+    HackathonTaskRepository,
+    HackathonTeamRepository,
+    HackathonRegistrationRepository,
+)
 
 
 class RepositoryProvider(Provider):
@@ -42,3 +46,5 @@ class RepositoryProvider(Provider):
     # Riêng hackathon_repo không dùng interface thì giữ nguyên
     hackathon_repo = provide(HackathonRepository)
     hackathon_task_repo = provide(HackathonTaskRepository)
+    hackathon_team_repo = provide(HackathonTeamRepository)
+    hackathon_registration_repo = provide(HackathonRegistrationRepository)

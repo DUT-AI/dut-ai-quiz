@@ -1,8 +1,6 @@
-from urllib import request
 from uuid import UUID, uuid4
 
 from app.core.datetime_utils import utc_to_ict
-from app.domain.entities import hackathon
 from app.domain.entities.hackathon import HackathonEntity
 from app.infrastructure.repositories.hackathons import HackathonRepository
 from app.presentation.schemas.hackathons import HackathonCreate, HackathonUpdate
@@ -36,6 +34,7 @@ class CreateHackathonUseCase:
             if payload.end_time
             else None,
             participation_mode=payload.participation_mode,
+            max_team_members=payload.max_team_members,
             created_by=admin_user_id,
             created_at=datetime.now()
         )
@@ -46,17 +45,21 @@ class ListHackathonsUseCase:
     def __init__(self, hackathon_repo: HackathonRepository):
         self._hackathon_repo = hackathon_repo
 
-    async def execute(self, admin_user_id: int) -> list[HackathonEntity]:
-        return await self._hackathon_repo.list_for_admin(admin_user_id)
+    async def execute(self, user_id: int, quiz_role: str) -> list[HackathonEntity]:
+        if quiz_role in ["admin", "MENTOR"]:
+            return await self._hackathon_repo.list_for_admin(user_id)
+        return await self._hackathon_repo.list_all()
 
 
 class GetHackathonUseCase:
     def __init__(self, hackathon_repo: HackathonRepository):
         self._hackathon_repo = hackathon_repo
 
-    async def execute(self, hackathon_id: UUID, admin_user_id: int) -> HackathonEntity | None:
+    async def execute(self, hackathon_id: UUID, user_id: int, quiz_role: str) -> HackathonEntity | None:
         entity = await self._hackathon_repo.get(hackathon_id)
-        if not entity or entity.created_by != admin_user_id:
+        if not entity:
+            return None
+        if quiz_role in ["admin", "MENTOR"] and entity.created_by != user_id:
             return None
         return entity
 

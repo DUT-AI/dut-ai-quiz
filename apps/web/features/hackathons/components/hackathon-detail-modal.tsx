@@ -1,13 +1,16 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { type Hackathon } from "../types";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { X, Calendar, Users, Award, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatDateTime, getParticipationModeLabel } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useHackathonRegistrationStatus } from "../queries";
+import { HackathonRegisterModal } from "./hackathon-register-modal";
+import { HackathonTeamDetail } from "./hackathon-team-detail";
 
 interface HackathonDetailModalProps {
   hackathon: Hackathon;
@@ -18,6 +21,10 @@ export function HackathonDetailModal({ hackathon, onClose }: HackathonDetailModa
   const isExpired = hackathon.end_time ? new Date(hackathon.end_time) < new Date() : false;
   const isStarted = hackathon.start_time ? new Date(hackathon.start_time) <= new Date() : false;
   const isOngoing = isStarted && !isExpired;
+
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const { data: regStatus, refetch } = useHackathonRegistrationStatus(hackathon.id);
+  const isRegistered = regStatus?.is_registered ?? false;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 overflow-y-auto">
@@ -121,6 +128,27 @@ export function HackathonDetailModal({ hackathon, onClose }: HackathonDetailModa
             </div>
           </div>
 
+          {/* Thông tin Đăng ký hiện tại (nếu có) */}
+          {isRegistered && regStatus && (
+            <div className="space-y-2.5">
+              <div className="flex items-center gap-2 px-1">
+                <Users className="size-4.5 text-primary" />
+                <h3 className="text-xs font-black text-gray-navy opacity-55 uppercase tracking-widest">
+                  Thông tin tham gia của bạn
+                </h3>
+              </div>
+              <div className="w-full px-6 py-5 rounded-3xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 text-sm">
+                <HackathonTeamDetail
+                  hackathonId={hackathon.id}
+                  registration={regStatus.registration!}
+                  team={regStatus.team}
+                  maxTeamMembers={hackathon.max_team_members}
+                  onSuccess={refetch}
+                />
+              </div>
+            </div>
+          )}
+
           {/* Luật thi đấu (Markdown) */}
           <div className="space-y-2.5">
             <div className="flex items-center gap-2 px-1">
@@ -154,17 +182,27 @@ export function HackathonDetailModal({ hackathon, onClose }: HackathonDetailModa
           >
             Đóng
           </Button>
-          {!isExpired && (
+          {!isExpired && !isRegistered && (
             <Button
               type="button"
               className="px-8 py-5 rounded-2xl bg-primary text-white font-bold flex items-center gap-2 shadow-lg shadow-primary/20 hover:bg-primary/95 transition-all transform active:scale-95"
-              onClick={() => alert("Chức năng đăng ký đang được cập nhật!")}
+              onClick={() => setShowRegisterModal(true)}
             >
               Đăng ký tham gia
             </Button>
           )}
         </div>
       </motion.div>
+
+      <AnimatePresence>
+        {showRegisterModal && (
+          <HackathonRegisterModal
+            hackathon={hackathon}
+            onClose={() => setShowRegisterModal(false)}
+            onSuccess={refetch}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

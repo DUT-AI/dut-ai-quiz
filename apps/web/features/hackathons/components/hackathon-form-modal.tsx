@@ -20,6 +20,7 @@ const HackathonFormSchema = z.object({
   start_time: z.string().optional(),
   end_time: z.string().optional(),
   participation_mode: z.enum(["individual", "team", "both"]),
+  max_team_members: z.number().min(1, "Số lượng thành viên tối thiểu là 1"),
 });
 
 type HackathonFormInput = z.infer<typeof HackathonFormSchema>;
@@ -52,6 +53,7 @@ export function HackathonFormModal({ onClose, initialData }: HackathonFormModalP
       start_time: formatToLocalDatetime(initialData?.start_time),
       end_time: formatToLocalDatetime(initialData?.end_time),
       participation_mode: initialData?.participation_mode || "both",
+      max_team_members: initialData?.max_team_members ?? 5,
     },
   });
 
@@ -72,6 +74,7 @@ export function HackathonFormModal({ onClose, initialData }: HackathonFormModalP
       start_time: data.start_time ? new Date(data.start_time).toISOString() : null,
       end_time: data.end_time ? new Date(data.end_time).toISOString() : null,
       participation_mode: data.participation_mode,
+      max_team_members: Number(data.max_team_members) || 5,
     };
 
     if (isEdit) {
@@ -246,6 +249,26 @@ export function HackathonFormModal({ onClose, initialData }: HackathonFormModalP
                     />
                   </div>
                 </div>
+
+                {/* Số lượng thành viên tối đa mỗi đội (chỉ hiện khi có Đội nhóm) */}
+                {(watch("participation_mode") === "team" || watch("participation_mode") === "both") && (
+                  <div className="space-y-1.5 max-w-xs">
+                    <label className="text-xs font-black text-gray-navy opacity-55 uppercase tracking-widest px-1">
+                      Số thành viên tối đa mỗi đội
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={20}
+                      placeholder="Mặc định: 5"
+                      {...register("max_team_members", { valueAsNumber: true })}
+                      className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 focus:border-primary outline-none transition-all font-medium text-sm text-navy-blue dark:text-white"
+                    />
+                    {errors.max_team_members && (
+                      <p className="text-red-500 text-xs font-bold px-1 mt-1">{errors.max_team_members.message}</p>
+                    )}
+                  </div>
+                )}
 
                 {/* Step 1 Actions */}
                 <div className="pt-4 flex gap-3">

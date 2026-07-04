@@ -1,4 +1,4 @@
 from .google_oauth import GoogleOAuthClient
-from .manage_service import ManageServiceClient
+from .dut_ai_manage import DUTAIManageService
 
-__all__ = ["GoogleOAuthClient", "ManageServiceClient"]
+__all__ = ["GoogleOAuthClient", "DUTAIManageService"]

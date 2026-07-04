@@ -1,9 +1,13 @@
 from typing import AsyncIterable
+
 import httpx
 from dishka import Provider, Scope, provide
 
-from app.domain.interfaces import IBlogCache
-from app.infrastructure.clients import GoogleOAuthClient, ManageServiceClient
+from app.domain.interfaces import IBlogCache, IDUTAIManageCache, IManageService
+from app.infrastructure.clients import (
+    DUTAIManageService,
+    GoogleOAuthClient,
+)
 from app.infrastructure.clients.blog_service import BlogServiceClient
 
 
@@ -22,11 +26,11 @@ class ClientProvider(Provider):
         return GoogleOAuthClient(client)
 
     @provide(scope=Scope.APP)
-    def get_manage_service_client(
-        self, client: httpx.AsyncClient
-    ) -> ManageServiceClient:
-        """Provide manage service client."""
-        return ManageServiceClient(client)
+    def get_dut_ai_manage_service(
+        self, client: httpx.AsyncClient, cache: IDUTAIManageCache
+    ) -> IManageService:
+        """Provide DUT AI manage service client."""
+        return DUTAIManageService(client, cache)
 
     @provide(scope=Scope.APP)
     def get_blog_service_client(

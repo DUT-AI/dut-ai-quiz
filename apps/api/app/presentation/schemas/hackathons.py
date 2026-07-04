@@ -3,7 +3,7 @@ from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, field_validator
-from app.domain.entities.hackathon import MetricType
+from app.domain.entities.hackathon import MetricType, RegistrationStatus
 
 ParticipationMode = Literal["individual", "team", "both"]
 
@@ -15,6 +15,7 @@ class HackathonCreate(BaseModel):
     start_time: datetime | None = None
     end_time: datetime | None = None
     participation_mode: ParticipationMode = "both"
+    max_team_members: int = 5
 
 
 class HackathonUpdate(BaseModel):
@@ -24,6 +25,7 @@ class HackathonUpdate(BaseModel):
     start_time: datetime | None = None
     end_time: datetime | None = None
     participation_mode: ParticipationMode | None = None
+    max_team_members: int | None = None
 
 
 class HackathonOut(BaseModel):
@@ -34,6 +36,7 @@ class HackathonOut(BaseModel):
     start_time: datetime | None
     end_time: datetime | None
     participation_mode: ParticipationMode
+    max_team_members: int
     created_by: int
 
     model_config = {"from_attributes": True}
@@ -97,3 +100,61 @@ class HackathonTaskOut(BaseModel):
     updated_at: datetime | None
 
     model_config = {"from_attributes": True}
+
+
+
+
+class TeamMemberOut(BaseModel):
+    id: int
+    name: str
+    email: str
+
+    model_config = {"from_attributes": True}
+
+
+class HackathonTeamOut(BaseModel):
+    id: UUID
+    hackathon_id: UUID
+    name: str
+    code: str
+    leader_id: int
+    member_ids: list[int]
+    members: list[TeamMemberOut] = []
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class HackathonRegistrationOut(BaseModel):
+    id: UUID
+    hackathon_id: UUID
+    user_id: int | None
+    team_id: UUID | None
+    status: RegistrationStatus
+    registered_at: datetime
+    reviewed_by: int | None = None
+    rejection_reason: str | None = None
+    
+    team: HackathonTeamOut | None = None
+    user_name: str | None = None
+    user_email: str | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class HackathonTeamCreate(BaseModel):
+    name: str
+
+
+class JoinTeamInput(BaseModel):
+    code: str
+
+
+class LeaveTeamInput(BaseModel):
+    new_leader_id: int | None = None
+
+
+class ReviewRegistrationInput(BaseModel):
+    status: RegistrationStatus
+    rejection_reason: str | None = None
+

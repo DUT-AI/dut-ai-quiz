@@ -13,11 +13,7 @@ from app.application.use_cases.attempts import (
     SubmitAttemptUseCase,
 )
 from app.application.use_cases.attempts.rescore_use_case import RescoreAttemptUseCase
-from app.application.use_cases.auth.auth_use_case import (
-    GoogleAuthUseCase,
-    LogoutUseCase,
-    ProxyLoginUseCase,
-)
+
 from app.application.use_cases.exams.exam_use_case import (
     CreateExamUseCase,
     DeleteExamUseCase,
@@ -39,6 +35,13 @@ from app.application.use_cases.hackathon import (
     ListHackathonsUseCase,
     UpdateHackathonUseCase,
     UpdateHackathonTaskUseCase,
+    RegisterIndividualUseCase,
+    CreateTeamUseCase,
+    JoinTeamUseCase,
+    LeaveTeamUseCase,
+    CancelRegistrationUseCase,
+    ListRegistrationsUseCase,
+    ReviewRegistrationUseCase,
 )
 from app.application.use_cases.leaderboard.leaderboard_use_case import (
     GetLeaderboardUseCase,
@@ -78,9 +81,9 @@ from app.domain.interfaces import (
     IAttemptRepository,
     IFocusEventRepository,
     IUserRepository,
+    IManageService,
 )
 from app.infrastructure.cache.redis_client import ProfileCache
-from app.infrastructure.clients import ManageServiceClient
 
 
 class UseCaseProvider(Provider):
@@ -114,6 +117,13 @@ class UseCaseProvider(Provider):
     update_hackathon_task_use_case = provide(
         UpdateHackathonTaskUseCase, scope=Scope.REQUEST
     )
+    register_individual_use_case = provide(RegisterIndividualUseCase, scope=Scope.REQUEST)
+    create_team_use_case = provide(CreateTeamUseCase, scope=Scope.REQUEST)
+    join_team_use_case = provide(JoinTeamUseCase, scope=Scope.REQUEST)
+    leave_team_use_case = provide(LeaveTeamUseCase, scope=Scope.REQUEST)
+    cancel_registration_use_case = provide(CancelRegistrationUseCase, scope=Scope.REQUEST)
+    list_registrations_use_case = provide(ListRegistrationsUseCase, scope=Scope.REQUEST)
+    review_registration_use_case = provide(ReviewRegistrationUseCase, scope=Scope.REQUEST)
 
     # questions
     create_question_use_case = provide(CreateQuestionUseCase, scope=Scope.REQUEST)
@@ -199,7 +209,7 @@ class UseCaseProvider(Provider):
         self,
         cache: ProfileCache,
         user_repo: IUserRepository,
-        manage_client: ManageServiceClient,
+        manage_client: IManageService,
     ) -> GetProfileUseCase:
         return GetProfileUseCase(cache, user_repo, manage_client)
 

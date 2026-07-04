@@ -2,8 +2,8 @@ from dishka import Provider, Scope, provide
 from redis.asyncio import Redis, from_url
 
 from app.config import settings
-from app.domain.interfaces import IBlogCache
-from app.infrastructure.cache import ProfileCache, RedisBlogCache
+from app.domain.interfaces import IBlogCache, IDUTAIManageCache
+from app.infrastructure.cache import DUTAIManageCache, ProfileCache, RedisBlogCache
 from app.infrastructure.cache.practice_leaderboard_cache import PracticeLeaderboardCache
 
 
@@ -27,6 +27,11 @@ class CacheProvider(Provider):
     def blog_cache(self, redis: Redis) -> IBlogCache:
         """Provide IBlogCache interface mapped to RedisBlogCache implementation."""
         return RedisBlogCache(redis, ttl=300)
+
+    @provide(scope=Scope.APP)
+    def get_dut_ai_manage_cache(self, redis: Redis) -> IDUTAIManageCache:
+        """Provide IDUTAIManageCache interface mapped to DUTAIManageCache implementation."""
+        return DUTAIManageCache(redis, ttl=300)
 
     @provide(scope=Scope.APP)
     def practice_leaderboard_cache(self, redis: Redis) -> PracticeLeaderboardCache:
