@@ -30,10 +30,15 @@ from app.application.use_cases.exams.exam_use_case import (
 from app.application.use_cases.exams.stats_use_case import GetExamStatsUseCase
 from app.application.use_cases.hackathon import (
     CreateHackathonUseCase,
+    CreateHackathonTaskUseCase,
     DeleteHackathonUseCase,
+    DeleteHackathonTaskUseCase,
     GetHackathonUseCase,
+    GetHackathonTaskUseCase,
+    ListHackathonTasksUseCase,
     ListHackathonsUseCase,
     UpdateHackathonUseCase,
+    UpdateHackathonTaskUseCase,
 )
 from app.application.use_cases.leaderboard.leaderboard_use_case import (
     GetLeaderboardUseCase,
@@ -94,6 +99,21 @@ class UseCaseProvider(Provider):
     get_hackathon_use_case = provide(GetHackathonUseCase, scope=Scope.REQUEST)
     list_hackathons_use_case = provide(ListHackathonsUseCase, scope=Scope.REQUEST)
     update_hackathon_use_case = provide(UpdateHackathonUseCase, scope=Scope.REQUEST)
+    create_hackathon_task_use_case = provide(
+        CreateHackathonTaskUseCase, scope=Scope.REQUEST
+    )
+    delete_hackathon_task_use_case = provide(
+        DeleteHackathonTaskUseCase, scope=Scope.REQUEST
+    )
+    get_hackathon_task_use_case = provide(
+        GetHackathonTaskUseCase, scope=Scope.REQUEST
+    )
+    list_hackathon_tasks_use_case = provide(
+        ListHackathonTasksUseCase, scope=Scope.REQUEST
+    )
+    update_hackathon_task_use_case = provide(
+        UpdateHackathonTaskUseCase, scope=Scope.REQUEST
+    )
 
     # questions
     create_question_use_case = provide(CreateQuestionUseCase, scope=Scope.REQUEST)

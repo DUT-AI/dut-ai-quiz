@@ -19,6 +19,7 @@ from app.infrastructure.repositories.practice_sessions import PracticeSessionRep
 from app.infrastructure.repositories.questions import QuestionRepository
 from app.infrastructure.repositories.users import UserRepository
 from app.infrastructure.repositories.hackathons import HackathonRepository
+from app.infrastructure.repositories.hackathons import HackathonTaskRepository
 
 
 class RepositoryProvider(Provider):
@@ -40,3 +41,4 @@ class RepositoryProvider(Provider):
 
     # Riêng hackathon_repo không dùng interface thì giữ nguyên
     hackathon_repo = provide(HackathonRepository)
+    hackathon_task_repo = provide(HackathonTaskRepository)

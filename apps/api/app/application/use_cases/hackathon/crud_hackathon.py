@@ -1,10 +1,14 @@
+from urllib import request
 from uuid import UUID, uuid4
 
 from app.core.datetime_utils import utc_to_ict
+from app.domain.entities import hackathon
 from app.domain.entities.hackathon import HackathonEntity
 from app.infrastructure.repositories.hackathons import HackathonRepository
 from app.presentation.schemas.hackathons import HackathonCreate, HackathonUpdate
 from datetime import datetime
+
+from fastapi import HTTPException
 
 class CreateHackathonUseCase:
     def __init__(self, hackathon_repo: HackathonRepository):
@@ -12,10 +16,14 @@ class CreateHackathonUseCase:
 
     async def execute(self, payload: HackathonCreate, admin_user_id: int) -> HackathonEntity:
         if(payload.start_time and payload.end_time and payload.start_time >= payload.end_time):
-            raise ValueError("start_time must be before end_time")
+            raise HTTPException(
+                status_code=400, detail="start_time must be before end_time"
+            )
         name = payload.name.strip()
         if not name:
-            raise ValueError("name must not be empty")
+            raise HTTPException(
+                status_code=400, detail="name must not be empty"
+            )
         entity = HackathonEntity(
             id=uuid4(),
             name=name,
@@ -63,7 +71,10 @@ class UpdateHackathonUseCase:
         entity = await self._hackathon_repo.get(hackathon_id)
         if not entity or entity.created_by != admin_user_id:
             return None
-
+        if(payload.start_time and payload.end_time and payload.start_time >= payload.end_time):
+            raise HTTPException(
+                status_code=400, detail="start_time must be before end_time"
+            )
         data = payload.model_dump(exclude_unset=True)
         for k, v in data.items():
             if k in ["start_time", "end_time"] and v is not None:

@@ -1,9 +1,16 @@
-from .create_hackathon import (
+from .crud_hackathon import (
     CreateHackathonUseCase,
     DeleteHackathonUseCase,
     GetHackathonUseCase,
     ListHackathonsUseCase,
     UpdateHackathonUseCase,
+)
+from .crud_task import (
+    CreateHackathonTaskUseCase,
+    DeleteHackathonTaskUseCase,
+    GetHackathonTaskUseCase,
+    ListHackathonTasksUseCase,
+    UpdateHackathonTaskUseCase,
 )
 
 __all__ = [
@@ -12,4 +19,9 @@ __all__ = [
     "GetHackathonUseCase",
     "ListHackathonsUseCase",
     "UpdateHackathonUseCase",
+    "CreateHackathonTaskUseCase",
+    "DeleteHackathonTaskUseCase",
+    "GetHackathonTaskUseCase",
+    "ListHackathonTasksUseCase",
+    "UpdateHackathonTaskUseCase",
 ]
