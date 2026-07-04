@@ -5,6 +5,7 @@ from dishka.integrations.fastapi import FromDishka, inject
 
 from app.application.use_cases.practice.practice_use_case import (
     GetPracticeSessionUseCase,
+    GetActivePracticeSessionUseCase,
     FinishPracticeSessionUseCase,
     ListPracticeHistoryUseCase,
 )
@@ -34,6 +35,19 @@ async def start_practice(
     row = await use_case.execute(user.id, body)
     if not row:
         raise HTTPException(status_code=400, detail="No practice questions")
+    return {"session_id": str(row.id), "snapshot": row.snapshot}
+
+
+@router.get("/sessions/active")
+@inject
+async def get_active_practice(
+    user: CurrentUser,
+    lesson_slug: str,
+    use_case: FromDishka[GetActivePracticeSessionUseCase]
+):
+    row = await use_case.execute(user.id, lesson_slug)
+    if not row:
+        raise HTTPException(status_code=404, detail="No active practice session found")
     return {"session_id": str(row.id), "snapshot": row.snapshot}
 
 

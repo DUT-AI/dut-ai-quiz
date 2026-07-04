@@ -22,3 +22,7 @@ class IPracticeSessionRepository(Protocol):
     async def save(self, entity: PracticeSessionEntity) -> PracticeSessionEntity:
         """Save/update an existing practice session entity in the store."""
         ...
+
+    async def get_active_by_lesson(self, user_id: int, lesson_slug: str) -> PracticeSessionEntity | None:
+        """Get an active practice session for a specific user and lesson slug."""
+        ...

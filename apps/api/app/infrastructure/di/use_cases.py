@@ -56,6 +56,7 @@ from app.application.use_cases.practice.gamification_use_case import (
 )
 from app.application.use_cases.practice.practice_use_case import (
     FinishPracticeSessionUseCase,
+    GetActivePracticeSessionUseCase,
     GetPracticeSessionUseCase,
     ListPracticeHistoryUseCase,
     PatchPracticeAnswersUseCase,
@@ -152,6 +153,9 @@ class UseCaseProvider(Provider):
     )
     finish_practice_session_use_case = provide(
         FinishPracticeSessionUseCase, scope=Scope.REQUEST
+    )
+    get_active_practice_session_use_case = provide(
+        GetActivePracticeSessionUseCase, scope=Scope.REQUEST
     )
     list_practice_history_use_case = provide(
         ListPracticeHistoryUseCase, scope=Scope.REQUEST

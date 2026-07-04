@@ -44,3 +44,17 @@ class PracticeSessionRepository(IPracticeSessionRepository):
             await self._s.refresh(model)
             return model.to_entity()
         raise ValueError("Practice session not found")
+
+    async def get_active_by_lesson(self, user_id: int, lesson_slug: str) -> PracticeSessionEntity | None:
+        from app.domain.value_objects import PracticeSessionStatus
+        r = await self._s.execute(
+            select(PracticeSession)
+            .where(PracticeSession.user_id == user_id)
+            .where(PracticeSession.status == PracticeSessionStatus.IN_PROGRESS)
+            .where(PracticeSession.tags_filter.contains([lesson_slug]))
+            .order_by(PracticeSession.started_at.desc())
+            .limit(1)
+        )
+        model = r.scalar_one_or_none()
+        return model.to_entity() if model else None
+
