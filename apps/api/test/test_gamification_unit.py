@@ -3,16 +3,16 @@ from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 from datetime import datetime, timedelta
 from app.domain.entities.practice import PracticeSessionEntity
-from app.infrastructure.persistence.models import Difficulty, PoolType, PracticeSessionStatus
+from app.domain.value_objects import Difficulty, PoolType, PracticeSessionStatus
 from app.presentation.schemas.practice import (
     GamificationStartIn,
     GamificationAnswerPatchIn,
     GamificationUseItemIn,
 )
-from app.application.use_cases.practice.gamification_use_case import (
-    StartGamificationSessionUseCase,
-    UseItemGamificationUseCase,
-    PatchGamificationAnswerUseCase,
+from app.application.use_cases.practice.practice_use_case import (
+    StartPracticeSessionUseCase,
+    UseItemPracticeUseCase,
+    PatchPracticeAnswerUseCase,
 )
 from app.core.datetime_utils import now_ict
 from fastapi import HTTPException
@@ -89,8 +89,10 @@ async def test_TC_G01_patch_gamification_answer_correct():
         status=PracticeSessionStatus.IN_PROGRESS, snapshot=snapshot, tags_filter=[], question_limit=2
     )
     ps_repo.get.return_value = session
+    ps_repo.count_completed_by_lesson.return_value = 0
+    ps_repo.count_completed_by_lesson.return_value = 0
     
-    use_case = PatchGamificationAnswerUseCase(ps_repo, question_repo)
+    use_case = PatchPracticeAnswerUseCase(ps_repo, question_repo)
     
     payload = GamificationAnswerPatchIn(
         question_id=q_id, option_id=opt_correct_id, time_response=10.0,
@@ -138,8 +140,10 @@ async def test_TC_G02_patch_gamification_answer_incorrect_lose_life():
         status=PracticeSessionStatus.IN_PROGRESS, snapshot=snapshot, tags_filter=[], question_limit=2
     )
     ps_repo.get.return_value = session
+    ps_repo.count_completed_by_lesson.return_value = 0
+    ps_repo.count_completed_by_lesson.return_value = 0
     
-    use_case = PatchGamificationAnswerUseCase(ps_repo, question_repo)
+    use_case = PatchPracticeAnswerUseCase(ps_repo, question_repo)
     
     payload = GamificationAnswerPatchIn(
         question_id=q_id, option_id=opt_wrong_id, time_response=30.0,
@@ -188,8 +192,9 @@ async def test_TC_P01_boss_defeated_advances_tier():
         status=PracticeSessionStatus.IN_PROGRESS, snapshot=snapshot, tags_filter=[], question_limit=2
     )
     ps_repo.get.return_value = session
+    ps_repo.count_completed_by_lesson.return_value = 0
     
-    use_case = PatchGamificationAnswerUseCase(ps_repo, question_repo)
+    use_case = PatchPracticeAnswerUseCase(ps_repo, question_repo)
     
     payload = GamificationAnswerPatchIn(
         question_id=q_id, option_id=opt_correct_id, time_response=10.0
@@ -231,8 +236,9 @@ async def test_TC_P02_user_loses_all_lives_game_over():
         status=PracticeSessionStatus.IN_PROGRESS, snapshot=snapshot, tags_filter=[], question_limit=1
     )
     ps_repo.get.return_value = session
+    ps_repo.count_completed_by_lesson.return_value = 0
     
-    use_case = PatchGamificationAnswerUseCase(ps_repo, question_repo)
+    use_case = PatchPracticeAnswerUseCase(ps_repo, question_repo)
     
     payload = GamificationAnswerPatchIn(question_id=q_id, option_id=opt_wrong_id, time_response=10.0)
     result = await use_case.execute(session_id, user_id=1, payload=payload)
@@ -269,7 +275,9 @@ async def test_TC_P03_win_game_on_last_question():
         status=PracticeSessionStatus.IN_PROGRESS, snapshot=snapshot, tags_filter=[], question_limit=1
     )
     ps_repo.get.return_value = session
-    use_case = PatchGamificationAnswerUseCase(ps_repo, question_repo)
+    ps_repo.count_completed_by_lesson.return_value = 0
+    ps_repo.count_completed_by_lesson.return_value = 0
+    use_case = PatchPracticeAnswerUseCase(ps_repo, question_repo)
     
     payload = GamificationAnswerPatchIn(question_id=q_id, option_id=opt_correct_id, time_response=10.0)
     result = await use_case.execute(session_id, user_id=1, payload=payload)
@@ -304,7 +312,8 @@ async def test_TC_S01_spam_already_answered_question():
         status=PracticeSessionStatus.IN_PROGRESS, snapshot=snapshot, tags_filter=[], question_limit=1
     )
     ps_repo.get.return_value = session
-    use_case = PatchGamificationAnswerUseCase(ps_repo, question_repo)
+    ps_repo.count_completed_by_lesson.return_value = 0
+    use_case = PatchPracticeAnswerUseCase(ps_repo, question_repo)
     
     payload = GamificationAnswerPatchIn(question_id=q_id, option_id=str(uuid4()), time_response=10.0)
     
@@ -354,7 +363,8 @@ async def test_TC_S03_timeout_fails_automatically():
         status=PracticeSessionStatus.IN_PROGRESS, snapshot=snapshot, tags_filter=[], question_limit=1
     )
     ps_repo.get.return_value = session
-    use_case = PatchGamificationAnswerUseCase(ps_repo, question_repo)
+    ps_repo.count_completed_by_lesson.return_value = 0
+    use_case = PatchPracticeAnswerUseCase(ps_repo, question_repo)
     
     # User cố tình truyền thời gian giả (15s) nhưng hệ thống lấy thời gian thực (100s) > 60s
     payload = GamificationAnswerPatchIn(question_id=q_id, option_id=opt_correct_id, time_response=15.0)
@@ -387,7 +397,8 @@ async def test_TC_S04_question_not_in_session():
         status=PracticeSessionStatus.IN_PROGRESS, snapshot=snapshot, tags_filter=[], question_limit=1
     )
     ps_repo.get.return_value = session
-    use_case = PatchGamificationAnswerUseCase(ps_repo, question_repo)
+    ps_repo.count_completed_by_lesson.return_value = 0
+    use_case = PatchPracticeAnswerUseCase(ps_repo, question_repo)
     
     payload = GamificationAnswerPatchIn(question_id=q_fake_id, option_id=str(uuid4()), time_response=10.0)
     
@@ -418,7 +429,9 @@ async def test_TC_S05_submit_after_game_over():
         snapshot=snapshot, tags_filter=[], question_limit=1
     )
     ps_repo.get.return_value = session
-    use_case = PatchGamificationAnswerUseCase(ps_repo, question_repo)
+    ps_repo.count_completed_by_lesson.return_value = 0
+    ps_repo.count_completed_by_lesson.return_value = 0
+    use_case = PatchPracticeAnswerUseCase(ps_repo, question_repo)
     
     payload = GamificationAnswerPatchIn(question_id=q_id, option_id=str(uuid4()), time_response=10.0)
     

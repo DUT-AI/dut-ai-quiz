@@ -26,3 +26,21 @@ class GamificationAnswerResultOut(BaseModel):
     updated_gamification: dict[str, Any]
     is_game_over: bool
 
+class PracticeLessonSummaryOut(BaseModel):
+    lesson_slug: str
+    total_sessions: int
+    completed_sessions: int
+    highest_points: int
+    total_gold_earned: int
+    highest_tier: int
+
+
+class PracticeLeaderboardRowOut(BaseModel):
+    user_id: int
+    username: str | None = None
+    avatar_url: str | None = None
+    final_score: float
+    gold: int
+    total_time_response: float
+    attempt_count: int
+

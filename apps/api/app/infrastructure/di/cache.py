@@ -4,6 +4,7 @@ from redis.asyncio import Redis, from_url
 from app.config import settings
 from app.domain.interfaces import IBlogCache
 from app.infrastructure.cache import ProfileCache, RedisBlogCache
+from app.infrastructure.cache.practice_leaderboard_cache import PracticeLeaderboardCache
 
 
 class CacheProvider(Provider):
@@ -26,3 +27,7 @@ class CacheProvider(Provider):
     def blog_cache(self, redis: Redis) -> IBlogCache:
         """Provide IBlogCache interface mapped to RedisBlogCache implementation."""
         return RedisBlogCache(redis, ttl=300)
+
+    @provide(scope=Scope.APP)
+    def practice_leaderboard_cache(self, redis: Redis) -> PracticeLeaderboardCache:
+        return PracticeLeaderboardCache(redis, ttl=600)

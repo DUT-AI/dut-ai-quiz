@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, func, cast, Float, Integer, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities.practice import PracticeSessionEntity
@@ -58,3 +58,61 @@ class PracticeSessionRepository(IPracticeSessionRepository):
         model = r.scalar_one_or_none()
         return model.to_entity() if model else None
 
+    async def count_completed_by_lesson(self, user_id: int, lesson_slug: str) -> int:
+        from app.domain.value_objects import PracticeSessionStatus
+        r = await self._s.execute(
+            select(func.count(PracticeSession.id))
+            .where(PracticeSession.user_id == user_id)
+            .where(PracticeSession.status == PracticeSessionStatus.COMPLETED)
+            .where(PracticeSession.tags_filter.contains([lesson_slug]))
+        )
+        return r.scalar() or 0
+
+    async def get_leaderboard_by_lesson(self, lesson_slug: str, limit: int = 100) -> list[dict]:
+        from app.domain.value_objects import PracticeSessionStatus
+        from app.infrastructure.persistence.models.user import User
+
+        subq = (
+            select(PracticeSession.id)
+            .where(PracticeSession.status == PracticeSessionStatus.COMPLETED)
+            .where(PracticeSession.tags_filter.contains([lesson_slug]))
+            .distinct(PracticeSession.user_id)
+            .order_by(
+                PracticeSession.user_id,
+                cast(PracticeSession.snapshot['gamification']['final_score'].astext, Float).desc(),
+                cast(PracticeSession.snapshot['gamification']['gold'].astext, Integer).desc(),
+                cast(PracticeSession.snapshot['gamification']['total_time_response'].astext, Float).asc(),
+                cast(PracticeSession.snapshot['gamification']['attempt_count'].astext, Integer).asc(),
+            )
+        ).subquery()
+        
+        stmt = (
+            select(PracticeSession, User)
+            .join(User, User.id == PracticeSession.user_id)
+            .join(subq, PracticeSession.id == subq.c.id)
+            .order_by(
+                cast(PracticeSession.snapshot['gamification']['final_score'].astext, Float).desc(),
+                cast(PracticeSession.snapshot['gamification']['gold'].astext, Integer).desc(),
+                cast(PracticeSession.snapshot['gamification']['total_time_response'].astext, Float).asc(),
+                cast(PracticeSession.snapshot['gamification']['attempt_count'].astext, Integer).asc(),
+            )
+            .limit(limit)
+        )
+        
+        r = await self._s.execute(stmt)
+        rows = r.all()
+        
+        result = []
+        for row in rows:
+            ps = row.PracticeSession.snapshot.get('gamification', {})
+            result.append({
+                "user_id": row.User.id,
+                "username": row.User.name,
+                "avatar_url": row.User.avatar_url,
+                "final_score": float(ps.get('final_score', 0)),
+                "gold": int(ps.get('gold', 0)),
+                "total_time_response": float(ps.get('total_time_response', 0)),
+                "attempt_count": int(ps.get('attempt_count', 0))
+            })
+            
+        return result

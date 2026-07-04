@@ -8,11 +8,11 @@ from app.application.use_cases.practice.practice_use_case import (
     GetActivePracticeSessionUseCase,
     FinishPracticeSessionUseCase,
     ListPracticeHistoryUseCase,
-)
-from app.application.use_cases.practice.gamification_use_case import (
-    StartGamificationSessionUseCase,
-    UseItemGamificationUseCase,
-    PatchGamificationAnswerUseCase,
+    GetPracticeHistorySummaryUseCase,
+    GetPracticeLeaderboardUseCase,
+    StartPracticeSessionUseCase,
+    PatchPracticeAnswerUseCase,
+    UseItemPracticeUseCase,
 )
 from app.presentation.api.deps import CurrentUser
 from app.presentation.schemas.practice import (
@@ -20,6 +20,8 @@ from app.presentation.schemas.practice import (
     GamificationAnswerPatchIn,
     GamificationUseItemIn,
     GamificationAnswerResultOut,
+    PracticeLessonSummaryOut,
+    PracticeLeaderboardRowOut,
 )
 
 router = APIRouter(prefix="/practice", tags=["practice"])
@@ -30,7 +32,7 @@ router = APIRouter(prefix="/practice", tags=["practice"])
 async def start_practice(
     user: CurrentUser,
     body: GamificationStartIn,
-    use_case: FromDishka[StartGamificationSessionUseCase]
+    use_case: FromDishka[StartPracticeSessionUseCase]
 ):
     row = await use_case.execute(user.id, body)
     if not row:
@@ -70,7 +72,7 @@ async def patch_practice_answers(
     user: CurrentUser,
     session_id: UUID,
     body: GamificationAnswerPatchIn,
-    use_case: FromDishka[PatchGamificationAnswerUseCase]
+    use_case: FromDishka[PatchPracticeAnswerUseCase]
 ):
     return await use_case.execute(session_id, user.id, body)
 
@@ -81,7 +83,7 @@ async def use_item_practice(
     user: CurrentUser,
     session_id: UUID,
     body: GamificationUseItemIn,
-    use_case: FromDishka[UseItemGamificationUseCase]
+    use_case: FromDishka[UseItemPracticeUseCase]
 ):
     result = await use_case.execute(session_id, user.id, body)
     if result is None:
@@ -109,3 +111,21 @@ async def practice_history(
     use_case: FromDishka[ListPracticeHistoryUseCase]
 ):
     return await use_case.execute(user.id)
+
+
+@router.get("/history/summary", response_model=list[PracticeLessonSummaryOut])
+@inject
+async def practice_history_summary(
+    user: CurrentUser,
+    use_case: FromDishka[GetPracticeHistorySummaryUseCase]
+):
+    return await use_case.execute(user.id)
+
+
+@router.get("/{lesson_slug}/leaderboard", response_model=list[PracticeLeaderboardRowOut])
+@inject
+async def get_practice_leaderboard(
+    lesson_slug: str,
+    use_case: FromDishka[GetPracticeLeaderboardUseCase]
+):
+    return await use_case.execute(lesson_slug)

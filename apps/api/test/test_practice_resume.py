@@ -80,6 +80,7 @@ async def test_finish_practice_session_success():
     ps_repo.get.return_value = mock_session
     # Mock save to return the modified entity
     ps_repo.save.side_effect = lambda entity: entity
+    ps_repo.count_completed_by_lesson.return_value = 0
     
     use_case = FinishPracticeSessionUseCase(ps_repo)
     result = await use_case.execute(session_id=session_id, user_id=user_id)
