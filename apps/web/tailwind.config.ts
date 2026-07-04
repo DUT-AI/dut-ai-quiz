@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import plugin from "tailwindcss/plugin";
 
 const config: Config = {
   darkMode: ["class"],
@@ -6,6 +7,7 @@ const config: Config = {
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./features/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     container: {
@@ -95,7 +97,64 @@ const config: Config = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    require("tailwindcss-animate"),
+    plugin(function ({ addUtilities }) {
+      addUtilities({
+        ".theory-scrollbar, .custom-scrollbar": {
+          "scrollbar-width": "thin",
+          "scrollbar-color": "hsl(var(--primary) / 0.3) transparent",
+          "&::-webkit-scrollbar": {
+            height: "6px",
+            width: "6px",
+          },
+          "&::-webkit-scrollbar-track": {
+            background: "transparent",
+            "border-radius": "9999px",
+          },
+          "&::-webkit-scrollbar-thumb": {
+            background: "hsl(var(--primary) / 0.25)",
+            "border-radius": "9999px",
+            border: "1px solid transparent",
+            "background-clip": "padding-box",
+          },
+          "&:hover::-webkit-scrollbar-track": {
+            background: "rgba(241, 245, 249, 0.6)",
+          },
+          "&::-webkit-scrollbar-thumb:hover": {
+            background: "hsl(var(--primary) / 0.8) !important",
+          },
+          "&:hover::-webkit-scrollbar-thumb": {
+            background: "hsl(var(--primary) / 0.55)",
+          },
+          ".dark &": {
+            "scrollbar-color": "hsl(var(--primary) / 0.2) transparent",
+            "&::-webkit-scrollbar-thumb": {
+              background: "hsl(var(--primary) / 0.18)",
+            },
+            "&:hover::-webkit-scrollbar-track": {
+              background: "rgba(30, 41, 59, 0.4)",
+            },
+            "&:hover::-webkit-scrollbar-thumb": {
+              background: "hsl(var(--primary) / 0.4)",
+            },
+          },
+          "@media (max-width: 768px)": {
+            "&::-webkit-scrollbar": {
+              height: "4px",
+              width: "4px",
+            },
+            "&::-webkit-scrollbar-thumb": {
+              background: "hsl(var(--primary) / 0.2)",
+            },
+            ".dark &::-webkit-scrollbar-thumb": {
+              background: "hsl(var(--primary) / 0.12)",
+            },
+          },
+        },
+      });
+    }),
+  ],
 };
 
 export default config;

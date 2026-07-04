@@ -105,7 +105,7 @@ export default function LessonSlugPage() {
               className={cn(
                 "relative flex items-center gap-2 px-6 py-4 text-sm font-black transition-all duration-200 text-nowrap rounded-t-2xl pb-4 border-b-2 border-transparent",
                 isActive
-                  ? "text-primary border-primary"
+                  ? "text-primary"
                   : "text-gray-navy dark:text-light-blue hover:text-primary opacity-70 hover:opacity-100"
               )}
             >
@@ -114,7 +114,7 @@ export default function LessonSlugPage() {
               {isActive && (
                 <motion.div
                   layoutId="lesson-active-tab-underline"
-                  className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary"
+                  className="absolute bottom-0 left-0 right-0 h-[3px] bg-primary"
                   transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 />
               )}
