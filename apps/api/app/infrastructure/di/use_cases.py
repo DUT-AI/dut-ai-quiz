@@ -13,7 +13,11 @@ from app.application.use_cases.attempts import (
     SubmitAttemptUseCase,
 )
 from app.application.use_cases.attempts.rescore_use_case import RescoreAttemptUseCase
-
+from app.application.use_cases.auth import (
+    GoogleAuthUseCase,
+    LoginByManageAccountUseCase,
+    LogoutUseCase,
+)
 from app.application.use_cases.exams.exam_use_case import (
     CreateExamUseCase,
     DeleteExamUseCase,
@@ -25,23 +29,23 @@ from app.application.use_cases.exams.exam_use_case import (
 )
 from app.application.use_cases.exams.stats_use_case import GetExamStatsUseCase
 from app.application.use_cases.hackathon import (
-    CreateHackathonUseCase,
+    CancelRegistrationUseCase,
     CreateHackathonTaskUseCase,
-    DeleteHackathonUseCase,
-    DeleteHackathonTaskUseCase,
-    GetHackathonUseCase,
-    GetHackathonTaskUseCase,
-    ListHackathonTasksUseCase,
-    ListHackathonsUseCase,
-    UpdateHackathonUseCase,
-    UpdateHackathonTaskUseCase,
-    RegisterIndividualUseCase,
+    CreateHackathonUseCase,
     CreateTeamUseCase,
+    DeleteHackathonTaskUseCase,
+    DeleteHackathonUseCase,
+    GetHackathonTaskUseCase,
+    GetHackathonUseCase,
     JoinTeamUseCase,
     LeaveTeamUseCase,
-    CancelRegistrationUseCase,
+    ListHackathonsUseCase,
+    ListHackathonTasksUseCase,
     ListRegistrationsUseCase,
+    RegisterIndividualUseCase,
     ReviewRegistrationUseCase,
+    UpdateHackathonTaskUseCase,
+    UpdateHackathonUseCase,
 )
 from app.application.use_cases.leaderboard.leaderboard_use_case import (
     GetLeaderboardUseCase,
@@ -60,12 +64,12 @@ from app.application.use_cases.me.me_use_case import GetProfileUseCase
 from app.application.use_cases.practice.practice_use_case import (
     FinishPracticeSessionUseCase,
     GetActivePracticeSessionUseCase,
-    GetPracticeSessionUseCase,
     GetPracticeHistorySummaryUseCase,
     GetPracticeLeaderboardUseCase,
+    GetPracticeSessionUseCase,
     ListPracticeHistoryUseCase,
-    StartPracticeSessionUseCase,
     PatchPracticeAnswerUseCase,
+    StartPracticeSessionUseCase,
     UseItemPracticeUseCase,
 )
 from app.application.use_cases.questions import (
@@ -80,8 +84,8 @@ from app.domain.events.bus import EventBus
 from app.domain.interfaces import (
     IAttemptRepository,
     IFocusEventRepository,
-    IUserRepository,
     IManageService,
+    IUserRepository,
 )
 from app.infrastructure.cache.redis_client import ProfileCache
 
@@ -108,22 +112,26 @@ class UseCaseProvider(Provider):
     delete_hackathon_task_use_case = provide(
         DeleteHackathonTaskUseCase, scope=Scope.REQUEST
     )
-    get_hackathon_task_use_case = provide(
-        GetHackathonTaskUseCase, scope=Scope.REQUEST
-    )
+    get_hackathon_task_use_case = provide(GetHackathonTaskUseCase, scope=Scope.REQUEST)
     list_hackathon_tasks_use_case = provide(
         ListHackathonTasksUseCase, scope=Scope.REQUEST
     )
     update_hackathon_task_use_case = provide(
         UpdateHackathonTaskUseCase, scope=Scope.REQUEST
     )
-    register_individual_use_case = provide(RegisterIndividualUseCase, scope=Scope.REQUEST)
+    register_individual_use_case = provide(
+        RegisterIndividualUseCase, scope=Scope.REQUEST
+    )
     create_team_use_case = provide(CreateTeamUseCase, scope=Scope.REQUEST)
     join_team_use_case = provide(JoinTeamUseCase, scope=Scope.REQUEST)
     leave_team_use_case = provide(LeaveTeamUseCase, scope=Scope.REQUEST)
-    cancel_registration_use_case = provide(CancelRegistrationUseCase, scope=Scope.REQUEST)
+    cancel_registration_use_case = provide(
+        CancelRegistrationUseCase, scope=Scope.REQUEST
+    )
     list_registrations_use_case = provide(ListRegistrationsUseCase, scope=Scope.REQUEST)
-    review_registration_use_case = provide(ReviewRegistrationUseCase, scope=Scope.REQUEST)
+    review_registration_use_case = provide(
+        ReviewRegistrationUseCase, scope=Scope.REQUEST
+    )
 
     # questions
     create_question_use_case = provide(CreateQuestionUseCase, scope=Scope.REQUEST)
@@ -164,9 +172,7 @@ class UseCaseProvider(Provider):
     start_practice_session_use_case = provide(
         StartPracticeSessionUseCase, scope=Scope.REQUEST
     )
-    use_item_practice_use_case = provide(
-        UseItemPracticeUseCase, scope=Scope.REQUEST
-    )
+    use_item_practice_use_case = provide(UseItemPracticeUseCase, scope=Scope.REQUEST)
     patch_practice_answer_use_case = provide(
         PatchPracticeAnswerUseCase, scope=Scope.REQUEST
     )
@@ -197,7 +203,7 @@ class UseCaseProvider(Provider):
     get_lesson_by_slug_use_case = provide(GetLessonBySlugUseCase, scope=Scope.REQUEST)
 
     # auth & me
-    proxy_login_use_case = provide(ProxyLoginUseCase, scope=Scope.REQUEST)
+    proxy_login_use_case = provide(LoginByManageAccountUseCase, scope=Scope.REQUEST)
     google_auth_use_case = provide(GoogleAuthUseCase, scope=Scope.REQUEST)
 
     @provide(scope=Scope.REQUEST)

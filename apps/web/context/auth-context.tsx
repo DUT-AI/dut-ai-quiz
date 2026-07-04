@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { apiGet, apiPostJson } from "@/lib/api";
 
 export interface UserContextType {
@@ -20,6 +21,7 @@ export interface UserContextType {
 const AuthContext = createContext<UserContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const [user, setUser] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -59,8 +61,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     try {
       await apiPostJson<any>("/api/v1/auth/logout", {});
+
     } finally {
       setUser(null);
+      router.push("/login");
     }
   };
 
