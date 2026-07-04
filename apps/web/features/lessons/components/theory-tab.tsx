@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { renderTheoryMarkdown } from "../utils/theory-parser/index";
+import { extractHeadings } from "../utils/theory-parser";
 import { TheoryEmptyState } from "./theory-empty-state";
 import { TheoryContent } from "./theory-content";
 import { TableOfContents } from "./table-of-contents";
@@ -13,8 +13,8 @@ interface TheoryTabProps {
 export function TheoryTab({ contentMd }: TheoryTabProps) {
   const [activeId, setActiveId] = useState<string>("");
 
-  const { html, headings } = useMemo(() => {
-    return renderTheoryMarkdown(contentMd || "");
+  const headings = useMemo(() => {
+    return extractHeadings(contentMd || "");
   }, [contentMd]);
 
   useEffect(() => {
@@ -112,7 +112,7 @@ export function TheoryTab({ contentMd }: TheoryTabProps) {
 
   return (
     <div className="relative">
-      <TheoryContent html={html} />
+      <TheoryContent contentMd={contentMd} />
 
       {showTOC && (
         <TableOfContents
