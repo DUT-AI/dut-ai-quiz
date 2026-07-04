@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { renderTheoryMarkdown } from "../utils/theory-parser";
+import { renderTheoryMarkdown } from "../utils/theory-parser/index";
 import { TheoryEmptyState } from "./theory-empty-state";
 import { TheoryContent } from "./theory-content";
 import { TableOfContents } from "./table-of-contents";
