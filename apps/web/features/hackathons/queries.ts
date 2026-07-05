@@ -96,17 +96,13 @@ export function useCreateTeam(hackathonId: string) {
   });
 }
 
-export function useJoinTeam(hackathonId?: string) {
+export function useJoinTeam(hackathonId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: { code: string }) =>
-      apiPost<HackathonTeam>("/api/v1/hackathons/register/team/join", body, HackathonTeamSchema),
+      apiPost<HackathonTeam>(`/api/v1/hackathons/${hackathonId}/register/team/join`, body, HackathonTeamSchema),
     onSuccess: () => {
-      if (hackathonId) {
-        qc.invalidateQueries({ queryKey: ["hackathons", hackathonId, "registration-status"] });
-      } else {
-        qc.invalidateQueries({ queryKey: ["hackathons"] });
-      }
+      qc.invalidateQueries({ queryKey: ["hackathons", hackathonId, "registration-status"] });
     },
   });
 }

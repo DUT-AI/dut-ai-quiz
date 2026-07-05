@@ -3,6 +3,7 @@ from datetime import datetime
 from uuid import UUID
 from enum import Enum
 
+
 class ParticipationMode(str, Enum):
     INDIVIDUAL = "individual"
     TEAM = "team"
@@ -13,6 +14,7 @@ class MetricType(str, Enum):
     RMSE = "rmse"
     F1_SCORE = "f1_score"
     ACCURACY = "accuracy"
+
 
 @dataclasses.dataclass(slots=True)
 class HackathonEntity:
@@ -27,6 +29,11 @@ class HackathonEntity:
     created_at: datetime
     max_team_members: int = 5
     updated_at: datetime | None = None
+
+    def is_registration_open(self) -> bool:
+        if not self.start_time:
+            return True
+        return datetime.now() < self.start_time
 
 
 @dataclasses.dataclass(slots=True)

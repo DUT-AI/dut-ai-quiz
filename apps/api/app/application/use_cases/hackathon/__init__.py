@@ -12,13 +12,14 @@ from .crud_task import (
     ListHackathonTasksUseCase,
     UpdateHackathonTaskUseCase,
 )
-from .registration import (
-    RegisterIndividualUseCase,
+from .team_registration import (
+    CancelRegistrationUseCase,
     CreateTeamUseCase,
+    GetRegistrationStatusUseCase,
     JoinTeamUseCase,
     LeaveTeamUseCase,
-    CancelRegistrationUseCase,
     ListRegistrationsUseCase,
+    RegisterIndividualUseCase,
     ReviewRegistrationUseCase,
 )
 
@@ -40,4 +41,5 @@ __all__ = [
     "CancelRegistrationUseCase",
     "ListRegistrationsUseCase",
     "ReviewRegistrationUseCase",
+    "GetRegistrationStatusUseCase",
 ]

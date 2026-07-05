@@ -50,8 +50,7 @@ export const HackathonRegistrationSchema = z.object({
   rejection_reason: z.string().nullable().optional(),
   
   team: HackathonTeamSchema.nullable().optional(),
-  user_name: z.string().nullable().optional(),
-  user_email: z.string().nullable().optional(),
+  user: TeamMemberSchema.nullable().optional(),
 });
 export type HackathonRegistration = z.infer<typeof HackathonRegistrationSchema>;
 

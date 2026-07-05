@@ -1,6 +1,7 @@
 from dishka import Provider, Scope, provide
 
 from app.application.services.pdf_parser import PDFParserService
+from app.application.services.user_service import UserService
 from app.application.use_cases.attempts import (
     GetAttemptDetailUseCase,
     GetAttemptUseCase,
@@ -46,6 +47,7 @@ from app.application.use_cases.hackathon import (
     ReviewRegistrationUseCase,
     UpdateHackathonTaskUseCase,
     UpdateHackathonUseCase,
+    GetRegistrationStatusUseCase,
 )
 from app.application.use_cases.leaderboard.leaderboard_use_case import (
     GetLeaderboardUseCase,
@@ -88,6 +90,11 @@ from app.domain.interfaces import (
     IUserRepository,
 )
 from app.infrastructure.cache.redis_client import ProfileCache
+from app.infrastructure.repositories.hackathons import (
+    HackathonRepository,
+    HackathonTeamRepository,
+    HackathonRegistrationRepository,
+)
 
 
 class UseCaseProvider(Provider):
@@ -122,16 +129,56 @@ class UseCaseProvider(Provider):
     register_individual_use_case = provide(
         RegisterIndividualUseCase, scope=Scope.REQUEST
     )
-    create_team_use_case = provide(CreateTeamUseCase, scope=Scope.REQUEST)
-    join_team_use_case = provide(JoinTeamUseCase, scope=Scope.REQUEST)
+
+    @provide(scope=Scope.REQUEST)
+    def create_team_use_case(
+        self,
+        hackathon_repo: HackathonRepository,
+        team_repo: HackathonTeamRepository,
+        reg_repo: HackathonRegistrationRepository,
+        user_service: UserService,
+    ) -> CreateTeamUseCase:
+        return CreateTeamUseCase(hackathon_repo, team_repo, reg_repo, user_service)
+
+    @provide(scope=Scope.REQUEST)
+    def join_team_use_case(
+        self,
+        hackathon_repo: HackathonRepository,
+        team_repo: HackathonTeamRepository,
+        reg_repo: HackathonRegistrationRepository,
+        user_service: UserService,
+    ) -> JoinTeamUseCase:
+        return JoinTeamUseCase(hackathon_repo, team_repo, reg_repo, user_service)
+
     leave_team_use_case = provide(LeaveTeamUseCase, scope=Scope.REQUEST)
     cancel_registration_use_case = provide(
         CancelRegistrationUseCase, scope=Scope.REQUEST
     )
-    list_registrations_use_case = provide(ListRegistrationsUseCase, scope=Scope.REQUEST)
+
+    @provide(scope=Scope.REQUEST)
+    def list_registrations_use_case(
+        self,
+        hackathon_repo: HackathonRepository,
+        reg_repo: HackathonRegistrationRepository,
+        team_repo: HackathonTeamRepository,
+        user_service: UserService,
+    ) -> ListRegistrationsUseCase:
+        return ListRegistrationsUseCase(
+            hackathon_repo, reg_repo, team_repo, user_service
+        )
+
     review_registration_use_case = provide(
         ReviewRegistrationUseCase, scope=Scope.REQUEST
     )
+
+    @provide(scope=Scope.REQUEST)
+    def get_registration_status_use_case(
+        self,
+        reg_repo: HackathonRegistrationRepository,
+        team_repo: HackathonTeamRepository,
+        user_service: UserService,
+    ) -> GetRegistrationStatusUseCase:
+        return GetRegistrationStatusUseCase(reg_repo, team_repo, user_service)
 
     # questions
     create_question_use_case = provide(CreateQuestionUseCase, scope=Scope.REQUEST)
@@ -222,3 +269,11 @@ class UseCaseProvider(Provider):
     @provide(scope=Scope.REQUEST)
     def pdf_parser_service(self) -> PDFParserService:
         return PDFParserService()
+
+    @provide(scope=Scope.REQUEST)
+    def user_service(
+        self,
+        user_repo: IUserRepository,
+        manage_client: IManageService,
+    ) -> UserService:
+        return UserService(user_repo, manage_client)

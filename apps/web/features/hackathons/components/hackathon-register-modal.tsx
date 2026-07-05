@@ -93,7 +93,7 @@ export function HackathonRegisterModal({
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="bg-white dark:bg-navy-blue w-full max-w-lg rounded-[36px] shadow-2xl relative z-10 overflow-hidden border border-white/10 p-8"
+        className="bg-white dark:bg-navy-blue w-full max-w-2xl rounded-[36px] shadow-2xl relative z-10 overflow-hidden border border-white/10 p-8"
       >
         <button
           onClick={onClose}
@@ -121,22 +121,20 @@ export function HackathonRegisterModal({
           <div className="grid grid-cols-2 gap-2 p-1.5 rounded-[20px] bg-gray-100 dark:bg-white/5 mb-6">
             <button
               onClick={() => setMode("individual")}
-              className={`flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-bold transition-all ${
-                mode === "individual"
-                  ? "bg-white dark:bg-white/15 text-primary shadow-sm"
-                  : "text-gray-navy/60 dark:text-light-blue/50 hover:text-gray-navy dark:hover:text-white"
-              }`}
+              className={`flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-bold transition-all ${mode === "individual"
+                ? "bg-white dark:bg-white/15 text-primary shadow-sm"
+                : "text-gray-navy/60 dark:text-light-blue/50 hover:text-gray-navy dark:hover:text-white"
+                }`}
             >
               <User className="size-4" />
               Cá nhân
             </button>
             <button
               onClick={() => setMode("team")}
-              className={`flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-bold transition-all ${
-                mode === "team"
-                  ? "bg-white dark:bg-white/15 text-primary shadow-sm"
-                  : "text-gray-navy/60 dark:text-light-blue/50 hover:text-gray-navy dark:hover:text-white"
-              }`}
+              className={`flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-bold transition-all ${mode === "team"
+                ? "bg-white dark:bg-white/15 text-primary shadow-sm"
+                : "text-gray-navy/60 dark:text-light-blue/50 hover:text-gray-navy dark:hover:text-white"
+                }`}
             >
               <Users className="size-4" />
               Đội nhóm
@@ -149,7 +147,7 @@ export function HackathonRegisterModal({
           <div className="space-y-6 text-left">
             <div className="p-5 rounded-3xl bg-primary/5 border border-primary/10">
               <p className="text-sm text-gray-navy dark:text-light-blue/80 leading-relaxed">
-                Bạn đang thực hiện đăng ký tham gia thi đấu với tư cách **Cá nhân**. Khi giảng viên phê duyệt, bạn sẽ được cấp quyền tham gia làm bài thi của giải đấu.
+                Bạn đang thực hiện đăng ký tham gia thi đấu với tư cách <strong>cá nhân</strong>. Khi Admin phê duyệt, bạn sẽ được cấp quyền tham gia làm bài thi của giải đấu.
               </p>
             </div>
             <Button
@@ -167,21 +165,19 @@ export function HackathonRegisterModal({
             <div className="flex gap-4 border-b border-gray-100 dark:border-white/5">
               <button
                 onClick={() => setTeamTab("create")}
-                className={`pb-3 text-sm font-bold transition-all border-b-2 ${
-                  teamTab === "create"
-                    ? "border-primary text-primary"
-                    : "border-transparent text-gray-navy/60 dark:text-light-blue/50 hover:text-gray-navy dark:hover:text-white"
-                }`}
+                className={`pb-3 text-sm font-bold transition-all border-b-2 ${teamTab === "create"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-gray-navy/60 dark:text-light-blue/50 hover:text-gray-navy dark:hover:text-white"
+                  }`}
               >
                 Tạo đội thi mới
               </button>
               <button
                 onClick={() => setTeamTab("join")}
-                className={`pb-3 text-sm font-bold transition-all border-b-2 ${
-                  teamTab === "join"
-                    ? "border-primary text-primary"
-                    : "border-transparent text-gray-navy/60 dark:text-light-blue/50 hover:text-gray-navy dark:hover:text-white"
-                }`}
+                className={`pb-3 text-sm font-bold transition-all border-b-2 ${teamTab === "join"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-gray-navy/60 dark:text-light-blue/50 hover:text-gray-navy dark:hover:text-white"
+                  }`}
               >
                 Gia nhập đội có sẵn
               </button>
@@ -204,7 +200,7 @@ export function HackathonRegisterModal({
                 <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/10 flex gap-3 text-left">
                   <ShieldAlert className="size-5 text-amber-500 shrink-0" />
                   <p className="text-xs text-amber-600 dark:text-amber-400 leading-normal">
-                    Sau khi tạo đội thành công, bạn sẽ là **Trưởng nhóm (Leader)**. Bạn sẽ nhận được mã mời để gửi cho các thành viên khác tham gia.
+                    Sau khi tạo đội thành công, bạn sẽ là <strong>Trưởng nhóm</strong>. Bạn sẽ nhận được mã mời để gửi cho các thành viên khác tham gia.
                   </p>
                 </div>
                 <Button

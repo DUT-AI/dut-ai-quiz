@@ -60,9 +60,13 @@ class HackathonTaskCreate(BaseModel):
             if not normalized:
                 raise ValueError("metric_type must not be empty")
             for member in MetricType:
-                if normalized.lower() == member.value.lower() or normalized.upper() == member.name.upper():
+                if (
+                    normalized.lower() == member.value.lower()
+                    or normalized.upper() == member.name.upper()
+                ):
                     return member
         return value
+
 
 class HackathonTaskUpdate(BaseModel):
     name: str | None = None
@@ -82,7 +86,10 @@ class HackathonTaskUpdate(BaseModel):
             if not normalized:
                 raise ValueError("metric_type must not be empty")
             for member in MetricType:
-                if normalized.lower() == member.value.lower() or normalized.upper() == member.name.upper():
+                if (
+                    normalized.lower() == member.value.lower()
+                    or normalized.upper() == member.name.upper()
+                ):
                     return member
         return value
 
@@ -102,12 +109,11 @@ class HackathonTaskOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
-
-
 class TeamMemberOut(BaseModel):
     id: int
     name: str
     email: str
+    avatar_url: str | None = None
 
     model_config = {"from_attributes": True}
 
@@ -134,10 +140,9 @@ class HackathonRegistrationOut(BaseModel):
     registered_at: datetime
     reviewed_by: int | None = None
     rejection_reason: str | None = None
-    
+
     team: HackathonTeamOut | None = None
-    user_name: str | None = None
-    user_email: str | None = None
+    user: TeamMemberOut | None = None
 
     model_config = {"from_attributes": True}
 
@@ -157,4 +162,3 @@ class LeaveTeamInput(BaseModel):
 class ReviewRegistrationInput(BaseModel):
     status: RegistrationStatus
     rejection_reason: str | None = None
-
