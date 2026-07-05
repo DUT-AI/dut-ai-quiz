@@ -11,7 +11,6 @@ import { Award, Plus } from "lucide-react";
 export function HackathonList() {
   const { data: hackathons, isLoading, error } = useHackathons();
   const [showCreate, setShowCreate] = useState(false);
-  const [editingHackathon, setEditingHackathon] = useState<Hackathon | null>(null);
 
   return (
     <div className="space-y-8">
@@ -38,12 +37,6 @@ export function HackathonList() {
       <AnimatePresence>
         {showCreate && (
           <HackathonFormModal onClose={() => setShowCreate(false)} />
-        )}
-        {editingHackathon && (
-          <HackathonFormModal
-            initialData={editingHackathon}
-            onClose={() => setEditingHackathon(null)}
-          />
         )}
       </AnimatePresence>
 
@@ -84,7 +77,6 @@ export function HackathonList() {
           <HackathonRow
             key={h.id}
             hackathon={h}
-            onEdit={() => setEditingHackathon(h)}
           />
         ))}
       </div>

@@ -54,3 +54,20 @@ export const HackathonRegistrationSchema = z.object({
 });
 export type HackathonRegistration = z.infer<typeof HackathonRegistrationSchema>;
 
+export const MetricTypeSchema = z.enum(["rmse", "f1_score", "accuracy"]);
+export type MetricType = z.infer<typeof MetricTypeSchema>;
+
+export const HackathonTaskSchema = z.object({
+  id: z.string(),
+  hackathon_id: z.string(),
+  name: z.string().min(1, "Tên đề bài không được để trống"),
+  problem_description_md: z.string().default(""),
+  private_test_url: z.string().default(""),
+  public_test_url: z.string().default(""),
+  metric_type: MetricTypeSchema,
+  max_submissions: z.number().default(10),
+  created_at: z.string(),
+  updated_at: z.string().nullable().optional(),
+});
+export type HackathonTask = z.infer<typeof HackathonTaskSchema>;
+

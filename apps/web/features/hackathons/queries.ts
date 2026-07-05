@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiGet, apiPost, apiPatch, apiClient } from "@/lib/api";
-import { HackathonSchema, type Hackathon } from "./types";
+import { HackathonSchema, type Hackathon, HackathonRegistrationSchema, type HackathonRegistration, type RegistrationStatus, HackathonTaskSchema, type HackathonTask, type MetricType, HackathonTeamSchema, type HackathonTeam } from "./types";
 import { z } from "zod";
 
 export function useHackathons(options?: any) {
@@ -52,13 +52,6 @@ export function useDeleteHackathon() {
   });
 }
 
-import {
-  HackathonRegistrationSchema,
-  HackathonTeamSchema,
-  type HackathonRegistration,
-  type HackathonTeam,
-  type RegistrationStatus,
-} from "./types";
 
 export function useHackathonRegistrationStatus(hackathonId: string, options?: any) {
   return useQuery<{
@@ -148,6 +141,50 @@ export function useReviewRegistration(hackathonId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["hackathons", hackathonId, "registrations"] });
       qc.invalidateQueries({ queryKey: ["hackathons", hackathonId, "registration-status"] });
+    },
+  });
+}
+
+export function useHackathonTasks(hackathonId: string, options?: any) {
+  return useQuery<HackathonTask[]>({
+    queryKey: ["hackathons", hackathonId, "tasks"],
+    queryFn: () =>
+      apiGet<HackathonTask[]>(`/api/v1/hackathons/${hackathonId}/tasks`, z.array(HackathonTaskSchema)),
+    staleTime: 30_000,
+    enabled: !!hackathonId,
+    ...options,
+  });
+}
+
+export function useCreateHackathonTask(hackathonId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Omit<HackathonTask, "id" | "hackathon_id" | "created_at" | "updated_at">) =>
+      apiPost<HackathonTask>(`/api/v1/hackathons/${hackathonId}/tasks`, body, HackathonTaskSchema),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["hackathons", hackathonId, "tasks"] });
+    },
+  });
+}
+
+export function useUpdateHackathonTask(hackathonId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ taskId, body }: { taskId: string; body: Partial<Omit<HackathonTask, "id" | "hackathon_id" | "created_at" | "updated_at">> }) =>
+      apiPatch<HackathonTask>(`/api/v1/hackathons/${hackathonId}/tasks/${taskId}`, body, HackathonTaskSchema),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["hackathons", hackathonId, "tasks"] });
+    },
+  });
+}
+
+export function useDeleteHackathonTask(hackathonId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (taskId: string) =>
+      apiClient.delete<any>(`/api/v1/hackathons/${hackathonId}/tasks/${taskId}`).then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["hackathons", hackathonId, "tasks"] });
     },
   });
 }

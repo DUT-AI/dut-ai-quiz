@@ -1,28 +1,27 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { type Hackathon } from "../types";
-import { useDeleteHackathon } from "@/lib/queries";
-import { Calendar, Users, Pencil, Trash2 } from "lucide-react";
+import { Calendar, Users } from "lucide-react";
 import { formatDateTime, getParticipationModeLabel } from "@/lib/utils";
-import { HackathonRegistrationsModal } from "./hackathon-registrations-modal";
-import { AnimatePresence } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 interface HackathonRowProps {
   hackathon: Hackathon;
-  onEdit: () => void;
 }
 
-export function HackathonRow({ hackathon, onEdit }: HackathonRowProps) {
-  const deleteMut = useDeleteHackathon();
-  const [showRegistrations, setShowRegistrations] = useState(false);
+export function HackathonRow({ hackathon }: HackathonRowProps) {
+  const router = useRouter();
 
   const isExpired = hackathon.end_time ? new Date(hackathon.end_time) < new Date() : false;
   const isStarted = hackathon.start_time ? new Date(hackathon.start_time) <= new Date() : false;
   const isOngoing = isStarted && !isExpired;
 
   return (
-    <div className="rounded-[2rem] bg-white dark:bg-navy-blue border border-gray-100 dark:border-white/5 overflow-hidden p-6 md:p-8 shadow-sm transition-all hover:shadow-md">
+    <div
+      onClick={() => router.push(`/teacher/hackathons/${hackathon.id}`)}
+      className="rounded-[2rem] bg-white dark:bg-navy-blue border border-gray-100 dark:border-white/5 overflow-hidden p-6 md:p-8 shadow-sm transition-all duration-300 hover:shadow-md hover:border-primary/20 dark:hover:border-primary/20 cursor-pointer active:scale-[0.99]"
+    >
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         
         {/* Left Information */}
@@ -71,45 +70,7 @@ export function HackathonRow({ hackathon, onEdit }: HackathonRowProps) {
           </div>
         </div>
 
-        {/* Right Actions */}
-        <div className="flex items-center gap-3 self-end md:self-center shrink-0">
-          <button
-            onClick={() => setShowRegistrations(true)}
-            className="flex items-center gap-2 text-xs px-4 py-2.5 rounded-xl border border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary transition font-black"
-          >
-            <Users className="size-3.5" />
-            <span>Đăng ký</span>
-          </button>
-          <button
-            onClick={onEdit}
-            className="flex items-center gap-2 text-xs px-4 py-2.5 rounded-xl border border-gray-150 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 text-dark-blue dark:text-white transition font-black"
-          >
-            <Pencil className="size-3.5" />
-            <span>Sửa</span>
-          </button>
-          <button
-            onClick={() => {
-              if (confirm(`Bạn có chắc chắn muốn xoá hackathon "${hackathon.name}"?`)) {
-                deleteMut.mutate(hackathon.id);
-              }
-            }}
-            className="flex items-center gap-2 text-xs px-4 py-2.5 rounded-xl bg-red/10 text-red hover:bg-red hover:text-white transition font-black border border-red/10 hover:border-transparent"
-          >
-            <Trash2 className="size-3.5" />
-            <span>Xoá</span>
-          </button>
-        </div>
-
       </div>
-
-      <AnimatePresence>
-        {showRegistrations && (
-          <HackathonRegistrationsModal
-            hackathon={hackathon}
-            onClose={() => setShowRegistrations(false)}
-          />
-        )}
-      </AnimatePresence>
     </div>
   );
 }

@@ -6,22 +6,36 @@ import { HackathonDetailModal } from "./hackathon-detail-modal";
 import { AnimatePresence } from "framer-motion";
 import { Calendar, Users, ArrowRight } from "lucide-react";
 import { formatDateTime, getParticipationModeLabel } from "@/lib/utils";
+import { useHackathonRegistrationStatus } from "../queries";
+import { useRouter } from "next/navigation";
 
 interface HackathonCardProps {
   hackathon: Hackathon;
 }
 
 export function HackathonCard({ hackathon }: HackathonCardProps) {
+  const router = useRouter();
   const [showDetail, setShowDetail] = useState(false);
+  const { data: regStatus } = useHackathonRegistrationStatus(hackathon.id);
+
+  const isApproved = regStatus?.registration?.status === "approved";
 
   const isExpired = hackathon.end_time ? new Date(hackathon.end_time) < new Date() : false;
   const isStarted = hackathon.start_time ? new Date(hackathon.start_time) <= new Date() : false;
   const isOngoing = isStarted && !isExpired;
 
+  const handleClick = () => {
+    if (isApproved) {
+      router.push(`/hackathons/${hackathon.id}`);
+    } else {
+      setShowDetail(true);
+    }
+  };
+
   return (
     <>
       <div 
-        onClick={() => setShowDetail(true)}
+        onClick={handleClick}
         className="rounded-[2rem] bg-white dark:bg-navy-blue border border-gray-100 dark:border-white/5 overflow-hidden p-6 md:p-8 shadow-sm transition-all duration-300 hover:shadow-md hover:scale-[1.005] hover:border-primary/20 cursor-pointer text-left flex flex-col justify-between gap-4 group"
       >
         <div className="space-y-3">

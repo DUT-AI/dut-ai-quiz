@@ -4,5 +4,10 @@ export * from "./hackathon-list";
 export * from "./hackathon-detail-modal";
 export * from "./hackathon-card";
 export * from "./student-hackathon-list";
+export * from "./hackathon-tasks-modal";
+export * from "./hackathon-tasks-tab";
+export * from "./hackathon-registrations-tab";
+export * from "./hackathon-edit-tab";
+export * from "./hackathon-team-detail";
 
 
