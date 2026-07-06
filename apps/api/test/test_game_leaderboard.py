@@ -2,37 +2,37 @@ import pytest
 from unittest.mock import AsyncMock
 from uuid import uuid4
 
-from app.application.use_cases.practice.practice_use_case import (
-    GetPracticeLeaderboardUseCase,
-    FinishPracticeSessionUseCase,
+from app.application.use_cases.game import (
+    GetGameLeaderboardUseCase,
+    FinishGameSessionUseCase,
 )
-from app.infrastructure.cache.practice_leaderboard_cache import PracticeLeaderboardCache
-from app.domain.interfaces import IPracticeSessionRepository
-from app.domain.entities.practice import PracticeSessionEntity
-from app.domain.value_objects import PracticeSessionStatus
+from app.infrastructure.cache.game_leaderboard_cache import GameLeaderboardCache
+from app.domain.interfaces import IGameSessionRepository
+from app.domain.entities.game import GameSessionEntity
+from app.domain.value_objects import GameSessionStatus
 from app.core.datetime_utils import now_ict
 
 
 @pytest.fixture
 def mock_repo():
-    return AsyncMock(spec=IPracticeSessionRepository)
+    return AsyncMock(spec=IGameSessionRepository)
 
 
 @pytest.fixture
 def mock_cache():
-    return AsyncMock(spec=PracticeLeaderboardCache)
+    return AsyncMock(spec=GameLeaderboardCache)
 
 
 @pytest.mark.asyncio
 async def test_get_leaderboard_cache_hit(mock_repo, mock_cache):
-    """Test GetPracticeLeaderboardUseCase returns data from cache if available."""
+    """Test GetGameLeaderboardUseCase returns data from cache if available."""
     lesson_slug = "test-lesson"
     cached_data = [
         {"user_id": 1, "username": "User1", "final_score": 100, "gold": 50, "total_time_response": 20, "attempt_count": 1}
     ]
     mock_cache.get.return_value = cached_data
     
-    use_case = GetPracticeLeaderboardUseCase(ps_repo=mock_repo, cache=mock_cache)
+    use_case = GetGameLeaderboardUseCase(ps_repo=mock_repo, cache=mock_cache)
     
     result = await use_case.execute(lesson_slug)
     
@@ -44,7 +44,7 @@ async def test_get_leaderboard_cache_hit(mock_repo, mock_cache):
 
 @pytest.mark.asyncio
 async def test_get_leaderboard_cache_miss(mock_repo, mock_cache):
-    """Test GetPracticeLeaderboardUseCase queries DB and updates cache on miss."""
+    """Test GetGameLeaderboardUseCase queries DB and updates cache on miss."""
     lesson_slug = "test-lesson"
     db_data = [
         {"user_id": 2, "username": "User2", "final_score": 90, "gold": 40, "total_time_response": 30, "attempt_count": 2}
@@ -53,7 +53,7 @@ async def test_get_leaderboard_cache_miss(mock_repo, mock_cache):
     mock_cache.get.return_value = None
     mock_repo.get_leaderboard_by_lesson.return_value = db_data
     
-    use_case = GetPracticeLeaderboardUseCase(ps_repo=mock_repo, cache=mock_cache)
+    use_case = GetGameLeaderboardUseCase(ps_repo=mock_repo, cache=mock_cache)
     
     result = await use_case.execute(lesson_slug, limit=50)
     
@@ -70,12 +70,12 @@ async def test_finish_session_computes_decay_and_invalidates_cache(mock_repo, mo
     session_id = uuid4()
     lesson_slug = "test-lesson"
     
-    mock_session = PracticeSessionEntity(
+    mock_session = GameSessionEntity(
         id=session_id,
         user_id=user_id,
         started_at=now_ict(),
         completed_at=None,
-        status=PracticeSessionStatus.IN_PROGRESS,
+        status=GameSessionStatus.IN_PROGRESS,
         snapshot={
             "lesson_slug": lesson_slug,
             "gamification": {
@@ -95,12 +95,12 @@ async def test_finish_session_computes_decay_and_invalidates_cache(mock_repo, mo
     # Decay should be: 1.0 - (2 * 0.2) = 0.6
     mock_repo.count_completed_by_lesson.return_value = 2
     
-    use_case = FinishPracticeSessionUseCase(ps_repo=mock_repo, cache=mock_cache)
+    use_case = FinishGameSessionUseCase(ps_repo=mock_repo, cache=mock_cache)
     
     result = await use_case.execute(session_id, user_id)
     
     assert result is not None
-    assert result.status == PracticeSessionStatus.COMPLETED
+    assert result.status == GameSessionStatus.COMPLETED
     assert result.completed_at is not None
     
     gamification = result.snapshot["gamification"]
@@ -121,12 +121,12 @@ async def test_finish_session_decay_minimum_limit(mock_repo, mock_cache):
     session_id = uuid4()
     lesson_slug = "test-lesson"
     
-    mock_session = PracticeSessionEntity(
+    mock_session = GameSessionEntity(
         id=session_id,
         user_id=user_id,
         started_at=now_ict(),
         completed_at=None,
-        status=PracticeSessionStatus.IN_PROGRESS,
+        status=GameSessionStatus.IN_PROGRESS,
         snapshot={
             "lesson_slug": lesson_slug,
             "gamification": {
@@ -144,7 +144,7 @@ async def test_finish_session_decay_minimum_limit(mock_repo, mock_cache):
     # But max(0.2, ...) should cap it at 0.2
     mock_repo.count_completed_by_lesson.return_value = 10
     
-    use_case = FinishPracticeSessionUseCase(ps_repo=mock_repo, cache=mock_cache)
+    use_case = FinishGameSessionUseCase(ps_repo=mock_repo, cache=mock_cache)
     result = await use_case.execute(session_id, user_id)
     
     gamification = result.snapshot["gamification"]

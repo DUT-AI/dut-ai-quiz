@@ -26,7 +26,7 @@ class GamificationAnswerResultOut(BaseModel):
     updated_gamification: dict[str, Any]
     is_game_over: bool
 
-class PracticeLessonSummaryOut(BaseModel):
+class GameLessonSummaryOut(BaseModel):
     lesson_slug: str
     total_sessions: int
     completed_sessions: int
@@ -35,7 +35,7 @@ class PracticeLessonSummaryOut(BaseModel):
     highest_tier: int
 
 
-class PracticeLeaderboardRowOut(BaseModel):
+class GameLeaderboardRowOut(BaseModel):
     user_id: int
     username: str | None = None
     avatar_url: str | None = None
