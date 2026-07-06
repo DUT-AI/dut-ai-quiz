@@ -66,7 +66,7 @@ export default function ExamsPage() {
           )}
           {exams.length > 0 && filteredExams.length === 0 && (
             <p className="text-gray-navy dark:text-light-blue text-sm text-center py-8">
-              Không tìm thấy kỳ thi nào phù hợp với từ khóa "{searchQuery}".
+              Không tìm thấy kỳ thi nào phù hợp với từ khóa &quot;{searchQuery}&quot;.
             </p>
           )}
           {filteredExams.map((ex) => (

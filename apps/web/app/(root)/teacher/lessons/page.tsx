@@ -143,7 +143,7 @@ export default function LessonsPage() {
         )}
         {lessons && lessons.length > 0 && filteredLessons.length === 0 && (
           <p className="text-center text-gray-navy dark:text-light-blue text-sm py-10">
-            Không tìm thấy bài học nào phù hợp với từ khóa "{searchQuery}".
+            Không tìm thấy bài học nào phù hợp với từ khóa &quot;{searchQuery}&quot;.
           </p>
         )}
         {filteredLessons.map((l) => (

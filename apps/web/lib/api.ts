@@ -10,7 +10,7 @@ export interface ApiClientOptions extends RequestInit {
   baseURL?: string;
 }
 
-function validateData<T>(data: unknown, schema: z.ZodType<T>, path: string, method = "GET"): T {
+function validateData<T>(data: unknown, schema: z.ZodType<T, any, any>, path: string, method = "GET"): T {
   const result = schema.safeParse(data);
   if (!result.success) {
     const errMsg = `Dữ liệu từ máy chủ không đúng định dạng tại đường dẫn: ${path}`;
@@ -43,7 +43,7 @@ export async function apiFetch(
 export async function apiJson<T>(
   path: string,
   init?: RequestInit,
-  schema?: z.ZodType<T>
+  schema?: z.ZodType<T, any, any>
 ): Promise<T> {
   const res = await apiFetch(path, init);
   if (!res.ok) {
@@ -69,7 +69,7 @@ export async function apiJson<T>(
 export function apiPostJson<T>(
   path: string,
   body: ApiBody,
-  schema?: z.ZodType<T>
+  schema?: z.ZodType<T, any, any>
 ): Promise<T> {
   return apiJson<T>(
     path,
@@ -85,7 +85,7 @@ export function apiPostJson<T>(
 export function apiPatchJson<T>(
   path: string,
   body: ApiBody,
-  schema?: z.ZodType<T>
+  schema?: z.ZodType<T, any, any>
 ): Promise<T> {
   return apiJson<T>(
     path,
@@ -101,7 +101,7 @@ export function apiPatchJson<T>(
 // Aliases and helpers for validation compatibility
 export function apiGet<T>(
   path: string,
-  schema?: z.ZodType<T>,
+  schema?: z.ZodType<T, any, any>,
   init?: RequestInit
 ): Promise<T> {
   return apiJson<T>(path, init, schema);
@@ -110,7 +110,7 @@ export function apiGet<T>(
 export function apiPost<T>(
   path: string,
   body: ApiBody,
-  schema?: z.ZodType<T>
+  schema?: z.ZodType<T, any, any>
 ): Promise<T> {
   return apiPostJson<T>(path, body, schema);
 }
@@ -118,25 +118,25 @@ export function apiPost<T>(
 export function apiPatch<T>(
   path: string,
   body: ApiBody,
-  schema?: z.ZodType<T>
+  schema?: z.ZodType<T, any, any>
 ): Promise<T> {
   return apiPatchJson<T>(path, body, schema);
 }
 
 // Helper to distinguish options and Zod schemas in apiClient
 function parseClientArgs<T>(
-  arg3: z.ZodType<T> | ApiClientOptions | undefined,
+  arg3: z.ZodType<T, any, any> | ApiClientOptions | undefined,
   arg4: ApiClientOptions | undefined
-): { schema?: z.ZodType<T>; options?: ApiClientOptions } {
+): { schema?: z.ZodType<T, any, any>; options?: ApiClientOptions } {
   if (arg3 && (arg3 instanceof z.ZodType || typeof (arg3 as any).safeParse === "function")) {
-    return { schema: arg3 as z.ZodType<T>, options: arg4 };
+    return { schema: arg3 as z.ZodType<T, any, any>, options: arg4 };
   }
-  return { schema: arg4 as z.ZodType<T>, options: arg3 as ApiClientOptions };
+  return { schema: arg4 as z.ZodType<T, any, any>, options: arg3 as ApiClientOptions };
 }
 
 // Polyfill for apiClient backward compatibility
 export const apiClient = {
-  delete: async <T = unknown>(path: string, schema?: z.ZodType<T>): Promise<{ data: T }> => {
+  delete: async <T = unknown>(path: string, schema?: z.ZodType<T, any, any>): Promise<{ data: T }> => {
     const res = await apiFetch(path, { method: "DELETE" });
     if (!res.ok) {
       let detail = res.statusText;
@@ -165,7 +165,7 @@ export const apiClient = {
   put: async <T = unknown>(
     path: string,
     body?: ApiBody,
-    arg3?: z.ZodType<T> | ApiClientOptions,
+    arg3?: z.ZodType<T, any, any> | ApiClientOptions,
     arg4?: ApiClientOptions
   ): Promise<{ data: T }> => {
     const { schema, options } = parseClientArgs(arg3, arg4);
@@ -219,7 +219,7 @@ export const apiClient = {
   post: async <T = unknown>(
     path: string,
     body?: ApiBody,
-    arg3?: z.ZodType<T> | ApiClientOptions,
+    arg3?: z.ZodType<T, any, any> | ApiClientOptions,
     arg4?: ApiClientOptions
   ): Promise<{ data: T }> => {
     const { schema, options } = parseClientArgs(arg3, arg4);

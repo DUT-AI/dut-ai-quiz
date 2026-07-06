@@ -17,7 +17,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Copy workspace pyproject and locks
 COPY pyproject.toml uv.lock ./
-COPY apps/api/pyproject.toml ./apps/api/
+COPY apps/api/pyproject.toml apps/api/README.md ./apps/api/
 COPY apps/worker/pyproject.toml ./apps/worker/
 
 # Sync all projects in workspace
