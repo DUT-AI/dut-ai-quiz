@@ -7,7 +7,7 @@ import { RotateCcw, Lightbulb, Edit3, Trash2, Sparkles, Check, XCircle } from "l
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { renderMathInHTML } from "@/lib/render-math";
+import { Markdown } from "@/components/markdown";
 import type { QuestionOut } from "@/lib/types";
 import { useAuth } from "@/context/auth-context";
 
@@ -21,7 +21,6 @@ interface QuestionCardProps {
 
 export const QuestionCard = React.memo(
   ({ q, idx, onExplain, onEdit, onDelete }: QuestionCardProps) => {
-    const contentHtml = useMemo(() => renderMathInHTML(q.content), [q.content]);
     const { user } = useAuth();
     const storageKey = useMemo(() => {
       return `practice_progress_${user?.id || "guest"}_${q.lesson_id || "default"}`;
@@ -102,10 +101,9 @@ export const QuestionCard = React.memo(
               </div>
 
               <div className="flex-1 space-y-8">
-                <div
-                  className="text-xl font-medium text-dark-blue dark:text-white leading-relaxed whitespace-pre-wrap select-text"
-                  dangerouslySetInnerHTML={{ __html: contentHtml }}
-                />
+                <div className="text-xl font-medium text-dark-blue dark:text-white leading-relaxed select-text">
+                  <Markdown content={q.content} />
+                </div>
 
                 <div className="grid grid-cols-1 gap-3">
                   {q.options.map((opt, i) => {
@@ -154,12 +152,9 @@ export const QuestionCard = React.memo(
                             String.fromCharCode(65 + i)
                           )}
                         </div>
-                        <span
-                          className="font-medium select-text"
-                          dangerouslySetInnerHTML={{
-                            __html: renderMathInHTML(opt.text),
-                          }}
-                        />
+                        <span className="font-medium select-text">
+                          <Markdown content={opt.text} />
+                        </span>
 
                         {isSelected && !isRevealed && (
                           <motion.div
@@ -184,12 +179,9 @@ export const QuestionCard = React.memo(
                           <Lightbulb className="size-3" />
                           Hướng dẫn chi tiết
                         </h4>
-                        <div
-                          className="text-dark-blue dark:text-white leading-relaxed font-medium whitespace-pre-wrap select-text"
-                          dangerouslySetInnerHTML={{
-                            __html: renderMathInHTML(q.solution),
-                          }}
-                        />
+                        <div className="text-dark-blue dark:text-white leading-relaxed font-medium select-text">
+                          <Markdown content={q.solution} />
+                        </div>
                       </div>
                     </motion.div>
                   )}

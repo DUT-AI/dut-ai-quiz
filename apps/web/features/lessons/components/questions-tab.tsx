@@ -6,6 +6,7 @@ import { AnimatePresence } from "framer-motion";
 
 import { useQuestions, useDeleteQuestion } from "@/lib/queries";
 import type { QuestionOut } from "@/lib/types";
+import { PoolType } from "@/features/questions/types";
 import QuestionEditorModal from "@/features/questions/components/question-editor-modal";
 import BulkQuestionModal from "@/features/questions/components/bulk-question-modal";
 import { PdfImport } from "@/components/pdf-import";
@@ -21,7 +22,7 @@ interface QuestionsTabProps {
 }
 
 export function QuestionsTab({ lessonId, isAdminView = false }: QuestionsTabProps) {
-  const [activePoolType, setActivePoolType] = useState<"PRACTICE" | "EXAM" | "MOCK">("PRACTICE");
+  const [activePoolType, setActivePoolType] = useState<PoolType>("PRACTICE");
 
   // Questions query
   const { data: questions = [], isLoading: isLoadingQuestions } = useQuestions({
@@ -101,7 +102,7 @@ export function QuestionsTab({ lessonId, isAdminView = false }: QuestionsTabProp
           {([
             { id: "PRACTICE", label: "Luyện tập", icon: "🏋️" },
             { id: "EXAM", label: "Kiểm tra", icon: "📝" },
-            { id: "MOCK", label: "Thi thử", icon: "🏆" },
+            { id: "GAME", label: "Trò chơi", icon: "🎮" },
           ] as const).map((t) => {
             const isActive = activePoolType === t.id;
             return (
@@ -136,7 +137,7 @@ export function QuestionsTab({ lessonId, isAdminView = false }: QuestionsTabProp
           <p className="font-bold text-lg text-dark-blue dark:text-white">
             {activePoolType === "PRACTICE" && "Hiện tại bài học này chưa cập nhật câu hỏi ôn tập."}
             {activePoolType === "EXAM" && "Hiện tại bài học này chưa cập nhật câu hỏi kiểm tra."}
-            {activePoolType === "MOCK" && "Hiện tại bài học này chưa cập nhật câu hỏi thi thử."}
+            {activePoolType === "GAME" && "Hiện tại bài học này chưa cập nhật câu hỏi trò chơi."}
           </p>
         </div>
       ) : (
