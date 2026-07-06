@@ -20,10 +20,12 @@ interface QuestionsTabProps {
 }
 
 export function QuestionsTab({ lessonId }: QuestionsTabProps) {
+  const [activePoolType, setActivePoolType] = useState<"PRACTICE" | "EXAM" | "MOCK">("PRACTICE");
+
   // Questions query
   const { data: questions = [], isLoading: isLoadingQuestions } = useQuestions({
     lesson_id: lessonId,
-    pool_type: "PRACTICE",
+    pool_type: activePoolType,
   });
 
   const { user, canManage } = useAuth();
@@ -92,6 +94,32 @@ export function QuestionsTab({ lessonId }: QuestionsTabProps) {
         )}
       </div>
 
+      {/* Category Tabs */}
+      {isTeacher && (
+        <div className="flex border-b border-gray-100 dark:border-white/10 pb-2 gap-6 overflow-x-auto select-none">
+          {([
+            { id: "PRACTICE", label: "Luyện tập", icon: "🏋️" },
+            { id: "EXAM", label: "Kiểm tra", icon: "📝" },
+            { id: "MOCK", label: "Thi thử", icon: "🏆" },
+          ] as const).map((t) => {
+            const isActive = activePoolType === t.id;
+            return (
+              <button
+                key={t.id}
+                onClick={() => setActivePoolType(t.id)}
+                className={`pb-2 text-sm font-bold border-b-2 transition-all relative flex items-center gap-1.5 ${isActive
+                    ? "border-primary text-primary"
+                    : "border-transparent text-gray-navy opacity-60 hover:opacity-100 dark:text-light-blue"
+                  }`}
+              >
+                <span>{t.icon}</span>
+                <span>{t.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {isLoadingQuestions ? (
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
@@ -105,7 +133,9 @@ export function QuestionsTab({ lessonId }: QuestionsTabProps) {
         <div className="text-center py-20 border-2 border-dashed border-gray-200 dark:border-white/10 rounded-[2rem] opacity-35">
           <BookOpen className="size-16 mx-auto mb-4" />
           <p className="font-bold text-lg text-dark-blue dark:text-white">
-            Hiện tại bài học này chưa cập nhật câu hỏi ôn tập.
+            {activePoolType === "PRACTICE" && "Hiện tại bài học này chưa cập nhật câu hỏi ôn tập."}
+            {activePoolType === "EXAM" && "Hiện tại bài học này chưa cập nhật câu hỏi kiểm tra."}
+            {activePoolType === "MOCK" && "Hiện tại bài học này chưa cập nhật câu hỏi thi thử."}
           </p>
         </div>
       ) : (

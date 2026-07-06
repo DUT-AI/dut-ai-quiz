@@ -21,7 +21,7 @@ export function PdfImport({ onSuccess, onClose }: PdfImportProps) {
   const [questions, setQuestions] = useState<ParsedQuestionPreview[]>([]);
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [lessonId, setLessonId] = useState("");
-  const [poolType, setPoolType] = useState<"PRACTICE" | "EXAM">("PRACTICE");
+  const [poolType, setPoolType] = useState<"PRACTICE" | "EXAM" | "MOCK">("PRACTICE");
 
   const { data: lessons = [] } = useLessons();
   const parseMutation = useParsePDF();
@@ -307,6 +307,7 @@ export function PdfImport({ onSuccess, onClose }: PdfImportProps) {
                 >
                   <option value="PRACTICE">Luyện tập</option>
                   <option value="EXAM">Kiểm tra</option>
+                  <option value="MOCK">Thi thử</option>
                 </select>
               </div>
               <div>
