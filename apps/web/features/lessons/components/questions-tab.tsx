@@ -13,6 +13,7 @@ import { PdfImport } from "@/components/pdf-import";
 import { QuestionCard } from "../../questions/components/question-card";
 import { AIExplanationModal } from "../../questions/components/ai-explanation-modal";
 import { useAuth } from "@/context/auth-context";
+import { ConfirmModal } from "@/components/molecules/confirm-modal";
 
 interface QuestionsTabProps {
   lessonId: string;
@@ -33,6 +34,7 @@ export function QuestionsTab({ lessonId }: QuestionsTabProps) {
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [showPdfModal, setShowPdfModal] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<QuestionOut | null>(null);
+  const [deletingQuestion, setDeletingQuestion] = useState<QuestionOut | null>(null);
 
   const deleteMut = useDeleteQuestion();
 
@@ -41,16 +43,10 @@ export function QuestionsTab({ lessonId }: QuestionsTabProps) {
   }, []);
 
   const handleDelete = useCallback(
-    async (q: QuestionOut) => {
-      if (confirm("Bạn có chắc chắn muốn xóa câu hỏi này không?")) {
-        try {
-          await deleteMut.mutateAsync(q.id);
-        } catch (err) {
-          console.error("Delete failed", err);
-        }
-      }
+    (q: QuestionOut) => {
+      setDeletingQuestion(q);
     },
-    [deleteMut]
+    []
   );
 
   const handleExplain = useCallback((q: QuestionOut) => {
@@ -161,6 +157,28 @@ export function QuestionsTab({ lessonId }: QuestionsTabProps) {
           />
         )}
       </AnimatePresence>
+
+      <ConfirmModal
+        isOpen={!!deletingQuestion}
+        title="Xóa câu hỏi"
+        description="Bạn có chắc chắn muốn xóa câu hỏi này không?"
+        confirmLabel="Xóa ngay"
+        cancelLabel="Hủy"
+        variant="danger"
+        isLoading={deleteMut.isPending}
+        onConfirm={async () => {
+          if (deletingQuestion) {
+            try {
+              await deleteMut.mutateAsync(deletingQuestion.id);
+            } catch (err) {
+              console.error("Delete failed", err);
+            } finally {
+              setDeletingQuestion(null);
+            }
+          }
+        }}
+        onCancel={() => setDeletingQuestion(null)}
+      />
     </div>
   );
 }

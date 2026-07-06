@@ -6,16 +6,16 @@ import { useLessons, useDeleteLesson } from "@/lib/queries";
 import type { Lesson } from "@/lib/types";
 import { LessonFormModal } from "@/features/lessons/components";
 import { AnimatePresence } from "framer-motion";
+import { ConfirmModal } from "@/components/molecules/confirm-modal";
 
 /* ─── Row bài học ──────────────────────────────────────── */
 interface LessonRowProps {
   lesson: Lesson;
   onEdit: () => void;
+  onDelete: () => void;
 }
 
-function LessonRow({ lesson, onEdit }: LessonRowProps) {
-  const deleteMut = useDeleteLesson();
-
+function LessonRow({ lesson, onEdit, onDelete }: LessonRowProps) {
   return (
     <div className="rounded-xl bg-white dark:bg-slate/20 border border-slate/10 dark:border-white/10 overflow-hidden">
       <div className="flex items-center gap-4 p-4">
@@ -46,11 +46,7 @@ function LessonRow({ lesson, onEdit }: LessonRowProps) {
             Sửa
           </button>
           <button
-            onClick={() => {
-              if (confirm(`Xoá bài học "${lesson.name}"?\nCác câu hỏi trong bài sẽ bị bỏ liên kết.`)) {
-                deleteMut.mutate(lesson.id);
-              }
-            }}
+            onClick={onDelete}
             className="text-xs px-2 py-1 rounded bg-red/10 text-red hover:bg-red/20 transition font-medium"
           >
             Xoá
@@ -64,8 +60,10 @@ function LessonRow({ lesson, onEdit }: LessonRowProps) {
 /* ─── Page ─────────────────────────────────────────────── */
 export default function LessonsPage() {
   const { data: lessons, isLoading, error } = useLessons();
+  const deleteMut = useDeleteLesson();
   const [showCreate, setShowCreate] = useState(false);
   const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
+  const [deletingLesson, setDeletingLesson] = useState<Lesson | null>(null);
 
   return (
     <div>
@@ -93,6 +91,23 @@ export default function LessonsPage() {
         )}
       </AnimatePresence>
 
+      <ConfirmModal
+        isOpen={!!deletingLesson}
+        title="Xoá bài học"
+        description={`Bạn có chắc chắn muốn xoá bài học "${deletingLesson?.name}"?\nCác câu hỏi trong bài sẽ bị bỏ liên kết.`}
+        confirmLabel="Xoá ngay"
+        cancelLabel="Hủy"
+        variant="danger"
+        isLoading={deleteMut.isPending}
+        onConfirm={async () => {
+          if (deletingLesson) {
+            await deleteMut.mutateAsync(deletingLesson.id);
+            setDeletingLesson(null);
+          }
+        }}
+        onCancel={() => setDeletingLesson(null)}
+      />
+
       {isLoading && (
         <p className="text-sm text-gray-navy dark:text-light-blue text-left">Đang tải…</p>
       )}
@@ -109,7 +124,12 @@ export default function LessonsPage() {
           </p>
         )}
         {lessons?.map((l) => (
-          <LessonRow key={l.id} lesson={l} onEdit={() => setEditingLesson(l)} />
+          <LessonRow
+            key={l.id}
+            lesson={l}
+            onEdit={() => setEditingLesson(l)}
+            onDelete={() => setDeletingLesson(l)}
+          />
         ))}
       </div>
     </div>

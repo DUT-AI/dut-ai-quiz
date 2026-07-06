@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -6,13 +7,14 @@ import {
   useDeleteExam,
 } from "@/lib/queries";
 import { Sparkles, BarChart2 } from "lucide-react";
-// ExamForm import removed
-import type { ExamCreate, ExamOut } from "@/lib/types";
+import type { ExamOut } from "@/lib/types";
+import { ConfirmModal } from "@/components/molecules/confirm-modal";
 
 export default function ExamsPage() {
   const router = useRouter();
   const { data: exams, isLoading, error } = useExamsFull();
   const deleteMut = useDeleteExam();
+  const [deletingExam, setDeletingExam] = useState<ExamOut | null>(null);
 
   return (
     <div>
@@ -28,8 +30,6 @@ export default function ExamsPage() {
           + Tạo kỳ thi mới
         </button>
       </div>
-
-      {/* Modal removed */}
 
       {isLoading && (
         <p className="text-gray-navy dark:text-light-blue text-sm">Đang tải…</p>
@@ -50,13 +50,33 @@ export default function ExamsPage() {
             <ExamRow
               key={ex.id}
               exam={ex}
-              onDelete={() =>
-                confirm(`Xoá kỳ thi "${ex.title}"?`) && deleteMut.mutate(ex.id)
-              }
+              onDelete={() => setDeletingExam(ex)}
             />
           ))}
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={!!deletingExam}
+        title="Xoá kỳ thi"
+        description={`Bạn có chắc chắn muốn xoá kỳ thi "${deletingExam?.title}"?`}
+        confirmLabel="Xoá ngay"
+        cancelLabel="Hủy"
+        variant="danger"
+        isLoading={deleteMut.isPending}
+        onConfirm={async () => {
+          if (deletingExam) {
+            try {
+              await deleteMut.mutateAsync(deletingExam.id);
+            } catch (err) {
+              console.error("Delete failed", err);
+            } finally {
+              setDeletingExam(null);
+            }
+          }
+        }}
+        onCancel={() => setDeletingExam(null)}
+      />
     </div>
   );
 }
