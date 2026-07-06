@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useLessons, useDeleteLesson } from "@/lib/queries";
 import type { Lesson } from "@/lib/types";
 import { LessonFormModal } from "@/features/lessons/components";
 import { AnimatePresence } from "framer-motion";
 import { ConfirmModal } from "@/components/molecules/confirm-modal";
+import { SearchBar } from "@/components/ui/search-bar";
 
 /* ─── Row bài học ──────────────────────────────────────── */
 interface LessonRowProps {
@@ -64,16 +65,33 @@ export default function LessonsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
   const [deletingLesson, setDeletingLesson] = useState<Lesson | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredLessons = useMemo(() => {
+    if (!lessons) return [];
+    return lessons.filter((l) =>
+      l.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [lessons, searchQuery]);
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-bold text-dark-blue dark:text-white">
-          Bài học
-        </h1>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 w-full md:w-auto">
+          <h1 className="text-xl font-bold text-dark-blue dark:text-white shrink-0">
+            Bài học
+          </h1>
+          <SearchBar
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onClear={() => setSearchQuery("")}
+            placeholder="Tìm kiếm bài học..."
+            className="w-full sm:w-64 py-2 h-10 rounded-xl"
+          />
+        </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/80 transition"
+          className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/80 transition shrink-0 self-end md:self-auto"
         >
           + Thêm bài học
         </button>
@@ -123,7 +141,12 @@ export default function LessonsPage() {
             Chưa có bài học nào. Hãy tạo bài học đầu tiên!
           </p>
         )}
-        {lessons?.map((l) => (
+        {lessons && lessons.length > 0 && filteredLessons.length === 0 && (
+          <p className="text-center text-gray-navy dark:text-light-blue text-sm py-10">
+            Không tìm thấy bài học nào phù hợp với từ khóa "{searchQuery}".
+          </p>
+        )}
+        {filteredLessons.map((l) => (
           <LessonRow
             key={l.id}
             lesson={l}
