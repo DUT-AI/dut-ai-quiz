@@ -23,7 +23,7 @@ async def leaderboard_route(
     ex = await get_exam.execute(exam_id)
     if not ex:
         raise HTTPException(status_code=404, detail="Not found")
-    if user.quiz_role == "student" and not ex.is_published:
+    if user.quiz_role not in ("admin", "MENTOR") and not ex.is_published:
         raise HTTPException(status_code=404, detail="Not found")
     
     rows = await use_case.execute(exam_id, limit=limit)

@@ -1,0 +1,28 @@
+# Version Control
+.git
+.gitignore
+
+# Environment files (Secrets)
+.env
+.env.*
+!.env.example
+
+# Python caches and virtual environments
+**/__pycache__/
+**/.venv/
+**/venv/
+**/.pytest_cache/
+**/.ruff_cache/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+
+# Node.js (Frontend)
+**/node_modules/
+apps/web/.next/
+apps/web/out/
+apps/web/build/
+
+# OS files
+**/.DS_Store
+Thumbs.db

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { apiGet, apiPostJson } from "@/lib/api";
 
 export interface UserContextType {
@@ -10,11 +11,17 @@ export interface UserContextType {
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
+  isAdmin: boolean;
+  isMentor: boolean;
+  isTeammate: boolean;
+  isGuest: boolean;
+  canManage: boolean;
 }
 
 const AuthContext = createContext<UserContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const [user, setUser] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -54,10 +61,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     try {
       await apiPostJson<any>("/api/v1/auth/logout", {});
+
     } finally {
       setUser(null);
+      router.push("/login");
     }
   };
+
+  const role = user?.quiz_role;
+  const isAdmin = role === "admin";
+  const isMentor = role === "MENTOR";
+  const isTeammate = role === "teammate";
+  const isGuest = !isAdmin && !isMentor && !isTeammate;
+  const canManage = isAdmin || isMentor;
 
   return (
     <AuthContext.Provider
@@ -68,6 +84,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         logout,
         refresh: fetchUser,
+        isAdmin,
+        isMentor,
+        isTeammate,
+        isGuest,
+        canManage,
       }}
     >
       {children}

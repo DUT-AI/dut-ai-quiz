@@ -5,10 +5,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities.exam import ExamEntity
+from app.domain.interfaces import IExamRepository
 from app.infrastructure.persistence.models import Exam
 
 
-class ExamRepository:
+class ExamRepository(IExamRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._s = session
 
@@ -60,6 +61,7 @@ class ExamRepository:
             model.duration_minutes = entity.duration_minutes
             model.max_attempts = entity.max_attempts
             model.is_published = entity.is_published
+            model.show_answers = entity.show_answers
             await self._s.flush()
             await self._s.refresh(model)
             return model.to_entity()

@@ -36,7 +36,7 @@ export function renderMathInHTML(raw: string): string {
   });
 
   // 3. Inline math: $...$
-  result = result.replace(/\$([\s\S]+?)\$/g, (match, math: string) => {
+  result = result.replace(/\$([^\n$]+?)\$/g, (match, math: string) => {
     if (!math.trim()) return match;
     try {
       return katex.renderToString(math.trim(), {
@@ -48,11 +48,28 @@ export function renderMathInHTML(raw: string): string {
     }
   });
 
-  // 4. Markdown: **bold**, *italic*, `code`
+  // 4. Headings: ####, ###, ##, # (order: most specific first)
+  result = result
+    .replace(/^#### (.+)$/gm, "<h4 class=\"text-base font-bold mt-3 mb-1\">$1</h4>")
+    .replace(/^### (.+)$/gm, "<h3 class=\"text-lg font-bold mt-4 mb-1\">$1</h3>")
+    .replace(/^## (.+)$/gm, "<h2 class=\"text-xl font-bold mt-4 mb-2\">$1</h2>")
+    .replace(/^# (.+)$/gm, "<h1 class=\"text-2xl font-bold mt-4 mb-2\">$1</h1>");
+
+  // 5. Horizontal rule
+  result = result.replace(/^---$/gm, "<hr class=\"my-4 border-gray-200 dark:border-white/10\" />");
+
+  // 6. Unordered list items
+  result = result.replace(/^[-*] (.+)$/gm, "<li class=\"ml-4 list-disc\">$1</li>");
+  result = result.replace(/(<li[^>]*>[\s\S]+?<\/li>(\n|$))+/g, (match) => `<ul class="my-2 space-y-1">${match}</ul>`);
+
+  // 7. Markdown: **bold**, *italic*, `code`
   result = result
     .replace(/\*\*((?:.|\n)+?)\*\*/g, "<strong>$1</strong>")
     .replace(/\*((?:.|\n)+?)\*/g, "<em>$1</em>")
     .replace(/`([^`]+)`/g, '<code class="bg-slate/10 px-1 rounded text-sm font-mono">$1</code>');
+
+  // 8. Newlines → <br> (only for text not already in block tags)
+  result = result.replace(/\n/g, "<br />");
 
   return result;
 }

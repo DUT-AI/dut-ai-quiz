@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default function TeacherRoot() {
-  redirect("/teacher/questions");
+  redirect("/teacher/lessons");
 }

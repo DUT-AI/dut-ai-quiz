@@ -11,17 +11,12 @@ router = APIRouter(prefix="/me", tags=["me"])
 
 @router.get("")
 @inject
-async def me(
-    request: Request,
-    use_case: FromDishka[GetProfileUseCase]
-):
+async def me(request: Request, use_case: FromDishka[GetProfileUseCase]):
     # Try to get access_token from cookie
     access_token = request.cookies.get("access_token")
-    
+
     data = await use_case.execute(access_token)
-    if not data:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-        
+
     return {"data": data, "is_success": True}
 
 

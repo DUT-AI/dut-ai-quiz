@@ -4,10 +4,11 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities.question import QuestionEntity
+from app.domain.interfaces import IExamQuestionRepository
 from app.infrastructure.persistence.models import ExamQuestion, Question
 
 
-class ExamQuestionRepository:
+class ExamQuestionRepository(IExamQuestionRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._s = session
 

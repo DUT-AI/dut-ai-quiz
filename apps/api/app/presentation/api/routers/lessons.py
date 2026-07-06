@@ -1,61 +1,130 @@
-from fastapi import APIRouter, HTTPException
-from dishka.integrations.fastapi import inject, FromDishka
-from app.application.use_cases.lessons.lesson_use_case import (
-    ListLessonsUseCase, 
-    CreateLessonUseCase, 
-    UpdateLessonUseCase, 
-    DeleteLessonUseCase,
-    GetLessonDetailUseCase
+from uuid import UUID
+
+from dishka.integrations.fastapi import FromDishka, inject
+from fastapi import APIRouter, HTTPException, Query
+
+from app.application.use_cases.lessons.create_lesson_uc import CreateLessonUseCase
+from app.application.use_cases.lessons.delete_lesson_uc import DeleteLessonUseCase
+from app.application.use_cases.lessons.get_lesson_detail_uc import (
+    GetLessonDetailUseCase,
 )
-from app.presentation.api.deps import CurrentUser
-from app.presentation.schemas.lessons import LessonCreate, LessonUpdate, LessonOut, LessonDetailOut
+from app.application.use_cases.lessons.get_lesson_from_blog_uc import (
+    GetLessonBySlugUseCase,
+)
+from app.application.use_cases.lessons.list_lessons_uc import ListLessonsUseCase
+from app.application.use_cases.lessons.update_lesson_uc import UpdateLessonUseCase
+from app.application.use_cases.questions import ListQuestionsUseCase
+from app.domain.value_objects import Difficulty, PoolType
+from app.presentation.api.deps import CurrentUser, AdminOrMentorUser
+from app.presentation.schemas.lessons import (
+    LessonCreate,
+    LessonDetailOut,
+    LessonOut,
+    LessonUpdate,
+)
+from app.presentation.schemas.questions import QuestionListQuery, QuestionOut
 
 router = APIRouter(prefix="/lessons", tags=["lessons"])
+
 
 @router.get("", response_model=list[LessonOut])
 @inject
 async def list_lessons(use_case: FromDishka[ListLessonsUseCase]):
     return await use_case.execute()
 
+
+@router.get("/by-slug/{slug}", response_model=LessonDetailOut)
+@inject
+async def get_lesson_by_slug(
+    slug: str,
+    user: CurrentUser,
+    use_case: FromDishka[GetLessonBySlugUseCase],
+):
+    """
+    Get lesson by slug.
+    If lesson not found locally, it will be fetched from blog service and created.
+    """
+    res = await use_case.execute(slug)
+    if not res:
+        raise HTTPException(status_code=404, detail="Lesson not found")
+    return res
+
+
+@router.get("/{lesson_id}/questions", response_model=list[QuestionOut])
+@inject
+async def list_lesson_questions(
+    lesson_id: UUID,
+    user: CurrentUser,
+    use_case: FromDishka[ListQuestionsUseCase],
+    pool_type: PoolType | None = None,
+    difficulty: Difficulty | None = None,
+    tag: str | None = None,
+    offset: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=200),
+):
+    # Guests only see practice questions. Admin/Mentors can filter both PRACTICE and EXAM.
+    if user.quiz_role not in ("admin", "MENTOR"):
+        pool_type = PoolType.PRACTICE
+
+    query = QuestionListQuery(
+        pool_type=pool_type,
+        difficulty=difficulty,
+        lesson_id=lesson_id,
+        tag=tag,
+        offset=offset,
+        limit=limit,
+    )
+    return await use_case.execute(query)
+
+
 @router.get("/{lesson_id}", response_model=LessonDetailOut)
 @inject
 async def get_lesson(
     lesson_id: str,
     user: CurrentUser,
-    use_case: FromDishka[GetLessonDetailUseCase]
+    use_case: FromDishka[GetLessonDetailUseCase],
 ):
-    res = await use_case.execute(lesson_id, is_teacher=user.quiz_role == "teacher")
+    res = await use_case.execute(lesson_id, is_teacher=user.quiz_role in ("admin", "MENTOR"))
     if not res:
         raise HTTPException(status_code=404, detail="Lesson not found")
     return res
 
+
 @router.post("", response_model=LessonOut)
 @inject
 async def create_lesson(
-    body: LessonCreate, 
-    use_case: FromDishka[CreateLessonUseCase]
+    user: AdminOrMentorUser,
+    body: LessonCreate,
+    use_case: FromDishka[CreateLessonUseCase],
 ):
     return await use_case.execute(body)
+
 
 @router.patch("/{lesson_id}", response_model=LessonOut)
 @inject
 async def update_lesson(
+    user: AdminOrMentorUser,
     lesson_id: str,
     body: LessonUpdate,
-    use_case: FromDishka[UpdateLessonUseCase]
+    use_case: FromDishka[UpdateLessonUseCase],
 ):
     res = await use_case.execute(lesson_id, body)
     if not res:
         raise HTTPException(status_code=404, detail="Lesson not found")
     return res
 
+
 @router.delete("/{lesson_id}")
 @inject
 async def delete_lesson(
+    user: AdminOrMentorUser,
     lesson_id: str,
-    use_case: FromDishka[DeleteLessonUseCase]
+    use_case: FromDishka[DeleteLessonUseCase],
 ):
-    ok = await use_case.execute(lesson_id)
-    if not ok:
-        raise HTTPException(status_code=404, detail="Lesson not found")
-    return {"ok": True}
+    try:
+        ok = await use_case.execute(lesson_id)
+        if not ok:
+            raise HTTPException(status_code=404, detail="Lesson not found")
+        return {"ok": True}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))

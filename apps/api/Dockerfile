@@ -15,11 +15,20 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 ENV TZ=Asia/Ho_Chi_Minh
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# Copy project files
-COPY pyproject.toml uv.lock README.md ./
+# Copy workspace pyproject and locks
+COPY pyproject.toml uv.lock ./
+COPY apps/api/pyproject.toml ./apps/api/
+COPY apps/worker/pyproject.toml ./apps/worker/
+
+# Sync all projects in workspace
 RUN uv sync --frozen --no-cache
 
-COPY . .
+# Copy source code of all workspace apps
+COPY apps/api ./apps/api
+COPY apps/worker ./apps/worker
+
+# Set working directory to api app to run uvicorn
+WORKDIR /app/apps/api
 
 # Expose port
 EXPOSE 8076

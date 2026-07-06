@@ -15,7 +15,7 @@ export function useLessons(options?: any) {
 export function useCreateLesson() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: { name: string; description?: string; order?: number }) =>
+    mutationFn: (body: { name: string; description?: string; order?: number; slug?: string }) =>
       apiPost<Lesson>("/api/v1/lessons", body, LessonSchema),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["lessons"] }),
   });
@@ -24,7 +24,7 @@ export function useCreateLesson() {
 export function useUpdateLesson(id: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: { name?: string; description?: string; order?: number }) =>
+    mutationFn: (body: { name?: string; description?: string; order?: number; slug?: string }) =>
       apiPatch<Lesson>(`/api/v1/lessons/${id}`, body, LessonSchema),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["lessons"] }),
   });
@@ -38,3 +38,14 @@ export function useDeleteLesson() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["lessons"] }),
   });
 }
+
+export function useLessonBySlug(slug: string, options?: any) {
+  return useQuery<Lesson>({
+    queryKey: ["lessons", "by-slug", slug],
+    queryFn: () => apiGet<Lesson>(`/api/v1/lessons/by-slug/${slug}`, LessonSchema),
+    staleTime: 60_000,
+    enabled: !!slug,
+    ...options,
+  });
+}
+

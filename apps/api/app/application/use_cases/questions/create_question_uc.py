@@ -2,19 +2,15 @@ from uuid import uuid4
 
 from app.core.datetime_utils import now_ict
 from app.domain.entities.question import QuestionEntity, QuestionOptionEntity
-from app.infrastructure.repositories.questions import QuestionRepository
-from app.presentation.schemas.questions import (
-    QuestionBulkCreate,
-    QuestionCreate,
-)
+from app.domain.interfaces import IQuestionRepository
+from app.presentation.schemas.questions import QuestionBulkCreate, QuestionCreate
 
 
 class CreateQuestionUseCase:
-    def __init__(self, question_repo: QuestionRepository):
+    def __init__(self, question_repo: IQuestionRepository):
         self._question_repo = question_repo
 
     async def execute(self, payload: QuestionCreate) -> QuestionEntity:
-
         options = [
             QuestionOptionEntity(
                 id=opt.id or str(uuid4()).split("-")[0],
@@ -29,6 +25,7 @@ class CreateQuestionUseCase:
             id=uuid4(),
             lesson_id=payload.lesson_id,
             pool_type=payload.pool_type,
+            difficulty=payload.difficulty,
             content=payload.content,
             options=options,
             solution=payload.solution,
@@ -40,7 +37,7 @@ class CreateQuestionUseCase:
 
 
 class BulkCreateQuestionsUseCase:
-    def __init__(self, question_repo: QuestionRepository):
+    def __init__(self, question_repo: IQuestionRepository):
         self._question_repo = question_repo
 
     async def execute(self, payload: QuestionBulkCreate) -> list[QuestionEntity]:
@@ -48,7 +45,6 @@ class BulkCreateQuestionsUseCase:
         created_at = now_ict()
 
         for item in payload.questions:
-            # Generate IDs for options if they don't have them
             options: list[QuestionOptionEntity] = []
             for opt in item.options:
                 options.append(
@@ -64,7 +60,8 @@ class BulkCreateQuestionsUseCase:
                 QuestionEntity(
                     id=uuid4(),
                     lesson_id=payload.lesson_id,
-                    pool_type=payload.pool_type,
+                    pool_type=item.pool_type or payload.pool_type,
+                    difficulty=item.difficulty or payload.difficulty,
                     content=item.question,
                     options=options,
                     solution=item.solution,

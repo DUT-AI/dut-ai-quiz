@@ -1,24 +1,26 @@
-from .base import Base, PoolType, AttemptStatus, PracticeSessionStatus
 from .question import Question
 from .exam import Exam, ExamQuestion
 from .attempt import Attempt, AttemptAnswer, FocusEvent
-from .practice import PracticeSession
+from .game import GameSession
 from .lesson import Lesson
 from .user import User
+from .hackathon import Hackathon, HackathonTask, HackathonTeam, HackathonRegistration, HackathonSubmission
 
 __all__ = [
     "Base",
-    "PoolType",
-    "AttemptStatus",
-    "PracticeSessionStatus",
     "Question",
     "Exam",
     "ExamQuestion",
     "Attempt",
     "AttemptAnswer",
     "FocusEvent",
-    "PracticeSession",
+    "GameSession",
     "Lesson",
     "User",
+    "Hackathon",
+    "HackathonTask",
+    "HackathonTeam",
+    "HackathonRegistration",
+    "HackathonSubmission",
 ]
 export_globals = globals()

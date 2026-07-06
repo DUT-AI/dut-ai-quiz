@@ -1,63 +1,60 @@
-import httpx
-from fastapi import APIRouter, HTTPException
-from app.presentation.api.deps import TeacherUser
-from app.config import settings
-from loguru import logger
+from fastapi import APIRouter
+from dishka.integrations.fastapi import FromDishka, inject
+from app.presentation.api.deps import AdminOrMentorUser
+from app.domain.interfaces import IManageService
+from app.presentation.schemas.external import (
+    ExternalUsersResponse,
+    ExternalTeamsResponse,
+    ExternalUserOut,
+    ExternalTeamOut,
+    ExternalTeamMemberOut,
+)
 
 router = APIRouter(prefix="/external", tags=["external"])
 
 
-@router.get("/teams")
-async def get_external_teams(user: TeacherUser):
-    headers = {"Authorization": f"Bearer {settings.manage_api_key}"}
-    url = f"{settings.manage_base_url}/api/v1/teams?skip=0&limit=100"
-    async with httpx.AsyncClient() as client:
-        try:
-            response = await client.get(url, headers=headers)
-            logger.debug(f"Proxy response status: {response.status_code}")
-            response.raise_for_status()
-            try:
-                return response.json()
-            except Exception as json_err:
-                logger.error(
-                    f"Failed to parse JSON: {json_err}. Content: {response.text[:500]}"
-                )
-                raise HTTPException(
-                    status_code=500, detail="External API returned invalid JSON"
-                )
-        except Exception as e:
-            if isinstance(e, httpx.HTTPStatusError):
-                logger.error(
-                    f"External API error: {e.response.status_code} - {e.response.text[:500]}"
-                )
-            else:
-                logger.error(f"Proxy error: {str(e)}")
-            raise e
+@router.get("/teams", response_model=ExternalTeamsResponse)
+@inject
+async def get_external_teams(
+    user: AdminOrMentorUser,
+    manage_service: FromDishka[IManageService],
+):
+    teams = await manage_service.get_teams()
+    mapped_teams = []
+    for t in teams:
+        mapped_members = [
+            ExternalTeamMemberOut(
+                user_id=m.user_id,
+                username=m.user_name,
+            )
+            for m in t.members
+        ]
+        mapped_teams.append(
+            ExternalTeamOut(
+                id=t.id,
+                team_name=t.team_name,
+                member_count=t.member_count,
+                members=mapped_members,
+            )
+        )
+    return ExternalTeamsResponse(data=mapped_teams)
 
 
-@router.get("/users")
-async def get_external_users(user: TeacherUser):
-    headers = {"Authorization": f"Bearer {settings.manage_api_key}"}
-    url = f"{settings.manage_base_url}/api/v1/users"
-    async with httpx.AsyncClient() as client:
-        try:
-            response = await client.get(url, headers=headers)
-            logger.debug(f"Proxy response status: {response.status_code}")
-            response.raise_for_status()
-            try:
-                return response.json()
-            except Exception as json_err:
-                logger.error(
-                    f"Failed to parse JSON: {json_err}. Content: {response.text[:500]}"
-                )
-                raise HTTPException(
-                    status_code=500, detail="External API returned invalid JSON"
-                )
-        except Exception as e:
-            if isinstance(e, httpx.HTTPStatusError):
-                logger.error(
-                    f"External API error: {e.response.status_code} - {e.response.text[:500]}"
-                )
-            else:
-                logger.error(f"Proxy error: {str(e)}")
-            raise e
+@router.get("/users", response_model=ExternalUsersResponse)
+@inject
+async def get_external_users(
+    user: AdminOrMentorUser,
+    manage_service: FromDishka[IManageService],
+):
+    users = await manage_service.get_users()
+    mapped_users = [
+        ExternalUserOut(
+            id=u.user_id,
+            username=u.user_name,
+            name=u.user_name,
+            email=u.email,
+            avatar_url=u.user_avatar_url,
+        )
+        for u in users
+    ]
+    return ExternalUsersResponse(data=mapped_users)

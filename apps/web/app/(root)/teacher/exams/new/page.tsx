@@ -2,7 +2,7 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Sparkles } from "lucide-react";
-import ExamStepper from "@/components/teacher/exam-editor/ExamStepper";
+import ExamStepper from "@/features/exams/components/exam-editor/ExamStepper";
 
 export default function NewExamPage() {
   const router = useRouter();

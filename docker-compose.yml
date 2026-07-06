@@ -33,8 +33,8 @@ services:
 
     api:
         build:
-            context: ./apps/api
-            dockerfile: Dockerfile
+            context: .
+            dockerfile: apps/api/Dockerfile
         container_name: dut-ai-quiz-api
         env_file:
             - .env
@@ -50,6 +50,31 @@ services:
             - "8076:8076"
         depends_on:
             postgres:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+
+    worker:
+        build:
+            context: .
+            dockerfile: apps/worker/Dockerfile
+        container_name: dut-ai-quiz-worker
+        env_file:
+            - .env
+        environment:
+            - TZ=Asia/Ho_Chi_Minh
+            - POSTGRES_HOST=postgres
+            - POSTGRES_PORT=5432
+            - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-dut_ai_quiz}
+            - REDIS_URL=redis://redis:6379/0
+            - REDIS_HOST=redis
+            - REDIS_PORT=6379
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+        depends_on:
+            postgres:
+                condition: service_healthy
+            redis:
                 condition: service_healthy
 
     web:

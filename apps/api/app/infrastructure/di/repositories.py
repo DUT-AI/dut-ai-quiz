@@ -1,26 +1,65 @@
 from dishka import Provider, Scope, provide
 
-from app.infrastructure.repositories.exams import ExamRepository
-from app.infrastructure.repositories.exam_questions import ExamQuestionRepository
-from app.infrastructure.repositories.questions import QuestionRepository
-from app.infrastructure.repositories.focus_events import FocusEventRepository
-from app.infrastructure.repositories.practice_sessions import PracticeSessionRepository
+from app.domain.interfaces import (
+    IAttemptRepository,
+    IExamQuestionRepository,
+    IExamRepository,
+    IFocusEventRepository,
+    ILessonRepository,
+    IGameSessionRepository,
+    IQuestionRepository,
+    IUserRepository,
+)
+from app.domain.interfaces.hackathon_repo import (
+    IHackathonRepository,
+    IHackathonTaskRepository,
+    IHackathonTeamRepository,
+    IHackathonRegistrationRepository,
+    IHackathonSubmissionRepository,
+)
 from app.infrastructure.repositories.attempts import AttemptRepository
-from app.infrastructure.repositories.lessons import SqlLessonRepository, LessonRepository
+from app.infrastructure.repositories.exam_questions import ExamQuestionRepository
+from app.infrastructure.repositories.exams import ExamRepository
+from app.infrastructure.repositories.focus_events import FocusEventRepository
+from app.infrastructure.repositories.lessons import LessonRepository
+from app.infrastructure.repositories.game_sessions import GameSessionRepository
+from app.infrastructure.repositories.questions import QuestionRepository
 from app.infrastructure.repositories.users import UserRepository
+from app.infrastructure.repositories.hackathons import (
+    HackathonRepository,
+    HackathonTaskRepository,
+    HackathonTeamRepository,
+    HackathonRegistrationRepository,
+    HackathonSubmissionRepository,
+)
 
 
 class RepositoryProvider(Provider):
     scope = Scope.REQUEST
 
-    # LessonRepository is a Protocol, so we provide the SQL implementation
-    lesson_repo = provide(SqlLessonRepository, provides=LessonRepository)
-
-    # These are currently concrete classes in your implementation
-    user_repo = provide(UserRepository)
-    exam_repo = provide(ExamRepository)
-    exam_question_repo = provide(ExamQuestionRepository)
-    question_repo = provide(QuestionRepository)
-    focus_event_repo = provide(FocusEventRepository)
-    practice_session_repo = provide(PracticeSessionRepository)
-    attempt_repo = provide(AttemptRepository)
+    # Đăng ký kèm theo tham số provides để map concrete class với interface của nó
+    lesson_repo = provide(LessonRepository, provides=ILessonRepository)
+    user_repo = provide(UserRepository, provides=IUserRepository)
+    exam_repo = provide(ExamRepository, provides=IExamRepository)
+    exam_question_repo = provide(
+        ExamQuestionRepository, provides=IExamQuestionRepository
+    )
+    question_repo = provide(QuestionRepository, provides=IQuestionRepository)
+    focus_event_repo = provide(FocusEventRepository, provides=IFocusEventRepository)
+    game_session_repo = provide(
+        GameSessionRepository, provides=IGameSessionRepository
+    )
+    attempt_repo = provide(AttemptRepository, provides=IAttemptRepository)
+    hackathon_repo = provide(HackathonRepository, provides=IHackathonRepository)
+    hackathon_task_repo = provide(
+        HackathonTaskRepository, provides=IHackathonTaskRepository
+    )
+    hackathon_team_repo = provide(
+        HackathonTeamRepository, provides=IHackathonTeamRepository
+    )
+    hackathon_registration_repo = provide(
+        HackathonRegistrationRepository, provides=IHackathonRegistrationRepository
+    )
+    hackathon_submission_repo = provide(
+        HackathonSubmissionRepository, provides=IHackathonSubmissionRepository
+    )

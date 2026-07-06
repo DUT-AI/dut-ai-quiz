@@ -1,38 +1,38 @@
 from typing import Any
-from loguru import logger
 
 from app.application.services.auth_roles import quiz_role_from_manage
-from app.infrastructure.cache.redis_client import ProfileCache
 from app.core.jwt import decode_access_token
-from app.infrastructure.clients import ManageServiceClient
-from app.infrastructure.repositories.users import UserRepository
+from app.domain.exceptions.exceptions import AppException
+from app.domain.interfaces import IManageService, IUserRepository
+from app.infrastructure.cache.redis_client import ProfileCache
+from loguru import logger
 
 
 class GetProfileUseCase:
     def __init__(
         self,
         cache: ProfileCache,
-        user_repo: UserRepository,
-        manage_client: ManageServiceClient,
+        user_repo: IUserRepository,
+        manage_client: IManageService,
     ) -> None:
         self._cache = cache
         self._user_repo = user_repo
         self._manage_client = manage_client
 
-    async def execute(self, access_token: str | None) -> dict[str, Any] | None:
+    async def execute(self, access_token: str | None) -> dict[str, Any]:
         if not access_token:
-            return None
+            raise AppException("Không tìm thấy access token trong cookie", 401)
 
         # 1. Decode JWT Token
         payload = decode_access_token(access_token)
         if not payload:
-            return None
+            raise AppException("Access token không hợp lệ hoặc đã hết hạn", 401)
 
         user_id = payload.get("user_id")
         user_type = payload.get("type", "service_a")
 
         if not user_id:
-            return None
+            raise AppException("Token payload không hợp lệ (thiếu user_id)", 401)
 
         # 2. Check Cache
         cached = await self._cache.get(access_token)
@@ -44,14 +44,17 @@ class GetProfileUseCase:
             # Fetch Google User from Local DB using UserRepository
             user = await self._user_repo.get_by_id(user_id)
             if not user:
-                return None
+                raise AppException(
+                    f"Không tìm thấy người dùng Google với ID {user_id} trong cơ sở dữ liệu local",
+                    401,
+                )
 
             profile_data = {
                 "id": user.id,
                 "email": user.email,
                 "name": user.name,
                 "avatar_url": user.avatar_url,
-                "role_name": "teammate",
+                "role_names": [user.role],
                 "quiz_role": user.role,
             }
             await self._cache.set(access_token, profile_data)
@@ -60,24 +63,35 @@ class GetProfileUseCase:
         else:
             # Fetch Service A User via ManageServiceClient
             try:
-                body = await self._manage_client.get_profile(user_id)
-                if not body:
-                    return None
+                profile = await self._manage_client.get_profile(user_id)
+                if not profile:
+                    raise AppException(
+                        f"Không tìm thấy thông tin tài khoản Manage Service với ID {user_id}",
+                        401,
+                    )
 
-                data = body.get("data") if isinstance(body, dict) else body
-                if not data:
-                    return None
-
-                # Map role
-                rn = str(data.get("role_name") or "")
+                quiz_role = "guest"
                 try:
-                    data["quiz_role"] = quiz_role_from_manage(rn)
-                except ValueError:
-                    data["quiz_role"] = "guest"
+                    quiz_role = quiz_role_from_manage(profile.role_names)
+                except Exception:
+                    pass
+
+                profile_data = {
+                    "id": profile.id,
+                    "email": profile.email,
+                    "name": profile.name,
+                    "avatar_url": profile.avatar_url,
+                    "role_names": profile.role_names,
+                    "quiz_role": quiz_role,
+                }
 
                 # Store in Cache
-                await self._cache.set(access_token, data)
-                return data
+                await self._cache.set(access_token, profile_data)
+                return profile_data
+            except AppException:
+                raise
             except Exception as e:
                 logger.error(f"Error fetching profile from Manage Service: {e}")
-                return None
+                raise AppException(
+                    f"Lỗi khi lấy thông tin tài khoản từ Manage Service: {str(e)}", 401
+                ) from e

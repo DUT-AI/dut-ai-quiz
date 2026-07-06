@@ -3,7 +3,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from app.infrastructure.persistence.models import AttemptStatus
+from app.domain.value_objects import AttemptStatus
 
 
 class AnswerItem(BaseModel):

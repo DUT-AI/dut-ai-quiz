@@ -55,3 +55,36 @@ export function formatToLocalDatetime(date: Date | string | null | undefined): s
     
     return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
+
+/** 
+ * Định dạng chuỗi ngày giờ từ API để hiển thị đẹp mắt (HH:mm DD/MM/YYYY).
+ */
+export function formatDateTime(isoString?: string | null): string {
+  if (!isoString) return "Không giới hạn";
+  const date = parseICT(isoString);
+  if (isNaN(date.getTime())) return "Lỗi ngày";
+  
+  return date.toLocaleString("vi-VN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+/** 
+ * Chuyển mode tham gia hackathon sang nhãn tiếng Việt tương ứng.
+ */
+export function getParticipationModeLabel(mode: string): string {
+  switch (mode) {
+    case "individual":
+      return "Cá nhân";
+    case "team":
+      return "Đội nhóm";
+    case "both":
+    default:
+      return "Cá nhân & Đội nhóm";
+  }
+}
+

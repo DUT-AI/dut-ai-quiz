@@ -3,11 +3,13 @@ from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domain.entities.attempt import AttemptEntity, AttemptAnswerEntity
-from app.infrastructure.persistence.models import Attempt, AttemptAnswer, AttemptStatus
+from app.domain.entities.attempt import AttemptAnswerEntity, AttemptEntity
+from app.domain.interfaces import IAttemptAnswerRepository, IAttemptRepository
+from app.domain.value_objects import AttemptStatus
+from app.infrastructure.persistence.models import Attempt, AttemptAnswer, Exam
 
 
-class AttemptRepository:
+class AttemptRepository(IAttemptRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._s = session
 
@@ -57,9 +59,7 @@ class AttemptRepository:
             model.tab_out_count = entity.tab_out_count
             model.shuffle_seed = entity.shuffle_seed
             model.shuffle_snapshot = (
-                entity.shuffle_snapshot.to_dict()
-                if entity.shuffle_snapshot
-                else None
+                entity.shuffle_snapshot.to_dict() if entity.shuffle_snapshot else None
             )
             await self._s.flush()
             await self._s.refresh(model)
@@ -121,7 +121,6 @@ class AttemptRepository:
         return [m.to_entity() for m in r.scalars().all()]
 
     async def list_for_user(self, user_id: int) -> list[tuple[AttemptEntity, str]]:
-        from app.infrastructure.persistence.models import Exam
 
         r = await self._s.execute(
             select(Attempt, Exam.title)
@@ -172,7 +171,7 @@ class AttemptRepository:
         return [m.to_entity() for m in r.scalars().all()]
 
 
-class AttemptAnswerRepository:
+class AttemptAnswerRepository(IAttemptAnswerRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._s = session
 

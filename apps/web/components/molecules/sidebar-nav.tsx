@@ -9,11 +9,11 @@ import {
   Rocket,
   Settings,
   UserCircle,
-  FileText,
   ShieldCheck,
   PlusCircle,
   BarChart2,
-  LogOut
+  LogOut,
+  Award
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -22,27 +22,26 @@ import { useAuth } from "@/context/auth-context";
 
 const STUDENT_NAV_ITEMS = [
   { icon: LayoutDashboard, label: "Tổng quan", href: "/dashboard" },
-  { icon: BookOpen, label: "Bài học", href: "/lessons" },
+  { icon: BookOpen, label: "Học tập", href: "/lessons" },
   { icon: GraduationCap, label: "Đề thi", href: "/exams" },
+  { icon: Award, label: "Hackathons", href: "/hackathons" },
   { icon: History, label: "Lịch sử làm bài", href: "/history" },
 ];
 
 const TEACHER_NAV_ITEMS = [
   { icon: ShieldCheck, label: "Quản lý Đề thi", href: "/teacher/exams" },
   { icon: PlusCircle, label: "Quản lý Bài học", href: "/teacher/lessons" },
-  { icon: FileText, label: "Quản lý Câu hỏi", href: "/teacher/questions" },
+  { icon: Award, label: "Quản lý Hackathon", href: "/teacher/hackathons" },
   { icon: BarChart2, label: "Thống kê kết quả", href: "/teacher/stats" },
 ];
 
-export const SidebarNav = () => {
+export const SidebarNav = ({ onCloseMobile }: { onCloseMobile?: () => void }) => {
   const pathname = usePathname();
-  const { user, logout } = useAuth();
-  console.log(user)
-
-  const isTeacher = user?.quiz_role === "teacher"
+  const { user, logout, canManage } = useAuth();
+  const isTeacher = canManage
 
   return (
-    <div className="hidden lg:flex flex-col w-72 bg-white dark:bg-navy-blue border-r border-gray-100 dark:border-white/5 h-screen sticky top-0 py-8 px-4 overflow-y-auto">
+    <div className="flex flex-col h-full w-72 py-8 px-4 overflow-y-auto custom-scrollbar">
       <div className="flex items-center gap-3 px-4 mb-10">
         <div className="size-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/30">
           <Rocket className="size-6" />
@@ -59,11 +58,12 @@ export const SidebarNav = () => {
           <p className="px-4 text-[10px] font-black text-gray-navy/40 uppercase tracking-[0.2em] mb-4">Sinh viên</p>
           <nav className="space-y-1">
             {STUDENT_NAV_ITEMS.map((item, idx) => {
-              const isActive = pathname === item.href;
+              const isActive = pathname.startsWith(item.href);
               return (
                 <Link
                   key={idx}
                   href={item.href}
+                  onClick={onCloseMobile}
                   className={cn(
                     "w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-sm font-bold transition-all duration-200 group",
                     isActive
@@ -93,6 +93,7 @@ export const SidebarNav = () => {
                   <Link
                     key={idx}
                     href={item.href}
+                    onClick={onCloseMobile}
                     className={cn(
                       "w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-sm font-bold transition-all duration-200 group",
                       isActive
@@ -125,7 +126,7 @@ export const SidebarNav = () => {
               <p className="text-[10px] text-gray-navy dark:text-light-blue opacity-60 uppercase">{user?.quiz_role || "Guest"}</p>
             </div>
           </div>
-          <button 
+          <button
             onClick={() => logout()}
             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-red/10 text-red text-xs font-bold hover:bg-red hover:text-white transition-all transform active:scale-95"
           >
