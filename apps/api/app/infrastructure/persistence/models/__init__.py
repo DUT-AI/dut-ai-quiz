@@ -5,6 +5,9 @@ from .practice import PracticeSession
 from .lesson import Lesson
 from .user import User
 from .hackathon import Hackathon, HackathonTask, HackathonTeam, HackathonRegistration
+from .runtime_profile import RuntimeProfile
+from .dependency_request import DependencyRequest
+from .submission import HackathonSubmission
 
 __all__ = [
     "Base",
@@ -21,5 +24,8 @@ __all__ = [
     "HackathonTask",
     "HackathonTeam",
     "HackathonRegistration",
+    "RuntimeProfile",
+    "DependencyRequest",
+    "HackathonSubmission",
 ]
 export_globals = globals()

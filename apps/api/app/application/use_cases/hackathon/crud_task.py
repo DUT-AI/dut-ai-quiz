@@ -27,19 +27,23 @@ class CreateHackathonTaskUseCase:
         hackathon = await self._hackathon_repo.get(hackathon_id)
         if not hackathon or hackathon.created_by != admin_user_id:
             return None
+
         now = datetime.now()
         if hackathon.start_time and hackathon.start_time <= now:
             raise ValueError("Cannot create task after hackathon has started.")
         if hackathon.end_time and hackathon.end_time <= now:
             raise ValueError("Cannot create task after hackathon has ended.")
+
         name = payload.name.strip()
         if await self._task_repo.exists_name(hackathon_id, name):
             raise ValueError("Task name already exists in this hackathon.")
+
         description = payload.problem_description_md.strip()
         if not name:
             raise ValueError("name must not be empty")
         if not description:
             raise ValueError("problem_description_md must not be empty")
+
         private_test_url = payload.private_test_url.strip()
         public_test_url = payload.public_test_url.strip()
         if not private_test_url:
@@ -75,14 +79,20 @@ class ListHackathonTasksUseCase:
     async def execute(
         self,
         hackathon_id: UUID,
-        user_id: int,
-        quiz_role: str,
+        user_id: int | None = None,
+        quiz_role: str | None = None,
     ) -> list[HackathonTaskEntity] | None:
         hackathon = await self._hackathon_repo.get(hackathon_id)
         if not hackathon:
             return None
+
+        # Public read.
+        if user_id is None or quiz_role is None:
+            return await self._task_repo.list_for_hackathon(hackathon_id)
+
         if quiz_role in ["admin", "MENTOR"] and hackathon.created_by != user_id:
             return None
+
         return await self._task_repo.list_for_hackathon(hackathon_id)
 
 
@@ -99,13 +109,15 @@ class GetHackathonTaskUseCase:
         self,
         hackathon_id: UUID,
         task_id: UUID,
-        user_id: int,
-        quiz_role: str,
+        user_id: int | None = None,
+        quiz_role: str | None = None,
     ) -> HackathonTaskEntity | None:
         hackathon = await self._hackathon_repo.get(hackathon_id)
         if not hackathon:
             return None
-        if quiz_role in ["admin", "MENTOR"] and hackathon.created_by != user_id:
+
+        # Public read.
+        if user_id is not None and quiz_role in ["admin", "MENTOR"] and hackathon.created_by != user_id:
             return None
 
         task = await self._task_repo.get(task_id)
@@ -143,13 +155,12 @@ class UpdateHackathonTaskUseCase:
             data["name"] = data["name"].strip()
             if not data["name"]:
                 raise ValueError("name must not be empty")
-        if (
-            "problem_description_md" in data
-            and data["problem_description_md"] is not None
-        ):
+
+        if "problem_description_md" in data and data["problem_description_md"] is not None:
             data["problem_description_md"] = data["problem_description_md"].strip()
             if not data["problem_description_md"]:
                 raise ValueError("problem_description_md must not be empty")
+
         if "max_submissions" in data and data["max_submissions"] is not None:
             if data["max_submissions"] < 1:
                 raise ValueError("max_submissions must be >= 1")

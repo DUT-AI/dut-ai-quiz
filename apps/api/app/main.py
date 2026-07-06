@@ -9,6 +9,7 @@ from app.presentation.api.exceptions import setup_exception_handlers
 from app.presentation.api.routers import (
     attempts,
     auth,
+    dependency_requests,
     exams,
     external,
     hackathon_registrations,
@@ -21,6 +22,8 @@ from app.presentation.api.routers import (
     pdf_import,
     practice,
     questions,
+    runtime_profiles,
+    submissions,
     uploads,
 )
 
@@ -51,6 +54,9 @@ app.include_router(lessons.router, prefix="/api/v1")
 app.include_router(hackathons.router, prefix="/api/v1")
 app.include_router(hackathon_tasks.router, prefix="/api/v1")
 app.include_router(hackathon_registrations.router, prefix="/api/v1")
+app.include_router(runtime_profiles.router, prefix="/api/v1")
+app.include_router(dependency_requests.router, prefix="/api/v1")
+app.include_router(submissions.router, prefix="/api/v1")
 app.include_router(questions.router, prefix="/api/v1")
 app.include_router(exams.router, prefix="/api/v1")
 app.include_router(attempts.router, prefix="/api/v1")

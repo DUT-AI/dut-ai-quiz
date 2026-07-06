@@ -7,6 +7,11 @@ dependencies = [
     "dut-ai-quiz-api",
     "arq>=0.26.0",
     "docker>=7.0.0",
+    "numpy>=1.24.0",
+    # Optional: cupy-cuda11x or cupy-cuda12x for GPU acceleration
+    # Install separately based on CUDA version:
+    # pip install cupy-cuda11x  # For CUDA 11.x
+    # pip install cupy-cuda12x  # For CUDA 12.x
 ]
 
 [tool.uv.sources]

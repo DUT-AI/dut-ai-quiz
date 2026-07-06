@@ -13,7 +13,7 @@ from app.application.use_cases.hackathon import (
     RegisterIndividualUseCase,
     ReviewRegistrationUseCase,
 )
-from app.presentation.api.deps import AdminOrMentorUser, CurrentUser
+from app.presentation.api.deps import AdminOrMentorUser, CurrentUser, OptionalCurrentUser
 from app.presentation.schemas.hackathons import (
     HackathonRegistrationOut,
     HackathonTeamCreate,
@@ -27,7 +27,8 @@ router = APIRouter(prefix="/hackathons", tags=["hackathons"])
 
 
 @router.post(
-    "/{hackathon_id}/register/individual", response_model=HackathonRegistrationOut
+    "/{hackathon_id}/register/individual",
+    response_model=HackathonRegistrationOut,
 )
 @inject
 async def register_individual_route(
@@ -38,7 +39,10 @@ async def register_individual_route(
     return await use_case(hackathon_id, user.id)
 
 
-@router.post("/{hackathon_id}/register/team/create", response_model=HackathonTeamOut)
+@router.post(
+    "/{hackathon_id}/register/team/create",
+    response_model=HackathonTeamOut,
+)
 @inject
 async def create_team_route(
     user: CurrentUser,
@@ -49,7 +53,10 @@ async def create_team_route(
     return await use_case(hackathon_id, user.id, body.name)
 
 
-@router.post("/{hackathon_id}/register/team/join", response_model=HackathonTeamOut)
+@router.post(
+    "/{hackathon_id}/register/team/join",
+    response_model=HackathonTeamOut,
+)
 @inject
 async def join_team_route(
     user: CurrentUser,
@@ -86,15 +93,23 @@ async def cancel_registration_route(
 @router.get("/{hackathon_id}/registration/status")
 @inject
 async def get_registration_status_route(
-    user: CurrentUser,
+    user: OptionalCurrentUser,
     hackathon_id: UUID,
     use_case: FromDishka[GetRegistrationStatusUseCase],
 ):
+    if user is None:
+        return {
+            "is_registered": False,
+            "registration": None,
+            "team": None,
+        }
+
     return await use_case(hackathon_id, user.id)
 
 
 @router.get(
-    "/{hackathon_id}/registrations", response_model=list[HackathonRegistrationOut]
+    "/{hackathon_id}/registrations",
+    response_model=list[HackathonRegistrationOut],
 )
 @inject
 async def list_registrations_route(

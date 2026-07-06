@@ -54,6 +54,15 @@ class Settings(BaseSettings):
     minio_secret_key: str = ""
     minio_bucket_name: str = ""
 
+    # Sandbox Security Settings
+    sandbox_timeout_seconds: int = 300
+    sandbox_memory_mb: int = 2048
+    sandbox_cpu_limit: float = 2.0
+    sandbox_pids_limit: int = 100
+    sandbox_network_disabled: bool = True
+    sandbox_log_max_lines: int = 50
+    sandbox_output_filename: str = "predict.csv"
+
     @field_validator("database_url")
     @classmethod
     def normalize_database_url(cls, value: str) -> str:

@@ -3,6 +3,7 @@ from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, field_validator
+
 from app.domain.entities.hackathon import MetricType, RegistrationStatus
 
 ParticipationMode = Literal["individual", "team", "both"]
@@ -94,12 +95,11 @@ class HackathonTaskUpdate(BaseModel):
         return value
 
 
-class HackathonTaskOut(BaseModel):
+class HackathonTaskPublicOut(BaseModel):
     id: UUID
     hackathon_id: UUID
     name: str
     problem_description_md: str
-    private_test_url: str
     public_test_url: str
     metric_type: MetricType
     max_submissions: int
@@ -107,6 +107,10 @@ class HackathonTaskOut(BaseModel):
     updated_at: datetime | None
 
     model_config = {"from_attributes": True}
+
+
+class HackathonTaskOut(HackathonTaskPublicOut):
+    private_test_url: str
 
 
 class TeamMemberOut(BaseModel):
