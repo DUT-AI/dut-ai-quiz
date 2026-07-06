@@ -53,34 +53,29 @@ class GoogleAuthUseCase:
         )
 
     def handle_login_by_manage_email(
-        self, user_profiles: list[ManageUserProfile], email: str
+        self, profile: ManageUserProfile
     ) -> AuthTokens:
-        for u in user_profiles:
-            if u.email == email:
-                service_a_user_id = int(u.id)
-                role_names = u.role_names
-                try:
-                    service_a_role = quiz_role_from_manage(role_names)
-                except Exception:
-                    service_a_role = "guest"
+        service_a_user_id = int(profile.id)
+        role_names = profile.role_names
+        try:
+            service_a_role = quiz_role_from_manage(role_names)
+        except Exception:
+            service_a_role = "guest"
 
-                # User exists in Service A -> Generate JWT linked to Service A ID directly (No DB row needed)
-                logger.info(
-                    f"Linking Google user {email} to Service A user ID: {service_a_user_id}"
-                )
-                local_jwt = create_access_token(
-                    {
-                        "user_id": service_a_user_id,
-                        "role": service_a_role,
-                        "type": "service_a",
-                    }
-                )
-                return AuthTokens(
-                    access_token=local_jwt,
-                    refresh_token="",
-                )
-        raise AppException(
-            "Không tìm thấy thông tin email khớp với hệ thống quản lý", 400
+        # User exists in Service A -> Generate JWT linked to Service A ID directly (No DB row needed)
+        logger.info(
+            f"Linking Google user {profile.email} to Service A user ID: {service_a_user_id}"
+        )
+        local_jwt = create_access_token(
+            {
+                "user_id": service_a_user_id,
+                "role": service_a_role,
+                "type": "service_a",
+            }
+        )
+        return AuthTokens(
+            access_token=local_jwt,
+            refresh_token="",
         )
 
     async def execute(self, code: str) -> AuthTokens:
@@ -106,8 +101,16 @@ class GoogleAuthUseCase:
             # 3. Check if email exists in Manage Service (for Account Linking)
             logger.info(f"Checking email {email} on Manage Service")
             user_profiles = await self._manage_client.find_user_by_email(email)
+            
+            matched_profile = None
             if user_profiles:
-                return self.handle_login_by_manage_email(user_profiles, email)
+                for u in user_profiles:
+                    if u.email == email:
+                        matched_profile = u
+                        break
+
+            if matched_profile:
+                return self.handle_login_by_manage_email(matched_profile)
 
             # Google-only user -> check / create locally
             logger.info(f"Google-only user {email}. Checking local DB.")

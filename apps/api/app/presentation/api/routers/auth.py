@@ -15,6 +15,9 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 def _set_auth_cookies(response: Response, access_token: str, refresh_token: str):
+    is_prod = ".dutai.site" in settings.frontend_url
+    domain = ".dutai.site" if is_prod else None
+
     # Set Access Token Cookie
     response.set_cookie(
         key="access_token",
@@ -22,7 +25,7 @@ def _set_auth_cookies(response: Response, access_token: str, refresh_token: str)
         httponly=True,
         secure=True,
         samesite="lax",
-        domain=".dutai.site" if ".dutai.site" in settings.cors_origins else None,
+        domain=domain,
         max_age=3600 * 24,  # 1 day
     )
     # Set Refresh Token Cookie
@@ -32,7 +35,7 @@ def _set_auth_cookies(response: Response, access_token: str, refresh_token: str)
         httponly=True,
         secure=True,
         samesite="lax",
-        domain=".dutai.site" if ".dutai.site" in settings.cors_origins else None,
+        domain=domain,
         max_age=3600 * 24 * 7,  # 7 days
     )
 
@@ -88,7 +91,8 @@ async def logout(
     await use_case.execute(access_token)
 
     # Clear cookies
-    domain = ".dutai.site" if ".dutai.site" in settings.cors_origins else None
+    is_prod = ".dutai.site" in settings.frontend_url
+    domain = ".dutai.site" if is_prod else None
     response.delete_cookie("access_token", domain=domain)
     response.delete_cookie("refresh_token", domain=domain)
 
