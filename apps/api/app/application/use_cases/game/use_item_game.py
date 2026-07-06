@@ -5,17 +5,17 @@ from uuid import UUID
 from fastapi import HTTPException
 
 from app.domain.interfaces import (
-    IPracticeSessionRepository,
+    IGameSessionRepository,
     IQuestionRepository,
 )
-from app.domain.value_objects import PracticeSessionStatus
+from app.domain.value_objects import GameSessionStatus
 from app.domain.value_objects.gamification import ITEM_PRICES, GamificationItem
-from app.presentation.schemas.practice import GamificationUseItemIn
+from app.presentation.schemas.game import GamificationUseItemIn
 
 
-class UseItemPracticeUseCase:
+class UseItemGameUseCase:
     def __init__(
-        self, ps_repo: IPracticeSessionRepository, question_repo: IQuestionRepository
+        self, ps_repo: IGameSessionRepository, question_repo: IQuestionRepository
     ):
         self._ps_repo = ps_repo
         self._question_repo = question_repo
@@ -25,9 +25,9 @@ class UseItemPracticeUseCase:
     ) -> dict[str, Any] | None:
         session = await self._ps_repo.get(session_id)
         if not session or session.user_id != user_id:
-            raise HTTPException(status_code=404, detail="Practice session not found")
+            raise HTTPException(status_code=404, detail="Game session not found")
 
-        if session.status != PracticeSessionStatus.IN_PROGRESS:
+        if session.status != GameSessionStatus.IN_PROGRESS:
             raise HTTPException(status_code=400, detail="Session is not in progress")
 
         if not session.snapshot or "gamification" not in session.snapshot:

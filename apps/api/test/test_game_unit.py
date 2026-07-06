@@ -2,17 +2,17 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 from datetime import datetime, timedelta
-from app.domain.entities.practice import PracticeSessionEntity
-from app.domain.value_objects import Difficulty, PoolType, PracticeSessionStatus
-from app.presentation.schemas.practice import (
+from app.domain.entities.game import GameSessionEntity
+from app.domain.value_objects import Difficulty, PoolType, GameSessionStatus
+from app.presentation.schemas.game import (
     GamificationStartIn,
     GamificationAnswerPatchIn,
     GamificationUseItemIn,
 )
-from app.application.use_cases.practice.practice_use_case import (
-    StartPracticeSessionUseCase,
-    UseItemPracticeUseCase,
-    PatchPracticeAnswerUseCase,
+from app.application.use_cases.game import (
+    StartGameSessionUseCase,
+    UseItemGameUseCase,
+    PatchGameAnswerUseCase,
 )
 from app.core.datetime_utils import now_ict
 from fastapi import HTTPException
@@ -36,7 +36,7 @@ class MockQuestion:
         self.difficulty = difficulty
         self.content = content
         self.options = options
-        self.pool_type = PoolType.PRACTICE
+        self.pool_type = PoolType.GAME
 
 
 # ==============================================================================
@@ -84,15 +84,15 @@ async def test_TC_G01_patch_gamification_answer_correct():
         }
     }
     
-    session = PracticeSessionEntity(
+    session = GameSessionEntity(
         id=session_id, user_id=1, started_at=datetime.utcnow(), completed_at=None,
-        status=PracticeSessionStatus.IN_PROGRESS, snapshot=snapshot, tags_filter=[], question_limit=2
+        status=GameSessionStatus.IN_PROGRESS, snapshot=snapshot, tags_filter=[], question_limit=2
     )
     ps_repo.get.return_value = session
     ps_repo.count_completed_by_lesson.return_value = 0
     ps_repo.count_completed_by_lesson.return_value = 0
     
-    use_case = PatchPracticeAnswerUseCase(ps_repo, question_repo)
+    use_case = PatchGameAnswerUseCase(ps_repo, question_repo)
     
     payload = GamificationAnswerPatchIn(
         question_id=q_id, option_id=opt_correct_id, time_response=10.0,
@@ -135,15 +135,15 @@ async def test_TC_G02_patch_gamification_answer_incorrect_lose_life():
         }
     }
     
-    session = PracticeSessionEntity(
+    session = GameSessionEntity(
         id=session_id, user_id=1, started_at=datetime.utcnow(), completed_at=None,
-        status=PracticeSessionStatus.IN_PROGRESS, snapshot=snapshot, tags_filter=[], question_limit=2
+        status=GameSessionStatus.IN_PROGRESS, snapshot=snapshot, tags_filter=[], question_limit=2
     )
     ps_repo.get.return_value = session
     ps_repo.count_completed_by_lesson.return_value = 0
     ps_repo.count_completed_by_lesson.return_value = 0
     
-    use_case = PatchPracticeAnswerUseCase(ps_repo, question_repo)
+    use_case = PatchGameAnswerUseCase(ps_repo, question_repo)
     
     payload = GamificationAnswerPatchIn(
         question_id=q_id, option_id=opt_wrong_id, time_response=30.0,
@@ -187,14 +187,14 @@ async def test_TC_P01_boss_defeated_advances_tier():
         }
     }
     
-    session = PracticeSessionEntity(
+    session = GameSessionEntity(
         id=session_id, user_id=1, started_at=datetime.utcnow(), completed_at=None,
-        status=PracticeSessionStatus.IN_PROGRESS, snapshot=snapshot, tags_filter=[], question_limit=2
+        status=GameSessionStatus.IN_PROGRESS, snapshot=snapshot, tags_filter=[], question_limit=2
     )
     ps_repo.get.return_value = session
     ps_repo.count_completed_by_lesson.return_value = 0
     
-    use_case = PatchPracticeAnswerUseCase(ps_repo, question_repo)
+    use_case = PatchGameAnswerUseCase(ps_repo, question_repo)
     
     payload = GamificationAnswerPatchIn(
         question_id=q_id, option_id=opt_correct_id, time_response=10.0
@@ -231,21 +231,21 @@ async def test_TC_P02_user_loses_all_lives_game_over():
         }
     }
     
-    session = PracticeSessionEntity(
+    session = GameSessionEntity(
         id=session_id, user_id=1, started_at=datetime.utcnow(), completed_at=None,
-        status=PracticeSessionStatus.IN_PROGRESS, snapshot=snapshot, tags_filter=[], question_limit=1
+        status=GameSessionStatus.IN_PROGRESS, snapshot=snapshot, tags_filter=[], question_limit=1
     )
     ps_repo.get.return_value = session
     ps_repo.count_completed_by_lesson.return_value = 0
     
-    use_case = PatchPracticeAnswerUseCase(ps_repo, question_repo)
+    use_case = PatchGameAnswerUseCase(ps_repo, question_repo)
     
     payload = GamificationAnswerPatchIn(question_id=q_id, option_id=opt_wrong_id, time_response=10.0)
     result = await use_case.execute(session_id, user_id=1, payload=payload)
     
     assert result.updated_gamification["lives"] == 0
     assert result.is_game_over is True
-    assert session.status == PracticeSessionStatus.COMPLETED
+    assert session.status == GameSessionStatus.COMPLETED
 
 @pytest.mark.asyncio
 async def test_TC_P03_win_game_on_last_question():
@@ -270,20 +270,20 @@ async def test_TC_P03_win_game_on_last_question():
         }
     }
     
-    session = PracticeSessionEntity(
+    session = GameSessionEntity(
         id=session_id, user_id=1, started_at=datetime.utcnow(), completed_at=None,
-        status=PracticeSessionStatus.IN_PROGRESS, snapshot=snapshot, tags_filter=[], question_limit=1
+        status=GameSessionStatus.IN_PROGRESS, snapshot=snapshot, tags_filter=[], question_limit=1
     )
     ps_repo.get.return_value = session
     ps_repo.count_completed_by_lesson.return_value = 0
     ps_repo.count_completed_by_lesson.return_value = 0
-    use_case = PatchPracticeAnswerUseCase(ps_repo, question_repo)
+    use_case = PatchGameAnswerUseCase(ps_repo, question_repo)
     
     payload = GamificationAnswerPatchIn(question_id=q_id, option_id=opt_correct_id, time_response=10.0)
     result = await use_case.execute(session_id, user_id=1, payload=payload)
     
     assert result.is_game_over is True
-    assert session.status == PracticeSessionStatus.COMPLETED
+    assert session.status == GameSessionStatus.COMPLETED
 
 
 # ==============================================================================
@@ -307,13 +307,13 @@ async def test_TC_S01_spam_already_answered_question():
         }
     }
     
-    session = PracticeSessionEntity(
+    session = GameSessionEntity(
         id=session_id, user_id=1, started_at=datetime.utcnow(), completed_at=None,
-        status=PracticeSessionStatus.IN_PROGRESS, snapshot=snapshot, tags_filter=[], question_limit=1
+        status=GameSessionStatus.IN_PROGRESS, snapshot=snapshot, tags_filter=[], question_limit=1
     )
     ps_repo.get.return_value = session
     ps_repo.count_completed_by_lesson.return_value = 0
-    use_case = PatchPracticeAnswerUseCase(ps_repo, question_repo)
+    use_case = PatchGameAnswerUseCase(ps_repo, question_repo)
     
     payload = GamificationAnswerPatchIn(question_id=q_id, option_id=str(uuid4()), time_response=10.0)
     
@@ -358,13 +358,13 @@ async def test_TC_S03_timeout_fails_automatically():
         }
     }
     
-    session = PracticeSessionEntity(
+    session = GameSessionEntity(
         id=session_id, user_id=1, started_at=datetime.utcnow(), completed_at=None,
-        status=PracticeSessionStatus.IN_PROGRESS, snapshot=snapshot, tags_filter=[], question_limit=1
+        status=GameSessionStatus.IN_PROGRESS, snapshot=snapshot, tags_filter=[], question_limit=1
     )
     ps_repo.get.return_value = session
     ps_repo.count_completed_by_lesson.return_value = 0
-    use_case = PatchPracticeAnswerUseCase(ps_repo, question_repo)
+    use_case = PatchGameAnswerUseCase(ps_repo, question_repo)
     
     # User cố tình truyền thời gian giả (15s) nhưng hệ thống lấy thời gian thực (100s) > 60s
     payload = GamificationAnswerPatchIn(question_id=q_id, option_id=opt_correct_id, time_response=15.0)
@@ -392,13 +392,13 @@ async def test_TC_S04_question_not_in_session():
         }
     }
     
-    session = PracticeSessionEntity(
+    session = GameSessionEntity(
         id=session_id, user_id=1, started_at=datetime.utcnow(), completed_at=None,
-        status=PracticeSessionStatus.IN_PROGRESS, snapshot=snapshot, tags_filter=[], question_limit=1
+        status=GameSessionStatus.IN_PROGRESS, snapshot=snapshot, tags_filter=[], question_limit=1
     )
     ps_repo.get.return_value = session
     ps_repo.count_completed_by_lesson.return_value = 0
-    use_case = PatchPracticeAnswerUseCase(ps_repo, question_repo)
+    use_case = PatchGameAnswerUseCase(ps_repo, question_repo)
     
     payload = GamificationAnswerPatchIn(question_id=q_fake_id, option_id=str(uuid4()), time_response=10.0)
     
@@ -423,15 +423,15 @@ async def test_TC_S05_submit_after_game_over():
         }
     }
     
-    session = PracticeSessionEntity(
+    session = GameSessionEntity(
         id=session_id, user_id=1, started_at=datetime.utcnow(), completed_at=datetime.utcnow(),
-        status=PracticeSessionStatus.COMPLETED, # Session ĐÃ KẾT THÚC
+        status=GameSessionStatus.COMPLETED, # Session ĐÃ KẾT THÚC
         snapshot=snapshot, tags_filter=[], question_limit=1
     )
     ps_repo.get.return_value = session
     ps_repo.count_completed_by_lesson.return_value = 0
     ps_repo.count_completed_by_lesson.return_value = 0
-    use_case = PatchPracticeAnswerUseCase(ps_repo, question_repo)
+    use_case = PatchGameAnswerUseCase(ps_repo, question_repo)
     
     payload = GamificationAnswerPatchIn(question_id=q_id, option_id=str(uuid4()), time_response=10.0)
     

@@ -1,8 +1,8 @@
-from app.domain.interfaces import IPracticeSessionRepository
+from app.domain.interfaces import IGameSessionRepository
 
 
-class GetPracticeHistorySummaryUseCase:
-    def __init__(self, ps_repo: IPracticeSessionRepository):
+class GetGameHistorySummaryUseCase:
+    def __init__(self, ps_repo: IGameSessionRepository):
         self._ps_repo = ps_repo
 
     async def execute(self, user_id: int) -> list[dict]:

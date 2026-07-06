@@ -3,24 +3,24 @@ from uuid import UUID
 from fastapi import HTTPException
 
 from app.domain.interfaces import (
-    IPracticeSessionRepository,
+    IGameSessionRepository,
     IQuestionRepository,
 )
-from app.domain.value_objects import PracticeSessionStatus
+from app.domain.value_objects import GameSessionStatus
 from app.domain.value_objects.gamification import ITEM_PRICES, GamificationItem
-from app.infrastructure.cache.practice_leaderboard_cache import PracticeLeaderboardCache
-from app.presentation.schemas.practice import (
+from app.infrastructure.cache.game_leaderboard_cache import GameLeaderboardCache
+from app.presentation.schemas.game import (
     GamificationAnswerPatchIn,
     GamificationAnswerResultOut,
 )
 
 
-class PatchPracticeAnswerUseCase:
+class PatchGameAnswerUseCase:
     def __init__(
         self,
-        ps_repo: IPracticeSessionRepository,
+        ps_repo: IGameSessionRepository,
         question_repo: IQuestionRepository,
-        cache: PracticeLeaderboardCache = None,
+        cache: GameLeaderboardCache = None,
     ):
         self._ps_repo = ps_repo
         self._question_repo = question_repo
@@ -31,9 +31,9 @@ class PatchPracticeAnswerUseCase:
     ) -> GamificationAnswerResultOut:
         session = await self._ps_repo.get(session_id)
         if not session or session.user_id != user_id:
-            raise HTTPException(status_code=404, detail="Practice session not found")
+            raise HTTPException(status_code=404, detail="Game session not found")
 
-        if session.status != PracticeSessionStatus.IN_PROGRESS:
+        if session.status != GameSessionStatus.IN_PROGRESS:
             raise HTTPException(status_code=400, detail="Session is not in progress")
 
         if not session.snapshot or "gamification" not in session.snapshot:
@@ -201,11 +201,11 @@ class PatchPracticeAnswerUseCase:
         is_game_over = False
         if session.snapshot["gamification"].get("lives", 0) <= 0:
             is_game_over = True
-            session.status = PracticeSessionStatus.COMPLETED
+            session.status = GameSessionStatus.COMPLETED
             session.completed_at = now_ict()
         elif next_idx >= len(questions):
             is_game_over = True
-            session.status = PracticeSessionStatus.COMPLETED
+            session.status = GameSessionStatus.COMPLETED
             session.completed_at = now_ict()
 
         if is_game_over:

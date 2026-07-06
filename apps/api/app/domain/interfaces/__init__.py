@@ -16,7 +16,7 @@ from .hackathon_submission_store import IHackathonSubmissionStore
 from .lesson_repo import ILessonRepository
 from .manage_cache import IDUTAIManageCache
 from .manage_service import IManageService
-from .practice_session_repo import IPracticeSessionRepository
+from .game_session_repo import IGameSessionRepository
 from .question_repo import IQuestionRepository
 from .s3_client import IS3Client
 from .submission_queue import ISubmissionQueue
@@ -30,7 +30,7 @@ __all__ = [
     "IExamRepository",
     "IFocusEventRepository",
     "ILessonRepository",
-    "IPracticeSessionRepository",
+    "IGameSessionRepository",
     "IQuestionRepository",
     "IUserRepository",
     "IManageService",

@@ -63,7 +63,7 @@ export default function LessonSlugPage() {
         {(
           [
             { id: "theory", label: "Lý thuyết", icon: BookOpen },
-            { id: "questions", label: "Trắc nghiệm câu hỏi", icon: ListRestart },
+            { id: "questions", label: "Luyện tập", icon: ListRestart },
             { id: "practice", label: "Luyện tập thi đấu", icon: Swords },
           ] as const
         ).map((tab) => {

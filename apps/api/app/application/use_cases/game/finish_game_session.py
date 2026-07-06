@@ -1,32 +1,32 @@
 from uuid import UUID
 
 from app.core.datetime_utils import now_ict
-from app.domain.entities.practice import PracticeSessionEntity
-from app.domain.interfaces import IPracticeSessionRepository
-from app.domain.value_objects import PracticeSessionStatus
-from app.infrastructure.cache.practice_leaderboard_cache import PracticeLeaderboardCache
+from app.domain.entities.game import GameSessionEntity
+from app.domain.interfaces import IGameSessionRepository
+from app.domain.value_objects import GameSessionStatus
+from app.infrastructure.cache.game_leaderboard_cache import GameLeaderboardCache
 
 
-class FinishPracticeSessionUseCase:
+class FinishGameSessionUseCase:
     def __init__(
         self,
-        ps_repo: IPracticeSessionRepository,
-        cache: PracticeLeaderboardCache = None,
+        ps_repo: IGameSessionRepository,
+        cache: GameLeaderboardCache = None,
     ):
         self._ps_repo = ps_repo
         self._cache = cache
 
     async def execute(
         self, session_id: UUID, user_id: int
-    ) -> PracticeSessionEntity | None:
+    ) -> GameSessionEntity | None:
         session = await self._ps_repo.get(session_id)
         if not session or session.user_id != user_id:
             return None
 
-        if session.status == PracticeSessionStatus.COMPLETED:
+        if session.status == GameSessionStatus.COMPLETED:
             return session
 
-        session.status = PracticeSessionStatus.COMPLETED
+        session.status = GameSessionStatus.COMPLETED
         session.completed_at = now_ict()
 
         lesson_slug = session.snapshot.get("lesson_slug") or (

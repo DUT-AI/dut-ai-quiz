@@ -17,11 +17,23 @@ import pytest
 @pytest.mark.asyncio
 async def test_patch():
     async with AsyncSessionLocal() as s:
-        # 1. Create a dummy attempt
+        # 1. Create a dummy exam to satisfy foreign key constraint
+        from app.infrastructure.persistence.models.exam import Exam
+        exam_id = uuid4()
+        dummy_exam = Exam(
+            id=exam_id,
+            title="Dummy Exam",
+            description="Dummy Description",
+            created_by=999,
+            participant_ids=[999]
+        )
+        s.add(dummy_exam)
+        await s.flush()
+
         att_id = uuid4()
         att = Attempt(
             id=att_id,
-            exam_id=uuid4(),
+            exam_id=exam_id,
             user_id=999,
             started_at=now_ict(),
             expires_at=now_ict(),

@@ -4,7 +4,7 @@ from redis.asyncio import Redis, from_url
 from app.config import settings
 from app.domain.interfaces import IBlogCache, IDUTAIManageCache
 from app.infrastructure.cache import DUTAIManageCache, ProfileCache, RedisBlogCache
-from app.infrastructure.cache.practice_leaderboard_cache import PracticeLeaderboardCache
+from app.infrastructure.cache.game_leaderboard_cache import GameLeaderboardCache
 
 
 class CacheProvider(Provider):
@@ -34,5 +34,5 @@ class CacheProvider(Provider):
         return DUTAIManageCache(redis, ttl=300)
 
     @provide(scope=Scope.APP)
-    def practice_leaderboard_cache(self, redis: Redis) -> PracticeLeaderboardCache:
-        return PracticeLeaderboardCache(redis, ttl=600)
+    def game_leaderboard_cache(self, redis: Redis) -> GameLeaderboardCache:
+        return GameLeaderboardCache(redis, ttl=600)

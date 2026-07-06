@@ -1,10 +1,10 @@
-from app.domain.interfaces import IPracticeSessionRepository
-from app.infrastructure.cache.practice_leaderboard_cache import PracticeLeaderboardCache
+from app.domain.interfaces import IGameSessionRepository
+from app.infrastructure.cache.game_leaderboard_cache import GameLeaderboardCache
 
 
-class GetPracticeLeaderboardUseCase:
+class GetGameLeaderboardUseCase:
     def __init__(
-        self, ps_repo: IPracticeSessionRepository, cache: PracticeLeaderboardCache
+        self, ps_repo: IGameSessionRepository, cache: GameLeaderboardCache
     ):
         self._ps_repo = ps_repo
         self._cache = cache

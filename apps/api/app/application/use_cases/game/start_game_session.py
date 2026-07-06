@@ -4,20 +4,20 @@ from uuid import UUID, uuid4
 from fastapi import HTTPException
 
 from app.core.datetime_utils import now_ict
-from app.domain.entities.practice import PracticeSessionEntity
+from app.domain.entities.game import GameSessionEntity
 from app.domain.interfaces import (
     ILessonRepository,
-    IPracticeSessionRepository,
+    IGameSessionRepository,
     IQuestionRepository,
 )
-from app.domain.value_objects import Difficulty, PoolType, PracticeSessionStatus
-from app.presentation.schemas.practice import GamificationStartIn
+from app.domain.value_objects import Difficulty, PoolType, GameSessionStatus
+from app.presentation.schemas.game import GamificationStartIn
 
 
-class StartPracticeSessionUseCase:
+class StartGameSessionUseCase:
     def __init__(
         self,
-        ps_repo: IPracticeSessionRepository,
+        ps_repo: IGameSessionRepository,
         question_repo: IQuestionRepository,
         lesson_repo: ILessonRepository,
     ):
@@ -27,7 +27,7 @@ class StartPracticeSessionUseCase:
 
     async def execute(
         self, user_id: int, payload: GamificationStartIn
-    ) -> PracticeSessionEntity:
+    ) -> GameSessionEntity:
         # Find lesson by slug (name)
         lessons = await self._lesson_repo.list_all()
         target_lesson_id = None
@@ -43,7 +43,7 @@ class StartPracticeSessionUseCase:
         # For safety, let's just use it to filter questions.
 
         questions = await self._question_repo.list_all(
-            pool_type=PoolType.PRACTICE,
+            pool_type=PoolType.GAME,
             lesson_id=target_lesson_id,
             offset=0,
             limit=1000,
@@ -141,12 +141,12 @@ class StartPracticeSessionUseCase:
             },
         }
 
-        entity = PracticeSessionEntity(
+        entity = GameSessionEntity(
             id=uuid4(),
             user_id=user_id,
             started_at=now_ict(),
             completed_at=None,
-            status=PracticeSessionStatus.IN_PROGRESS,
+            status=GameSessionStatus.IN_PROGRESS,
             snapshot=snapshot,
             tags_filter=[payload.lesson_slug],
             question_limit=len(selected_questions),
