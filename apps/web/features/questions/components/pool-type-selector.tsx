@@ -1,15 +1,16 @@
 import React from "react";
+import { PoolType } from "../types";
 
 interface PoolTypeSelectorProps {
-  value: "PRACTICE" | "EXAM" | "MOCK";
-  onChange: (value: "PRACTICE" | "EXAM" | "MOCK") => void;
+  value: PoolType;
+  onChange: (value: PoolType) => void;
 }
 
 export function PoolTypeSelector({ value, onChange }: PoolTypeSelectorProps) {
   const options = [
     { id: "PRACTICE", label: "Luyện tập", icon: "🏋️" },
     { id: "EXAM", label: "Kiểm tra", icon: "📝" },
-    { id: "MOCK", label: "Thi thử", icon: "🏆" },
+    { id: "GAME", label: "Trò chơi", icon: "🎮" },
   ] as const;
 
   return (
