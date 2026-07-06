@@ -6,16 +6,22 @@ from app.infrastructure.repositories.hackathons import HackathonRepository
 from app.presentation.schemas.hackathons import HackathonCreate, HackathonUpdate
 from datetime import datetime
 
+from fastapi import HTTPException
+
 class CreateHackathonUseCase:
     def __init__(self, hackathon_repo: HackathonRepository):
         self._hackathon_repo = hackathon_repo
 
     async def execute(self, payload: HackathonCreate, admin_user_id: int) -> HackathonEntity:
         if(payload.start_time and payload.end_time and payload.start_time >= payload.end_time):
-            raise ValueError("start_time must be before end_time")
+            raise HTTPException(
+                status_code=400, detail="start_time must be before end_time"
+            )
         name = payload.name.strip()
         if not name:
-            raise ValueError("name must not be empty")
+            raise HTTPException(
+                status_code=400, detail="name must not be empty"
+            )
         entity = HackathonEntity(
             id=uuid4(),
             name=name,
@@ -28,6 +34,7 @@ class CreateHackathonUseCase:
             if payload.end_time
             else None,
             participation_mode=payload.participation_mode,
+            max_team_members=payload.max_team_members,
             created_by=admin_user_id,
             created_at=datetime.now()
         )
@@ -38,17 +45,21 @@ class ListHackathonsUseCase:
     def __init__(self, hackathon_repo: HackathonRepository):
         self._hackathon_repo = hackathon_repo
 
-    async def execute(self, admin_user_id: int) -> list[HackathonEntity]:
-        return await self._hackathon_repo.list_for_admin(admin_user_id)
+    async def execute(self, user_id: int, quiz_role: str) -> list[HackathonEntity]:
+        if quiz_role in ["admin", "MENTOR"]:
+            return await self._hackathon_repo.list_for_admin(user_id)
+        return await self._hackathon_repo.list_all()
 
 
 class GetHackathonUseCase:
     def __init__(self, hackathon_repo: HackathonRepository):
         self._hackathon_repo = hackathon_repo
 
-    async def execute(self, hackathon_id: UUID, admin_user_id: int) -> HackathonEntity | None:
+    async def execute(self, hackathon_id: UUID, user_id: int, quiz_role: str) -> HackathonEntity | None:
         entity = await self._hackathon_repo.get(hackathon_id)
-        if not entity or entity.created_by != admin_user_id:
+        if not entity:
+            return None
+        if quiz_role in ["admin", "MENTOR"] and entity.created_by != user_id:
             return None
         return entity
 
@@ -63,7 +74,10 @@ class UpdateHackathonUseCase:
         entity = await self._hackathon_repo.get(hackathon_id)
         if not entity or entity.created_by != admin_user_id:
             return None
-
+        if(payload.start_time and payload.end_time and payload.start_time >= payload.end_time):
+            raise HTTPException(
+                status_code=400, detail="start_time must be before end_time"
+            )
         data = payload.model_dump(exclude_unset=True)
         for k, v in data.items():
             if k in ["start_time", "end_time"] and v is not None:

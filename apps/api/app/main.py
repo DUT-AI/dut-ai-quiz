@@ -4,22 +4,24 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.infrastructure.di import setup_di, register_event_handlers
+from app.infrastructure.di import register_event_handlers, setup_di
 from app.presentation.api.exceptions import setup_exception_handlers
 from app.presentation.api.routers import (
     attempts,
     auth,
     exams,
+    external,
+    hackathon_registrations,
+    hackathon_tasks,
+    hackathons,
     health,
     leaderboard,
-    hackathons,
     lessons,
     me,
+    pdf_import,
     practice,
     questions,
     uploads,
-    external,
-    pdf_import,
 )
 
 
@@ -47,6 +49,8 @@ app.include_router(auth.router, prefix="/api/v1")
 app.include_router(me.router, prefix="/api/v1")
 app.include_router(lessons.router, prefix="/api/v1")
 app.include_router(hackathons.router, prefix="/api/v1")
+app.include_router(hackathon_tasks.router, prefix="/api/v1")
+app.include_router(hackathon_registrations.router, prefix="/api/v1")
 app.include_router(questions.router, prefix="/api/v1")
 app.include_router(exams.router, prefix="/api/v1")
 app.include_router(attempts.router, prefix="/api/v1")

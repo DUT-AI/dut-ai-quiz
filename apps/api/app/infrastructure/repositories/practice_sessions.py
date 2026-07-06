@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import select, func, cast, Float, Integer, desc
+from sqlalchemy import select, func, cast, Float, Integer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities.practice import PracticeSessionEntity

@@ -1,13 +1,28 @@
 "use client";
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from "@tanstack/react-query";
 import { useState } from "react";
 import { AuthProvider } from "@/context/auth-context";
+import { toast } from "sonner";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
+        queryCache: new QueryCache({
+          onError: (error: any) => {
+            if (error?.status === 401) return;
+            const message = error?.message || "Đã có lỗi xảy ra ở hệ thống vui lòng liên hệ admin!";
+            toast.error(message);
+          },
+        }),
+        mutationCache: new MutationCache({
+          onError: (error: any) => {
+            if (error?.status === 401) return;
+            const message = error?.message || "Yêu cầu thực hiện thất bại";
+            toast.error(message);
+          },
+        }),
         defaultOptions: {
           queries: {
             staleTime: 30_000,

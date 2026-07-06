@@ -1,11 +1,10 @@
 from typing import Any
-from loguru import logger
 
 from app.application.services.auth_roles import quiz_role_from_manage
-from app.infrastructure.cache.redis_client import ProfileCache
 from app.core.jwt import decode_access_token
-from app.infrastructure.clients import ManageServiceClient
-from app.domain.interfaces import IUserRepository
+from app.domain.interfaces import IManageService, IUserRepository
+from app.infrastructure.cache.redis_client import ProfileCache
+from loguru import logger
 
 
 class GetProfileUseCase:
@@ -13,7 +12,7 @@ class GetProfileUseCase:
         self,
         cache: ProfileCache,
         user_repo: IUserRepository,
-        manage_client: ManageServiceClient,
+        manage_client: IManageService,
     ) -> None:
         self._cache = cache
         self._user_repo = user_repo
@@ -60,24 +59,28 @@ class GetProfileUseCase:
         else:
             # Fetch Service A User via ManageServiceClient
             try:
-                body = await self._manage_client.get_profile(user_id)
-                if not body:
+                profile = await self._manage_client.get_profile(user_id)
+                if not profile:
                     return None
 
-                data = body.get("data") if isinstance(body, dict) else body
-                if not data:
-                    return None
-
-                # Map role
-                role_names = data.get("role_names") or data.get("role_name") or []
+                quiz_role = "guest"
                 try:
-                    data["quiz_role"] = quiz_role_from_manage(role_names)
+                    quiz_role = quiz_role_from_manage(profile.role_names)
                 except Exception:
-                    data["quiz_role"] = "guest"
+                    pass
+
+                profile_data = {
+                    "id": profile.id,
+                    "email": profile.email,
+                    "name": profile.name,
+                    "avatar_url": profile.avatar_url,
+                    "role_names": profile.role_names,
+                    "quiz_role": quiz_role,
+                }
 
                 # Store in Cache
-                await self._cache.set(access_token, data)
-                return data
+                await self._cache.set(access_token, profile_data)
+                return profile_data
             except Exception as e:
                 logger.error(f"Error fetching profile from Manage Service: {e}")
                 return None

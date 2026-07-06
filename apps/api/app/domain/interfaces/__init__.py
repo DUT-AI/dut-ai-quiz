@@ -7,6 +7,8 @@ from .lesson_repo import ILessonRepository
 from .practice_session_repo import IPracticeSessionRepository
 from .question_repo import IQuestionRepository
 from .user_repo import IUserRepository
+from .manage_service import IManageService
+from .manage_cache import IDUTAIManageCache
 
 __all__ = [
     "IAttemptAnswerRepository",
@@ -19,4 +21,6 @@ __all__ = [
     "IPracticeSessionRepository",
     "IQuestionRepository",
     "IUserRepository",
+    "IManageService",
+    "IDUTAIManageCache",
 ]

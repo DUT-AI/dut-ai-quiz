@@ -33,7 +33,7 @@ api-dev: api-sync
 	cd $(API_DIR) && uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 api-lint:
-	cd $(API_DIR) && uv run ruff check app
+	cd $(API_DIR) && uv run ruff check app --fix
 
 migrate: 
 	cd $(API_DIR) && uv run alembic upgrade head

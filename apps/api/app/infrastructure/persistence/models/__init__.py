@@ -4,7 +4,7 @@ from .attempt import Attempt, AttemptAnswer, FocusEvent
 from .practice import PracticeSession
 from .lesson import Lesson
 from .user import User
-from .hackathon import Hackathon
+from .hackathon import Hackathon, HackathonTask, HackathonTeam, HackathonRegistration
 
 __all__ = [
     "Base",
@@ -18,5 +18,8 @@ __all__ = [
     "Lesson",
     "User",
     "Hackathon",
+    "HackathonTask",
+    "HackathonTeam",
+    "HackathonRegistration",
 ]
 export_globals = globals()

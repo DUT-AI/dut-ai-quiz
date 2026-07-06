@@ -5,16 +5,15 @@ from app.core.datetime_utils import now_ict
 from app.domain.entities.practice import PracticeSessionEntity
 from app.domain.interfaces import IPracticeSessionRepository, IQuestionRepository
 from app.domain.value_objects import PoolType, PracticeSessionStatus
-from app.presentation.schemas.exams import PracticeStartIn
-from app.presentation.schemas.attempts import AttemptAnswersPatch
-
 
 
 class GetPracticeSessionUseCase:
     def __init__(self, ps_repo: IPracticeSessionRepository):
         self._ps_repo = ps_repo
 
-    async def execute(self, session_id: UUID, user_id: int) -> PracticeSessionEntity | None:
+    async def execute(
+        self, session_id: UUID, user_id: int
+    ) -> PracticeSessionEntity | None:
         session = await self._ps_repo.get(session_id)
         if not session or session.user_id != user_id:
             return None
@@ -25,41 +24,53 @@ class GetActivePracticeSessionUseCase:
     def __init__(self, ps_repo: IPracticeSessionRepository):
         self._ps_repo = ps_repo
 
-    async def execute(self, user_id: int, lesson_slug: str) -> PracticeSessionEntity | None:
+    async def execute(
+        self, user_id: int, lesson_slug: str
+    ) -> PracticeSessionEntity | None:
         return await self._ps_repo.get_active_by_lesson(user_id, lesson_slug)
-
 
 
 from app.infrastructure.cache.practice_leaderboard_cache import PracticeLeaderboardCache
 
+
 class FinishPracticeSessionUseCase:
-    def __init__(self, ps_repo: IPracticeSessionRepository, cache: PracticeLeaderboardCache = None):
+    def __init__(
+        self,
+        ps_repo: IPracticeSessionRepository,
+        cache: PracticeLeaderboardCache = None,
+    ):
         self._ps_repo = ps_repo
         self._cache = cache
 
-    async def execute(self, session_id: UUID, user_id: int) -> PracticeSessionEntity | None:
+    async def execute(
+        self, session_id: UUID, user_id: int
+    ) -> PracticeSessionEntity | None:
         session = await self._ps_repo.get(session_id)
         if not session or session.user_id != user_id:
             return None
-            
+
         if session.status == PracticeSessionStatus.COMPLETED:
             return session
-            
+
         session.status = PracticeSessionStatus.COMPLETED
         session.completed_at = now_ict()
-        
-        lesson_slug = session.snapshot.get("lesson_slug") or (session.tags_filter[0] if session.tags_filter else "unknown")
-        count_completed = await self._ps_repo.count_completed_by_lesson(user_id, lesson_slug)
+
+        lesson_slug = session.snapshot.get("lesson_slug") or (
+            session.tags_filter[0] if session.tags_filter else "unknown"
+        )
+        count_completed = await self._ps_repo.count_completed_by_lesson(
+            user_id, lesson_slug
+        )
         decay = max(0.2, 1.0 - (count_completed * 0.2))
-        
+
         if "gamification" in session.snapshot:
             base_points = session.snapshot["gamification"].get("points", 0)
             session.snapshot["gamification"]["final_score"] = base_points * decay
             session.snapshot["gamification"]["attempt_count"] = count_completed + 1
-            
+
         if self._cache:
             await self._cache.invalidate(lesson_slug)
-            
+
         return await self._ps_repo.save(session)
 
 
@@ -77,17 +88,17 @@ class GetPracticeHistorySummaryUseCase:
 
     async def execute(self, user_id: int) -> list[dict]:
         sessions = await self._ps_repo.list_history(user_id)
-        
+
         summary = {}
         for s in sessions:
             if not s.snapshot:
                 continue
-            
+
             slug = s.snapshot.get("lesson_slug")
             if not slug:
                 # Fallback to tags if lesson_slug is not explicitly in snapshot
                 slug = s.tags_filter[0] if s.tags_filter else "unknown"
-            
+
             if slug not in summary:
                 summary[slug] = {
                     "lesson_slug": slug,
@@ -95,32 +106,34 @@ class GetPracticeHistorySummaryUseCase:
                     "completed_sessions": 0,
                     "highest_points": 0,
                     "total_gold_earned": 0,
-                    "highest_tier": 1
+                    "highest_tier": 1,
                 }
-            
+
             st = summary[slug]
             st["total_sessions"] += 1
             if s.status == "COMPLETED":
                 st["completed_sessions"] += 1
-            
+
             gamification = s.snapshot.get("gamification", {})
             points = gamification.get("points", 0)
             gold = gamification.get("gold", 0)
             tier = gamification.get("current_tier", 1)
-            
+
             if points > st["highest_points"]:
                 st["highest_points"] = points
-            
+
             st["total_gold_earned"] += gold
-            
+
             if tier > st["highest_tier"]:
                 st["highest_tier"] = tier
-                
+
         return list(summary.values())
 
 
 class GetPracticeLeaderboardUseCase:
-    def __init__(self, ps_repo: IPracticeSessionRepository, cache: PracticeLeaderboardCache):
+    def __init__(
+        self, ps_repo: IPracticeSessionRepository, cache: PracticeLeaderboardCache
+    ):
         self._ps_repo = ps_repo
         self._cache = cache
 
@@ -128,23 +141,21 @@ class GetPracticeLeaderboardUseCase:
         cached = await self._cache.get(lesson_slug)
         if cached is not None:
             return cached
-            
+
         leaderboard = await self._ps_repo.get_leaderboard_by_lesson(lesson_slug, limit)
         await self._cache.set(lesson_slug, leaderboard)
         return leaderboard
-from app.domain.value_objects import PracticeSessionStatus
-import random
-from typing import Any
-from uuid import UUID, uuid4
 
-from app.core.datetime_utils import now_ict
+
+from typing import Any
+from uuid import UUID
+
 from app.domain.entities.practice import PracticeSessionEntity
 from app.domain.interfaces import (
     ILessonRepository,
     IPracticeSessionRepository,
-    IQuestionRepository,
 )
-from app.domain.value_objects import Difficulty, PoolType
+from app.domain.value_objects import Difficulty
 from app.domain.value_objects.gamification import ITEM_PRICES, GamificationItem
 from app.presentation.schemas.practice import (
     GamificationAnswerPatchIn,
@@ -399,9 +410,13 @@ class UseItemPracticeUseCase:
 
 from app.infrastructure.cache.practice_leaderboard_cache import PracticeLeaderboardCache
 
+
 class PatchPracticeAnswerUseCase:
     def __init__(
-        self, ps_repo: IPracticeSessionRepository, question_repo: IQuestionRepository, cache: PracticeLeaderboardCache = None
+        self,
+        ps_repo: IPracticeSessionRepository,
+        question_repo: IQuestionRepository,
+        cache: PracticeLeaderboardCache = None,
     ):
         self._ps_repo = ps_repo
         self._question_repo = question_repo
@@ -590,13 +605,17 @@ class PatchPracticeAnswerUseCase:
             session.completed_at = now_ict()
 
         if is_game_over:
-            lesson_slug = session.snapshot.get("lesson_slug") or (session.tags_filter[0] if session.tags_filter else "unknown")
-            count_completed = await self._ps_repo.count_completed_by_lesson(user_id, lesson_slug)
+            lesson_slug = session.snapshot.get("lesson_slug") or (
+                session.tags_filter[0] if session.tags_filter else "unknown"
+            )
+            count_completed = await self._ps_repo.count_completed_by_lesson(
+                user_id, lesson_slug
+            )
             decay = max(0.2, 1.0 - (count_completed * 0.2))
             base_points = session.snapshot["gamification"].get("points", 0)
             session.snapshot["gamification"]["final_score"] = base_points * decay
             session.snapshot["gamification"]["attempt_count"] = count_completed + 1
-            
+
             if hasattr(self, "_cache") and self._cache:
                 await self._cache.invalidate(lesson_slug)
 

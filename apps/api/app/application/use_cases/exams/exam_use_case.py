@@ -27,6 +27,7 @@ class CreateExamUseCase:
             is_published=payload.is_published,
             created_by=teacher_user_id,
             participant_ids=payload.participant_ids,
+            show_answers=payload.show_answers,
         )
         return await self._exam_repo.add(entity)
 

@@ -28,6 +28,7 @@ class Exam(Base):
     participant_ids: Mapped[list[int]] = mapped_column(
         ARRAY(Integer()), nullable=False, default=list
     )
+    show_answers: Mapped[bool] = mapped_column(default=False, server_default="false")
 
     def to_entity(self) -> "ExamEntity":
         return ExamEntity(
@@ -41,6 +42,7 @@ class Exam(Base):
             is_published=self.is_published,
             created_by=self.created_by,
             participant_ids=self.participant_ids,
+            show_answers=self.show_answers,
         )
 
     @classmethod
@@ -56,6 +58,7 @@ class Exam(Base):
             is_published=entity.is_published,
             created_by=entity.created_by,
             participant_ids=entity.participant_ids,
+            show_answers=entity.show_answers,
         )
 
 

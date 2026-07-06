@@ -1,12 +1,12 @@
-from fastapi import APIRouter, HTTPException, Response, Request
-from fastapi.responses import RedirectResponse
 from dishka.integrations.fastapi import FromDishka, inject
+from fastapi import APIRouter, HTTPException, Request, Response
+from fastapi.responses import RedirectResponse
 
-from app.application.use_cases.auth.auth_use_case import (
-    ProxyLoginUseCase,
-    LogoutUseCase,
-    LoginPayload,
+from app.application.dtos import LoginPayload
+from app.application.use_cases.auth import (
     GoogleAuthUseCase,
+    LoginByManageAccountUseCase,
+    LogoutUseCase,
 )
 from app.config import settings
 from app.infrastructure.clients import GoogleOAuthClient
@@ -40,7 +40,9 @@ def _set_auth_cookies(response: Response, access_token: str, refresh_token: str)
 @router.post("/login")
 @inject
 async def login(
-    payload: LoginPayload, response: Response, use_case: FromDishka[ProxyLoginUseCase]
+    payload: LoginPayload,
+    response: Response,
+    use_case: FromDishka[LoginByManageAccountUseCase],
 ):
     tokens = await use_case.execute(payload)
     if not tokens:
@@ -63,11 +65,12 @@ async def google_callback(
     response: Response,
     use_case: FromDishka[GoogleAuthUseCase],
 ):
-    tokens = await use_case.execute(code)
-    if not tokens:
+    try:
+        tokens = await use_case.execute(code)
+    except Exception as e:
         # Redirect back to frontend login with error query param
         return RedirectResponse(
-            url=f"{settings.frontend_url.rstrip('/')}/login?error=GoogleAuthFailed"
+            url=f"{settings.frontend_url.rstrip('/')}/login?error={str(e)}"
         )
 
     # Set cookies in the redirect response
