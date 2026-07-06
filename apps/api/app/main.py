@@ -12,6 +12,7 @@ from app.presentation.api.routers import (
     exams,
     external,
     hackathon_registrations,
+    hackathon_submissions,
     hackathon_tasks,
     hackathons,
     health,
@@ -49,6 +50,7 @@ app.include_router(auth.router, prefix="/api/v1")
 app.include_router(me.router, prefix="/api/v1")
 app.include_router(lessons.router, prefix="/api/v1")
 app.include_router(hackathons.router, prefix="/api/v1")
+app.include_router(hackathon_submissions.router, prefix="/api/v1")
 app.include_router(hackathon_tasks.router, prefix="/api/v1")
 app.include_router(hackathon_registrations.router, prefix="/api/v1")
 app.include_router(questions.router, prefix="/api/v1")

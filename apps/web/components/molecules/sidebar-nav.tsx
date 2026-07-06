@@ -38,8 +38,6 @@ const TEACHER_NAV_ITEMS = [
 export const SidebarNav = ({ onCloseMobile }: { onCloseMobile?: () => void }) => {
   const pathname = usePathname();
   const { user, logout, canManage } = useAuth();
-  console.log(user)
-
   const isTeacher = canManage
 
   return (

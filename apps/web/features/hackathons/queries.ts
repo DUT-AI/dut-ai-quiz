@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiGet, apiPost, apiPatch, apiClient } from "@/lib/api";
-import { HackathonSchema, type Hackathon, HackathonRegistrationSchema, type HackathonRegistration, type RegistrationStatus, HackathonTaskSchema, type HackathonTask, type MetricType, HackathonTeamSchema, type HackathonTeam } from "./types";
+import { HackathonSchema, type Hackathon, HackathonRegistrationSchema, type HackathonRegistration, type RegistrationStatus, HackathonTaskSchema, type HackathonTask, type MetricType, HackathonTeamSchema, type HackathonTeam, HackathonSubmissionSchema, type HackathonSubmission, PresignSubmitOutSchema, type PresignSubmitOut } from "./types";
 import { z } from "zod";
+import { API_BASE } from "@/lib/config";
 
 export function useHackathons(options?: any) {
   return useQuery<Hackathon[]>({
@@ -188,4 +189,154 @@ export function useDeleteHackathonTask(hackathonId: string) {
     },
   });
 }
+
+/** Upload a single file directly to S3 using a presigned PUT URL, tracking progress in real-time. */
+function uploadFileToS3WithProgress(
+  presignedUrl: string,
+  file: File,
+  onProgress: (loaded: number, total: number) => void
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", presignedUrl, true);
+    xhr.setRequestHeader("Content-Type", "application/octet-stream");
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        onProgress(event.loaded, event.total);
+      }
+    };
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve();
+      } else {
+        reject(new Error(`S3 upload failed: HTTP ${xhr.status}`));
+      }
+    };
+
+    xhr.onerror = () => reject(new Error("Lỗi kết nối mạng khi tải lên S3"));
+    xhr.send(file);
+  });
+}
+
+interface SubmitTaskInput {
+  scriptFile: File;
+  modelFile: File;
+  onProgress: (phase: "script" | "model" | "commit", loaded: number, total: number) => void;
+}
+
+export function useSubmitTask(taskId: string) {
+  const qc = useQueryClient();
+  return useMutation<HackathonSubmission, Error, SubmitTaskInput>({
+    mutationFn: async ({ scriptFile, modelFile, onProgress }) => {
+      console.log("[SUBMIT_PERF] Bắt đầu quá trình nộp bài...");
+      const start = performance.now();
+
+      // Step 1: Request presigned upload URLs from backend
+      const presignStart = performance.now();
+      const presign = await apiPost<PresignSubmitOut>(
+        `/api/v1/hackathons/tasks/${taskId}/presign-submit`,
+        {
+          script_filename: scriptFile.name,
+          model_filename: modelFile.name,
+        },
+        PresignSubmitOutSchema
+      );
+      console.log(`[SUBMIT_PERF] 1. Lấy Presigned URLs: ${(performance.now() - presignStart).toFixed(2)} ms`);
+
+      // Step 2a: Upload script directly to S3
+      const scriptStart = performance.now();
+      await uploadFileToS3WithProgress(
+        presign.script.upload_url,
+        scriptFile,
+        (loaded, total) => {
+          onProgress("script", loaded, total);
+        }
+      );
+      console.log(`[SUBMIT_PERF] 2a. Upload Script lên S3 (gồm cả ghi đĩa): ${(performance.now() - scriptStart).toFixed(2)} ms`);
+
+      // Step 2b: Upload model weights directly to S3 (bắt buộc)
+      const modelStart = performance.now();
+      await uploadFileToS3WithProgress(
+        presign.model.upload_url,
+        modelFile,
+        (loaded, total) => {
+          onProgress("model", loaded, total);
+        }
+      );
+      console.log(`[SUBMIT_PERF] 2b. Upload Model Weights lên S3 (gồm cả ghi đĩa): ${(performance.now() - modelStart).toFixed(2)} ms`);
+
+      // Step 3: Commit to backend — save DB record and enqueue evaluation job
+      const commitStart = performance.now();
+      onProgress("commit", 0, 0);
+      const res = await apiPost<HackathonSubmission>(
+        `/api/v1/hackathons/tasks/${taskId}/submit`,
+        {
+          submission_id: presign.submission_id,
+          script_s3_key: presign.script.s3_key,
+          script_url: presign.script.download_url,
+          model_s3_key: presign.model.s3_key,
+          model_url: presign.model.download_url,
+        },
+        HackathonSubmissionSchema
+      );
+      console.log(`[SUBMIT_PERF] 3. Commit lên Backend API: ${(performance.now() - commitStart).toFixed(2)} ms`);
+      console.log(`[SUBMIT_PERF] === TỔNG THỜI GIAN HOÀN TẤT ===: ${(performance.now() - start).toFixed(2)} ms`);
+      return res;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({
+        queryKey: ["hackathons", "tasks", taskId, "submissions"],
+      });
+    },
+  });
+}
+
+export function useSubmissions(taskId: string, options?: any) {
+  return useQuery<HackathonSubmission[]>({
+    queryKey: ["hackathons", "tasks", taskId, "submissions"],
+    queryFn: () =>
+      apiGet<HackathonSubmission[]>(
+        `/api/v1/hackathons/tasks/${taskId}/submissions`,
+        z.array(HackathonSubmissionSchema)
+      ),
+    staleTime: 5_000,
+    enabled: !!taskId,
+    ...options,
+  });
+}
+
+
+
+export function useCancelSubmission(taskId: string) {
+  const qc = useQueryClient();
+  return useMutation<HackathonSubmission, Error, string>({
+    mutationFn: (submissionId: string) =>
+      apiPost<HackathonSubmission>(
+        `/api/v1/hackathons/submissions/${submissionId}/cancel`,
+        {},
+        HackathonSubmissionSchema
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({
+        queryKey: ["hackathons", "tasks", taskId, "submissions"],
+      });
+    },
+  });
+}
+
+export function useSubmissionLogs(submissionId: string, options?: any) {
+  return useQuery<{ logs: string | null }>({
+    queryKey: ["submissions", submissionId, "logs"],
+    queryFn: () =>
+      apiGet<{ logs: string | null }>(
+        `/api/v1/hackathons/submissions/${submissionId}/logs`
+      ),
+    staleTime: 30_000,
+    enabled: !!submissionId,
+    ...options,
+  });
+}
+
 

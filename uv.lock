@@ -299,6 +299,7 @@ version = "0.1.0"
 source = { editable = "apps/api" }
 dependencies = [
     { name = "alembic" },
+    { name = "arq" },
     { name = "asyncpg" },
     { name = "boto3" },
     { name = "dishka" },
@@ -325,6 +326,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "alembic", specifier = ">=1.13" },
+    { name = "arq", specifier = ">=0.26.0" },
     { name = "asyncpg", specifier = ">=0.29" },
     { name = "boto3", specifier = ">=1.35" },
     { name = "dishka", specifier = ">=1.4.0" },

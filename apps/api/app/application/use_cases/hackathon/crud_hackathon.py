@@ -2,14 +2,14 @@ from uuid import UUID, uuid4
 
 from app.core.datetime_utils import utc_to_ict
 from app.domain.entities.hackathon import HackathonEntity
-from app.infrastructure.repositories.hackathons import HackathonRepository
+from app.domain.interfaces import IHackathonRepository
 from app.presentation.schemas.hackathons import HackathonCreate, HackathonUpdate
 from datetime import datetime
 
 from fastapi import HTTPException
 
 class CreateHackathonUseCase:
-    def __init__(self, hackathon_repo: HackathonRepository):
+    def __init__(self, hackathon_repo: IHackathonRepository):
         self._hackathon_repo = hackathon_repo
 
     async def execute(self, payload: HackathonCreate, admin_user_id: int) -> HackathonEntity:
@@ -42,7 +42,7 @@ class CreateHackathonUseCase:
 
 
 class ListHackathonsUseCase:
-    def __init__(self, hackathon_repo: HackathonRepository):
+    def __init__(self, hackathon_repo: IHackathonRepository):
         self._hackathon_repo = hackathon_repo
 
     async def execute(self, user_id: int, quiz_role: str) -> list[HackathonEntity]:
@@ -52,7 +52,7 @@ class ListHackathonsUseCase:
 
 
 class GetHackathonUseCase:
-    def __init__(self, hackathon_repo: HackathonRepository):
+    def __init__(self, hackathon_repo: IHackathonRepository):
         self._hackathon_repo = hackathon_repo
 
     async def execute(self, hackathon_id: UUID, user_id: int, quiz_role: str) -> HackathonEntity | None:
@@ -65,7 +65,7 @@ class GetHackathonUseCase:
 
 
 class UpdateHackathonUseCase:
-    def __init__(self, hackathon_repo: HackathonRepository):
+    def __init__(self, hackathon_repo: IHackathonRepository):
         self._hackathon_repo = hackathon_repo
 
     async def execute(
@@ -88,7 +88,7 @@ class UpdateHackathonUseCase:
 
 
 class DeleteHackathonUseCase:
-    def __init__(self, hackathon_repo: HackathonRepository):
+    def __init__(self, hackathon_repo: IHackathonRepository):
         self._hackathon_repo = hackathon_repo
 
     async def execute(self, hackathon_id: UUID, admin_user_id: int) -> bool:

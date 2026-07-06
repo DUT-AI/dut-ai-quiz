@@ -5,17 +5,17 @@ from app.domain.entities.hackathon import (
     HackathonRegistrationEntity,
     RegistrationStatus,
 )
-from app.infrastructure.repositories.hackathons import (
-    HackathonRegistrationRepository,
-    HackathonRepository,
+from app.domain.interfaces import (
+    IHackathonRegistrationRepository,
+    IHackathonRepository,
 )
 
 
 class ReviewRegistrationUseCase:
     def __init__(
         self,
-        hackathon_repo: HackathonRepository,
-        reg_repo: HackathonRegistrationRepository,
+        hackathon_repo: IHackathonRepository,
+        reg_repo: IHackathonRegistrationRepository,
     ) -> None:
         self._hackathon_repo = hackathon_repo
         self._reg_repo = reg_repo

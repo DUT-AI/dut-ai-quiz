@@ -7,19 +7,19 @@ from app.domain.entities.hackathon import (
     ParticipationMode,
     RegistrationStatus,
 )
-from app.infrastructure.repositories.hackathons import (
-    HackathonRegistrationRepository,
-    HackathonRepository,
-    HackathonTeamRepository,
+from app.domain.interfaces import (
+    IHackathonRegistrationRepository,
+    IHackathonRepository,
+    IHackathonTeamRepository,
 )
 
 
 class RegisterIndividualUseCase:
     def __init__(
         self,
-        hackathon_repo: HackathonRepository,
-        team_repo: HackathonTeamRepository,
-        reg_repo: HackathonRegistrationRepository,
+        hackathon_repo: IHackathonRepository,
+        team_repo: IHackathonTeamRepository,
+        reg_repo: IHackathonRegistrationRepository,
     ) -> None:
         self._hackathon_repo = hackathon_repo
         self._team_repo = team_repo

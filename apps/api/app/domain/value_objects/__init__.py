@@ -10,6 +10,7 @@ from .enums import (
     PoolType,
     PracticeSessionStatus,
 )
+from .submission import SubmissionStorageInfo
 
 __all__ = [
     "ShuffledOption",
@@ -20,4 +21,5 @@ __all__ = [
     "Difficulty",
     "PoolType",
     "PracticeSessionStatus",
+    "SubmissionStorageInfo",
 ]
