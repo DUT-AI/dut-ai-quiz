@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, HTTPException
 from dishka.integrations.fastapi import FromDishka, inject
 
-from app.application.use_cases.practice.practice_use_case import (
+from app.application.use_cases.practice import (
     GetPracticeSessionUseCase,
     GetActivePracticeSessionUseCase,
     FinishPracticeSessionUseCase,

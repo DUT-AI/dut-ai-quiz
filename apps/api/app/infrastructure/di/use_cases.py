@@ -63,7 +63,7 @@ from app.application.use_cases.lessons.get_lesson_from_blog_uc import (
 from app.application.use_cases.lessons.list_lessons_uc import ListLessonsUseCase
 from app.application.use_cases.lessons.update_lesson_uc import UpdateLessonUseCase
 from app.application.use_cases.me.me_use_case import GetProfileUseCase
-from app.application.use_cases.practice.practice_use_case import (
+from app.application.use_cases.practice import (
     FinishPracticeSessionUseCase,
     GetActivePracticeSessionUseCase,
     GetPracticeHistorySummaryUseCase,
