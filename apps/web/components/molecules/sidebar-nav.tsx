@@ -40,7 +40,7 @@ export const SidebarNav = ({ onCloseMobile }: { onCloseMobile?: () => void }) =>
   const isTeacher = canManage
 
   return (
-    <div className="flex flex-col h-full w-72 py-8 px-4 overflow-y-auto">
+    <div className="flex flex-col h-full w-72 py-8 px-4 overflow-y-auto custom-scrollbar">
       <div className="flex items-center gap-3 px-4 mb-10">
         <div className="size-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/30">
           <Rocket className="size-6" />
