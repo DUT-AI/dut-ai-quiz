@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { renderMathInHTML } from "@/lib/render-math";
 import type { QuestionOut } from "@/lib/types";
+import { useAuth } from "@/context/auth-context";
 
 interface QuestionCardProps {
   q: QuestionOut;
@@ -21,18 +22,57 @@ interface QuestionCardProps {
 export const QuestionCard = React.memo(
   ({ q, idx, onExplain, onEdit, onDelete }: QuestionCardProps) => {
     const contentHtml = useMemo(() => renderMathInHTML(q.content), [q.content]);
+    const { user } = useAuth();
+    const storageKey = useMemo(() => {
+      return `practice_progress_${user?.id || "guest"}_${q.lesson_id || "default"}`;
+    }, [user?.id, q.lesson_id]);
+
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [isRevealed, setIsRevealed] = useState(false);
+
+    // Load state from localStorage on mount
+    React.useEffect(() => {
+      try {
+        const stored = localStorage.getItem(storageKey);
+        if (stored) {
+          const data = JSON.parse(stored);
+          if (data[q.id]) {
+            setSelectedId(data[q.id].selectedId || null);
+            setIsRevealed(data[q.id].isRevealed || false);
+          }
+        }
+      } catch (e) {
+        console.error("Failed to load progress", e);
+      }
+    }, [storageKey, q.id]);
 
     const handleSelect = (optionId: string) => {
       if (isRevealed) return;
       setSelectedId(optionId);
       setIsRevealed(true);
+
+      try {
+        const stored = localStorage.getItem(storageKey) || "{}";
+        const data = JSON.parse(stored);
+        data[q.id] = { selectedId: optionId, isRevealed: true };
+        localStorage.setItem(storageKey, JSON.stringify(data));
+      } catch (e) {
+        console.error("Failed to save progress", e);
+      }
     };
 
     const handleReset = () => {
       setSelectedId(null);
       setIsRevealed(false);
+
+      try {
+        const stored = localStorage.getItem(storageKey) || "{}";
+        const data = JSON.parse(stored);
+        delete data[q.id];
+        localStorage.setItem(storageKey, JSON.stringify(data));
+      } catch (e) {
+        console.error("Failed to reset progress", e);
+      }
     };
 
     return (
@@ -58,17 +98,7 @@ export const QuestionCard = React.memo(
                   #{idx + 1}
                 </div>
 
-                {isRevealed && (
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={handleReset}
-                    className="size-10 rounded-xl hover:bg-primary/10 text-primary"
-                    title="Làm lại"
-                  >
-                    <RotateCcw className="size-5" />
-                  </Button>
-                )}
+                {/* Reset button removed to prevent re-answering once chosen */}
               </div>
 
               <div className="flex-1 space-y-8">
@@ -112,8 +142,8 @@ export const QuestionCard = React.memo(
                             isRevealed && isCorrect
                               ? "bg-green text-white"
                               : isSelected && !isCorrect
-                              ? "bg-red text-white"
-                              : "bg-white dark:bg-navy-blue border border-gray-200 dark:border-white/10 text-primary"
+                                ? "bg-red text-white"
+                                : "bg-white dark:bg-navy-blue border border-gray-200 dark:border-white/10 text-primary"
                           )}
                         >
                           {isRevealed && isCorrect ? (
