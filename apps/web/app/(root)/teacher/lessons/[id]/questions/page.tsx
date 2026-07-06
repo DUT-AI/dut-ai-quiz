@@ -36,7 +36,7 @@ export default function LessonQuestionsPage() {
 
       {/* Questions Tab Section */}
       <div className="bg-white dark:bg-navy-blue/40 border border-gray-150 dark:border-white/5 rounded-[2.5rem] p-6 md:p-8 shadow-xl">
-        <QuestionsTab lessonId={lessonId} />
+        <QuestionsTab lessonId={lessonId} isAdminView={true} />
       </div>
     </div>
   );

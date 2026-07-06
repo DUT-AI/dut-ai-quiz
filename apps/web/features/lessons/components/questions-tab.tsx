@@ -17,9 +17,10 @@ import { ConfirmModal } from "@/components/molecules/confirm-modal";
 
 interface QuestionsTabProps {
   lessonId: string;
+  isAdminView?: boolean;
 }
 
-export function QuestionsTab({ lessonId }: QuestionsTabProps) {
+export function QuestionsTab({ lessonId, isAdminView = false }: QuestionsTabProps) {
   const [activePoolType, setActivePoolType] = useState<"PRACTICE" | "EXAM" | "MOCK">("PRACTICE");
 
   // Questions query
@@ -29,7 +30,7 @@ export function QuestionsTab({ lessonId }: QuestionsTabProps) {
   });
 
   const { user, canManage } = useAuth();
-  const isTeacher = canManage;
+  const isTeacher = isAdminView && canManage;
 
   const [explainingQuestion, setExplainingQuestion] = useState<QuestionOut | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
