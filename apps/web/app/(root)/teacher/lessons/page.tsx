@@ -1,21 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useLessons, useDeleteLesson } from "@/lib/queries";
 import type { Lesson } from "@/lib/types";
 import { LessonFormModal } from "@/features/lessons/components";
 import { AnimatePresence } from "framer-motion";
+import { ConfirmModal } from "@/components/molecules/confirm-modal";
+import { SearchBar } from "@/components/ui/search-bar";
 
 /* ─── Row bài học ──────────────────────────────────────── */
 interface LessonRowProps {
   lesson: Lesson;
   onEdit: () => void;
+  onDelete: () => void;
 }
 
-function LessonRow({ lesson, onEdit }: LessonRowProps) {
-  const deleteMut = useDeleteLesson();
-
+function LessonRow({ lesson, onEdit, onDelete }: LessonRowProps) {
   return (
     <div className="rounded-xl bg-white dark:bg-slate/20 border border-slate/10 dark:border-white/10 overflow-hidden">
       <div className="flex items-center gap-4 p-4">
@@ -46,11 +47,7 @@ function LessonRow({ lesson, onEdit }: LessonRowProps) {
             Sửa
           </button>
           <button
-            onClick={() => {
-              if (confirm(`Xoá bài học "${lesson.name}"?\nCác câu hỏi trong bài sẽ bị bỏ liên kết.`)) {
-                deleteMut.mutate(lesson.id);
-              }
-            }}
+            onClick={onDelete}
             className="text-xs px-2 py-1 rounded bg-red/10 text-red hover:bg-red/20 transition font-medium"
           >
             Xoá
@@ -64,18 +61,37 @@ function LessonRow({ lesson, onEdit }: LessonRowProps) {
 /* ─── Page ─────────────────────────────────────────────── */
 export default function LessonsPage() {
   const { data: lessons, isLoading, error } = useLessons();
+  const deleteMut = useDeleteLesson();
   const [showCreate, setShowCreate] = useState(false);
   const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
+  const [deletingLesson, setDeletingLesson] = useState<Lesson | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredLessons = useMemo(() => {
+    if (!lessons) return [];
+    return lessons.filter((l) =>
+      l.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [lessons, searchQuery]);
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-bold text-dark-blue dark:text-white">
-          Bài học
-        </h1>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 w-full md:w-auto">
+          <h1 className="text-xl font-bold text-dark-blue dark:text-white shrink-0">
+            Bài học
+          </h1>
+          <SearchBar
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onClear={() => setSearchQuery("")}
+            placeholder="Tìm kiếm bài học..."
+            className="w-full sm:w-64 py-2 h-10 rounded-xl"
+          />
+        </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/80 transition"
+          className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/80 transition shrink-0 self-end md:self-auto"
         >
           + Thêm bài học
         </button>
@@ -93,6 +109,23 @@ export default function LessonsPage() {
         )}
       </AnimatePresence>
 
+      <ConfirmModal
+        isOpen={!!deletingLesson}
+        title="Xoá bài học"
+        description={`Bạn có chắc chắn muốn xoá bài học "${deletingLesson?.name}"?\nCác câu hỏi trong bài sẽ bị bỏ liên kết.`}
+        confirmLabel="Xoá ngay"
+        cancelLabel="Hủy"
+        variant="danger"
+        isLoading={deleteMut.isPending}
+        onConfirm={async () => {
+          if (deletingLesson) {
+            await deleteMut.mutateAsync(deletingLesson.id);
+            setDeletingLesson(null);
+          }
+        }}
+        onCancel={() => setDeletingLesson(null)}
+      />
+
       {isLoading && (
         <p className="text-sm text-gray-navy dark:text-light-blue text-left">Đang tải…</p>
       )}
@@ -108,8 +141,18 @@ export default function LessonsPage() {
             Chưa có bài học nào. Hãy tạo bài học đầu tiên!
           </p>
         )}
-        {lessons?.map((l) => (
-          <LessonRow key={l.id} lesson={l} onEdit={() => setEditingLesson(l)} />
+        {lessons && lessons.length > 0 && filteredLessons.length === 0 && (
+          <p className="text-center text-gray-navy dark:text-light-blue text-sm py-10">
+            Không tìm thấy bài học nào phù hợp với từ khóa "{searchQuery}".
+          </p>
+        )}
+        {filteredLessons.map((l) => (
+          <LessonRow
+            key={l.id}
+            lesson={l}
+            onEdit={() => setEditingLesson(l)}
+            onDelete={() => setDeletingLesson(l)}
+          />
         ))}
       </div>
     </div>

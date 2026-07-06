@@ -73,6 +73,7 @@ class QuestionBulkItem(BaseModel):
     options: list[QuestionOptionIn]
     solution: str | None = None
     difficulty: Difficulty | None = None
+    pool_type: PoolType | None = None
 
 
 class QuestionBulkCreate(BaseModel):

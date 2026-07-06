@@ -1,4 +1,5 @@
 "use client";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -6,30 +7,47 @@ import {
   useDeleteExam,
 } from "@/lib/queries";
 import { Sparkles, BarChart2 } from "lucide-react";
-// ExamForm import removed
-import type { ExamCreate, ExamOut } from "@/lib/types";
+import type { ExamOut } from "@/lib/types";
+import { ConfirmModal } from "@/components/molecules/confirm-modal";
+import { SearchBar } from "@/components/ui/search-bar";
 
 export default function ExamsPage() {
   const router = useRouter();
   const { data: exams, isLoading, error } = useExamsFull();
   const deleteMut = useDeleteExam();
+  const [deletingExam, setDeletingExam] = useState<ExamOut | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredExams = useMemo(() => {
+    if (!exams) return [];
+    return exams.filter((ex) =>
+      ex.title.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [exams, searchQuery]);
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-bold text-dark-blue dark:text-white">
-          Danh sách kỳ thi
-        </h1>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 w-full md:w-auto">
+          <h1 className="text-xl font-bold text-dark-blue dark:text-white shrink-0">
+            Danh sách kỳ thi
+          </h1>
+          <SearchBar
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onClear={() => setSearchQuery("")}
+            placeholder="Tìm kiếm kỳ thi..."
+            className="w-full sm:w-64 py-2 h-10 rounded-xl"
+          />
+        </div>
         <button
           onClick={() => router.push("/teacher/exams/new")}
-          className="px-6 py-3 bg-gradient-to-br from-primary to-indigo-600 text-white rounded-[2rem] text-xs font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+          className="px-6 py-3 bg-gradient-to-br from-primary to-indigo-600 text-white rounded-[2rem] text-xs font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 shrink-0 self-end md:self-auto"
         >
           <Sparkles className="size-4" />
           + Tạo kỳ thi mới
         </button>
       </div>
-
-      {/* Modal removed */}
 
       {isLoading && (
         <p className="text-gray-navy dark:text-light-blue text-sm">Đang tải…</p>
@@ -46,17 +64,42 @@ export default function ExamsPage() {
               Chưa có kỳ thi nào.
             </p>
           )}
-          {exams.map((ex) => (
+          {exams.length > 0 && filteredExams.length === 0 && (
+            <p className="text-gray-navy dark:text-light-blue text-sm text-center py-8">
+              Không tìm thấy kỳ thi nào phù hợp với từ khóa "{searchQuery}".
+            </p>
+          )}
+          {filteredExams.map((ex) => (
             <ExamRow
               key={ex.id}
               exam={ex}
-              onDelete={() =>
-                confirm(`Xoá kỳ thi "${ex.title}"?`) && deleteMut.mutate(ex.id)
-              }
+              onDelete={() => setDeletingExam(ex)}
             />
           ))}
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={!!deletingExam}
+        title="Xoá kỳ thi"
+        description={`Bạn có chắc chắn muốn xoá kỳ thi "${deletingExam?.title}"?`}
+        confirmLabel="Xoá ngay"
+        cancelLabel="Hủy"
+        variant="danger"
+        isLoading={deleteMut.isPending}
+        onConfirm={async () => {
+          if (deletingExam) {
+            try {
+              await deleteMut.mutateAsync(deletingExam.id);
+            } catch (err) {
+              console.error("Delete failed", err);
+            } finally {
+              setDeletingExam(null);
+            }
+          }
+        }}
+        onCancel={() => setDeletingExam(null)}
+      />
     </div>
   );
 }

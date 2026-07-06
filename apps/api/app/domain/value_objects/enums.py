@@ -4,6 +4,7 @@ from enum import StrEnum
 class PoolType(StrEnum):
     PRACTICE = "PRACTICE"
     EXAM = "EXAM"
+    MOCK = "MOCK"
 
 
 class Difficulty(StrEnum):

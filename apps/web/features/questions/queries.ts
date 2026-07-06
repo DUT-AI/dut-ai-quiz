@@ -67,7 +67,7 @@ export function useBulkCreateQuestions() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: { 
-      questions: { question: string; options: any[]; solution?: string }[]; 
+      questions: { question: string; options: any[]; solution?: string; pool_type?: string }[]; 
       lesson_id?: string;
       pool_type?: string;
     }) =>

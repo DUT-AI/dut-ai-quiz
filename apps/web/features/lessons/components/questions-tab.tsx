@@ -13,26 +13,31 @@ import { PdfImport } from "@/components/pdf-import";
 import { QuestionCard } from "../../questions/components/question-card";
 import { AIExplanationModal } from "../../questions/components/ai-explanation-modal";
 import { useAuth } from "@/context/auth-context";
+import { ConfirmModal } from "@/components/molecules/confirm-modal";
 
 interface QuestionsTabProps {
   lessonId: string;
+  isAdminView?: boolean;
 }
 
-export function QuestionsTab({ lessonId }: QuestionsTabProps) {
+export function QuestionsTab({ lessonId, isAdminView = false }: QuestionsTabProps) {
+  const [activePoolType, setActivePoolType] = useState<"PRACTICE" | "EXAM" | "MOCK">("PRACTICE");
+
   // Questions query
   const { data: questions = [], isLoading: isLoadingQuestions } = useQuestions({
     lesson_id: lessonId,
-    pool_type: "PRACTICE",
+    pool_type: activePoolType,
   });
 
   const { user, canManage } = useAuth();
-  const isTeacher = canManage;
+  const isTeacher = isAdminView && canManage;
 
   const [explainingQuestion, setExplainingQuestion] = useState<QuestionOut | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [showPdfModal, setShowPdfModal] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<QuestionOut | null>(null);
+  const [deletingQuestion, setDeletingQuestion] = useState<QuestionOut | null>(null);
 
   const deleteMut = useDeleteQuestion();
 
@@ -41,16 +46,10 @@ export function QuestionsTab({ lessonId }: QuestionsTabProps) {
   }, []);
 
   const handleDelete = useCallback(
-    async (q: QuestionOut) => {
-      if (confirm("Bạn có chắc chắn muốn xóa câu hỏi này không?")) {
-        try {
-          await deleteMut.mutateAsync(q.id);
-        } catch (err) {
-          console.error("Delete failed", err);
-        }
-      }
+    (q: QuestionOut) => {
+      setDeletingQuestion(q);
     },
-    [deleteMut]
+    []
   );
 
   const handleExplain = useCallback((q: QuestionOut) => {
@@ -96,6 +95,32 @@ export function QuestionsTab({ lessonId }: QuestionsTabProps) {
         )}
       </div>
 
+      {/* Category Tabs */}
+      {isTeacher && (
+        <div className="flex border-b border-gray-100 dark:border-white/10 pb-2 gap-6 overflow-x-auto select-none">
+          {([
+            { id: "PRACTICE", label: "Luyện tập", icon: "🏋️" },
+            { id: "EXAM", label: "Kiểm tra", icon: "📝" },
+            { id: "MOCK", label: "Thi thử", icon: "🏆" },
+          ] as const).map((t) => {
+            const isActive = activePoolType === t.id;
+            return (
+              <button
+                key={t.id}
+                onClick={() => setActivePoolType(t.id)}
+                className={`pb-2 text-sm font-bold border-b-2 transition-all relative flex items-center gap-1.5 ${isActive
+                    ? "border-primary text-primary"
+                    : "border-transparent text-gray-navy opacity-60 hover:opacity-100 dark:text-light-blue"
+                  }`}
+              >
+                <span>{t.icon}</span>
+                <span>{t.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {isLoadingQuestions ? (
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
@@ -109,7 +134,9 @@ export function QuestionsTab({ lessonId }: QuestionsTabProps) {
         <div className="text-center py-20 border-2 border-dashed border-gray-200 dark:border-white/10 rounded-[2rem] opacity-35">
           <BookOpen className="size-16 mx-auto mb-4" />
           <p className="font-bold text-lg text-dark-blue dark:text-white">
-            Hiện tại bài học này chưa cập nhật câu hỏi ôn tập.
+            {activePoolType === "PRACTICE" && "Hiện tại bài học này chưa cập nhật câu hỏi ôn tập."}
+            {activePoolType === "EXAM" && "Hiện tại bài học này chưa cập nhật câu hỏi kiểm tra."}
+            {activePoolType === "MOCK" && "Hiện tại bài học này chưa cập nhật câu hỏi thi thử."}
           </p>
         </div>
       ) : (
@@ -161,6 +188,28 @@ export function QuestionsTab({ lessonId }: QuestionsTabProps) {
           />
         )}
       </AnimatePresence>
+
+      <ConfirmModal
+        isOpen={!!deletingQuestion}
+        title="Xóa câu hỏi"
+        description="Bạn có chắc chắn muốn xóa câu hỏi này không?"
+        confirmLabel="Xóa ngay"
+        cancelLabel="Hủy"
+        variant="danger"
+        isLoading={deleteMut.isPending}
+        onConfirm={async () => {
+          if (deletingQuestion) {
+            try {
+              await deleteMut.mutateAsync(deletingQuestion.id);
+            } catch (err) {
+              console.error("Delete failed", err);
+            } finally {
+              setDeletingQuestion(null);
+            }
+          }
+        }}
+        onCancel={() => setDeletingQuestion(null)}
+      />
     </div>
   );
 }

@@ -97,16 +97,17 @@ export default function BulkQuestionModal({ lessonId, onClose, onSuccess }: Prop
                     autoFocus
                     value={jsonInput}
                     onChange={(e) => setJsonInput(e.target.value)}
-                    placeholder='[
+                    placeholder={`[
   {
     "question": "Nội dung câu hỏi...",
+    "pool_type": "PRACTICE",
     "options": [
       { "text": "Đáp án A", "is_correct": true },
       { "text": "Đáp án B", "is_correct": false }
     ],
     "solution": "Giải thích..."
   }
-]'
+]`}
                     rows={15}
                     className="w-full px-6 py-6 rounded-3xl bg-gray-50 dark:bg-white/5 border-2 border-transparent focus:border-primary/30 outline-none transition-all font-mono text-sm leading-relaxed resize-none"
                   />
@@ -125,7 +126,7 @@ export default function BulkQuestionModal({ lessonId, onClose, onSuccess }: Prop
                  <ul className="text-xs space-y-2 opacity-70 list-disc pl-4">
                    <li>Dữ liệu phải là một mảng các đối tượng.</li>
                    <li>Mỗi đối tượng cần có: <code className="bg-white/10 px-1 rounded">question</code> (string), <code className="bg-white/10 px-1 rounded">options</code> (array).</li>
-                   <li>Trường <code className="bg-white/10 px-1 rounded">solution</code> (string) là không bắt buộc.</li>
+                   <li>Trường <code className="bg-white/10 px-1 rounded">solution</code> (string) và <code className="bg-white/10 px-1 rounded">pool_type</code> (<code className="bg-white/15 px-1 rounded">"PRACTICE"</code> | <code className="bg-white/15 px-1 rounded">"EXAM"</code> | <code className="bg-white/15 px-1 rounded">"MOCK"</code>) là không bắt buộc.</li>
                    <li>Hệ thống sẽ tự động gán ID cho các đáp án và liên kết với bài học hiện tại.</li>
                  </ul>
               </div>

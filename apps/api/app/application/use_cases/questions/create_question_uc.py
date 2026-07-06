@@ -60,7 +60,7 @@ class BulkCreateQuestionsUseCase:
                 QuestionEntity(
                     id=uuid4(),
                     lesson_id=payload.lesson_id,
-                    pool_type=payload.pool_type,
+                    pool_type=item.pool_type or payload.pool_type,
                     difficulty=item.difficulty or payload.difficulty,
                     content=item.question,
                     options=options,
