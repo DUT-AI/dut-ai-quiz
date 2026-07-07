@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useParsePDF, useBulkCreateQuestions, useLessons } from "@/lib/queries";
 import { ParsedQuestionPreview } from "@/lib/types";
+import { PoolType } from "@/features/questions/types";
 import { Card } from "@/components/ui/card";
 import { Check, Trash2, Upload, AlertCircle, Save, Loader2, X, FileText } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -21,7 +22,7 @@ export function PdfImport({ onSuccess, onClose }: PdfImportProps) {
   const [questions, setQuestions] = useState<ParsedQuestionPreview[]>([]);
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [lessonId, setLessonId] = useState("");
-  const [poolType, setPoolType] = useState<"PRACTICE" | "EXAM">("PRACTICE");
+  const [poolType, setPoolType] = useState<PoolType>("PRACTICE");
 
   const { data: lessons = [] } = useLessons();
   const parseMutation = useParsePDF();
@@ -307,6 +308,7 @@ export function PdfImport({ onSuccess, onClose }: PdfImportProps) {
                 >
                   <option value="PRACTICE">Luyện tập</option>
                   <option value="EXAM">Kiểm tra</option>
+                  <option value="GAME">Trò chơi</option>
                 </select>
               </div>
               <div>

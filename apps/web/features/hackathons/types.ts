@@ -71,3 +71,46 @@ export const HackathonTaskSchema = z.object({
 });
 export type HackathonTask = z.infer<typeof HackathonTaskSchema>;
 
+export const SubmissionStatusSchema = z.enum([
+  "UPLOADING",
+  "EXTRACTING",
+  "RUNNING",
+  "EVALUATING",
+  "PUBLISHED",
+  "FAILED",
+  "CANCELLED",
+]);
+export type SubmissionStatus = z.infer<typeof SubmissionStatusSchema>;
+
+export const HackathonSubmissionSchema = z.object({
+  id: z.string(),
+  task_id: z.string(),
+  user_id: z.number(),
+  team_id: z.string().nullable().optional(),
+  script_url: z.string(),
+  model_url: z.string().nullable().optional(),
+  status: SubmissionStatusSchema,
+  score: z.number().nullable().optional(),
+  error_message: z.string().nullable().optional(),
+  logs: z.string().nullable().optional(),
+  created_at: z.string(),
+  updated_at: z.string().nullable().optional(),
+});
+export type HackathonSubmission = z.infer<typeof HackathonSubmissionSchema>;
+
+export const PresignURLInfoSchema = z.object({
+  upload_url: z.string(),
+  s3_key: z.string(),
+  download_url: z.string(),
+});
+export type PresignURLInfo = z.infer<typeof PresignURLInfoSchema>;
+
+export const PresignSubmitOutSchema = z.object({
+  submission_id: z.string(),
+  script: PresignURLInfoSchema,
+  model: PresignURLInfoSchema,
+});
+export type PresignSubmitOut = z.infer<typeof PresignSubmitOutSchema>;
+
+
+

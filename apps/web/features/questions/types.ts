@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const PoolTypeSchema = z.enum(["PRACTICE", "EXAM"]);
+export const PoolTypeSchema = z.enum(["PRACTICE", "EXAM", "GAME"]);
 export type PoolType = z.infer<typeof PoolTypeSchema>;
 
 export const QuestionCreateSchema = z.object({

@@ -38,6 +38,7 @@ from app.application.use_cases.hackathon import (
     DeleteHackathonUseCase,
     GetHackathonTaskUseCase,
     GetHackathonUseCase,
+    GetRegistrationStatusUseCase,
     JoinTeamUseCase,
     LeaveTeamUseCase,
     ListHackathonsUseCase,
@@ -47,7 +48,13 @@ from app.application.use_cases.hackathon import (
     ReviewRegistrationUseCase,
     UpdateHackathonTaskUseCase,
     UpdateHackathonUseCase,
-    GetRegistrationStatusUseCase,
+)
+from app.application.use_cases.hackathon.submissions import (
+    CancelSubmissionUseCase,
+    GetSubmissionLogsUseCase,
+    ListSubmissionsUseCase,
+    SubmitTaskUseCase,
+    PresignSubmitUseCase,
 )
 from app.application.use_cases.leaderboard.leaderboard_use_case import (
     GetLeaderboardUseCase,
@@ -63,16 +70,16 @@ from app.application.use_cases.lessons.get_lesson_from_blog_uc import (
 from app.application.use_cases.lessons.list_lessons_uc import ListLessonsUseCase
 from app.application.use_cases.lessons.update_lesson_uc import UpdateLessonUseCase
 from app.application.use_cases.me.me_use_case import GetProfileUseCase
-from app.application.use_cases.practice import (
-    FinishPracticeSessionUseCase,
-    GetActivePracticeSessionUseCase,
-    GetPracticeHistorySummaryUseCase,
-    GetPracticeLeaderboardUseCase,
-    GetPracticeSessionUseCase,
-    ListPracticeHistoryUseCase,
-    PatchPracticeAnswerUseCase,
-    StartPracticeSessionUseCase,
-    UseItemPracticeUseCase,
+from app.application.use_cases.game import (
+    FinishGameSessionUseCase,
+    GetActiveGameSessionUseCase,
+    GetGameHistorySummaryUseCase,
+    GetGameLeaderboardUseCase,
+    GetGameSessionUseCase,
+    ListGameHistoryUseCase,
+    PatchGameAnswerUseCase,
+    StartGameSessionUseCase,
+    UseItemGameUseCase,
 )
 from app.application.use_cases.questions import (
     BulkCreateQuestionsUseCase,
@@ -82,6 +89,7 @@ from app.application.use_cases.questions import (
     ListQuestionsUseCase,
     UpdateQuestionUseCase,
 )
+from app.application.use_cases.uploads.presign_upload import PresignUploadUseCase
 from app.domain.events.bus import EventBus
 from app.domain.interfaces import (
     IAttemptRepository,
@@ -90,11 +98,6 @@ from app.domain.interfaces import (
     IUserRepository,
 )
 from app.infrastructure.cache.redis_client import ProfileCache
-from app.infrastructure.repositories.hackathons import (
-    HackathonRepository,
-    HackathonTeamRepository,
-    HackathonRegistrationRepository,
-)
 
 
 class UseCaseProvider(Provider):
@@ -130,55 +133,29 @@ class UseCaseProvider(Provider):
         RegisterIndividualUseCase, scope=Scope.REQUEST
     )
 
-    @provide(scope=Scope.REQUEST)
-    def create_team_use_case(
-        self,
-        hackathon_repo: HackathonRepository,
-        team_repo: HackathonTeamRepository,
-        reg_repo: HackathonRegistrationRepository,
-        user_service: UserService,
-    ) -> CreateTeamUseCase:
-        return CreateTeamUseCase(hackathon_repo, team_repo, reg_repo, user_service)
-
-    @provide(scope=Scope.REQUEST)
-    def join_team_use_case(
-        self,
-        hackathon_repo: HackathonRepository,
-        team_repo: HackathonTeamRepository,
-        reg_repo: HackathonRegistrationRepository,
-        user_service: UserService,
-    ) -> JoinTeamUseCase:
-        return JoinTeamUseCase(hackathon_repo, team_repo, reg_repo, user_service)
-
+    create_team_use_case = provide(CreateTeamUseCase, scope=Scope.REQUEST)
+    join_team_use_case = provide(JoinTeamUseCase, scope=Scope.REQUEST)
     leave_team_use_case = provide(LeaveTeamUseCase, scope=Scope.REQUEST)
     cancel_registration_use_case = provide(
         CancelRegistrationUseCase, scope=Scope.REQUEST
     )
-
-    @provide(scope=Scope.REQUEST)
-    def list_registrations_use_case(
-        self,
-        hackathon_repo: HackathonRepository,
-        reg_repo: HackathonRegistrationRepository,
-        team_repo: HackathonTeamRepository,
-        user_service: UserService,
-    ) -> ListRegistrationsUseCase:
-        return ListRegistrationsUseCase(
-            hackathon_repo, reg_repo, team_repo, user_service
-        )
-
+    list_registrations_use_case = provide(ListRegistrationsUseCase, scope=Scope.REQUEST)
     review_registration_use_case = provide(
         ReviewRegistrationUseCase, scope=Scope.REQUEST
     )
+    get_registration_status_use_case = provide(
+        GetRegistrationStatusUseCase, scope=Scope.REQUEST
+    )
 
-    @provide(scope=Scope.REQUEST)
-    def get_registration_status_use_case(
-        self,
-        reg_repo: HackathonRegistrationRepository,
-        team_repo: HackathonTeamRepository,
-        user_service: UserService,
-    ) -> GetRegistrationStatusUseCase:
-        return GetRegistrationStatusUseCase(reg_repo, team_repo, user_service)
+    # hackathon submissions
+    submit_task_use_case = provide(SubmitTaskUseCase, scope=Scope.REQUEST)
+    presign_submit_use_case = provide(PresignSubmitUseCase, scope=Scope.REQUEST)
+    cancel_submission_use_case = provide(CancelSubmissionUseCase, scope=Scope.REQUEST)
+    get_submission_logs_use_case = provide(
+        GetSubmissionLogsUseCase, scope=Scope.REQUEST
+    )
+    list_submissions_use_case = provide(ListSubmissionsUseCase, scope=Scope.REQUEST)
+    presign_upload_use_case = provide(PresignUploadUseCase, scope=Scope.REQUEST)
 
     # questions
     create_question_use_case = provide(CreateQuestionUseCase, scope=Scope.REQUEST)
@@ -215,31 +192,31 @@ class UseCaseProvider(Provider):
     # leaderboard
     get_leaderboard_use_case = provide(GetLeaderboardUseCase, scope=Scope.REQUEST)
 
-    # practice
-    start_practice_session_use_case = provide(
-        StartPracticeSessionUseCase, scope=Scope.REQUEST
+    # game
+    start_game_session_use_case = provide(
+        StartGameSessionUseCase, scope=Scope.REQUEST
     )
-    use_item_practice_use_case = provide(UseItemPracticeUseCase, scope=Scope.REQUEST)
-    patch_practice_answer_use_case = provide(
-        PatchPracticeAnswerUseCase, scope=Scope.REQUEST
+    use_item_game_use_case = provide(UseItemGameUseCase, scope=Scope.REQUEST)
+    patch_game_answer_use_case = provide(
+        PatchGameAnswerUseCase, scope=Scope.REQUEST
     )
-    get_practice_session_use_case = provide(
-        GetPracticeSessionUseCase, scope=Scope.REQUEST
+    get_game_session_use_case = provide(
+        GetGameSessionUseCase, scope=Scope.REQUEST
     )
-    finish_practice_session_use_case = provide(
-        FinishPracticeSessionUseCase, scope=Scope.REQUEST
+    finish_game_session_use_case = provide(
+        FinishGameSessionUseCase, scope=Scope.REQUEST
     )
-    get_active_practice_session_use_case = provide(
-        GetActivePracticeSessionUseCase, scope=Scope.REQUEST
+    get_active_game_session_use_case = provide(
+        GetActiveGameSessionUseCase, scope=Scope.REQUEST
     )
-    list_practice_history_use_case = provide(
-        ListPracticeHistoryUseCase, scope=Scope.REQUEST
+    list_game_history_use_case = provide(
+        ListGameHistoryUseCase, scope=Scope.REQUEST
     )
-    get_practice_history_summary_use_case = provide(
-        GetPracticeHistorySummaryUseCase, scope=Scope.REQUEST
+    get_game_history_summary_use_case = provide(
+        GetGameHistorySummaryUseCase, scope=Scope.REQUEST
     )
-    get_practice_leaderboard_use_case = provide(
-        GetPracticeLeaderboardUseCase, scope=Scope.REQUEST
+    get_game_leaderboard_use_case = provide(
+        GetGameLeaderboardUseCase, scope=Scope.REQUEST
     )
 
     list_lessons_use_case = provide(ListLessonsUseCase, scope=Scope.REQUEST)

@@ -8,8 +8,9 @@ from .enums import (
     AttemptStatus,
     Difficulty,
     PoolType,
-    PracticeSessionStatus,
+    GameSessionStatus,
 )
+from .submission import SubmissionStorageInfo
 
 __all__ = [
     "ShuffledOption",
@@ -19,5 +20,6 @@ __all__ = [
     "AttemptStatus",
     "Difficulty",
     "PoolType",
-    "PracticeSessionStatus",
+    "GameSessionStatus",
+    "SubmissionStorageInfo",
 ]

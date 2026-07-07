@@ -5,12 +5,12 @@ from fastapi import HTTPException
 
 from app.core.datetime_utils import utc_to_ict
 from app.domain.entities.hackathon import HackathonEntity
-from app.infrastructure.repositories.hackathons import HackathonRepository
+from app.domain.interfaces import IHackathonRepository
 from app.presentation.schemas.hackathons import HackathonCreate, HackathonUpdate
 
 
 class CreateHackathonUseCase:
-    def __init__(self, hackathon_repo: HackathonRepository):
+    def __init__(self, hackathon_repo: IHackathonRepository):
         self._hackathon_repo = hackathon_repo
 
     async def execute(
@@ -52,7 +52,7 @@ class CreateHackathonUseCase:
 
 
 class ListHackathonsUseCase:
-    def __init__(self, hackathon_repo: HackathonRepository):
+    def __init__(self, hackathon_repo: IHackathonRepository):
         self._hackathon_repo = hackathon_repo
 
     async def execute(
@@ -76,7 +76,7 @@ class ListHackathonsUseCase:
 
 
 class GetHackathonUseCase:
-    def __init__(self, hackathon_repo: HackathonRepository):
+    def __init__(self, hackathon_repo: IHackathonRepository):
         self._hackathon_repo = hackathon_repo
 
     async def execute(
@@ -104,7 +104,7 @@ class GetHackathonUseCase:
 
 
 class UpdateHackathonUseCase:
-    def __init__(self, hackathon_repo: HackathonRepository):
+    def __init__(self, hackathon_repo: IHackathonRepository):
         self._hackathon_repo = hackathon_repo
 
     async def execute(
@@ -135,7 +135,7 @@ class UpdateHackathonUseCase:
 
 
 class DeleteHackathonUseCase:
-    def __init__(self, hackathon_repo: HackathonRepository):
+    def __init__(self, hackathon_repo: IHackathonRepository):
         self._hackathon_repo = hackathon_repo
 
     async def execute(

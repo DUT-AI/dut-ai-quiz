@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { 
-  X, 
-  CheckCircle2, 
+import {
+  X,
+  CheckCircle2,
   Loader2,
   FileJson,
   AlertCircle
@@ -30,7 +30,7 @@ export default function BulkQuestionModal({ lessonId, onClose, onSuccess }: Prop
       if (!Array.isArray(parsed)) {
         throw new Error("Dữ liệu phải là một mảng []");
       }
-      
+
       // Basic validation
       for (const item of parsed) {
         if (!item.question || !Array.isArray(item.options)) {
@@ -43,7 +43,7 @@ export default function BulkQuestionModal({ lessonId, onClose, onSuccess }: Prop
         lesson_id: lessonId,
         pool_type: "PRACTICE"
       });
-      
+
       onSuccess();
       onClose();
     } catch (err: any) {
@@ -54,14 +54,14 @@ export default function BulkQuestionModal({ lessonId, onClose, onSuccess }: Prop
 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
         className="fixed inset-0 bg-black/70 backdrop-blur-md"
       />
-      
+
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 30 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -97,16 +97,17 @@ export default function BulkQuestionModal({ lessonId, onClose, onSuccess }: Prop
                     autoFocus
                     value={jsonInput}
                     onChange={(e) => setJsonInput(e.target.value)}
-                    placeholder='[
+                    placeholder={`[
   {
     "question": "Nội dung câu hỏi...",
+    "pool_type": "PRACTICE",
     "options": [
       { "text": "Đáp án A", "is_correct": true },
       { "text": "Đáp án B", "is_correct": false }
     ],
     "solution": "Giải thích..."
   }
-]'
+]`}
                     rows={15}
                     className="w-full px-6 py-6 rounded-3xl bg-gray-50 dark:bg-white/5 border-2 border-transparent focus:border-primary/30 outline-none transition-all font-mono text-sm leading-relaxed resize-none"
                   />
@@ -121,13 +122,13 @@ export default function BulkQuestionModal({ lessonId, onClose, onSuccess }: Prop
               )}
 
               <div className="p-6 rounded-[32px] bg-indigo-500/5 dark:bg-white/5 border border-indigo-500/10 space-y-4">
-                 <h4 className="font-bold text-sm text-indigo-500">💡 Hướng dẫn:</h4>
-                 <ul className="text-xs space-y-2 opacity-70 list-disc pl-4">
-                   <li>Dữ liệu phải là một mảng các đối tượng.</li>
-                   <li>Mỗi đối tượng cần có: <code className="bg-white/10 px-1 rounded">question</code> (string), <code className="bg-white/10 px-1 rounded">options</code> (array).</li>
-                   <li>Trường <code className="bg-white/10 px-1 rounded">solution</code> (string) là không bắt buộc.</li>
-                   <li>Hệ thống sẽ tự động gán ID cho các đáp án và liên kết với bài học hiện tại.</li>
-                 </ul>
+                <h4 className="font-bold text-sm text-indigo-500">💡 Hướng dẫn:</h4>
+                <ul className="text-xs space-y-2 opacity-70 list-disc pl-4">
+                  <li>Dữ liệu phải là một mảng các đối tượng.</li>
+                  <li>Mỗi đối tượng cần có: <code className="bg-white/10 px-1 rounded">question</code> (string), <code className="bg-white/10 px-1 rounded">options</code> (array).</li>
+                  <li>Trường <code className="bg-white/10 px-1 rounded">solution</code> (string) và <code className="bg-white/10 px-1 rounded">pool_type</code> (<code className="bg-white/15 px-1 rounded">"PRACTICE"</code> | <code className="bg-white/15 px-1 rounded">"EXAM"</code> | <code className="bg-white/15 px-1 rounded">"GAME"</code>) là không bắt buộc.</li>
+                  <li>Hệ thống sẽ tự động gán ID cho các đáp án và liên kết với bài học hiện tại.</li>
+                </ul>
               </div>
             </div>
           </div>

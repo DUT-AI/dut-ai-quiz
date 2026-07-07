@@ -2,9 +2,9 @@ from datetime import datetime
 from uuid import UUID, uuid4
 
 from app.domain.entities.hackathon import HackathonTaskEntity
-from app.infrastructure.repositories.hackathons import (
-    HackathonRepository,
-    HackathonTaskRepository,
+from app.domain.interfaces import (
+    IHackathonRepository,
+    IHackathonTaskRepository,
 )
 from app.presentation.schemas.hackathons import HackathonTaskCreate, HackathonTaskUpdate
 
@@ -12,8 +12,8 @@ from app.presentation.schemas.hackathons import HackathonTaskCreate, HackathonTa
 class CreateHackathonTaskUseCase:
     def __init__(
         self,
-        hackathon_repo: HackathonRepository,
-        task_repo: HackathonTaskRepository,
+        hackathon_repo: IHackathonRepository,
+        task_repo: IHackathonTaskRepository,
     ):
         self._hackathon_repo = hackathon_repo
         self._task_repo = task_repo
@@ -70,8 +70,8 @@ class CreateHackathonTaskUseCase:
 class ListHackathonTasksUseCase:
     def __init__(
         self,
-        hackathon_repo: HackathonRepository,
-        task_repo: HackathonTaskRepository,
+        hackathon_repo: IHackathonRepository,
+        task_repo: IHackathonTaskRepository,
     ):
         self._hackathon_repo = hackathon_repo
         self._task_repo = task_repo
@@ -99,8 +99,8 @@ class ListHackathonTasksUseCase:
 class GetHackathonTaskUseCase:
     def __init__(
         self,
-        hackathon_repo: HackathonRepository,
-        task_repo: HackathonTaskRepository,
+        hackathon_repo: IHackathonRepository,
+        task_repo: IHackathonTaskRepository,
     ):
         self._hackathon_repo = hackathon_repo
         self._task_repo = task_repo
@@ -129,8 +129,8 @@ class GetHackathonTaskUseCase:
 class UpdateHackathonTaskUseCase:
     def __init__(
         self,
-        hackathon_repo: HackathonRepository,
-        task_repo: HackathonTaskRepository,
+        hackathon_repo: IHackathonRepository,
+        task_repo: IHackathonTaskRepository,
     ):
         self._hackathon_repo = hackathon_repo
         self._task_repo = task_repo
@@ -179,8 +179,8 @@ class UpdateHackathonTaskUseCase:
 class DeleteHackathonTaskUseCase:
     def __init__(
         self,
-        hackathon_repo: HackathonRepository,
-        task_repo: HackathonTaskRepository,
+        hackathon_repo: IHackathonRepository,
+        task_repo: IHackathonTaskRepository,
     ):
         self._hackathon_repo = hackathon_repo
         self._task_repo = task_repo

@@ -1,18 +1,24 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { BookOpen, ArrowLeft, Sparkles, Swords, ListRestart } from "lucide-react";
+import { useParams } from "next/navigation";
+import { BookOpen, Swords, ListRestart } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { useLessons, useLessonBySlug } from "@/lib/queries";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { TheoryTab, QuestionsTab, PracticeTab } from "@/features/lessons/components";
+import {
+  TheoryTab,
+  QuestionsTab,
+  PracticeTab,
+  LessonLoading,
+  LessonNotFound,
+  LessonHeader,
+  LessonDraft,
+} from "@/features/lessons/components";
 
 export default function LessonSlugPage() {
   const { slug } = useParams<{ slug: string }>();
-  const router = useRouter();
 
   // Load all lessons list
   const { data: lessons = [], isLoading: isLoadingAll } = useLessons();
@@ -38,60 +44,26 @@ export default function LessonSlugPage() {
   const isLoading = isLoadingAll || isLoadingDetail;
 
   if (isLoading) {
-    return (
-      <div className="h-full flex flex-col items-center justify-center py-40 opacity-50">
-        <div className="size-12 border-4 border-primary border-t-transparent animate-spin rounded-full mb-6" />
-        <p className="font-bold text-lg">Đang tải bài học...</p>
-      </div>
-    );
+    return <LessonLoading />;
   }
 
   // Use resolved lesson info if detail query is not finished yet or returned None
   const currentLesson = lesson || resolvedLesson;
 
   if (!currentLesson) {
-    return (
-      <div className="h-full flex flex-col items-center justify-center text-center py-40">
-        <h2 className="text-3xl font-black text-dark-blue dark:text-white mb-6">Không tìm thấy bài học</h2>
-        <Button onClick={() => router.push("/lessons")} className="rounded-2xl">
-          Quay lại danh sách bài học
-        </Button>
-      </div>
-    );
+    return <LessonNotFound />;
   }
 
   return (
     <div className="w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20 text-left">
-      {/* Back button */}
-      <button
-        onClick={() => router.push("/lessons")}
-        className="flex items-center gap-2 text-primary font-bold hover:gap-3 transition-all mb-4 group"
-      >
-        <ArrowLeft className="size-5" />
-        Quay lại danh sách bài học
-      </button>
-
-      {/* Lesson Header */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 mb-8">
-        <div>
-          <span className="text-xs font-black text-primary uppercase tracking-[0.3em] mb-2 block">
-            BÀI HỌC {currentLesson.order}
-          </span>
-          <h1 className="text-4xl md:text-5xl font-black text-dark-blue dark:text-white mb-4">
-            {currentLesson.name}
-          </h1>
-          <p className="text-lg text-gray-navy dark:text-light-blue max-w-3xl opacity-75 leading-relaxed font-medium">
-            {currentLesson.description || "Tìm hiểu sâu kiến thức lý thuyết và làm bài tập thực hành."}
-          </p>
-        </div>
-      </div>
+      <LessonHeader lesson={currentLesson} />
 
       {/* Lesson specific tabs */}
       <div className="flex border-b border-gray-150 dark:border-white/10 gap-2 md:gap-4 overflow-x-auto no-scrollbar scroll-smooth">
         {(
           [
             { id: "theory", label: "Lý thuyết", icon: BookOpen },
-            { id: "questions", label: "Trắc nghiệm câu hỏi", icon: ListRestart },
+            { id: "questions", label: "Luyện tập", icon: ListRestart },
             { id: "practice", label: "Luyện tập thi đấu", icon: Swords },
           ] as const
         ).map((tab) => {
@@ -134,17 +106,7 @@ export default function LessonSlugPage() {
               exit={{ opacity: 0, y: -10 }}
             >
               {!currentLesson.slug ? (
-                <div className="flex flex-col items-center justify-center text-center py-20 bg-white dark:bg-navy-blue/40 border border-gray-150 dark:border-white/5 rounded-[2.5rem] shadow-xl p-8 max-w-2xl mx-auto">
-                  <div className="size-16 rounded-3xl bg-amber-500/10 flex items-center justify-center text-amber-500 mb-6 animate-pulse">
-                    <Sparkles className="size-8" />
-                  </div>
-                  <h3 className="text-2xl font-black text-dark-blue dark:text-white mb-3">
-                    Bài học đang soạn thảo
-                  </h3>
-                  <p className="text-gray-navy dark:text-light-blue opacity-70 max-w-md text-sm leading-relaxed">
-                    Nội dung lý thuyết của bài học này đang được tiến hành soạn thảo và cập nhật. Vui lòng quay lại sau!
-                  </p>
-                </div>
+                <LessonDraft />
               ) : (
                 <TheoryTab contentMd={currentLesson.content_md} />
               )}
@@ -177,3 +139,4 @@ export default function LessonSlugPage() {
     </div>
   );
 }
+

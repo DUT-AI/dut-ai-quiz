@@ -6,16 +6,23 @@ from app.domain.interfaces import (
     IExamRepository,
     IFocusEventRepository,
     ILessonRepository,
-    IPracticeSessionRepository,
+    IGameSessionRepository,
     IQuestionRepository,
     IUserRepository,
+)
+from app.domain.interfaces.hackathon_repo import (
+    IHackathonRepository,
+    IHackathonTaskRepository,
+    IHackathonTeamRepository,
+    IHackathonRegistrationRepository,
+    IHackathonSubmissionRepository,
 )
 from app.infrastructure.repositories.attempts import AttemptRepository
 from app.infrastructure.repositories.exam_questions import ExamQuestionRepository
 from app.infrastructure.repositories.exams import ExamRepository
 from app.infrastructure.repositories.focus_events import FocusEventRepository
 from app.infrastructure.repositories.lessons import LessonRepository
-from app.infrastructure.repositories.practice_sessions import PracticeSessionRepository
+from app.infrastructure.repositories.game_sessions import GameSessionRepository
 from app.infrastructure.repositories.questions import QuestionRepository
 from app.infrastructure.repositories.users import UserRepository
 from app.infrastructure.repositories.hackathons import (
@@ -23,6 +30,7 @@ from app.infrastructure.repositories.hackathons import (
     HackathonTaskRepository,
     HackathonTeamRepository,
     HackathonRegistrationRepository,
+    HackathonSubmissionRepository,
 )
 
 
@@ -38,13 +46,20 @@ class RepositoryProvider(Provider):
     )
     question_repo = provide(QuestionRepository, provides=IQuestionRepository)
     focus_event_repo = provide(FocusEventRepository, provides=IFocusEventRepository)
-    practice_session_repo = provide(
-        PracticeSessionRepository, provides=IPracticeSessionRepository
+    game_session_repo = provide(
+        GameSessionRepository, provides=IGameSessionRepository
     )
     attempt_repo = provide(AttemptRepository, provides=IAttemptRepository)
-
-    # Riêng hackathon_repo không dùng interface thì giữ nguyên
-    hackathon_repo = provide(HackathonRepository)
-    hackathon_task_repo = provide(HackathonTaskRepository)
-    hackathon_team_repo = provide(HackathonTeamRepository)
-    hackathon_registration_repo = provide(HackathonRegistrationRepository)
+    hackathon_repo = provide(HackathonRepository, provides=IHackathonRepository)
+    hackathon_task_repo = provide(
+        HackathonTaskRepository, provides=IHackathonTaskRepository
+    )
+    hackathon_team_repo = provide(
+        HackathonTeamRepository, provides=IHackathonTeamRepository
+    )
+    hackathon_registration_repo = provide(
+        HackathonRegistrationRepository, provides=IHackathonRegistrationRepository
+    )
+    hackathon_submission_repo = provide(
+        HackathonSubmissionRepository, provides=IHackathonSubmissionRepository
+    )

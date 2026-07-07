@@ -12,6 +12,10 @@ from app.domain.entities.hackathon import (
     HackathonRegistrationEntity,
     RegistrationStatus,
 )
+from app.domain.entities.submission import (
+    SubmissionStatus,
+    HackathonSubmissionEntity,
+)
 
 from .base import Base
 
@@ -225,3 +229,73 @@ class HackathonRegistration(Base):
             reviewed_by=entity.reviewed_by,
             rejection_reason=entity.rejection_reason,
         )
+
+
+class HackathonSubmission(Base):
+    __tablename__ = "hackathon_submissions"
+
+    id: Mapped[UUID] = mapped_column(
+        pgUUID(as_uuid=True), primary_key=True, default=uuid4
+    )
+    task_id: Mapped[UUID] = mapped_column(
+        pgUUID(as_uuid=True),
+        ForeignKey("hackathon_tasks.id", ondelete="CASCADE"),
+        index=True,
+    )
+    user_id: Mapped[int] = mapped_column(index=True)
+    team_id: Mapped[UUID | None] = mapped_column(
+        pgUUID(as_uuid=True),
+        ForeignKey("hackathon_teams.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    script_url: Mapped[str] = mapped_column(Text)
+    model_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    status: Mapped[SubmissionStatus] = mapped_column(
+        SAEnum(
+            SubmissionStatus,
+            name="submission_status_enum",
+            values_callable=lambda enum_cls: [item.value for item in enum_cls],
+        ),
+        default=SubmissionStatus.UPLOADING,
+        server_default="UPLOADING",
+    )
+    score: Mapped[float | None] = mapped_column(nullable=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    logs: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(nullable=False)
+    updated_at: Mapped[datetime | None] = mapped_column(nullable=True)
+
+    def to_entity(self) -> HackathonSubmissionEntity:
+        return HackathonSubmissionEntity(
+            id=self.id,
+            task_id=self.task_id,
+            user_id=self.user_id,
+            team_id=self.team_id,
+            script_url=self.script_url,
+            model_url=self.model_url,
+            status=self.status,
+            score=self.score,
+            error_message=self.error_message,
+            logs=self.logs,
+            created_at=self.created_at,
+            updated_at=self.updated_at,
+        )
+
+    @classmethod
+    def from_entity(cls, entity: HackathonSubmissionEntity) -> "HackathonSubmission":
+        return cls(
+            id=entity.id,
+            task_id=entity.task_id,
+            user_id=entity.user_id,
+            team_id=entity.team_id,
+            script_url=entity.script_url,
+            model_url=entity.model_url,
+            status=entity.status,
+            score=entity.score,
+            error_message=entity.error_message,
+            logs=entity.logs,
+            created_at=entity.created_at,
+            updated_at=entity.updated_at,
+        )
+

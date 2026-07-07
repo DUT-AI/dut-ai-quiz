@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.infrastructure.database import AsyncSessionLocal
 
+
 class DatabaseProvider(Provider):
     @provide(scope=Scope.REQUEST)
     async def get_session(self) -> AsyncIterable[AsyncSession]:

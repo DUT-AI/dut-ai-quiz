@@ -15,15 +15,21 @@ interface TableOfContentsProps {
     headings: HeadingItem[];
     activeId: string;
     onHeadingClick: (id: string) => void;
+    isOpen: boolean;
+    setIsOpen: (isOpen: boolean) => void;
 }
 
-export function TableOfContents({ headings, activeId, onHeadingClick }: TableOfContentsProps) {
-    const [isOpen, setIsOpen] = useState(true);
+export function TableOfContents({ 
+    headings, 
+    activeId, 
+    onHeadingClick,
+    isOpen,
+    setIsOpen
+}: TableOfContentsProps) {
     const [cardTop, setCardTop] = useState(180);
 
     useEffect(() => {
         if (typeof window !== "undefined") {
-            setIsOpen(window.innerWidth >= 1024);
             setCardTop(window.innerWidth >= 1024 ? 180 : 120);
         }
     }, []);
@@ -76,10 +82,10 @@ export function TableOfContents({ headings, activeId, onHeadingClick }: TableOfC
                         animate={{ opacity: 1, x: 0, scale: 1 }}
                         exit={{ opacity: 0, x: 50, scale: 0.95 }}
                         transition={{ type: "spring", damping: 25, stiffness: 250 }}
-                        className="fixed right-4 lg:right-8 z-40 w-[300px] sm:w-[350px] flex flex-col rounded-3xl bg-white/95 dark:bg-[#121E31]/95 backdrop-blur-md border border-gray-200 dark:border-white/10 shadow-2xl overflow-hidden"
+                        className="fixed right-4 lg:right-8 z-40 w-[260px] sm:w-[300px] flex flex-col rounded-3xl bg-white/95 dark:bg-[#121E31]/95 backdrop-blur-md border border-gray-200 dark:border-white/10 shadow-2xl overflow-hidden"
                         style={{
                             top: `${cardTop}px`,
-                            bottom: "80px"
+                            bottom: "24px"
                         }}
                     >
                         {/* Drag Handle Pill */}
@@ -138,7 +144,7 @@ export function TableOfContents({ headings, activeId, onHeadingClick }: TableOfC
                                             }
                                         }}
                                         className={cn(
-                                            "w-full text-left py-2 px-3 rounded-lg transition-all duration-200 cursor-pointer block truncate",
+                                            "w-full text-left py-2 px-3 rounded-lg transition-all duration-200 cursor-pointer line-clamp-2",
                                             heading.level === 1 && "font-extrabold text-[19px]",
                                             heading.level === 2 && "pl-5 font-medium text-[18px]",
                                             heading.level === 3 && "pl-10 font-medium text-[18px]",

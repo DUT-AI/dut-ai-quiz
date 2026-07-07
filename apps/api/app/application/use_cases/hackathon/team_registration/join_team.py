@@ -4,19 +4,19 @@ from uuid import UUID
 from app.application.dtos import HackathonTeamOutDTO
 from app.application.services.user_service import UserService
 from app.domain.exceptions.exceptions import AppException
-from app.infrastructure.repositories.hackathons import (
-    HackathonRegistrationRepository,
-    HackathonRepository,
-    HackathonTeamRepository,
+from app.domain.interfaces import (
+    IHackathonRegistrationRepository,
+    IHackathonRepository,
+    IHackathonTeamRepository,
 )
 
 
 class JoinTeamUseCase:
     def __init__(
         self,
-        hackathon_repo: HackathonRepository,
-        team_repo: HackathonTeamRepository,
-        reg_repo: HackathonRegistrationRepository,
+        hackathon_repo: IHackathonRepository,
+        team_repo: IHackathonTeamRepository,
+        reg_repo: IHackathonRegistrationRepository,
         user_service: UserService,
     ) -> None:
         self._hackathon_repo = hackathon_repo

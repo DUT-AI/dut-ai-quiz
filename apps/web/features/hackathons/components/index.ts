@@ -9,5 +9,4 @@ export * from "./hackathon-tasks-tab";
 export * from "./hackathon-registrations-tab";
 export * from "./hackathon-edit-tab";
 export * from "./hackathon-team-detail";
-
-
+export * from "./hackathon-task-submissions";

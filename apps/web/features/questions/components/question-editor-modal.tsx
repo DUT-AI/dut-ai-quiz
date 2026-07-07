@@ -20,6 +20,7 @@ import { uploadImage, handlePasteImage } from "@/lib/upload-utils";
 import type { QuestionOut } from "@/lib/types";
 import { QuestionFormSchema, type QuestionFormValues } from "@/features/questions/types";
 import { renderMathInHTML } from "@/lib/render-math";
+import { PoolTypeSelector } from "./pool-type-selector";
 
 interface Props {
   lessonId: string;
@@ -176,28 +177,16 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
           <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
             <form id="question-form" onSubmit={handleSubmit(onSubmit)} className="space-y-10 text-left">
               {/* Pool type selector */}
-              <div className="flex gap-3">
-                {(["PRACTICE", "EXAM"] as const).map((t) => (
-                  <Controller
-                    key={t}
-                    control={control}
-                    name="pool_type"
-                    render={({ field }) => (
-                      <button
-                        type="button"
-                        onClick={() => field.onChange(t)}
-                        className={`px-6 py-3 rounded-2xl text-sm font-bold border-2 transition-all ${
-                          field.value === t
-                            ? "border-primary bg-primary/10 text-primary"
-                            : "border-gray-100 dark:border-white/10 text-gray-navy opacity-50 hover:opacity-80"
-                        }`}
-                      >
-                        {t === "PRACTICE" ? "🏋️ Luyện tập" : "📝 Kiểm tra"}
-                      </button>
-                    )}
+              <Controller
+                control={control}
+                name="pool_type"
+                render={({ field }) => (
+                  <PoolTypeSelector
+                    value={field.value}
+                    onChange={field.onChange}
                   />
-                ))}
-              </div>
+                )}
+              />
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                 {/* Left: Inputs */}

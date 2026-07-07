@@ -6,17 +6,17 @@ from app.application.dtos import (
     HackathonTeamOutDTO,
 )
 from app.application.services.user_service import UserService
-from app.infrastructure.repositories.hackathons import (
-    HackathonRegistrationRepository,
-    HackathonTeamRepository,
+from app.domain.interfaces import (
+    IHackathonRegistrationRepository,
+    IHackathonTeamRepository,
 )
 
 
 class GetRegistrationStatusUseCase:
     def __init__(
         self,
-        reg_repo: HackathonRegistrationRepository,
-        team_repo: HackathonTeamRepository,
+        reg_repo: IHackathonRegistrationRepository,
+        team_repo: IHackathonTeamRepository,
         user_service: UserService,
     ) -> None:
         self._reg_repo = reg_repo

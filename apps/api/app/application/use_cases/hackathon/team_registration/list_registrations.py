@@ -6,19 +6,19 @@ from app.application.dtos import (
 )
 from app.application.services.user_service import UserService
 from app.domain.exceptions.exceptions import AppException
-from app.infrastructure.repositories.hackathons import (
-    HackathonRegistrationRepository,
-    HackathonRepository,
-    HackathonTeamRepository,
+from app.domain.interfaces import (
+    IHackathonRegistrationRepository,
+    IHackathonRepository,
+    IHackathonTeamRepository,
 )
 
 
 class ListRegistrationsUseCase:
     def __init__(
         self,
-        hackathon_repo: HackathonRepository,
-        reg_repo: HackathonRegistrationRepository,
-        team_repo: HackathonTeamRepository,
+        hackathon_repo: IHackathonRepository,
+        reg_repo: IHackathonRegistrationRepository,
+        team_repo: IHackathonTeamRepository,
         user_service: UserService,
     ) -> None:
         self._hackathon_repo = hackathon_repo

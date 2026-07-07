@@ -13,6 +13,7 @@ from app.presentation.api.routers import (
     exams,
     external,
     hackathon_registrations,
+    hackathon_submissions,
     hackathon_tasks,
     hackathons,
     health,
@@ -20,7 +21,7 @@ from app.presentation.api.routers import (
     lessons,
     me,
     pdf_import,
-    practice,
+    game,
     questions,
     runtime_profiles,
     submissions,
@@ -52,6 +53,7 @@ app.include_router(auth.router, prefix="/api/v1")
 app.include_router(me.router, prefix="/api/v1")
 app.include_router(lessons.router, prefix="/api/v1")
 app.include_router(hackathons.router, prefix="/api/v1")
+app.include_router(hackathon_submissions.router, prefix="/api/v1")
 app.include_router(hackathon_tasks.router, prefix="/api/v1")
 app.include_router(hackathon_registrations.router, prefix="/api/v1")
 app.include_router(runtime_profiles.router, prefix="/api/v1")
@@ -61,7 +63,7 @@ app.include_router(questions.router, prefix="/api/v1")
 app.include_router(exams.router, prefix="/api/v1")
 app.include_router(attempts.router, prefix="/api/v1")
 app.include_router(leaderboard.router, prefix="/api/v1")
-app.include_router(practice.router, prefix="/api/v1")
+app.include_router(game.router, prefix="/api/v1")
 app.include_router(uploads.router, prefix="/api/v1")
 app.include_router(pdf_import.router, prefix="/api/v1")
 app.include_router(external.router, prefix="/api/v1")

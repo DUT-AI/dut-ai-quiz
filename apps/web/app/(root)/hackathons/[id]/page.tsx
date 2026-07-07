@@ -8,7 +8,7 @@ import {
   useHackathonRegistrationStatus,
   useHackathonTasks,
 } from "@/features/hackathons/queries";
-import { HackathonTeamDetail } from "@/features/hackathons/components";
+import { HackathonTeamDetail, HackathonTaskSubmissions } from "@/features/hackathons/components";
 import {
   ArrowLeft,
   Calendar,
@@ -275,6 +275,9 @@ export default function StudentHackathonDetailPage() {
                                   )}
                                 </div>
                               </div>
+
+                              {/* Submissions Section */}
+                              <HackathonTaskSubmissions taskId={task.id} />
                             </div>
                           </motion.div>
                         )}

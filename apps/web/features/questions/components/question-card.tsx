@@ -7,8 +7,9 @@ import { RotateCcw, Lightbulb, Edit3, Trash2, Sparkles, Check, XCircle } from "l
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { renderMathInHTML } from "@/lib/render-math";
+import { Markdown } from "@/components/markdown";
 import type { QuestionOut } from "@/lib/types";
+import { useAuth } from "@/context/auth-context";
 
 interface QuestionCardProps {
   q: QuestionOut;
@@ -20,19 +21,57 @@ interface QuestionCardProps {
 
 export const QuestionCard = React.memo(
   ({ q, idx, onExplain, onEdit, onDelete }: QuestionCardProps) => {
-    const contentHtml = useMemo(() => renderMathInHTML(q.content), [q.content]);
+    const { user } = useAuth();
+    const storageKey = useMemo(() => {
+      return `practice_progress_${user?.id || "guest"}_${q.lesson_id || "default"}`;
+    }, [user?.id, q.lesson_id]);
+
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [isRevealed, setIsRevealed] = useState(false);
+
+    // Load state from localStorage on mount
+    React.useEffect(() => {
+      try {
+        const stored = localStorage.getItem(storageKey);
+        if (stored) {
+          const data = JSON.parse(stored);
+          if (data[q.id]) {
+            setSelectedId(data[q.id].selectedId || null);
+            setIsRevealed(data[q.id].isRevealed || false);
+          }
+        }
+      } catch (e) {
+        console.error("Failed to load progress", e);
+      }
+    }, [storageKey, q.id]);
 
     const handleSelect = (optionId: string) => {
       if (isRevealed) return;
       setSelectedId(optionId);
       setIsRevealed(true);
+
+      try {
+        const stored = localStorage.getItem(storageKey) || "{}";
+        const data = JSON.parse(stored);
+        data[q.id] = { selectedId: optionId, isRevealed: true };
+        localStorage.setItem(storageKey, JSON.stringify(data));
+      } catch (e) {
+        console.error("Failed to save progress", e);
+      }
     };
 
     const handleReset = () => {
       setSelectedId(null);
       setIsRevealed(false);
+
+      try {
+        const stored = localStorage.getItem(storageKey) || "{}";
+        const data = JSON.parse(stored);
+        delete data[q.id];
+        localStorage.setItem(storageKey, JSON.stringify(data));
+      } catch (e) {
+        console.error("Failed to reset progress", e);
+      }
     };
 
     return (
@@ -58,24 +97,13 @@ export const QuestionCard = React.memo(
                   #{idx + 1}
                 </div>
 
-                {isRevealed && (
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={handleReset}
-                    className="size-10 rounded-xl hover:bg-primary/10 text-primary"
-                    title="Làm lại"
-                  >
-                    <RotateCcw className="size-5" />
-                  </Button>
-                )}
+                {/* Reset button removed to prevent re-answering once chosen */}
               </div>
 
               <div className="flex-1 space-y-8">
-                <div
-                  className="text-xl font-medium text-dark-blue dark:text-white leading-relaxed whitespace-pre-wrap select-text"
-                  dangerouslySetInnerHTML={{ __html: contentHtml }}
-                />
+                <div className="text-xl font-medium text-dark-blue dark:text-white leading-relaxed select-text">
+                  <Markdown content={q.content} />
+                </div>
 
                 <div className="grid grid-cols-1 gap-3">
                   {q.options.map((opt, i) => {
@@ -112,8 +140,8 @@ export const QuestionCard = React.memo(
                             isRevealed && isCorrect
                               ? "bg-green text-white"
                               : isSelected && !isCorrect
-                              ? "bg-red text-white"
-                              : "bg-white dark:bg-navy-blue border border-gray-200 dark:border-white/10 text-primary"
+                                ? "bg-red text-white"
+                                : "bg-white dark:bg-navy-blue border border-gray-200 dark:border-white/10 text-primary"
                           )}
                         >
                           {isRevealed && isCorrect ? (
@@ -124,12 +152,9 @@ export const QuestionCard = React.memo(
                             String.fromCharCode(65 + i)
                           )}
                         </div>
-                        <span
-                          className="font-medium select-text"
-                          dangerouslySetInnerHTML={{
-                            __html: renderMathInHTML(opt.text),
-                          }}
-                        />
+                        <span className="font-medium select-text">
+                          <Markdown content={opt.text} />
+                        </span>
 
                         {isSelected && !isRevealed && (
                           <motion.div
@@ -154,12 +179,9 @@ export const QuestionCard = React.memo(
                           <Lightbulb className="size-3" />
                           Hướng dẫn chi tiết
                         </h4>
-                        <div
-                          className="text-dark-blue dark:text-white leading-relaxed font-medium whitespace-pre-wrap select-text"
-                          dangerouslySetInnerHTML={{
-                            __html: renderMathInHTML(q.solution),
-                          }}
-                        />
+                        <div className="text-dark-blue dark:text-white leading-relaxed font-medium select-text">
+                          <Markdown content={q.solution} />
+                        </div>
                       </div>
                     </motion.div>
                   )}

@@ -53,6 +53,18 @@ class Settings(BaseSettings):
     minio_access_key: str = ""
     minio_secret_key: str = ""
     minio_bucket_name: str = ""
+    presigned_url_expire_seconds: int = 3600
+
+    # ================= SUBMISSION SYSTEM CONFIG =================
+    submission_cooldown_seconds: int = 300  # 5 minutes
+    submission_max_quota: int = 20  # Max 20 submissions per contest
+    sandbox_timeout_seconds: int = 900  # 15 minutes
+    sandbox_mem_limit: str = "4g"  # 4GB RAM
+    sandbox_cpu_limit: int = 2000000000  # 2 vCPUs (nano_cpus = CPU * 1e9)
+    sandbox_image_name: str = "python:3.12-slim"
+    log_max_lines: int = 50
+    max_script_size_bytes: int = 10 * 1024 * 1024  # 10 MB
+    max_model_size_bytes: int = 1024 * 1024 * 1024  # 1 GB
 
     # Sandbox Security Settings
     sandbox_timeout_seconds: int = 300
