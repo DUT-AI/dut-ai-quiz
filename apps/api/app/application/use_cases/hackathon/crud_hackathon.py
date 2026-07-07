@@ -46,8 +46,6 @@ class ListHackathonsUseCase:
         self._hackathon_repo = hackathon_repo
 
     async def execute(self, user_id: int, quiz_role: str) -> list[HackathonEntity]:
-        if quiz_role in ["admin", "MENTOR"]:
-            return await self._hackathon_repo.list_for_admin(user_id)
         return await self._hackathon_repo.list_all()
 
 
@@ -57,10 +55,6 @@ class GetHackathonUseCase:
 
     async def execute(self, hackathon_id: UUID, user_id: int, quiz_role: str) -> HackathonEntity | None:
         entity = await self._hackathon_repo.get(hackathon_id)
-        if not entity:
-            return None
-        if quiz_role in ["admin", "MENTOR"] and entity.created_by != user_id:
-            return None
         return entity
 
 
