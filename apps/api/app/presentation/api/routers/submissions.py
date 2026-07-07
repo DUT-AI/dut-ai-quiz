@@ -1,9 +1,11 @@
 """
 API Router for Hackathon Submission management
 """
+import inspect
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.application.use_cases.submissions import (
@@ -12,6 +14,7 @@ from app.application.use_cases.submissions import (
     GetSubmissionUseCase,
     ListSubmissionsUseCase,
 )
+from app.config import settings
 from app.infrastructure.database import get_session
 from app.infrastructure.repositories.hackathons import HackathonTaskRepository
 from app.infrastructure.repositories.runtime_profiles import RuntimeProfileRepository
@@ -24,6 +27,63 @@ from app.presentation.schemas.submissions import (
 )
 
 router = APIRouter(prefix="/submissions", tags=["Submissions"])
+
+
+def _redis_settings() -> tuple[str, int]:
+    redis_url_or_host = settings.redis_host
+    host = redis_url_or_host
+    port = settings.redis_port
+
+    if "://" in redis_url_or_host:
+        host_part = redis_url_or_host.split("://", 1)[1].split("/", 1)[0]
+        if ":" in host_part:
+            host, port_text = host_part.rsplit(":", 1)
+            port = int(port_text)
+        else:
+            host = host_part
+
+    return host, port
+
+
+async def _close_pool(pool) -> None:
+    close = getattr(pool, "aclose", None) or getattr(pool, "close", None)
+    if not close:
+        return
+
+    result = close()
+    if inspect.isawaitable(result):
+        await result
+
+
+async def _enqueue_submission_job(submission, task) -> str | None:
+    try:
+        from arq import create_pool
+        from arq.connections import RedisSettings
+    except ImportError as exc:
+        logger.warning(
+            f"Cannot enqueue submission job because arq is unavailable: {exc}"
+        )
+        return None
+
+    redis_host, redis_port = _redis_settings()
+    pool = await create_pool(RedisSettings(host=redis_host, port=redis_port))
+    try:
+        metric_type = (
+            task.metric_type.value
+            if hasattr(task.metric_type, "value")
+            else str(task.metric_type)
+        )
+        job = await pool.enqueue_job(
+            "evaluate_submission_job",
+            str(submission.id),
+            submission.script_s3_key,
+            task.private_test_url,
+            metric_type,
+            str(submission.runtime_profile_id),
+        )
+        return job.job_id if job else None
+    finally:
+        await _close_pool(pool)
 
 
 @router.post("", response_model=SubmissionResponse, status_code=status.HTTP_201_CREATED)
@@ -53,8 +113,17 @@ async def create_submission(
         )
         await session.commit()
 
-        # TODO: Enqueue submission to worker queue for processing
-        # await enqueue_submission_job(submission.id)
+        task = await task_repo.get(submission.task_id)
+        if task:
+            try:
+                job_id = await _enqueue_submission_job(submission, task)
+                logger.info(
+                    f"Enqueued submission {submission.id} for evaluation as job {job_id}"
+                )
+            except Exception as exc:
+                logger.warning(
+                    f"Failed to enqueue submission {submission.id} for evaluation: {exc}"
+                )
 
         return SubmissionResponse.model_validate(submission)
     except ValueError as e:

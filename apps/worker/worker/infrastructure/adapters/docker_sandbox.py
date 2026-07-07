@@ -16,15 +16,22 @@ class DockerSandbox(ISandbox):
         self,
         script_dir: str,
         script_name: str,
-        timeout_seconds: int = 30,
-        mem_limit: str = "256m",
-        nano_cpus: int = 1000000000,
+        timeout_seconds: int | None = 30,
+        mem_limit: str | None = "256m",
+        nano_cpus: int | None = 1000000000,
+        docker_image: str | None = None,
+        gpu_enabled: bool = False,
+        gpu_limit: int = 0,
+        pids_limit: int | None = None,
     ) -> Dict[str, Any]:
+        image_name = docker_image or self.image_name
+        timeout = timeout_seconds or 30
+
         try:
-            self.client.images.get(self.image_name)
+            self.client.images.get(image_name)
         except ImageNotFound:
-            logger.info(f"Image {self.image_name} not found. Pulling...")
-            self.client.images.pull(self.image_name)
+            logger.info(f"Image {image_name} not found. Pulling...")
+            self.client.images.pull(image_name)
 
         container = None
         result = {"status": "failed", "exit_code": -1, "logs": "", "error": None}
@@ -33,18 +40,19 @@ class DockerSandbox(ISandbox):
 
         try:
             container = self.client.containers.create(
-                image=self.image_name,
+                image=image_name,
                 command=f"python {script_name}",
                 volumes={abs_script_dir: {"bind": "/sandbox", "mode": "rw"}},
                 working_dir="/sandbox",
                 network_mode="none",
-                mem_limit=mem_limit,
-                nano_cpus=nano_cpus,
+                mem_limit=mem_limit or "256m",
+                nano_cpus=nano_cpus or 1000000000,
+                pids_limit=pids_limit,
                 detach=True,
             )
 
             container.start()
-            wait_res = container.wait(timeout=timeout_seconds)
+            wait_res = container.wait(timeout=timeout)
             exit_code = wait_res.get("StatusCode", 0)
             logs = container.logs().decode("utf-8", errors="replace")
 
@@ -65,7 +73,7 @@ class DockerSandbox(ISandbox):
             ):
                 result["status"] = "timeout"
                 result["error"] = (
-                    f"Execution timed out after {timeout_seconds} seconds."
+                    f"Execution timed out after {timeout} seconds."
                 )
                 if container:
                     try:

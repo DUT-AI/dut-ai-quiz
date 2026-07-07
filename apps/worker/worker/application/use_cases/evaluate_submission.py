@@ -1,10 +1,10 @@
 import os
 import tempfile
+from uuid import UUID
 
 from app.infrastructure.database import AsyncSessionLocal
 from loguru import logger
-from sqlalchemy import text, select
-from sqlalchemy.dialects.postgresql import UUID as pgUUID
+from sqlalchemy import select
 from worker.domain.interfaces.evaluator import IEvaluator
 from worker.domain.interfaces.sandbox import ISandbox
 
@@ -35,14 +35,17 @@ class EvaluateSubmissionUseCase:
         Returns:
             float: The calculated score
         """
-        logger.info(f"Executing EvaluateSubmissionUseCase for submission {submission_id}...")
+        logger.info(
+            f"Executing EvaluateSubmissionUseCase for submission {submission_id}..."
+        )
+        profile_uuid = UUID(runtime_profile_id)
 
         # Fetch runtime profile configuration from database
         async with AsyncSessionLocal() as session:
             from app.infrastructure.persistence.models.runtime_profile import RuntimeProfile
             
             result = await session.execute(
-                select(RuntimeProfile).where(RuntimeProfile.id == runtime_profile_id)
+                select(RuntimeProfile).where(RuntimeProfile.id == profile_uuid)
             )
             profile_model = result.scalar_one_or_none()
             
@@ -50,7 +53,10 @@ class EvaluateSubmissionUseCase:
                 raise ValueError(f"Runtime profile {runtime_profile_id} not found")
             
             profile = profile_model.to_entity()
-            logger.info(f"Using runtime profile: {profile.name} ({profile.docker_image}:{profile.docker_image_tag})")
+            logger.info(
+                "Using runtime profile: "
+                f"{profile.name} ({profile.docker_image}:{profile.docker_image_tag})"
+            )
 
         with tempfile.TemporaryDirectory() as tmpdir:
             script_path = os.path.join(tmpdir, "predict.py")
@@ -59,7 +65,7 @@ class EvaluateSubmissionUseCase:
 
             # TODO: Download script from S3 using MinIO client
             # For now, mocking script download
-            with open(script_path, "w") as f:
+            with open(script_path, "w", encoding="utf-8") as f:
                 f.write("import csv\n")
                 f.write("with open('predict.csv', 'w', newline='') as f:\n")
                 f.write("    writer = csv.writer(f)\n")
@@ -69,7 +75,7 @@ class EvaluateSubmissionUseCase:
 
             # TODO: Download ground truth from S3 using MinIO client
             # CRITICAL: Ground truth is NEVER mounted in the sandbox container
-            with open(gt_path, "w") as f:
+            with open(gt_path, "w", encoding="utf-8") as f:
                 f.write("target\n1\n0\n")
 
             # Execute code inside Secure Sandbox with runtime profile settings
@@ -88,7 +94,9 @@ class EvaluateSubmissionUseCase:
             )
 
             if sandbox_res["status"] == "timeout":
-                raise RuntimeError(f"Sandbox execution timeout: {sandbox_res.get('error')}")
+                raise RuntimeError(
+                    f"Sandbox execution timeout: {sandbox_res.get('error')}"
+                )
 
             if sandbox_res["status"] != "success" or not os.path.exists(pred_path):
                 raise RuntimeError(
@@ -98,6 +106,9 @@ class EvaluateSubmissionUseCase:
             # Compute Metric Score using GPU-accelerated evaluator
             # Ground Truth is only accessed here, OUTSIDE the sandbox
             score = self.evaluator.evaluate(gt_path, pred_path, metric_type)
-            logger.info(f"Successfully calculated score for {submission_id}: {score} (elapsed: {sandbox_res.get('elapsed_seconds', 0):.2f}s)")
+            logger.info(
+                f"Successfully calculated score for {submission_id}: {score} "
+                f"(elapsed: {sandbox_res.get('elapsed_seconds', 0):.2f}s)"
+            )
             
             return score

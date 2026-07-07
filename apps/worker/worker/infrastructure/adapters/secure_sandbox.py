@@ -41,7 +41,7 @@ class SecureSandbox(ISandbox):
         timeout_seconds: int = None,
         mem_limit: str = None,
         nano_cpus: int = None,
-        docker_image: str = "python:3.10-slim",
+        docker_image: str | None = "python:3.10-slim",
         gpu_enabled: bool = False,
         gpu_limit: int = 0,
         pids_limit: int = None,
@@ -77,6 +77,8 @@ class SecureSandbox(ISandbox):
                 "error": f"Script file not found: {script_name}",
             }
 
+        image_name = docker_image or "python:3.10-slim"
+
         # Build secure Docker command
         docker_cmd = [
             "docker",
@@ -100,7 +102,7 @@ class SecureSandbox(ISandbox):
 
         # Add image and command
         docker_cmd.extend([
-            docker_image,
+            image_name,
             "python",
             script_name,
         ])
