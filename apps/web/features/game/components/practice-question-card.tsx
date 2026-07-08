@@ -4,6 +4,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Timer, Zap, Swords } from "lucide-react";
 import { type GameQuestion } from "../types";
+import { Markdown } from "@/components/markdown";
 
 interface PracticeQuestionCardProps {
   currentQuestion: GameQuestion;
@@ -20,6 +21,7 @@ interface PracticeQuestionCardProps {
   hiddenOptions: string[];
   onSubmitAnswer: (optionId: string) => void;
   onNextQuestion: () => void;
+  correctOptionId: string | null;
 }
 
 export default function PracticeQuestionCard({
@@ -37,6 +39,7 @@ export default function PracticeQuestionCard({
   hiddenOptions,
   onSubmitAnswer,
   onNextQuestion,
+  correctOptionId,
 }: PracticeQuestionCardProps) {
   return (
     <div className="w-full flex flex-col gap-4 items-center">
@@ -88,9 +91,9 @@ export default function PracticeQuestionCard({
         </div>
 
         {/* Question Body Text */}
-        <h3 className="text-sm md:text-base lg:text-lg font-extrabold leading-relaxed text-zinc-900 dark:text-white mb-6 min-h-[50px] whitespace-pre-wrap">
-          {currentQuestion.content}
-        </h3>
+        <div className="text-sm md:text-base lg:text-lg font-extrabold leading-relaxed text-zinc-900 dark:text-white mb-6 min-h-[50px] theory-markdown-content">
+          <Markdown content={currentQuestion.content} />
+        </div>
 
         {/* Answers Options Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
@@ -101,53 +104,19 @@ export default function PracticeQuestionCard({
             let btnStyles = "border-zinc-900 dark:border-slate-700 hover:bg-amber-50 dark:hover:bg-slate-800 text-zinc-900 dark:text-slate-100 bg-stone-50 dark:bg-slate-950 shadow-sm active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all duration-200";
             
             if (isAnswered) {
-              // Wait, the client doesn't know which option is correct beforehand since BE handles it!
-              // But when isAnswered is true, we have a selectedOptionId, and we need to show correctness.
-              // Wait! How do we know which option is correct?
-              // The backend PATCH `/answers` returns `is_correct`.
-              // Wait! If the user answered, did the server reveal the correct answer?
-              // Let's check `patch_game_answer.py` or the schema `GamificationAnswerResultOut`.
-              // Ah! The API response `GamificationAnswerResultOut` has:
-              // `is_correct: bool`
-              // But it does NOT tell us the correct option_id if we choose wrong!
-              // Wait, let's verify if the server returns the correct answer.
-              // Looking at the pydantic schema of `GamificationAnswerResultOut` in `game.py`:
-              // `is_correct: bool`, `points_gained: int`, `coins_gained: int`, `updated_gamification: dict`, `is_game_over: bool`.
-              // It does NOT return `correct_option_id`!
-              // Oh! If the user answers incorrectly, how do we show which one was correct?
-              // Wait, in `page.tsx` line 320:
-              // `const isCorrect = optionId !== null && currentQuestion?.options.find((o: any) => o.id === optionId)?.is_correct === true;`
-              // Ah! In the mock frontend, `currentQuestion` has `options: [{ id: "a", text: "const", is_correct: true }]` (the mock questions had `is_correct` in them!).
-              // But the real backend cleans up `options` before sending them to the client!
-              // Let's check `start_game_session.py` lines 77-83:
-              // ```python
-              // def clean_options(options):
-              //     cleaned = []
-              //     for opt in options:
-              //         o_dict = opt.to_dict()
-              //         o_dict.pop("is_correct", None)
-              //         cleaned.append(o_dict)
-              //     return cleaned
-              // ```
-              // Yes! The server removes `is_correct` from the options so that the client cannot cheat!
-              // That is a classic security practice!
-              // So the frontend does NOT know which option is the correct one when rendering the question.
-              // Then how do we show the result of the answer?
-              // If `isAnswered` is true:
-              // - If the user selected this option and the response said `is_correct` was true, then this option is correct! We style it green.
-              // - If the user selected this option and the response said `is_correct` was false, then this option is incorrect! We style it red.
-              // - What about the other options? We cannot easily show which one was the correct one since the server didn't tell us, OR we can just style all other options as disabled (reduced opacity).
-              // Wait! This is actually normal and fair. If they select a wrong option, they only see that their selection was wrong (red), and they can guess/study later. Or we can highlight the selected one as red, and keep all others dimmed.
-              // Let's check if the server returns any info. It doesn't, so that's the only way!
-              // Let's implement this logic:
-              // If selected:
-              //   If was correct: green
-              //   If was incorrect: red
-              // If not selected:
+              const isCorrectOption = correctOptionId === option.id;
               if (isSelected) {
                 btnStyles = isSelectedCorrect 
                   ? "border-emerald-500 bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 shadow-sm shadow-emerald-500/20" 
                   : "border-red-500 bg-red-100 dark:bg-red-950/40 text-red-800 dark:text-red-300 shadow-sm shadow-red-500/20";
+              } else if (isCorrectOption) {
+                btnStyles = "border-emerald-500 bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 shadow-sm shadow-emerald-500/20";
+              } else {
+                btnStyles = "border-zinc-200 dark:border-slate-800 text-zinc-300 dark:text-slate-700 bg-zinc-50 dark:bg-slate-950 opacity-30 cursor-default shadow-none pointer-events-none";
+              }
+            } else if (selectedOptionId) {
+              if (isSelected) {
+                btnStyles = "border-amber-500 bg-amber-50 dark:bg-amber-950/20 text-zinc-900 dark:text-white animate-pulse shadow-sm";
               } else {
                 btnStyles = "border-zinc-200 dark:border-slate-800 text-zinc-300 dark:text-slate-700 bg-zinc-50 dark:bg-slate-950 opacity-30 cursor-default shadow-none pointer-events-none";
               }
@@ -159,16 +128,16 @@ export default function PracticeQuestionCard({
               <button
                 key={option.id}
                 type="button"
-                disabled={isAnswered || isHidden}
+                disabled={isAnswered || !!selectedOptionId || isHidden}
                 onClick={() => onSubmitAnswer(option.id)}
                 className={`w-full text-left p-3.5 border-2 transition-all duration-200 flex items-start gap-3 rounded-none relative group overflow-hidden ${btnStyles}`}
               >
                 <span className="font-extrabold text-cyan-600 dark:text-cyan-400 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors duration-200">
-                  {option.id.toUpperCase()}.
+                  {String.fromCharCode(65 + idx)}.
                 </span>
 
-                <span className="text-xs md:text-sm font-bold leading-normal">
-                  {option.text}
+                <span className="text-xs md:text-sm font-bold leading-normal option-markdown">
+                  <Markdown content={option.text} />
                 </span>
               </button>
             );
@@ -193,6 +162,16 @@ export default function PracticeQuestionCard({
           </motion.div>
         )}
       </div>
+      <style jsx global>{`
+        .option-markdown p {
+          margin: 0 !important;
+          display: inline !important;
+        }
+        .option-markdown img {
+          pointer-events: none !important;
+          cursor: default !important;
+        }
+      `}</style>
     </div>
   );
 }

@@ -25,6 +25,7 @@ class GamificationAnswerResultOut(BaseModel):
     coins_gained: int
     updated_gamification: dict[str, Any]
     is_game_over: bool
+    correct_option_id: str | None = None
 
 class GameLessonSummaryOut(BaseModel):
     lesson_slug: str

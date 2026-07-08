@@ -236,4 +236,5 @@ class PatchGameAnswerUseCase:
             coins_gained=coins_gained,
             updated_gamification=session.snapshot["gamification"],
             is_game_over=is_game_over,
+            correct_option_id=str(correct_opt_id) if correct_opt_id else None,
         )
