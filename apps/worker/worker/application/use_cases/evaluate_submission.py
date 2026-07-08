@@ -1,17 +1,51 @@
 import os
+import posixpath
+import shutil
 import tempfile
+from datetime import datetime
+from urllib.parse import unquote, urlparse
+from uuid import UUID
 
-from app.infrastructure.database import AsyncSessionLocal
 from loguru import logger
-from sqlalchemy import text
+
+from app.domain.entities.submission import (
+    HackathonSubmissionEntity,
+    SubmissionStatus,
+)
+from worker.domain.interfaces.artifact_store import IArtifactStore
+from worker.domain.interfaces.cancellation import ICancellationToken
 from worker.domain.interfaces.evaluator import IEvaluator
+from worker.domain.interfaces.event_publisher import ISubmissionEventPublisher
 from worker.domain.interfaces.sandbox import ISandbox
+from worker.domain.interfaces.submission_repository import ISubmissionRepository
 
 
 class EvaluateSubmissionUseCase:
-    def __init__(self, sandbox: ISandbox, evaluator: IEvaluator):
+    def __init__(
+        self,
+        sandbox: ISandbox,
+        evaluator: IEvaluator,
+        artifact_store: IArtifactStore,
+        submission_repo: ISubmissionRepository,
+        cancellation: ICancellationToken,
+        event_publisher: ISubmissionEventPublisher,
+        sandbox_timeout_seconds: int,
+        sandbox_mem_limit: str,
+        sandbox_cpu_limit: int,
+        log_max_lines: int,
+        sandbox_workspace_root: str | None = None,
+    ):
         self.sandbox = sandbox
         self.evaluator = evaluator
+        self.artifact_store = artifact_store
+        self.submission_repo = submission_repo
+        self.cancellation = cancellation
+        self.event_publisher = event_publisher
+        self.sandbox_timeout_seconds = sandbox_timeout_seconds
+        self.sandbox_mem_limit = sandbox_mem_limit
+        self.sandbox_cpu_limit = sandbox_cpu_limit
+        self.log_max_lines = log_max_lines
+        self.sandbox_workspace_root = sandbox_workspace_root
 
     async def execute(
         self,
@@ -19,42 +53,235 @@ class EvaluateSubmissionUseCase:
         script_s3_key: str,
         ground_truth_s3_key: str,
         metric_type: str,
-    ) -> float:
-        logger.info(f"Executing EvaluateSubmissionUseCase for {submission_id}...")
+    ) -> float | None:
+        submission_uuid = UUID(str(submission_id))
+        logger.info(f"Executing EvaluateSubmissionUseCase for {submission_uuid}...")
 
-        # Verify DB connection from shared api repository
-        async with AsyncSessionLocal() as session:
-            res = await session.execute(text("SELECT 1"))
-            logger.debug(f"UseCase DB connection active: {res.scalar() == 1}")
+        submission = await self.submission_repo.get_submission(submission_uuid)
+        if not submission:
+            raise ValueError(f"Submission not found: {submission_uuid}")
 
-        with tempfile.TemporaryDirectory() as tmpdir:
-            script_path = os.path.join(tmpdir, "predict.py")
-            gt_path = os.path.join(tmpdir, "ground_truth.csv")
-            pred_path = os.path.join(tmpdir, "predict.csv")
+        if await self._is_cancelled(submission_uuid):
+            await self._mark_cancelled(submission)
+            return None
 
-            # Mocking scripts and files download (In production, retrieve via MinIO S3 client)
-            with open(script_path, "w") as f:
-                f.write("import csv\n")
-                f.write("with open('predict.csv', 'w', newline='') as f:\n")
-                f.write("    writer = csv.writer(f)\n")
-                f.write("    writer.writerow(['target'])\n")
-                f.write("    writer.writerow(['1'])\n")
-                f.write("    writer.writerow(['0'])\n")
+        try:
+            return await self._run_pipeline(
+                submission=submission,
+                script_s3_key=script_s3_key,
+                ground_truth_s3_key=ground_truth_s3_key,
+                metric_type=metric_type,
+            )
+        except Exception as exc:
+            logger.exception(f"Unhandled worker failure for {submission_uuid}: {exc}")
+            latest = await self.submission_repo.get_submission(submission_uuid)
+            if latest and latest.status != SubmissionStatus.CANCELLED:
+                await self._mark_failed(
+                    latest,
+                    error_message=f"Worker Error: {exc}",
+                    logs="",
+                )
+            return None
 
-            with open(gt_path, "w") as f:
-                f.write("target\n1\n0\n")
+    async def _run_pipeline(
+        self,
+        submission: HackathonSubmissionEntity,
+        script_s3_key: str,
+        ground_truth_s3_key: str,
+        metric_type: str,
+    ) -> float | None:
+        task = await self.submission_repo.get_task(submission.task_id)
+        if not task:
+            await self._mark_failed(
+                submission,
+                error_message=f"Task not found: {submission.task_id}",
+                logs="",
+            )
+            return None
 
-            # Execute code inside Sandbox
-            sandbox_res = self.sandbox.run_script(
-                script_dir=tmpdir, script_name="predict.py", timeout_seconds=30
+        submission = await self._transition(submission, SubmissionStatus.EXTRACTING)
+        if submission.status == SubmissionStatus.CANCELLED:
+            return None
+
+        if self.sandbox_workspace_root:
+            os.makedirs(self.sandbox_workspace_root, exist_ok=True)
+
+        with tempfile.TemporaryDirectory(dir=self.sandbox_workspace_root) as tmpdir:
+            sandbox_dir = os.path.join(tmpdir, "sandbox")
+            private_dir = os.path.join(tmpdir, "private")
+            os.makedirs(sandbox_dir, exist_ok=True)
+            os.makedirs(private_dir, exist_ok=True)
+
+            script_path = os.path.join(sandbox_dir, "predict.py")
+            ground_truth_path = os.path.join(private_dir, "ground_truth.csv")
+            prediction_path = os.path.join(sandbox_dir, "predict.csv")
+
+            self.artifact_store.download_file(script_s3_key, script_path)
+            self._download_model_if_present(submission, sandbox_dir)
+            self._download_hidden_input_if_present(task.public_test_url, sandbox_dir)
+            self.artifact_store.download_file(ground_truth_s3_key, ground_truth_path)
+
+            if await self._is_cancelled(submission.id):
+                await self._mark_cancelled(submission)
+                return None
+
+            submission = await self._transition(submission, SubmissionStatus.RUNNING)
+            if submission.status == SubmissionStatus.CANCELLED:
+                return None
+
+            sandbox_result = await self.sandbox.run_script(
+                script_dir=sandbox_dir,
+                script_name="predict.py",
+                timeout_seconds=self.sandbox_timeout_seconds,
+                mem_limit=self.sandbox_mem_limit,
+                nano_cpus=self.sandbox_cpu_limit,
+                submission_id=str(submission.id),
+                cancel_check=lambda: self.cancellation.is_cancelled(submission.id),
             )
 
-            if sandbox_res["status"] != "success" or not os.path.exists(pred_path):
-                raise RuntimeError(
-                    f"Sandbox execution failed: {sandbox_res.get('error')}"
-                )
+            if sandbox_result["status"] == "cancelled":
+                await self._mark_cancelled(submission)
+                return None
 
-            # Compute Metric Score
-            score = self.evaluator.evaluate(gt_path, pred_path, metric_type)
-            logger.info(f"Successfully calculated score for {submission_id}: {score}")
+            if sandbox_result["status"] != "success":
+                await self._mark_failed(
+                    submission,
+                    error_message=sandbox_result.get("error")
+                    or "Sandbox execution failed.",
+                    logs=self._tail_logs(sandbox_result.get("logs", "")),
+                )
+                return None
+
+            if not os.path.exists(prediction_path):
+                await self._mark_failed(
+                    submission,
+                    error_message="Sandbox completed but predict.csv was not created.",
+                    logs=self._tail_logs(sandbox_result.get("logs", "")),
+                )
+                return None
+
+            if await self._is_cancelled(submission.id):
+                await self._mark_cancelled(submission)
+                return None
+
+            submission = await self._transition(submission, SubmissionStatus.EVALUATING)
+            if submission.status == SubmissionStatus.CANCELLED:
+                return None
+
+            try:
+                score = self.evaluator.evaluate(
+                    ground_truth_path, prediction_path, metric_type
+                )
+            except Exception as exc:
+                await self._mark_failed(
+                    submission,
+                    error_message=f"Evaluation Error: {exc}",
+                    logs=self._tail_logs(sandbox_result.get("logs", "")),
+                )
+                return None
+
+            predict_key = self._predict_key(script_s3_key)
+            self.artifact_store.upload_file(
+                prediction_path, predict_key, content_type="text/csv"
+            )
+
+            submission.score = score
+            submission.status = SubmissionStatus.PUBLISHED
+            submission.error_message = None
+            submission.logs = None
+            submission.updated_at = datetime.now()
+            submission = await self.submission_repo.update_submission(submission)
+            await self.event_publisher.publish_submission_update(
+                submission, "submission.published"
+            )
+
+            logger.info(f"Successfully calculated score for {submission.id}: {score}")
             return score
+
+    def _download_model_if_present(
+        self, submission: HackathonSubmissionEntity, sandbox_dir: str
+    ) -> None:
+        if not submission.model_url:
+            return
+
+        model_name = self._safe_filename(submission.model_url, default="model.bin")
+        model_path = os.path.join(sandbox_dir, model_name)
+        self.artifact_store.download_file(submission.model_url, model_path)
+
+    def _download_hidden_input_if_present(
+        self, public_test_url: str | None, sandbox_dir: str
+    ) -> None:
+        if not public_test_url:
+            return
+
+        hidden_path = os.path.join(sandbox_dir, "hidden_test_input.csv")
+        self.artifact_store.download_file(public_test_url, hidden_path)
+
+        original_name = self._safe_filename(public_test_url, default="")
+        if original_name and original_name != "hidden_test_input.csv":
+            shutil.copyfile(hidden_path, os.path.join(sandbox_dir, original_name))
+
+    async def _transition(
+        self,
+        submission: HackathonSubmissionEntity,
+        status: SubmissionStatus,
+    ) -> HackathonSubmissionEntity:
+        if await self._is_cancelled(submission.id):
+            return await self._mark_cancelled(submission)
+
+        submission.status = status
+        submission.updated_at = datetime.now()
+        return await self.submission_repo.update_submission(submission)
+
+    async def _mark_failed(
+        self,
+        submission: HackathonSubmissionEntity,
+        error_message: str,
+        logs: str,
+    ) -> HackathonSubmissionEntity:
+        if await self._is_cancelled(submission.id):
+            return await self._mark_cancelled(submission)
+
+        submission.status = SubmissionStatus.FAILED
+        submission.score = None
+        submission.error_message = error_message
+        submission.logs = self._tail_logs(logs)
+        submission.updated_at = datetime.now()
+        submission = await self.submission_repo.update_submission(submission)
+        await self.event_publisher.publish_submission_update(
+            submission, "submission.failed"
+        )
+        return submission
+
+    async def _mark_cancelled(
+        self, submission: HackathonSubmissionEntity
+    ) -> HackathonSubmissionEntity:
+        submission.status = SubmissionStatus.CANCELLED
+        submission.updated_at = datetime.now()
+        submission = await self.submission_repo.update_submission(submission)
+        await self.event_publisher.publish_submission_update(
+            submission, "submission.cancelled"
+        )
+        return submission
+
+    async def _is_cancelled(self, submission_id: UUID) -> bool:
+        if await self.cancellation.is_cancelled(submission_id):
+            return True
+
+        latest = await self.submission_repo.get_submission(submission_id)
+        return latest is not None and latest.status == SubmissionStatus.CANCELLED
+
+    def _tail_logs(self, logs: str) -> str:
+        if not logs:
+            return ""
+        return "\n".join(logs.splitlines()[-self.log_max_lines :])
+
+    def _predict_key(self, script_reference: str) -> str:
+        script_key = self.artifact_store.object_key_from_reference(script_reference)
+        return posixpath.join(posixpath.dirname(script_key), "predict.csv")
+
+    def _safe_filename(self, key_or_url: str, default: str) -> str:
+        parsed = urlparse(key_or_url)
+        path = parsed.path if parsed.scheme else key_or_url
+        filename = os.path.basename(unquote(path.rstrip("/")))
+        return filename or default

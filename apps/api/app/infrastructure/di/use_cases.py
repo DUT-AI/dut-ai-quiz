@@ -51,6 +51,7 @@ from app.application.use_cases.hackathon import (
 )
 from app.application.use_cases.hackathon.submissions import (
     CancelSubmissionUseCase,
+    GetHackathonSubmissionLeaderboardUseCase,
     GetSubmissionLogsUseCase,
     ListSubmissionsUseCase,
     SubmitTaskUseCase,
@@ -153,6 +154,9 @@ class UseCaseProvider(Provider):
     cancel_submission_use_case = provide(CancelSubmissionUseCase, scope=Scope.REQUEST)
     get_submission_logs_use_case = provide(
         GetSubmissionLogsUseCase, scope=Scope.REQUEST
+    )
+    get_hackathon_submission_leaderboard_use_case = provide(
+        GetHackathonSubmissionLeaderboardUseCase, scope=Scope.REQUEST
     )
     list_submissions_use_case = provide(ListSubmissionsUseCase, scope=Scope.REQUEST)
     presign_upload_use_case = provide(PresignUploadUseCase, scope=Scope.REQUEST)

@@ -69,8 +69,10 @@ services:
             - REDIS_URL=redis://redis:6379/0
             - REDIS_HOST=redis
             - REDIS_PORT=6379
+            - WORKER_SANDBOX_ROOT=${WORKER_SANDBOX_ROOT:-/tmp/dut-ai-worker}
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
+            - ${WORKER_SANDBOX_ROOT:-/tmp/dut-ai-worker}:${WORKER_SANDBOX_ROOT:-/tmp/dut-ai-worker}
         depends_on:
             postgres:
                 condition: service_healthy
