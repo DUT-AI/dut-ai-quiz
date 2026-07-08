@@ -28,13 +28,17 @@ class StartGameSessionUseCase:
     async def execute(
         self, user_id: int, payload: GamificationStartIn
     ) -> GameSessionEntity:
-        # Find lesson by slug (name)
+        # Find lesson by slug, id or name
         lessons = await self._lesson_repo.list_all()
         target_lesson_id = None
         for lesson in lessons:
-            # Simple slug comparison
-            slug = lesson.name.lower().replace(" ", "-").replace("_", "-")
-            if slug == payload.lesson_slug.lower().replace(" ", "-").replace("_", "-"):
+            # Check UUID match, slug match, or name-slug match
+            name_slug = lesson.name.lower().replace(" ", "-").replace("_", "-")
+            if (
+                str(lesson.id) == payload.lesson_slug
+                or (lesson.slug and lesson.slug.lower() == payload.lesson_slug.lower())
+                or name_slug == payload.lesson_slug.lower().replace(" ", "-").replace("_", "-")
+            ):
                 target_lesson_id = lesson.id
                 break
 
