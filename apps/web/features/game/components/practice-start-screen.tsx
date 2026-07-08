@@ -3,7 +3,7 @@
 import React from "react";
 import { Swords, Play, Heart, Coins, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import PracticeLeaderboard from "./practice-leaderboard";
+import PracticePersonalBest from "./practice-personal-best";
 
 interface PracticeStartScreenProps {
   lessonSlug: string;
@@ -79,7 +79,7 @@ export default function PracticeStartScreen({
 
       {/* Leaderboard Column (5 columns) */}
       <div className="lg:col-span-5 w-full">
-        <PracticeLeaderboard lessonSlug={lessonSlug} />
+        <PracticePersonalBest lessonSlug={lessonSlug} />
       </div>
     </div>
   );

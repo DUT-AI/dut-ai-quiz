@@ -6,10 +6,12 @@ import {
   GameSessionSchema,
   GamificationAnswerResultOutSchema,
   GameLeaderboardRowOutSchema,
+  GameLessonSummaryOutSchema,
   type StartGameSessionResponse,
   type GameSession,
   type GamificationAnswerResultOut,
   type GameLeaderboardRowOut,
+  type GameLessonSummaryOut,
 } from "./types";
 
 export function useActiveGameSession(lessonSlug: string, options?: any) {
@@ -77,6 +79,7 @@ export function usePatchGameAnswer() {
       if (data.is_game_over) {
         void qc.invalidateQueries({ queryKey: ["game", "sessions"] });
         void qc.invalidateQueries({ queryKey: ["game", "leaderboard"] });
+        void qc.invalidateQueries({ queryKey: ["game", "history", "summary"] });
       }
     },
   });
@@ -99,6 +102,7 @@ export function useFinishGameSession() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["game", "sessions"] });
       void qc.invalidateQueries({ queryKey: ["game", "leaderboard"] });
+      void qc.invalidateQueries({ queryKey: ["game", "history", "summary"] });
     },
   });
 }
@@ -113,6 +117,19 @@ export function useGameLeaderboard(lessonSlug: string, options?: any) {
       ),
     enabled: !!lessonSlug,
     staleTime: 10_000,
+    ...options,
+  });
+}
+
+export function useGameHistorySummary(options?: any) {
+  return useQuery<GameLessonSummaryOut[]>({
+    queryKey: ["game", "history", "summary"],
+    queryFn: () =>
+      apiGet<GameLessonSummaryOut[]>(
+        "/api/v1/game/history/summary",
+        z.array(GameLessonSummaryOutSchema)
+      ),
+    staleTime: 5000,
     ...options,
   });
 }

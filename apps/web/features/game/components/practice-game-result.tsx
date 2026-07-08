@@ -4,7 +4,7 @@ import React from "react";
 import { Trophy, Skull, RotateCcw, BookOpen } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import PracticeLeaderboard from "./practice-leaderboard";
+import PracticePersonalBest from "./practice-personal-best";
 
 interface PracticeGameResultProps {
   lessonSlug: string;
@@ -101,7 +101,7 @@ export default function PracticeGameResult({
 
       {/* Leaderboard Column (5 cols) */}
       <div className="lg:col-span-5 w-full">
-        <PracticeLeaderboard lessonSlug={lessonSlug} />
+        <PracticePersonalBest lessonSlug={lessonSlug} />
       </div>
     </div>
   );
