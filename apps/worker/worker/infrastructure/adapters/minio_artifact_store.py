@@ -1,0 +1,72 @@
+import os
+from urllib.parse import unquote, urlparse
+from urllib.request import urlretrieve
+
+import boto3
+from botocore.client import Config
+from botocore.exceptions import BotoCoreError, ClientError
+
+from app.config import settings
+from worker.domain.interfaces.artifact_store import IArtifactStore
+
+
+class MinioArtifactStore(IArtifactStore):
+    def __init__(self) -> None:
+        scheme = "https" if settings.minio_secure else "http"
+        self._endpoint_url = f"{scheme}://{settings.minio_endpoint}"
+        self._bucket_name = settings.minio_bucket_name
+        self._client = boto3.client(
+            "s3",
+            endpoint_url=self._endpoint_url,
+            aws_access_key_id=settings.minio_access_key,
+            aws_secret_access_key=settings.minio_secret_key,
+            config=Config(signature_version="s3v4"),
+            region_name="us-east-1",
+        )
+
+    def object_key_from_reference(self, key_or_url: str) -> str:
+        if not key_or_url or not key_or_url.strip():
+            raise ValueError("Artifact reference must not be empty.")
+
+        value = key_or_url.strip()
+        parsed = urlparse(value)
+        if parsed.scheme in {"http", "https", "s3"}:
+            path_parts = [
+                unquote(part) for part in parsed.path.split("/") if part.strip()
+            ]
+            if not path_parts:
+                raise ValueError(f"Cannot resolve object key from URL: {value}")
+            if path_parts[0] == self._bucket_name:
+                path_parts = path_parts[1:]
+            return "/".join(path_parts)
+
+        return value.lstrip("/")
+
+    def download_file(self, key_or_url: str, destination_path: str) -> None:
+        os.makedirs(os.path.dirname(destination_path), exist_ok=True)
+        key = self.object_key_from_reference(key_or_url)
+
+        try:
+            self._client.download_file(self._bucket_name, key, destination_path)
+            return
+        except (BotoCoreError, ClientError):
+            parsed = urlparse(key_or_url)
+            if parsed.scheme not in {"http", "https"}:
+                raise
+
+        urlretrieve(key_or_url, destination_path)
+
+    def upload_file(
+        self, source_path: str, key: str, content_type: str | None = None
+    ) -> str:
+        extra_args = {"ContentType": content_type} if content_type else None
+        upload_kwargs = {
+            "Filename": source_path,
+            "Bucket": self._bucket_name,
+            "Key": key,
+        }
+        if extra_args:
+            upload_kwargs["ExtraArgs"] = extra_args
+
+        self._client.upload_file(**upload_kwargs)
+        return f"{self._endpoint_url}/{self._bucket_name}/{key}"
