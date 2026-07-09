@@ -89,6 +89,12 @@ class MockSubRepo(IHackathonSubmissionRepository):
     async def count_submissions(self, task_id, user_id, team_id):
         return self.count
 
+    async def acquire_quota_lock(self, task_id, user_id, team_id):
+        return None
+
+    async def commit(self):
+        return None
+
     async def add(self, entity):
         self.added = entity
         return entity
@@ -125,15 +131,9 @@ class MockSubmissionQueue(ISubmissionQueue):
     async def enqueue_evaluation(
         self,
         submission_id: UUID,
-        script_s3_key: str,
-        ground_truth_s3_key: str,
-        metric_type: str,
     ) -> None:
         self.enqueued.append({
             "submission_id": submission_id,
-            "script_s3_key": script_s3_key,
-            "ground_truth_s3_key": ground_truth_s3_key,
-            "metric_type": metric_type,
         })
 
 
@@ -241,11 +241,22 @@ async def test_submit_task_success():
         registered_at=datetime.now(),
     )
 
+    sub_id = uuid4()
+    submission = HackathonSubmissionEntity(
+        id=sub_id,
+        task_id=task.id,
+        user_id=1,
+        script_url="https://minio/lms-dev/hackathons/hackathon-1/test-user/predict.py",
+        model_url="https://minio/lms-dev/hackathons/hackathon-1/test-user/model.bin",
+        status=SubmissionStatus.UPLOADING,
+        created_at=datetime.now(),
+    )
+
     hackathon_repo = MockHackathonRepo(hackathon)
     task_repo = MockTaskRepo(task)
     team_repo = MockTeamRepo(None)
     reg_repo = MockRegRepo(reg)
-    sub_repo = MockSubRepo(last_sub=None, count=0)
+    sub_repo = MockSubRepo(last_sub=submission, count=0)
     user_service = MockUserService()
     submission_queue = MockSubmissionQueue()
 
@@ -259,21 +270,16 @@ async def test_submit_task_success():
         user_service,
     )
 
-    sub_id = uuid4()
     res = await use_case(
         submission_id=sub_id,
         task_id=task.id,
         user_id=1,
-        script_s3_key="hackathons/hackathon-1/test-user/predict.py",
-        script_url="https://minio/lms-dev/hackathons/hackathon-1/test-user/predict.py",
-        model_s3_key="hackathons/hackathon-1/test-user/model.bin",
-        model_url="https://minio/lms-dev/hackathons/hackathon-1/test-user/model.bin"
     )
 
     assert res is not None
     assert res.id == sub_id
-    assert res.status == SubmissionStatus.UPLOADING
-    assert sub_repo.added is not None
+    assert res.status == SubmissionStatus.EXTRACTING
+    assert sub_repo.updated is not None
     assert len(submission_queue.enqueued) == 1
     assert submission_queue.enqueued[0]["submission_id"] == sub_id
 

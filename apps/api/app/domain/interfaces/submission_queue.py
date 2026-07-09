@@ -8,9 +8,6 @@ class ISubmissionQueue(Protocol):
     async def enqueue_evaluation(
         self,
         submission_id: UUID,
-        script_s3_key: str,
-        ground_truth_s3_key: str,
-        metric_type: str,
     ) -> None:
         """Enqueue a background job to evaluate a hackathon submission."""
         ...

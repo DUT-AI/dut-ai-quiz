@@ -1,6 +1,7 @@
 import os
 from urllib.parse import urlparse
 
+from arq import cron
 from arq.connections import RedisSettings
 from loguru import logger
 from redis.asyncio import from_url
@@ -21,7 +22,10 @@ async def startup(ctx):
     logger.info("Starting up worker entrypoint (Presentation layer)...")
     redis = from_url(_redis_url_from_settings(), decode_responses=True)
 
-    sandbox = DockerSandbox(image_name=settings.sandbox_image_name)
+    sandbox = DockerSandbox(
+        image_name=settings.sandbox_image_name,
+        log_tail_lines=settings.log_max_lines,
+    )
     evaluator = CsvEvaluator()
     artifact_store = MinioArtifactStore()
     submission_repo = PostgresSubmissionRepository()
@@ -55,9 +59,6 @@ async def shutdown(ctx):
 async def evaluate_submission_job(
     ctx,
     submission_id: str,
-    script_s3_key: str,
-    ground_truth_s3_key: str,
-    metric_type: str,
 ):
     logger.info(f"Received submission job event for ID: {submission_id}")
     use_case: EvaluateSubmissionUseCase = ctx["evaluate_use_case"]
@@ -65,9 +66,6 @@ async def evaluate_submission_job(
     try:
         score = await use_case.execute(
             submission_id=submission_id,
-            script_s3_key=script_s3_key,
-            ground_truth_s3_key=ground_truth_s3_key,
-            metric_type=metric_type,
         )
         if score is None:
             logger.info(f"Job finished without score for Submission {submission_id}")
@@ -79,6 +77,14 @@ async def evaluate_submission_job(
     except Exception as e:
         logger.error(f"Job failed for Submission {submission_id}: {e}")
         raise
+
+
+async def sweep_stale_submissions_job(ctx):
+    use_case: EvaluateSubmissionUseCase = ctx["evaluate_use_case"]
+    return await use_case.sweep_stale_submissions(
+        uploading_timeout_seconds=settings.presigned_url_expire_seconds + 300,
+        processing_timeout_seconds=settings.sandbox_timeout_seconds + 300,
+    )
 
 
 def _redis_url_from_settings() -> str:
@@ -100,6 +106,12 @@ def _redis_settings_from_config() -> RedisSettings:
 
 class WorkerSettings:
     functions = [evaluate_submission_job]
+    cron_jobs = [
+        cron(
+            sweep_stale_submissions_job,
+            minute={0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55},
+        )
+    ]
     redis_settings = _redis_settings_from_config()
     on_startup = startup
     on_shutdown = shutdown

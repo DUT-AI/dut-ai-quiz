@@ -202,7 +202,7 @@ export function UploadForm({
           {/* Model Weights Zone */}
           <div className="space-y-2 text-left">
             <label className="text-xs font-bold text-gray-navy/70 dark:text-light-blue/70 flex items-center gap-1 h-5">
-              Model Weight (File bắt buộc - Tối đa 1 GB) <span className="text-red-500">*</span>
+              Model Weight (optional - max 1 GB)
             </label>
             <input
               type="file"
@@ -322,7 +322,7 @@ export function UploadForm({
         <div className="flex justify-end pt-2">
           <Button
             type="submit"
-            disabled={isUploading || isCommitting || !scriptFile || !modelFile}
+            disabled={isUploading || isCommitting || !scriptFile}
             className="rounded-xl px-6 py-2.5 font-bold cursor-pointer transition-transform"
           >
             {isUploading ? (
