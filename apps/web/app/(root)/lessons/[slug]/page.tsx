@@ -1,12 +1,12 @@
 "use client";
-
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { BookOpen, Swords, ListRestart } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { useLessons, useLessonBySlug } from "@/lib/queries";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/auth-context";
 import {
   TheoryTab,
   QuestionsTab,
@@ -42,6 +42,29 @@ export default function LessonSlugPage() {
   const [activeTab, setActiveTab] = useState<"theory" | "questions" | "practice">("theory");
 
   const isLoading = isLoadingAll || isLoadingDetail;
+
+  const { user } = useAuth();
+
+  useEffect(() => {
+    let isUnloading = false;
+    const handleBeforeUnload = () => {
+      isUnloading = true;
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      if (!isUnloading && lessonId) {
+        const storageKey = `practice_progress_${user?.id || "guest"}_${lessonId}`;
+        try {
+          sessionStorage.removeItem(storageKey);
+          localStorage.removeItem(storageKey);
+        } catch (e) {
+          console.error("Failed to clear progress on navigate away", e);
+        }
+      }
+    };
+  }, [lessonId, user?.id]);
 
   if (isLoading) {
     return <LessonLoading />;

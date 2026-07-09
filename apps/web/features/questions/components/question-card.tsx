@@ -29,10 +29,10 @@ export const QuestionCard = React.memo(
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [isRevealed, setIsRevealed] = useState(false);
 
-    // Load state from localStorage on mount
+    // Load state from sessionStorage on mount
     React.useEffect(() => {
       try {
-        const stored = localStorage.getItem(storageKey);
+        const stored = sessionStorage.getItem(storageKey);
         if (stored) {
           const data = JSON.parse(stored);
           if (data[q.id]) {
@@ -51,10 +51,10 @@ export const QuestionCard = React.memo(
       setIsRevealed(true);
 
       try {
-        const stored = localStorage.getItem(storageKey) || "{}";
+        const stored = sessionStorage.getItem(storageKey) || "{}";
         const data = JSON.parse(stored);
         data[q.id] = { selectedId: optionId, isRevealed: true };
-        localStorage.setItem(storageKey, JSON.stringify(data));
+        sessionStorage.setItem(storageKey, JSON.stringify(data));
       } catch (e) {
         console.error("Failed to save progress", e);
       }
@@ -65,10 +65,10 @@ export const QuestionCard = React.memo(
       setIsRevealed(false);
 
       try {
-        const stored = localStorage.getItem(storageKey) || "{}";
+        const stored = sessionStorage.getItem(storageKey) || "{}";
         const data = JSON.parse(stored);
         delete data[q.id];
-        localStorage.setItem(storageKey, JSON.stringify(data));
+        sessionStorage.setItem(storageKey, JSON.stringify(data));
       } catch (e) {
         console.error("Failed to reset progress", e);
       }
