@@ -65,7 +65,7 @@ export default function PracticeGameResult({
           <div className="bg-zinc-50 dark:bg-slate-950 border-2 border-zinc-900 dark:border-slate-800 p-4 text-xs text-left mb-8 space-y-3 shadow-sm rounded-none">
             <div className="flex justify-between items-center pb-2 border-b border-zinc-200 dark:border-slate-800 font-extrabold">
               <span className="text-zinc-500 dark:text-slate-400">TỔNG ĐIỂM ĐẠT ĐƯỢC:</span>
-              <span className="font-extrabold text-cyan-600 dark:text-cyan-400">{score} PTS</span>
+              <span className="font-extrabold text-cyan-600 dark:text-cyan-400">{Number(score.toFixed(2))} PTS</span>
             </div>
             <div className="flex justify-between items-center pb-2 border-b border-zinc-200 dark:border-slate-800 font-extrabold">
               <span className="text-zinc-500 dark:text-slate-400">VÀNG MANG VỀ:</span>

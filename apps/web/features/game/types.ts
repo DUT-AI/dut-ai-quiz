@@ -41,6 +41,7 @@ export const GamificationAnswerResultOutSchema = z.object({
   coins_gained: z.number(),
   updated_gamification: GamificationStateSchema,
   is_game_over: z.boolean(),
+  correct_option_id: z.string().nullable().optional(),
 });
 export type GamificationAnswerResultOut = z.infer<typeof GamificationAnswerResultOutSchema>;
 

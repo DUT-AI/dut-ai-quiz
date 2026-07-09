@@ -54,12 +54,15 @@ export default function PracticeGameContainer({ lessonSlug }: PracticeGameContai
   const [questions, setQuestions] = useState<GameQuestion[]>([]);
   const [gamification, setGamification] = useState<GamificationState | null>(null);
 
-  // Derived state from gamification
+  // Derived state from questions & gamification
   const [currentIdx, setCurrentIdx] = useState(0);
   const [hp, setHp] = useState(3);
   const [gold, setGold] = useState(0);
   const [score, setScore] = useState(0);
-  const [stage, setStage] = useState(1);
+
+  const currentQuestion = questions[currentIdx];
+  const stage = currentQuestion?.tier || 1;
+  const timerMax = currentQuestion?.time_limit || (currentQuestion?.is_boss ? 30 : 60);
 
   // Boss Battle state
   const [bossHp, setBossHp] = useState(5);
@@ -75,13 +78,20 @@ export default function PracticeGameContainer({ lessonSlug }: PracticeGameContai
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
   const [isSelectedCorrect, setIsSelectedCorrect] = useState(false);
+  const [correctOptionId, setCorrectOptionId] = useState<string | null>(null);
 
   // Timer state
   const [countdown, setCountdown] = useState<number | null>(null);
-  const [timeLeft, setTimeLeft] = useState(15);
-  const [timerMax, setTimerMax] = useState(15);
+  const [timeLeft, setTimeLeft] = useState(60);
   const [timerFrozen, setTimerFrozen] = useState(false);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Sync timeLeft when current question changes
+  useEffect(() => {
+    if (currentQuestion) {
+      setTimeLeft(currentQuestion.time_limit);
+    }
+  }, [currentIdx, currentQuestion]);
 
   // Countdown effect
   useEffect(() => {
@@ -124,6 +134,7 @@ export default function PracticeGameContainer({ lessonSlug }: PracticeGameContai
     setDoubleActive(false);
     setShieldActive(false);
     setIsSelectedCorrect(false);
+    setCorrectOptionId(null);
 
     const idx = snap.gamification.last_question_index;
     setCurrentIdx(idx);
@@ -136,7 +147,6 @@ export default function PracticeGameContainer({ lessonSlug }: PracticeGameContai
     setHp(snap.gamification.lives);
     setGold(snap.gamification.gold);
     setScore(snap.gamification.points);
-    setStage(snap.gamification.current_tier);
 
     // Reconstruct progress dots based on answers
     const totalQCount = snap.questions.length;
@@ -221,12 +231,6 @@ export default function PracticeGameContainer({ lessonSlug }: PracticeGameContai
       return;
     }
 
-    const limit = isBossMode ? 10 : 15; // 10s for boss, 15s for normal
-    setTimerMax(limit);
-    if (!isAnswered) {
-      setTimeLeft(limit);
-    }
-
     timerIntervalRef.current = setInterval(() => {
       if (timerFrozen) return;
 
@@ -254,8 +258,7 @@ export default function PracticeGameContainer({ lessonSlug }: PracticeGameContai
 
   // Submit answer
   const submitAnswer = (optionId: string) => {
-    if (isAnswered) return;
-    setIsAnswered(true);
+    if (isAnswered || patchAnswerMutation.isPending) return;
     setSelectedOptionId(optionId);
 
     const currentQuestion = questions[currentIdx];
@@ -277,6 +280,8 @@ export default function PracticeGameContainer({ lessonSlug }: PracticeGameContai
       {
         onSuccess: (data) => {
           setIsSelectedCorrect(data.is_correct);
+          setCorrectOptionId(data.correct_option_id ?? null);
+          setIsAnswered(true);
           setGamification(data.updated_gamification);
 
           // Update metrics from response
@@ -340,6 +345,7 @@ export default function PracticeGameContainer({ lessonSlug }: PracticeGameContai
         onError: (err: any) => {
           toast.error(err.message || "Lỗi nộp câu trả lời!");
           setIsAnswered(false);
+          setSelectedOptionId(null);
         },
       }
     );
@@ -359,8 +365,7 @@ export default function PracticeGameContainer({ lessonSlug }: PracticeGameContai
     // Check if we evolved stage
     const nextQ = questions[nextIdx];
     if (nextQ) {
-      if (nextQ.tier > stage) {
-        setStage(nextQ.tier);
+      if (currentQuestion && nextQ.tier > currentQuestion.tier) {
         toast.info(`ẢI TẦNG THỨ ${nextQ.tier}: MỨC ĐỘ ${nextQ.tier === 2 ? "TRUNG BÌNH" : "KHÓ"}`);
       }
 
@@ -380,6 +385,7 @@ export default function PracticeGameContainer({ lessonSlug }: PracticeGameContai
     setCurrentIdx(nextIdx);
     setIsAnswered(false);
     setSelectedOptionId(null);
+    setCorrectOptionId(null);
     setHiddenOptions([]);
     setTimerFrozen(false);
   };
@@ -513,7 +519,7 @@ export default function PracticeGameContainer({ lessonSlug }: PracticeGameContai
 
   return (
     <div
-      className={`min-h-screen text-zinc-950 dark:text-slate-100 flex flex-col font-sans relative overflow-hidden select-none p-4 md:p-6 transition-all duration-300 ${
+      className={`min-h-screen text-zinc-950 dark:text-slate-100 flex flex-col font-sans relative select-none p-4 md:p-6 transition-all duration-300 ${
         screenShake ? "animate-[shake_0.5s_infinite]" : ""
       }`}
       style={{
@@ -543,6 +549,15 @@ export default function PracticeGameContainer({ lessonSlug }: PracticeGameContai
       }}
     >
       <style jsx global>{`
+        html, body {
+          height: auto !important;
+          overflow: auto !important;
+          overflow-y: auto !important;
+        }
+        #__next, main, [data-nextjs-scroll-focus-boundary], #root, .dark, body > div {
+          height: auto !important;
+          overflow: visible !important;
+        }
         @keyframes shake {
           0%, 100% { transform: translate(0, 0) rotate(0deg); }
           10% { transform: translate(-2px, -2px) rotate(-0.5deg); }
@@ -663,6 +678,7 @@ export default function PracticeGameContainer({ lessonSlug }: PracticeGameContai
                     hiddenOptions={hiddenOptions}
                     onSubmitAnswer={submitAnswer}
                     onNextQuestion={nextQuestion}
+                    correctOptionId={correctOptionId}
                   />
                 )}
               </div>
@@ -673,7 +689,7 @@ export default function PracticeGameContainer({ lessonSlug }: PracticeGameContai
         <PracticeGameResult
           lessonSlug={lessonSlug}
           gameResult={gameResult === "victory" ? "victory" : "defeat"}
-          score={score}
+          score={gamification?.final_score ?? score}
           gold={gold}
           highestIdx={currentIdx + 1}
           onRetry={handleRetry}

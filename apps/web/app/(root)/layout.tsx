@@ -30,7 +30,7 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
 
   if (isPracticeGame) {
     return (
-      <div className="w-full min-h-screen bg-slate-50 dark:bg-zinc-950 overflow-hidden">
+      <div className="w-full min-h-screen bg-slate-50 dark:bg-zinc-950">
         {children}
       </div>
     );

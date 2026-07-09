@@ -61,8 +61,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     try {
       await apiPostJson<any>("/api/v1/auth/logout", {});
-
     } finally {
+      if (typeof window !== "undefined") {
+        try {
+          // Clear practice progress from sessionStorage
+          for (let i = 0; i < sessionStorage.length; i++) {
+            const key = sessionStorage.key(i);
+            if (key && key.startsWith("practice_progress_")) {
+              sessionStorage.removeItem(key);
+              i--;
+            }
+          }
+          // Clear practice progress from localStorage
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith("practice_progress_")) {
+              localStorage.removeItem(key);
+              i--;
+            }
+          }
+        } catch (e) {
+          console.error("Failed to clear practice progress on logout", e);
+        }
+      }
       setUser(null);
       router.push("/login");
     }
