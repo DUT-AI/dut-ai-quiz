@@ -29,7 +29,7 @@ class QuestionCreate(BaseModel):
     options: list[QuestionOptionIn] = Field(default_factory=list)
     solution: str | None = None
     lesson_id: UUID | None = None
-    tags: list[str] = Field(default_factory=list)
+    tags: list[UUID] = Field(default_factory=list)
     created_by: int | None = None
 
 
@@ -40,7 +40,7 @@ class QuestionUpdate(BaseModel):
     options: list[QuestionOptionIn] | None = None
     solution: str | None = None
     lesson_id: UUID | None = None
-    tags: list[str] | None = None
+    tags: list[UUID] | None = None
     created_by: int | None = None
 
 
@@ -81,5 +81,5 @@ class QuestionBulkCreate(BaseModel):
     pool_type: PoolType = PoolType.PRACTICE
     difficulty: Difficulty = Difficulty.EASY
     lesson_id: UUID | None = None
-    tags: list[str] = Field(default_factory=list)
+    tags: list[UUID] = Field(default_factory=list)
     created_by: int | None = None

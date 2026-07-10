@@ -40,6 +40,7 @@ export const QuestionFormSchema = z.object({
     }),
   solution: z.string().optional(),
   lesson_id: z.string().optional(),
+  tags: z.array(z.string()).optional(),
 });
 export type QuestionFormValues = z.infer<typeof QuestionFormSchema>;
 
@@ -82,3 +83,10 @@ export const PDFParseResponseSchema = z.object({
 });
 
 export type PDFParseResponse = z.infer<typeof PDFParseResponseSchema>;
+
+export const TagOutSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  created_at: z.string(),
+});
+export type TagOut = z.infer<typeof TagOutSchema>;

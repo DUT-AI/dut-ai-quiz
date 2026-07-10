@@ -4,9 +4,11 @@ import { z } from "zod";
 import {
   QuestionOutSchema,
   PDFParseResponseSchema,
+  TagOutSchema,
   type QuestionCreate,
   type QuestionOut,
   type PDFParseResponse,
+  type TagOut,
 } from "./types";
 
 export function useQuestions(params?: {
@@ -111,3 +113,34 @@ export function usePresignUpload() {
       ),
   });
 }
+
+export function useTags() {
+  return useQuery({
+    queryKey: ["tags"],
+    queryFn: () => apiGet<TagOut[]>("/api/v1/tags", z.array(TagOutSchema)),
+    staleTime: 5 * 60_000,
+  });
+}
+
+export function useCreateTag() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { name: string }) =>
+      apiPost<TagOut>("/api/v1/tags", body, TagOutSchema),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["tags"] });
+    },
+  });
+}
+
+export function useDeleteTag() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      apiClient.delete(`/api/v1/tags/${id}`).then((r) => r.data),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["tags"] });
+    },
+  });
+}
+

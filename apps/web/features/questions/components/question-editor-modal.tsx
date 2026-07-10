@@ -15,13 +15,14 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { usePresignUpload, useCreateQuestion, useUpdateQuestion } from "@/lib/queries";
+import { usePresignUpload, useCreateQuestion, useUpdateQuestion, useTags } from "@/lib/queries";
 import { uploadImage, handlePasteImage } from "@/lib/upload-utils";
 import type { QuestionOut } from "@/lib/types";
 import { QuestionFormSchema, type QuestionFormValues } from "@/features/questions/types";
 import { renderMathInHTML } from "@/lib/render-math";
 import { PoolTypeSelector } from "./pool-type-selector";
 import { DifficultySelector } from "./difficulty-selector";
+import { TagSelector } from "./tag-selector";
 
 interface Props {
   lessonId: string;
@@ -50,6 +51,8 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
         newOption(),
       ];
 
+  const { data: allTags = [] } = useTags();
+
   const {
     control,
     register,
@@ -67,8 +70,18 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
       options: defaultOptions,
       solution: initialData?.solution ?? "",
       lesson_id: lessonId,
+      tags: [],
     },
   });
+
+  React.useEffect(() => {
+    if (initialData?.tags && allTags.length) {
+      const tagIds = allTags
+        .filter((tag) => initialData.tags.includes(tag.name))
+        .map((tag) => tag.id);
+      setValue("tags", tagIds);
+    }
+  }, [initialData?.tags, allTags, setValue]);
 
   const { fields, append, remove, update } = useFieldArray({ control, name: "options" });
 
@@ -115,7 +128,7 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
         content: values.content,
         options: values.options,
         solution: values.solution || undefined,
-        tags: [],
+        tags: values.tags || [],
         lesson_id: lessonId,
       };
       if (initialData) {
@@ -203,6 +216,18 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
                   render={({ field }) => (
                     <DifficultySelector
                       value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
+                />
+
+                {/* Tag selector */}
+                <Controller
+                  control={control}
+                  name="tags"
+                  render={({ field }) => (
+                    <TagSelector
+                      value={field.value || []}
                       onChange={field.onChange}
                     />
                   )}

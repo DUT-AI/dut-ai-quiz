@@ -1,4 +1,5 @@
 from .question import Question
+from .tag import Tag
 from .exam import Exam, ExamQuestion
 from .attempt import Attempt, AttemptAnswer, FocusEvent
 from .game import GameSession
@@ -9,6 +10,7 @@ from .hackathon import Hackathon, HackathonTask, HackathonTeam, HackathonRegistr
 __all__ = [
     "Base",
     "Question",
+    "Tag",
     "Exam",
     "ExamQuestion",
     "Attempt",
@@ -23,4 +25,5 @@ __all__ = [
     "HackathonRegistration",
     "HackathonSubmission",
 ]
+
 export_globals = globals()
