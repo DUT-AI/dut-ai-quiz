@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
-import { ListRestart, FileJson, Plus, BookOpen, FileText } from "lucide-react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 
 import { useQuestions, useDeleteQuestion } from "@/lib/queries";
@@ -11,26 +10,31 @@ import QuestionEditorModal from "@/features/questions/components/question-editor
 import BulkQuestionModal from "@/features/questions/components/bulk-question-modal";
 import { PdfImport } from "@/components/pdf-import";
 
-import { QuestionCard } from "../../questions/components/question-card";
 import { AIExplanationModal } from "../../questions/components/ai-explanation-modal";
 import { useAuth } from "@/context/auth-context";
 import { ConfirmModal } from "@/components/molecules/confirm-modal";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SearchBar } from "@/components/ui/search-bar";
+
+import { QuestionsTabHeader } from "./questions-tab-header";
+import { QuestionsTabList } from "./questions-tab-list";
 
 interface QuestionsTabProps {
   lessonId: string;
   isAdminView?: boolean;
+  lessonName?: string;
 }
 
-export function QuestionsTab({ lessonId, isAdminView = false }: QuestionsTabProps) {
+export function QuestionsTab({ lessonId, isAdminView = false, lessonName }: QuestionsTabProps) {
   const [activePoolType, setActivePoolType] = useState<PoolType>("PRACTICE");
+  const [searchQuery, setSearchQuery] = useState("");
 
-  // Questions query
-  const { data: questions = [], isLoading: isLoadingQuestions } = useQuestions({
+  // Questions query for all pool types under this lesson
+  const { data: allQuestions = [], isLoading: isLoadingQuestions } = useQuestions({
     lesson_id: lessonId,
-    pool_type: activePoolType,
   });
 
-  const { user, canManage } = useAuth();
+  const { canManage } = useAuth();
   const isTeacher = isAdminView && canManage;
 
   const [explainingQuestion, setExplainingQuestion] = useState<QuestionOut | null>(null);
@@ -41,6 +45,52 @@ export function QuestionsTab({ lessonId, isAdminView = false }: QuestionsTabProp
   const [deletingQuestion, setDeletingQuestion] = useState<QuestionOut | null>(null);
 
   const deleteMut = useDeleteQuestion();
+
+  // Local client-side realtime filtering across all tabs
+  const searchedQuestions = useMemo(() => {
+    if (!searchQuery.trim()) return allQuestions;
+    const term = searchQuery.toLowerCase().trim();
+    return allQuestions.filter((q) => {
+      const matchContent = q.content?.toLowerCase().includes(term);
+      const matchSolution = q.solution?.toLowerCase().includes(term);
+      const matchOptions = q.options?.some((o) => o.text?.toLowerCase().includes(term));
+      return matchContent || matchSolution || matchOptions;
+    });
+  }, [allQuestions, searchQuery]);
+
+  // Questions matching active pool type
+  const filteredQuestions = useMemo(() => {
+    return searchedQuestions.filter((q) => q.pool_type === activePoolType);
+  }, [searchedQuestions, activePoolType]);
+
+  // Dynamic counts for each category based on search results
+  const counts = useMemo(() => {
+    const res = { PRACTICE: 0, EXAM: 0, GAME: 0 };
+    searchedQuestions.forEach((q) => {
+      if (q.pool_type && res[q.pool_type] !== undefined) {
+        res[q.pool_type]++;
+      }
+    });
+    return res;
+  }, [searchedQuestions]);
+
+  // Auto-switch tabs to the first category that has matching questions when searching
+  useEffect(() => {
+    if (!searchQuery.trim()) return;
+
+    // Check if the current tab has any matches
+    const activeHasMatches = searchedQuestions.some((q) => q.pool_type === activePoolType);
+    if (activeHasMatches) return;
+
+    // If not, find the first category that has results and switch to it
+    const pools: PoolType[] = ["PRACTICE", "EXAM", "GAME"];
+    for (const p of pools) {
+      if (searchedQuestions.some((q) => q.pool_type === p)) {
+        setActivePoolType(p);
+        break;
+      }
+    }
+  }, [searchQuery, searchedQuestions, activePoolType]);
 
   const handleEdit = useCallback((q: QuestionOut) => {
     setEditingQuestion(q);
@@ -61,99 +111,89 @@ export function QuestionsTab({ lessonId, isAdminView = false }: QuestionsTabProp
     setExplainingQuestion(null);
   }, []);
 
+  const handleClearSearch = useCallback(() => {
+    setSearchQuery("");
+  }, []);
+
   return (
-    <div className="space-y-6 text-left">
-      {/* Question manipulation buttons */}
-      <div className="flex justify-between items-center gap-4 mb-4">
-        <h2 className="text-xl font-bold text-dark-blue dark:text-white flex items-center gap-3">
-          <ListRestart className="text-primary" />
-          Danh sách câu hỏi ôn tập
-        </h2>
+    <div className="space-y-8 text-left">
+      {/* Redesigned Header using subcomponent */}
+      <QuestionsTabHeader
+        lessonName={lessonName}
+        activePoolType={activePoolType}
+        isTeacher={isTeacher}
+        questionsCount={filteredQuestions.length}
+        onAddClick={() => setShowAddModal(true)}
+        onBulkClick={() => setShowBulkModal(true)}
+        onPdfClick={() => setShowPdfModal(true)}
+      />
+
+      {/* Filter and Search Section */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-slate-100 dark:border-zinc-800/80">
         {isTeacher && (
-          <div className="flex gap-3 flex-wrap">
-            <button
-              onClick={() => setShowBulkModal(true)}
-              className="group relative px-6 py-4 rounded-[1.5rem] bg-indigo-50 dark:bg-white/5 text-indigo-600 dark:text-indigo-400 font-black uppercase tracking-widest text-[10px] flex items-center gap-2 border border-indigo-100 dark:border-white/5 hover:bg-indigo-100 transition-all shadow-sm"
-            >
-              <FileJson className="size-4" />
-              Nhập JSON
-            </button>
-            <button
-              onClick={() => setShowPdfModal(true)}
-              className="group relative px-6 py-4 rounded-[1.5rem] bg-rose-50 dark:bg-white/5 text-rose-600 dark:text-rose-400 font-black uppercase tracking-widest text-[10px] flex items-center gap-2 border border-rose-100 dark:border-white/5 hover:bg-rose-100 transition-all shadow-sm"
-            >
-              <FileText className="size-4" />
-              Import PDF
-            </button>
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="group relative px-6 py-4 rounded-[1.5rem] bg-gradient-to-br from-primary to-pink-500 text-white font-black uppercase tracking-widest text-[10px] flex items-center gap-2 shadow-md shadow-primary/20 hover:scale-105 active:scale-95 transition-all text-nowrap"
-            >
-              <Plus className="size-4" />
-              Thêm câu hỏi
-            </button>
-          </div>
+          <Tabs
+            value={activePoolType}
+            onValueChange={(val) => {
+              setActivePoolType(val as PoolType);
+            }}
+            className="w-full md:w-auto"
+          >
+            <TabsList className="bg-slate-100/80 dark:bg-zinc-900 border-none p-1 rounded-2xl">
+              <TabsTrigger
+                value="PRACTICE"
+                className="flex items-center gap-2 rounded-xl px-5 py-2 text-xs font-black uppercase tracking-wider"
+              >
+                <span>🏋️</span>
+                <span>Luyện tập</span>
+                <span className="ml-1.5 px-1.5 py-0.5 rounded-md bg-slate-200/60 dark:bg-zinc-800 text-[10px] opacity-80">
+                  {counts.PRACTICE}
+                </span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="EXAM"
+                className="flex items-center gap-2 rounded-xl px-5 py-2 text-xs font-black uppercase tracking-wider"
+              >
+                <span>📝</span>
+                <span>Kiểm tra</span>
+                <span className="ml-1.5 px-1.5 py-0.5 rounded-md bg-slate-200/60 dark:bg-zinc-800 text-[10px] opacity-80">
+                  {counts.EXAM}
+                </span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="GAME"
+                className="flex items-center gap-2 rounded-xl px-5 py-2 text-xs font-black uppercase tracking-wider"
+              >
+                <span>🎮</span>
+                <span>Trò chơi</span>
+                <span className="ml-1.5 px-1.5 py-0.5 rounded-md bg-slate-200/60 dark:bg-zinc-800 text-[10px] opacity-80">
+                  {counts.GAME}
+                </span>
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
         )}
+
+        <SearchBar
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onClear={handleClearSearch}
+          placeholder="Tìm kiếm câu hỏi..."
+          containerClassName="w-full md:max-w-xs shrink-0"
+        />
       </div>
 
-      {/* Category Tabs */}
-      {isTeacher && (
-        <div className="flex border-b border-gray-100 dark:border-white/10 pb-2 gap-6 overflow-x-auto select-none">
-          {([
-            { id: "PRACTICE", label: "Luyện tập", icon: "🏋️" },
-            { id: "EXAM", label: "Kiểm tra", icon: "📝" },
-            { id: "GAME", label: "Trò chơi", icon: "🎮" },
-          ] as const).map((t) => {
-            const isActive = activePoolType === t.id;
-            return (
-              <button
-                key={t.id}
-                onClick={() => setActivePoolType(t.id)}
-                className={`pb-2 text-sm font-bold border-b-2 transition-all relative flex items-center gap-1.5 ${isActive
-                    ? "border-primary text-primary"
-                    : "border-transparent text-gray-navy opacity-60 hover:opacity-100 dark:text-light-blue"
-                  }`}
-              >
-                <span>{t.icon}</span>
-                <span>{t.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {isLoadingQuestions ? (
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="h-32 bg-gray-100 dark:bg-white/5 animate-pulse rounded-[2rem] w-full"
-            />
-          ))}
-        </div>
-      ) : questions.length === 0 ? (
-        <div className="text-center py-20 border-2 border-dashed border-gray-200 dark:border-white/10 rounded-[2rem] opacity-35">
-          <BookOpen className="size-16 mx-auto mb-4" />
-          <p className="font-bold text-lg text-dark-blue dark:text-white">
-            {activePoolType === "PRACTICE" && "Hiện tại bài học này chưa cập nhật câu hỏi ôn tập."}
-            {activePoolType === "EXAM" && "Hiện tại bài học này chưa cập nhật câu hỏi kiểm tra."}
-            {activePoolType === "GAME" && "Hiện tại bài học này chưa cập nhật câu hỏi trò chơi."}
-          </p>
-        </div>
-      ) : (
-        <div className="grid gap-6">
-          {questions.map((q, idx) => (
-            <QuestionCard
-              key={q.id}
-              q={q}
-              idx={idx}
-              onExplain={handleExplain}
-              onEdit={isTeacher ? handleEdit : undefined}
-              onDelete={isTeacher ? handleDelete : undefined}
-            />
-          ))}
-        </div>
-      )}
+      {/* Redesigned Questions list using subcomponent */}
+      <QuestionsTabList
+        isLoading={isLoadingQuestions}
+        questions={filteredQuestions}
+        activePoolType={activePoolType}
+        isTeacher={isTeacher}
+        onExplain={handleExplain}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        searchQuery={searchQuery}
+        onClearSearch={handleClearSearch}
+      />
 
       {/* Modals and overlay panels */}
       <AnimatePresence>
@@ -215,3 +255,6 @@ export function QuestionsTab({ lessonId, isAdminView = false }: QuestionsTabProp
     </div>
   );
 }
+
+
+
