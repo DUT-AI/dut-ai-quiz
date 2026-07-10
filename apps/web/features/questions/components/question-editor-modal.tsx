@@ -56,6 +56,7 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
     handleSubmit,
     watch,
     setValue,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<QuestionFormValues>({
     resolver: zodResolver(QuestionFormSchema),
@@ -87,12 +88,15 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
         const markdown = `\n![image](${url})`;
 
         if (target === "content") {
-          setValue("content", (watchContent ?? "") + markdown);
+          setValue("content", (getValues("content") ?? "") + markdown);
         } else if (target === "solution") {
-          setValue("solution", (watchSolution ?? "") + markdown);
+          setValue("solution", (getValues("solution") ?? "") + markdown);
         } else {
           const idx = fields.findIndex((f) => f.id === target);
-          if (idx !== -1) update(idx, { ...fields[idx], text: fields[idx].text + markdown });
+          if (idx !== -1) {
+            const currentText = getValues(`options.${idx}.text`) ?? "";
+            update(idx, { ...fields[idx], text: currentText + markdown });
+          }
         }
       } catch (err) {
         console.error("Upload failed", err);
@@ -100,7 +104,7 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
         setUploading(null);
       }
     },
-    [presign.mutateAsync, watchContent, watchSolution, fields, setValue, update]
+    [presign.mutateAsync, getValues, fields, setValue, update]
   );
 
   const onSubmit = async (values: QuestionFormValues) => {
@@ -220,7 +224,7 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
                         onPaste={(e) => handlePasteImage(e, (file) => handleUpload(file, "content"))}
                         placeholder="Nhập nội dung câu hỏi, $...$ cho LaTeX, hỗ trợ dán ảnh (Ctrl+V)..."
                         rows={5}
-                        className={`w-full px-8 py-6 rounded-3xl bg-gray-50 dark:bg-white/5 border-2 outline-none transition-all font-medium text-lg leading-relaxed resize-none ${
+                        className={`w-full px-8 py-6 rounded-3xl bg-gray-50 dark:bg-white/5 border-2 outline-none transition-all font-medium text-lg leading-relaxed resize-y ${
                           errors.content ? "border-red/50" : "border-transparent focus:border-primary/30"
                         }`}
                       />
@@ -266,9 +270,12 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
                               <button
                                 type="button"
                                 onClick={() => {
-                                  fields.forEach((_, i) => {
-                                    setValue(`options.${i}.is_correct`, i === idx);
-                                  });
+                                  const currentOptions = watchOptions || [];
+                                  const updated = currentOptions.map((opt, i) => ({
+                                    ...opt,
+                                    is_correct: i === idx,
+                                  }));
+                                  setValue("options", updated, { shouldDirty: true, shouldValidate: true });
                                 }}
                                 className={`mt-4 size-8 rounded-xl flex items-center justify-center border-2 transition-all font-black text-xs shrink-0 ${
                                   f.value
@@ -287,8 +294,8 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
                                 {...register(`options.${idx}.text`)}
                                 onPaste={(e) => handlePasteImage(e, (file) => handleUpload(file, field.id))}
                                 placeholder={`Đáp án ${String.fromCharCode(65 + idx)}...`}
-                                rows={1}
-                                className={`w-full px-6 py-4 rounded-2xl bg-gray-50/50 dark:bg-white/5 border outline-none transition-all font-medium min-h-[56px] resize-none overflow-hidden ${
+                                rows={2}
+                                className={`w-full px-6 py-4 rounded-2xl bg-gray-50/50 dark:bg-white/5 border outline-none transition-all font-medium min-h-[56px] resize-y overflow-y-auto ${
                                   errors.options?.[idx]?.text ? "border-red/40" : "border-transparent focus:border-primary/30"
                                 }`}
                               />
@@ -344,7 +351,7 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
                         onPaste={(e) => handlePasteImage(e, (file) => handleUpload(file, "solution"))}
                         placeholder="Hướng dẫn giải bài tập..."
                         rows={3}
-                        className="w-full px-8 py-6 rounded-3xl bg-gray-50 dark:bg-white/5 border border-transparent focus:border-primary/30 outline-none transition-all font-medium text-sm resize-none"
+                        className="w-full px-8 py-6 rounded-3xl bg-gray-50 dark:bg-white/5 border border-transparent focus:border-primary/30 outline-none transition-all font-medium text-sm resize-y"
                       />
                       <div className="absolute right-4 bottom-4">
                         <label className="cursor-pointer p-2 rounded-xl bg-white dark:bg-white/10 shadow-sm hover:scale-110 transition-all text-primary opacity-40 hover:opacity-100 block">
