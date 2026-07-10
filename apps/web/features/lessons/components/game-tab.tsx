@@ -4,14 +4,14 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { Swords, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import PracticeLeaderboard from "@/features/game/components/practice-leaderboard";
+import GameLeaderboard from "@/features/game/components/game-leaderboard";
 
-interface PracticeTabProps {
+interface GameTabProps {
   lessonId: string;
   slug: string;
 }
 
-export function PracticeTab({ lessonId, slug }: PracticeTabProps) {
+export function GameTab({ lessonId, slug }: GameTabProps) {
   const router = useRouter();
 
   return (
@@ -28,7 +28,7 @@ export function PracticeTab({ lessonId, slug }: PracticeTabProps) {
           Sử dụng các vật phẩm như Khiên bảo vệ, Nhân đôi điểm và cạnh tranh bảng xếp hạng với các học viên khác bằng cách trả lời nhanh các câu hỏi!
         </p>
         <Button
-          onClick={() => router.push(`/lessons/${slug}/practice`)}
+          onClick={() => router.push(`/lessons/${slug}/game`)}
           className="py-6 px-10 rounded-[1.8rem] bg-indigo-500 text-white font-black uppercase tracking-widest hover:bg-indigo-600 shadow-xl shadow-indigo-500/25 active:scale-95 transition-all text-xs flex items-center gap-3"
         >
           <Play className="size-4 fill-current animate-pulse" />
@@ -38,7 +38,7 @@ export function PracticeTab({ lessonId, slug }: PracticeTabProps) {
 
       {/* Right Column: Modern Leaderboard */}
       <div className="lg:col-span-5 w-full flex">
-        <PracticeLeaderboard lessonSlug={slug} variant="modern" />
+        <GameLeaderboard lessonSlug={slug} variant="modern" />
       </div>
     </div>
   );

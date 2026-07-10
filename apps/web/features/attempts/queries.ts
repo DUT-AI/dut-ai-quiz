@@ -125,10 +125,10 @@ export function useAttemptReview(attemptId: string | null) {
   });
 }
 
-export function usePracticeHistory() {
+export function useGameHistory() {
   return useQuery({
-    queryKey: ["practice-history"],
-    queryFn: () => apiGet<unknown[]>("/api/v1/practice/history"),
+    queryKey: ["game-history"],
+    queryFn: () => apiGet<unknown[]>("/api/v1/game/history"),
     staleTime: 30_000,
   });
 }

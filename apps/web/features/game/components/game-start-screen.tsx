@@ -3,21 +3,21 @@
 import React from "react";
 import { Swords, Play, Heart, Coins, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import PracticePersonalBest from "./practice-personal-best";
+import GamePersonalBest from "./game-personal-best";
 
-interface PracticeStartScreenProps {
+interface GameStartScreenProps {
   lessonSlug: string;
   hasActiveSession: boolean;
   isStarting: boolean;
   onStart: () => void;
 }
 
-export default function PracticeStartScreen({
+export default function GameStartScreen({
   lessonSlug,
   hasActiveSession,
   isStarting,
   onStart,
-}: PracticeStartScreenProps) {
+}: GameStartScreenProps) {
   return (
     <div className="w-full max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 items-start py-6 px-4 md:px-0">
       {/* Rules / Intro Column (7 columns) */}
@@ -79,7 +79,7 @@ export default function PracticeStartScreen({
 
       {/* Leaderboard Column (5 columns) */}
       <div className="lg:col-span-5 w-full">
-        <PracticePersonalBest lessonSlug={lessonSlug} />
+        <GamePersonalBest lessonSlug={lessonSlug} />
       </div>
     </div>
   );

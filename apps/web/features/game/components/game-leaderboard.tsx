@@ -4,12 +4,12 @@ import React from "react";
 import { Trophy } from "lucide-react";
 import { useGameLeaderboard } from "../queries";
 
-interface PracticeLeaderboardProps {
+interface GameLeaderboardProps {
   lessonSlug: string;
   variant?: "retro" | "modern";
 }
 
-export default function PracticeLeaderboard({ lessonSlug, variant = "retro" }: PracticeLeaderboardProps) {
+export default function GameLeaderboard({ lessonSlug, variant = "retro" }: GameLeaderboardProps) {
   const { data: leaderboard = [], isLoading } = useGameLeaderboard(lessonSlug);
 
   const isModern = variant === "modern";
@@ -129,7 +129,7 @@ export default function PracticeLeaderboard({ lessonSlug, variant = "retro" }: P
                         ) : (
                           <div className={
                             isModern
-                              ? "size-6 bg-indigo-500/10 rounded-full border border-gray-150 dark:border-white/10 flex items-center justify-center text-[9px] text-indigo-550 font-black"
+                              ? "size-6 bg-indigo-550/10 rounded-full border border-gray-150 dark:border-white/10 flex items-center justify-center text-[9px] text-indigo-550 font-black"
                               : "size-5 bg-zinc-200 dark:bg-slate-800 border border-zinc-900 dark:border-slate-700 flex items-center justify-center text-[9px] text-zinc-500 font-bold"
                           }>
                             DS

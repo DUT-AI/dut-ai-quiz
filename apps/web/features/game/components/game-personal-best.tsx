@@ -4,11 +4,11 @@ import React from "react";
 import { Trophy, Coins, Gamepad2, Award, Sparkles } from "lucide-react";
 import { useGameHistorySummary } from "../queries";
 
-interface PracticePersonalBestProps {
+interface GamePersonalBestProps {
   lessonSlug: string;
 }
 
-export default function PracticePersonalBest({ lessonSlug }: PracticePersonalBestProps) {
+export default function GamePersonalBest({ lessonSlug }: GamePersonalBestProps) {
   const { data: summaries = [], isLoading } = useGameHistorySummary();
 
   const summary = summaries.find((s) => s.lesson_slug === lessonSlug);

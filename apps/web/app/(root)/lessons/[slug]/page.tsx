@@ -10,7 +10,7 @@ import { useAuth } from "@/context/auth-context";
 import {
   TheoryTab,
   QuestionsTab,
-  PracticeTab,
+  GameTab,
   LessonLoading,
   LessonNotFound,
   LessonHeader,
@@ -39,7 +39,7 @@ export default function LessonSlugPage() {
     { enabled: !!resolvedLesson?.slug }
   );
 
-  const [activeTab, setActiveTab] = useState<"theory" | "questions" | "practice">("theory");
+  const [activeTab, setActiveTab] = useState<"theory" | "questions" | "game">("theory");
 
   const isLoading = isLoadingAll || isLoadingDetail;
 
@@ -87,7 +87,7 @@ export default function LessonSlugPage() {
           [
             { id: "theory", label: "Lý thuyết", icon: BookOpen },
             { id: "questions", label: "Luyện tập", icon: ListRestart },
-            { id: "practice", label: "Luyện tập thi đấu", icon: Swords },
+            { id: "game", label: "Luyện tập thi đấu", icon: Swords },
           ] as const
         ).map((tab) => {
           const isActive = activeTab === tab.id;
@@ -147,14 +147,14 @@ export default function LessonSlugPage() {
             </motion.div>
           )}
 
-          {activeTab === "practice" && (
+          {activeTab === "game" && (
             <motion.div
-              key="practice"
+              key="game"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
             >
-              <PracticeTab lessonId={lessonId} slug={currentLesson.slug || slug} />
+              <GameTab lessonId={lessonId} slug={currentLesson.slug || slug} />
             </motion.div>
           )}
         </AnimatePresence>
