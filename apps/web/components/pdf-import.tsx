@@ -8,6 +8,7 @@ import { PoolType } from "@/features/questions/types";
 import { Card } from "@/components/ui/card";
 import { Check, Trash2, Upload, AlertCircle, Save, Loader2, X, FileText } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { TagSelector } from "@/features/questions/components/tag-selector";
 
 interface PdfImportProps {
   lessonId?: string;
@@ -25,6 +26,7 @@ export function PdfImport({ lessonId: propLessonId, onSuccess, onClose }: PdfImp
   const [lessonId, setLessonId] = useState(propLessonId || "");
   const [poolType, setPoolType] = useState<PoolType>("PRACTICE");
   const [defaultDifficulty, setDefaultDifficulty] = useState("EASY");
+  const [tags, setTags] = useState<string[]>([]);
 
   const { data: lessons = [] } = useLessons();
   const parseMutation = useParsePDF();
@@ -118,7 +120,8 @@ export function PdfImport({ lessonId: propLessonId, onSuccess, onClose }: PdfImp
           difficulty: q.difficulty || "EASY"
         })),
         pool_type: poolType,
-        lesson_id: lessonId || undefined
+        lesson_id: lessonId || undefined,
+        tags
       });
       alert("Đã nhập thành công tất cả câu hỏi!");
       onSuccess();
@@ -417,6 +420,10 @@ export function PdfImport({ lessonId: propLessonId, onSuccess, onClose }: PdfImp
                   placeholder="e.g. *"
                 />
               </div>
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-slate-200/50 dark:border-white/5">
+              <TagSelector value={tags} onChange={setTags} />
             </div>
           </div>
         </div>

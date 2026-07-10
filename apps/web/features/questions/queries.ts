@@ -72,6 +72,7 @@ export function useBulkCreateQuestions() {
       questions: { question: string; options: any[]; solution?: string; pool_type?: string }[]; 
       lesson_id?: string;
       pool_type?: string;
+      tags?: string[];
     }) =>
       apiPost<QuestionOut[]>("/api/v1/questions/bulk", body, z.array(QuestionOutSchema)),
     onSuccess: () => {

@@ -74,6 +74,7 @@ class QuestionBulkItem(BaseModel):
     solution: str | None = None
     difficulty: Difficulty | None = None
     pool_type: PoolType | None = None
+    tags: list[str] = Field(default_factory=list)
 
 
 class QuestionBulkCreate(BaseModel):

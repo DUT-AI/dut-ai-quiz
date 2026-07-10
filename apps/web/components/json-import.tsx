@@ -54,7 +54,8 @@ export function JsonImport({ onSuccess }: JsonImportProps) {
           question: q.question || q.content,
           options: q.options,
           solution: q.solution,
-          difficulty: q.difficulty || "EASY"
+          difficulty: q.difficulty || "EASY",
+          tags: q.tags || []
         })),
         pool_type: "PRACTICE"
       });

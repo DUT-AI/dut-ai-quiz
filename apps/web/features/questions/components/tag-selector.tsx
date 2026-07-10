@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { useTags, useCreateTag, useDeleteTag } from "@/lib/queries";
 import { toast } from "sonner";
+import { useThemeStore } from "@/store/theme-store";
+import { cn } from "@/lib/utils";
 
 interface TagSelectorProps {
   value: string[];
@@ -21,6 +23,7 @@ interface TagSelectorProps {
 }
 
 export function TagSelector({ value, onChange }: TagSelectorProps) {
+  const { darkMode } = useThemeStore();
   const { data: allTags = [], isLoading } = useTags();
   const createTagMut = useCreateTag();
   const deleteTagMut = useDeleteTag();
@@ -108,7 +111,12 @@ export function TagSelector({ value, onChange }: TagSelectorProps) {
         <Popover.Trigger asChild>
           <button
             type="button"
-            className="flex flex-wrap gap-2 items-center w-full px-4 py-3 rounded-2xl bg-gray-50/50 dark:bg-white/5 border border-gray-100 dark:border-white/10 hover:border-gray-200 dark:hover:border-white/20 text-left outline-none transition-all duration-200"
+            className={cn(
+              "flex flex-wrap gap-2 items-center w-full px-4 py-3 rounded-2xl border text-left outline-none transition-all duration-200",
+              darkMode
+                ? "bg-white/5 border-white/10 hover:border-indigo-500/30 focus:border-indigo-500/50"
+                : "bg-white border-gray-200/80 shadow-sm hover:border-indigo-500/30 focus:border-indigo-500/50"
+            )}
           >
             {value.length === 0 ? (
               <span className="text-gray-navy/50 dark:text-light-blue/40 text-xs font-semibold">
@@ -147,7 +155,12 @@ export function TagSelector({ value, onChange }: TagSelectorProps) {
           <Popover.Content
             align="start"
             sideOffset={6}
-            className="z-[150] w-72 sm:w-80 p-4 rounded-3xl bg-white dark:bg-navy-blue border border-gray-100 dark:border-white/10 shadow-2xl shadow-indigo-500/5 outline-none animate-in fade-in zoom-in-95 duration-150"
+            className={cn(
+              "z-[150] w-72 sm:w-80 p-4 rounded-3xl outline-none shadow-2xl transition-all duration-150 animate-in fade-in zoom-in-95 duration-150",
+              darkMode
+                ? "dark bg-[#1E2A3A] border border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.5)] text-white"
+                : "bg-white border border-gray-200 shadow-[0_10px_40px_rgba(0,0,0,0.12)] text-dark-blue"
+            )}
           >
             <div className="space-y-3">
               {/* Search Header */}
