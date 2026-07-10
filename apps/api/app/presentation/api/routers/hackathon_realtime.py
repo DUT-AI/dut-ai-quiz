@@ -1,34 +1,80 @@
-import asyncio
 import json
 import time
 from collections.abc import AsyncIterator
 from uuid import UUID
 
-from dishka import Scope
+from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
-from redis.asyncio import from_url
 
 from app.application.use_cases.hackathon.submissions import (
-    GetHackathonSubmissionLeaderboardUseCase,
+    ViewHackathonLeaderboardUseCase,
 )
-from app.config import settings
+from app.domain.interfaces import IHackathonEventSubscriber, IHackathonTaskRepository
 from app.presentation.api.deps import CurrentUser
 
 router = APIRouter(prefix="/hackathons", tags=["hackathon-realtime"])
 
-SUBMISSION_EVENTS_CHANNEL = "hackathon:submission-events"
 HEARTBEAT_SECONDS = 15
 
 
-@router.get("/tasks/{task_id}/leaderboard/events")
-async def hackathon_task_leaderboard_events(
+@router.get("/{hackathon_id}/leaderboard/events")
+@inject
+async def hackathon_leaderboard_events(
     request: Request,
-    task_id: UUID,
+    hackathon_id: UUID,
     user: CurrentUser,
+    subscriber: FromDishka[IHackathonEventSubscriber],
+    view_uc: FromDishka[ViewHackathonLeaderboardUseCase],
+    task_repo: FromDishka[IHackathonTaskRepository],
 ):
+    def _sse_message(event: str, data: dict) -> str:
+        return f"event: {event}\ndata: {json.dumps(data)}\n\n"
+
+    async def event_stream() -> AsyncIterator[str]:
+        next_heartbeat = time.monotonic() + HEARTBEAT_SECONDS
+
+        tasks = await task_repo.list_for_hackathon(hackathon_id)
+        task_ids = {str(t.id) for t in tasks}
+
+        # 1. Gửi bảng điểm hiện tại lần đầu
+        data = await view_uc(hackathon_id)
+        yield _sse_message(
+            event="hackathon.leaderboard.updated",
+            data={
+                "type": "hackathon.leaderboard.updated",
+                "hackathon_id": str(hackathon_id),
+                "event": None,
+                "leaderboard": data,
+            },
+        )
+
+        # 2. Lắng nghe các event nộp bài để gửi cập nhật
+        async for event in subscriber.subscribe_submission_events():
+            if await request.is_disconnected():
+                break
+
+            if event is None:
+                if time.monotonic() >= next_heartbeat:
+                    yield ": keep-alive\n\n"
+                    next_heartbeat = time.monotonic() + HEARTBEAT_SECONDS
+                continue
+
+            if event.get("task_id") in task_ids:
+                data = await view_uc(hackathon_id)
+                yield _sse_message(
+                    event="hackathon.leaderboard.updated",
+                    data={
+                        "type": "hackathon.leaderboard.updated",
+                        "hackathon_id": str(hackathon_id),
+                        "event": event,
+                        "leaderboard": data,
+                    },
+                )
+                next_heartbeat = time.monotonic() + HEARTBEAT_SECONDS
+
     return StreamingResponse(
-        _leaderboard_event_stream(request, task_id),
+        event_stream(),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
@@ -36,89 +82,3 @@ async def hackathon_task_leaderboard_events(
             "X-Accel-Buffering": "no",
         },
     )
-
-
-async def _leaderboard_event_stream(
-    request: Request,
-    task_id: UUID,
-) -> AsyncIterator[str]:
-    redis = from_url(_redis_url_from_settings(), decode_responses=True)
-    pubsub = redis.pubsub()
-    next_heartbeat = time.monotonic() + HEARTBEAT_SECONDS
-
-    try:
-        await pubsub.subscribe(SUBMISSION_EVENTS_CHANNEL)
-        yield _sse_message(
-            event="hackathon.leaderboard.updated",
-            data=await _leaderboard_payload(request, task_id),
-        )
-
-        while not await request.is_disconnected():
-            message = await pubsub.get_message(
-                ignore_subscribe_messages=True,
-                timeout=1.0,
-            )
-            if message:
-                event = _decode_pubsub_message(message.get("data"))
-                if event and event.get("task_id") == str(task_id):
-                    yield _sse_message(
-                        event="hackathon.leaderboard.updated",
-                        data=await _leaderboard_payload(
-                            request, task_id, event=event
-                        ),
-                    )
-                    next_heartbeat = time.monotonic() + HEARTBEAT_SECONDS
-                    continue
-
-            if time.monotonic() >= next_heartbeat:
-                yield ": keep-alive\n\n"
-                next_heartbeat = time.monotonic() + HEARTBEAT_SECONDS
-
-            await asyncio.sleep(0)
-    finally:
-        await pubsub.unsubscribe(SUBMISSION_EVENTS_CHANNEL)
-        await pubsub.close()
-        await redis.aclose()
-
-
-async def _leaderboard_payload(
-    request: Request,
-    task_id: UUID,
-    event: dict | None = None,
-) -> dict:
-    async with request.app.state.dishka_container(
-        scope=Scope.REQUEST
-    ) as request_container:
-        use_case = await request_container.get(
-            GetHackathonSubmissionLeaderboardUseCase
-        )
-        rows = await use_case(task_id)
-
-    return {
-        "type": "hackathon.leaderboard.updated",
-        "task_id": str(task_id),
-        "event": event,
-        "leaderboard": [row.to_dict() for row in rows],
-    }
-
-
-def _sse_message(event: str, data: dict) -> str:
-    return f"event: {event}\ndata: {json.dumps(data)}\n\n"
-
-
-def _decode_pubsub_message(data: str | bytes | None) -> dict | None:
-    if data is None:
-        return None
-    if isinstance(data, bytes):
-        data = data.decode("utf-8", errors="replace")
-    try:
-        return json.loads(data)
-    except json.JSONDecodeError:
-        return None
-
-
-def _redis_url_from_settings() -> str:
-    redis_host = str(settings.redis_host)
-    if redis_host.startswith(("redis://", "rediss://")):
-        return redis_host
-    return f"redis://{redis_host}:{settings.redis_port}/0"

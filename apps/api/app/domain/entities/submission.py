@@ -24,7 +24,9 @@ class HackathonSubmissionEntity:
     created_at: datetime
     team_id: UUID | None = None
     model_url: str | None = None
-    score: float | None = None
+    public_score: float | None = None
+    private_score: float | None = None
+    inference_time: float | None = None
     error_message: str | None = None
     logs: str | None = None
     updated_at: datetime | None = None

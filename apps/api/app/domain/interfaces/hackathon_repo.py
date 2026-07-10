@@ -139,6 +139,11 @@ class IHackathonSubmissionRepository(Protocol):
     async def commit(self) -> None:
         ...
 
+    async def list_for_hackathon(
+        self, hackathon_id: UUID
+    ) -> list[HackathonSubmissionEntity]:
+        ...
+
     async def get_last_submission(
         self, task_id: UUID, user_id: int | None = None, team_id: UUID | None = None
     ) -> HackathonSubmissionEntity | None:

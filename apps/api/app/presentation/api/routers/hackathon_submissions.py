@@ -1,20 +1,21 @@
 from uuid import UUID
 
 from dishka.integrations.fastapi import FromDishka, inject
-from fastapi import APIRouter, File, UploadFile
+from fastapi import APIRouter
 
 from app.application.use_cases.hackathon.submissions import (
-    SubmitTaskUseCase,
     CancelSubmissionUseCase,
     GetSubmissionLogsUseCase,
     ListSubmissionsUseCase,
     PresignSubmitUseCase,
+    SubmitTaskUseCase,
+    ViewHackathonLeaderboardUseCase,
 )
 from app.presentation.api.deps import CurrentUser
 from app.presentation.schemas.submissions import (
-    SubmissionOut,
     PresignSubmitIn,
     PresignSubmitOut,
+    SubmissionOut,
     SubmitTaskIn,
 )
 
@@ -83,3 +84,17 @@ async def list_submissions_route(
     use_case: FromDishka[ListSubmissionsUseCase],
 ):
     return await use_case(task_id=task_id, user_id=user.id, quiz_role=user.quiz_role)
+
+
+@router.get("/{hackathon_id}/leaderboard")
+@inject
+async def view_hackathon_leaderboard_route(
+    hackathon_id: UUID,
+    user: CurrentUser,
+    use_case: FromDishka[ViewHackathonLeaderboardUseCase],
+):
+    """
+    Xem bảng điểm xếp hạng của hackathon.
+    """
+    data = await use_case(hackathon_id)
+    return {"leaderboard": data}

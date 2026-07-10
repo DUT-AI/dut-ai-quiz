@@ -6,17 +6,18 @@ import {
   useSubmissions,
   useSubmitTask,
   useCancelSubmission,
-  useTaskSubmissionEvents,
+  useHackathonSubmissionEvents,
 } from "../queries";
 import { UploadForm } from "./submissions/upload-form";
 import { HistoryTable } from "./submissions/history-table";
 import { LogsModal } from "./submissions/logs-modal";
 
 interface HackathonTaskSubmissionsProps {
+  hackathonId: string;
   taskId: string;
 }
 
-export function HackathonTaskSubmissions({ taskId }: HackathonTaskSubmissionsProps) {
+export function HackathonTaskSubmissions({ hackathonId, taskId }: HackathonTaskSubmissionsProps) {
   // Upload progress state
   const [isUploading, setIsUploading] = useState(false);
   const [isCommitting, setIsCommitting] = useState(false); // POST /submit phase
@@ -38,7 +39,7 @@ export function HackathonTaskSubmissions({ taskId }: HackathonTaskSubmissionsPro
   const cancelMutation = useCancelSubmission(taskId);
 
   const { data: submissions = [], isLoading: isSubmissionsLoading } = useSubmissions(taskId);
-  useTaskSubmissionEvents(taskId, !isUploading && !isCommitting);
+  useHackathonSubmissionEvents(hackathonId, !isUploading && !isCommitting);
 
   const handleUploadProgress = (phase: "script" | "model" | "commit", loaded: number, total: number) => {
     setUploadPhase(phase);

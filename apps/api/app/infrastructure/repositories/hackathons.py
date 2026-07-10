@@ -343,7 +343,9 @@ class HackathonSubmissionRepository(IHackathonSubmissionRepository):
         model = r.scalar_one_or_none()
         if model:
             model.status = entity.status
-            model.score = entity.score
+            model.public_score = entity.public_score
+            model.private_score = entity.private_score
+            model.inference_time = entity.inference_time
             model.error_message = entity.error_message
             model.logs = entity.logs
             model.updated_at = entity.updated_at
@@ -396,9 +398,7 @@ class HackathonSubmissionRepository(IHackathonSubmissionRepository):
     ) -> None:
         participant = f"team:{team_id}" if team_id else f"user:{user_id}"
         digest = hashlib.sha256(f"{task_id}:{participant}".encode("utf-8")).digest()
-        lock_id = int.from_bytes(digest[:8], "big", signed=False) % (
-            2**63 - 1
-        )
+        lock_id = int.from_bytes(digest[:8], "big", signed=False) % (2**63 - 1)
         await self._s.execute(select(func.pg_advisory_xact_lock(lock_id)))
 
     async def commit(self) -> None:
@@ -419,3 +419,16 @@ class HackathonSubmissionRepository(IHackathonSubmissionRepository):
         r = await self._s.execute(stmt)
         model = r.scalar_one_or_none()
         return model.to_entity() if model else None
+
+    async def list_for_hackathon(
+        self, hackathon_id: UUID
+    ) -> list[HackathonSubmissionEntity]:
+        from app.infrastructure.persistence.models.hackathon import HackathonTask
+
+        stmt = (
+            select(HackathonSubmission)
+            .join(HackathonTask, HackathonSubmission.task_id == HackathonTask.id)
+            .where(HackathonTask.hackathon_id == hackathon_id)
+        )
+        r = await self._s.execute(stmt)
+        return [m.to_entity() for m in r.scalars().all()]

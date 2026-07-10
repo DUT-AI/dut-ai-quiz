@@ -51,12 +51,14 @@ from app.application.use_cases.hackathon import (
 )
 from app.application.use_cases.hackathon.submissions import (
     CancelSubmissionUseCase,
-    GetHackathonSubmissionLeaderboardUseCase,
     GetSubmissionLogsUseCase,
     ListSubmissionsUseCase,
     SubmitTaskUseCase,
     PresignSubmitUseCase,
+    ViewHackathonLeaderboardUseCase,
 )
+from app.application.services.hackathon_leaderboard import HackathonLeaderboardAppService
+from app.domain.services.hackathon_leaderboard import HackathonLeaderboardDomainService
 from app.application.use_cases.leaderboard.leaderboard_use_case import (
     GetLeaderboardUseCase,
 )
@@ -155,8 +157,14 @@ class UseCaseProvider(Provider):
     get_submission_logs_use_case = provide(
         GetSubmissionLogsUseCase, scope=Scope.REQUEST
     )
-    get_hackathon_submission_leaderboard_use_case = provide(
-        GetHackathonSubmissionLeaderboardUseCase, scope=Scope.REQUEST
+    hackathon_leaderboard_app_service = provide(
+        HackathonLeaderboardAppService, scope=Scope.REQUEST
+    )
+    hackathon_leaderboard_domain_service = provide(
+        HackathonLeaderboardDomainService, scope=Scope.REQUEST
+    )
+    view_hackathon_leaderboard_use_case = provide(
+        ViewHackathonLeaderboardUseCase, scope=Scope.REQUEST
     )
     list_submissions_use_case = provide(ListSubmissionsUseCase, scope=Scope.REQUEST)
     presign_upload_use_case = provide(PresignUploadUseCase, scope=Scope.REQUEST)

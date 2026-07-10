@@ -25,7 +25,9 @@ class RedisSubmissionEventPublisher(ISubmissionEventPublisher):
             "user_id": submission.user_id,
             "team_id": str(submission.team_id) if submission.team_id else None,
             "status": submission.status.value,
-            "score": submission.score,
+            "public_score": submission.public_score,
+            "private_score": submission.private_score,
+            "inference_time": submission.inference_time,
             "error_message": submission.error_message,
             "updated_at": _to_json_value(submission.updated_at),
         }

@@ -10,3 +10,4 @@ export * from "./hackathon-registrations-tab";
 export * from "./hackathon-edit-tab";
 export * from "./hackathon-team-detail";
 export * from "./hackathon-task-submissions";
+export * from "./hackathon-leaderboard";

@@ -8,7 +8,7 @@ import {
   useHackathonRegistrationStatus,
   useHackathonTasks,
 } from "@/features/hackathons/queries";
-import { HackathonTeamDetail, HackathonTaskSubmissions } from "@/features/hackathons/components";
+import { HackathonTeamDetail, HackathonTaskSubmissions, HackathonLeaderboard } from "@/features/hackathons/components";
 import {
   ArrowLeft,
   Calendar,
@@ -18,7 +18,9 @@ import {
   BookOpen,
   ChevronDown,
   ChevronUp,
+  CheckCircle2,
   ExternalLink,
+  Trophy,
 } from "lucide-react";
 import { cn, formatDateTime, getParticipationModeLabel } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
@@ -168,6 +170,10 @@ export default function StudentHackathonDetailPage() {
             <BookOpen className="size-4" />
             <span>Thể lệ cuộc thi</span>
           </TabsTrigger>
+          <TabsTrigger value="leaderboard">
+            <Trophy className="size-4" />
+            <span>Bảng xếp hạng</span>
+          </TabsTrigger>
         </TabsList>
 
         {/* Tab Đề bài */}
@@ -277,7 +283,14 @@ export default function StudentHackathonDetailPage() {
                               </div>
 
                               {/* Submissions Section */}
-                              <HackathonTaskSubmissions taskId={task.id} />
+                              <Tabs defaultValue="submissions" className="w-full">
+                                <TabsList className="grid w-full grid-cols-1 mb-4">
+                                  <TabsTrigger value="submissions">Nộp bài & Lịch sử</TabsTrigger>
+                                </TabsList>
+                                <TabsContent value="submissions">
+                                  <HackathonTaskSubmissions hackathonId={hackathon.id} taskId={task.id} />
+                                </TabsContent>
+                              </Tabs>
                             </div>
                           </motion.div>
                         )}
@@ -347,6 +360,26 @@ export default function StudentHackathonDetailPage() {
                 <p className="text-gray-navy/50 dark:text-light-blue/40 italic">Giải đấu chưa công bố thể lệ chính thức.</p>
               )}
             </div>
+          </motion.div>
+        </TabsContent>
+
+        {/* Tab Bảng xếp hạng */}
+        <TabsContent value="leaderboard">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+          >
+            <div className="text-left mt-2">
+              <h3 className="text-lg font-black text-navy-blue dark:text-white">
+                Bảng xếp hạng (Leaderboard)
+              </h3>
+              <p className="text-xs text-gray-navy/70 dark:text-light-blue/60 mt-1 mb-6">
+                Bảng xếp hạng chung cho toàn bộ giải đấu, được cập nhật theo thời gian thực.
+              </p>
+            </div>
+
+            <HackathonLeaderboard hackathonId={hackathon.id} tasks={tasks} />
           </motion.div>
         </TabsContent>
       </Tabs>

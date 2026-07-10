@@ -2,8 +2,13 @@ from dishka import Provider, Scope, provide
 from redis.asyncio import Redis, from_url
 
 from app.config import settings
-from app.domain.interfaces import IBlogCache, IDUTAIManageCache
-from app.infrastructure.cache import DUTAIManageCache, ProfileCache, RedisBlogCache
+from app.domain.interfaces import IBlogCache, IDUTAIManageCache, IHackathonLeaderboardCache
+from app.infrastructure.cache import (
+    DUTAIManageCache,
+    ProfileCache,
+    RedisBlogCache,
+    RedisHackathonLeaderboardCache,
+)
 from app.infrastructure.cache.game_leaderboard_cache import GameLeaderboardCache
 
 
@@ -36,3 +41,9 @@ class CacheProvider(Provider):
     @provide(scope=Scope.APP)
     def game_leaderboard_cache(self, redis: Redis) -> GameLeaderboardCache:
         return GameLeaderboardCache(redis, ttl=600)
+
+    @provide(scope=Scope.APP)
+    def hackathon_leaderboard_cache(
+        self, redis: Redis
+    ) -> IHackathonLeaderboardCache:
+        return RedisHackathonLeaderboardCache(redis, ttl=300)

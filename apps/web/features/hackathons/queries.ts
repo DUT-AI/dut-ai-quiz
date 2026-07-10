@@ -306,13 +306,25 @@ export function useSubmissions(taskId: string, options?: any) {
   });
 }
 
-export function useTaskSubmissionEvents(taskId: string, enabled = true) {
+export function useHackathonLeaderboard(hackathonId: string) {
+  return useQuery<any[]>({
+    queryKey: ["hackathons", hackathonId, "leaderboard"],
+    queryFn: () =>
+      apiGet<{ leaderboard: any[] }>(`/api/v1/hackathons/${hackathonId}/leaderboard`).then(
+        (res) => res.leaderboard
+      ),
+    staleTime: 5_000,
+    enabled: !!hackathonId,
+  });
+}
+
+export function useHackathonSubmissionEvents(hackathonId: string, enabled = true) {
   const qc = useQueryClient();
 
   useEffect(() => {
-    if (!taskId || !enabled || typeof window === "undefined") return;
+    if (!hackathonId || !enabled || typeof window === "undefined") return;
 
-    const url = `${API_BASE}/api/v1/hackathons/tasks/${taskId}/leaderboard/events`;
+    const url = `${API_BASE}/api/v1/hackathons/${hackathonId}/leaderboard/events`;
     const source = new EventSource(url, { withCredentials: true });
 
     const handleUpdate = (event: Event) => {
@@ -320,15 +332,17 @@ export function useTaskSubmissionEvents(taskId: string, enabled = true) {
       try {
         const payload = JSON.parse(message.data);
         qc.setQueryData(
-          ["hackathons", "tasks", taskId, "leaderboard"],
+          ["hackathons", hackathonId, "leaderboard"],
           payload.leaderboard ?? []
         );
       } catch {
         /* ignore malformed realtime payloads */
       }
 
+      // TODO: We might want to invalidate submissions if needed, but since submissions are per task, it's harder here.
+      // For now, we'll just invalidate all hackathon tasks submissions if any update happens, or maybe skip.
       qc.invalidateQueries({
-        queryKey: ["hackathons", "tasks", taskId, "submissions"],
+        queryKey: ["hackathons", "tasks"],
       });
     };
 
@@ -338,10 +352,8 @@ export function useTaskSubmissionEvents(taskId: string, enabled = true) {
       source.removeEventListener("hackathon.leaderboard.updated", handleUpdate);
       source.close();
     };
-  }, [enabled, qc, taskId]);
+  }, [hackathonId, enabled, qc]);
 }
-
-
 
 export function useCancelSubmission(taskId: string) {
   const qc = useQueryClient();
