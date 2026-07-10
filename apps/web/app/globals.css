@@ -86,6 +86,7 @@
   body,
   :root {
     min-height: 100%;
+    overscroll-behavior: none;
   }
 
   .overflow-y-auto,
@@ -93,7 +94,7 @@
   .overflow-auto,
   .custom-scrollbar,
   .theory-scrollbar {
-    /* removed overscroll-behavior: none to restore natural scrolling */
+    overscroll-behavior: contain;
   }
 }
 .whitespace-pre-wrap {
