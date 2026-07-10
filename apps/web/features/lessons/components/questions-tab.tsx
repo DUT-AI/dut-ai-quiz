@@ -6,18 +6,22 @@ import { AnimatePresence } from "framer-motion";
 import { useQuestions, useDeleteQuestion } from "@/lib/queries";
 import type { QuestionOut } from "@/lib/types";
 import { PoolType } from "@/features/questions/types";
-import QuestionEditorModal from "@/features/questions/components/question-editor-modal";
-import BulkQuestionModal from "@/features/questions/components/bulk-question-modal";
 import { PdfImport } from "@/components/pdf-import";
-
-import { AIExplanationModal } from "../../questions/components/ai-explanation-modal";
 import { useAuth } from "@/context/auth-context";
 import { ConfirmModal } from "@/components/molecules/confirm-modal";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SearchBar } from "@/components/ui/search-bar";
+import { cn } from "@/lib/utils";
+
+import {
+  AIExplanationModal,
+  QuestionEditorModal,
+  BulkQuestionModal,
+  DifficultyFilter,
+  QuestionsList,
+} from "@/features/questions/components";
 
 import { QuestionsTabHeader } from "./questions-tab-header";
-import { QuestionsTabList } from "./questions-tab-list";
 
 interface QuestionsTabProps {
   lessonId: string;
@@ -58,10 +62,16 @@ export function QuestionsTab({ lessonId, isAdminView = false, lessonName }: Ques
     });
   }, [allQuestions, searchQuery]);
 
-  // Questions matching active pool type
+  const [difficultyFilter, setDifficultyFilter] = useState<"ALL" | "EASY" | "MEDIUM" | "HARD">("ALL");
+
+  // Questions matching active pool type and difficulty filter
   const filteredQuestions = useMemo(() => {
-    return searchedQuestions.filter((q) => q.pool_type === activePoolType);
-  }, [searchedQuestions, activePoolType]);
+    return searchedQuestions.filter((q) => {
+      const matchPool = q.pool_type === activePoolType;
+      const matchDifficulty = difficultyFilter === "ALL" || q.difficulty === difficultyFilter;
+      return matchPool && matchDifficulty;
+    });
+  }, [searchedQuestions, activePoolType, difficultyFilter]);
 
   // Dynamic counts for each category based on search results
   const counts = useMemo(() => {
@@ -73,6 +83,22 @@ export function QuestionsTab({ lessonId, isAdminView = false, lessonName }: Ques
     });
     return res;
   }, [searchedQuestions]);
+
+  // Dynamic counts for each difficulty level based on current search and active pool
+  const difficultyCounts = useMemo(() => {
+    const res: Record<"ALL" | "EASY" | "MEDIUM" | "HARD", number> = { ALL: 0, EASY: 0, MEDIUM: 0, HARD: 0 };
+    const activePoolQuestions = searchedQuestions.filter((q) => q.pool_type === activePoolType);
+    res.ALL = activePoolQuestions.length;
+    activePoolQuestions.forEach((q) => {
+      if (q.difficulty) {
+        const diffKey = q.difficulty as "EASY" | "MEDIUM" | "HARD";
+        if (res[diffKey] !== undefined) {
+          res[diffKey]++;
+        }
+      }
+    });
+    return res;
+  }, [searchedQuestions, activePoolType]);
 
   // Auto-switch tabs to the first category that has matching questions when searching
   useEffect(() => {
@@ -115,75 +141,125 @@ export function QuestionsTab({ lessonId, isAdminView = false, lessonName }: Ques
     setSearchQuery("");
   }, []);
 
+  const handleClearDifficulty = useCallback(() => {
+    setDifficultyFilter("ALL");
+  }, []);
+
   return (
     <div className="space-y-8 text-left">
-      {/* Redesigned Header using subcomponent */}
-      <QuestionsTabHeader
-        lessonName={lessonName}
-        activePoolType={activePoolType}
-        isTeacher={isTeacher}
-        questionsCount={filteredQuestions.length}
-        onAddClick={() => setShowAddModal(true)}
-        onBulkClick={() => setShowBulkModal(true)}
-        onPdfClick={() => setShowPdfModal(true)}
-      />
+      {isTeacher && (
+        <>
+          {/* Redesigned Header using subcomponent */}
+          <QuestionsTabHeader
+            lessonName={lessonName}
+            activePoolType={activePoolType}
+            isTeacher={isTeacher}
+            questionsCount={filteredQuestions.length}
+            onAddClick={() => setShowAddModal(true)}
+            onBulkClick={() => setShowBulkModal(true)}
+            onPdfClick={() => setShowPdfModal(true)}
+          />
 
-      {/* Filter and Search Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-slate-100 dark:border-zinc-800/80">
-        {isTeacher && (
-          <Tabs
-            value={activePoolType}
-            onValueChange={(val) => {
-              setActivePoolType(val as PoolType);
-            }}
-            className="w-full md:w-auto"
-          >
-            <TabsList className="bg-slate-100/80 dark:bg-zinc-900 border-none p-1 rounded-2xl">
-              <TabsTrigger
-                value="PRACTICE"
-                className="flex items-center gap-2 rounded-xl px-5 py-2 text-xs font-black uppercase tracking-wider"
+          {/* Filter and Search Section */}
+          <div className="flex flex-col gap-4 pb-4 border-b border-slate-100 dark:border-zinc-800/80">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+              <Tabs
+                value={activePoolType}
+                onValueChange={(val) => {
+                  setActivePoolType(val as PoolType);
+                  setDifficultyFilter("ALL");
+                }}
+                className="w-full lg:w-auto"
               >
-                <span>🏋️</span>
-                <span>Luyện tập</span>
-                <span className="ml-1.5 px-1.5 py-0.5 rounded-md bg-slate-200/60 dark:bg-zinc-800 text-[10px] opacity-80">
-                  {counts.PRACTICE}
-                </span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="EXAM"
-                className="flex items-center gap-2 rounded-xl px-5 py-2 text-xs font-black uppercase tracking-wider"
-              >
-                <span>📝</span>
-                <span>Kiểm tra</span>
-                <span className="ml-1.5 px-1.5 py-0.5 rounded-md bg-slate-200/60 dark:bg-zinc-800 text-[10px] opacity-80">
-                  {counts.EXAM}
-                </span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="GAME"
-                className="flex items-center gap-2 rounded-xl px-5 py-2 text-xs font-black uppercase tracking-wider"
-              >
-                <span>🎮</span>
-                <span>Trò chơi</span>
-                <span className="ml-1.5 px-1.5 py-0.5 rounded-md bg-slate-200/60 dark:bg-zinc-800 text-[10px] opacity-80">
-                  {counts.GAME}
-                </span>
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        )}
+                <TabsList className="bg-slate-100/80 dark:bg-zinc-900 border-none p-1 rounded-2xl">
+                  <TabsTrigger
+                    value="PRACTICE"
+                    className="flex items-center gap-2 rounded-xl px-5 py-2 text-xs font-black uppercase tracking-wider"
+                  >
+                    <span>🏋️</span>
+                    <span>Luyện tập</span>
+                    <span className="ml-1.5 px-1.5 py-0.5 rounded-md bg-slate-200/60 dark:bg-zinc-800 text-[10px] opacity-80">
+                      {counts.PRACTICE}
+                    </span>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="EXAM"
+                    className="flex items-center gap-2 rounded-xl px-5 py-2 text-xs font-black uppercase tracking-wider"
+                  >
+                    <span>📝</span>
+                    <span>Kiểm tra</span>
+                    <span className="ml-1.5 px-1.5 py-0.5 rounded-md bg-slate-200/60 dark:bg-zinc-800 text-[10px] opacity-80">
+                      {counts.EXAM}
+                    </span>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="GAME"
+                    className="flex items-center gap-2 rounded-xl px-5 py-2 text-xs font-black uppercase tracking-wider"
+                  >
+                    <span>🎮</span>
+                    <span>Trò chơi</span>
+                    <span className="ml-1.5 px-1.5 py-0.5 rounded-md bg-slate-200/60 dark:bg-zinc-800 text-[10px] opacity-80">
+                      {counts.GAME}
+                    </span>
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
 
-        <SearchBar
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          onClear={handleClearSearch}
-          placeholder="Tìm kiếm câu hỏi..."
-          containerClassName="w-full md:max-w-xs shrink-0"
-        />
-      </div>
+              <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto shrink-0">
+                <div className="w-full sm:w-44 shrink-0">
+                  <DifficultyFilter
+                    value={difficultyFilter}
+                    onChange={setDifficultyFilter}
+                    counts={difficultyCounts}
+                  />
+                </div>
+
+                <SearchBar
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onClear={handleClearSearch}
+                  placeholder="Tìm kiếm câu hỏi..."
+                  containerClassName="w-full sm:max-w-xs shrink-0"
+                />
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {!isTeacher && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+          <div className="space-y-1">
+            <h2 className="text-xl font-black text-slate-800 dark:text-white tracking-tight">
+              Danh sách câu hỏi luyện tập
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-zinc-400">
+              Hiện có <span className="font-extrabold text-primary">{filteredQuestions.length}</span> câu hỏi được hiển thị.
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto shrink-0">
+            <div className="w-full sm:w-44 shrink-0">
+              <DifficultyFilter
+                value={difficultyFilter}
+                onChange={setDifficultyFilter}
+                counts={difficultyCounts}
+              />
+            </div>
+
+            <SearchBar
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onClear={handleClearSearch}
+              placeholder="Tìm kiếm câu hỏi..."
+              containerClassName="w-full sm:max-w-xs shrink-0"
+            />
+          </div>
+        </div>
+      )}
 
       {/* Redesigned Questions list using subcomponent */}
-      <QuestionsTabList
+      <QuestionsList
         isLoading={isLoadingQuestions}
         questions={filteredQuestions}
         activePoolType={activePoolType}
@@ -193,6 +269,8 @@ export function QuestionsTab({ lessonId, isAdminView = false, lessonName }: Ques
         onDelete={handleDelete}
         searchQuery={searchQuery}
         onClearSearch={handleClearSearch}
+        difficultyFilter={difficultyFilter}
+        onClearDifficulty={handleClearDifficulty}
       />
 
       {/* Modals and overlay panels */}
