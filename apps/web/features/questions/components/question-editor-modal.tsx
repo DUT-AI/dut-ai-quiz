@@ -21,6 +21,7 @@ import type { QuestionOut } from "@/lib/types";
 import { QuestionFormSchema, type QuestionFormValues } from "@/features/questions/types";
 import { renderMathInHTML } from "@/lib/render-math";
 import { PoolTypeSelector } from "./pool-type-selector";
+import { DifficultySelector } from "./difficulty-selector";
 
 interface Props {
   lessonId: string;
@@ -60,6 +61,7 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
     resolver: zodResolver(QuestionFormSchema),
     defaultValues: {
       pool_type: initialData?.pool_type ?? "PRACTICE",
+      difficulty: (initialData?.difficulty as any) ?? "EASY",
       content: initialData?.content ?? "",
       options: defaultOptions,
       solution: initialData?.solution ?? "",
@@ -105,6 +107,7 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
     try {
       const payload = {
         pool_type: values.pool_type,
+        difficulty: values.difficulty,
         content: values.content,
         options: values.options,
         solution: values.solution || undefined,
@@ -176,17 +179,31 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
           {/* Body */}
           <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
             <form id="question-form" onSubmit={handleSubmit(onSubmit)} className="space-y-10 text-left">
-              {/* Pool type selector */}
-              <Controller
-                control={control}
-                name="pool_type"
-                render={({ field }) => (
-                  <PoolTypeSelector
-                    value={field.value}
-                    onChange={field.onChange}
-                  />
-                )}
-              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Pool type selector */}
+                <Controller
+                  control={control}
+                  name="pool_type"
+                  render={({ field }) => (
+                    <PoolTypeSelector
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
+                />
+
+                {/* Difficulty selector */}
+                <Controller
+                  control={control}
+                  name="difficulty"
+                  render={({ field }) => (
+                    <DifficultySelector
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
+                />
+              </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                 {/* Left: Inputs */}

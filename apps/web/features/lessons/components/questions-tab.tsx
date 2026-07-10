@@ -184,6 +184,7 @@ export function QuestionsTab({ lessonId, isAdminView = false }: QuestionsTabProp
         )}
         {showPdfModal && (
           <PdfImport
+            lessonId={lessonId}
             onClose={() => setShowPdfModal(false)}
             onSuccess={() => setShowPdfModal(false)}
           />

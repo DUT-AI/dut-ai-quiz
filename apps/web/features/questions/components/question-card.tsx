@@ -97,7 +97,16 @@ export const QuestionCard = React.memo(
                   #{idx + 1}
                 </div>
 
-                {/* Reset button removed to prevent re-answering once chosen */}
+                {q.difficulty && (
+                  <span className={cn(
+                    "px-3 py-1.5 text-[10px] font-black rounded-xl uppercase tracking-wider text-center w-full min-w-[70px]",
+                    q.difficulty === "EASY" && "bg-green-500/10 text-green-500 border border-green-500/20",
+                    q.difficulty === "MEDIUM" && "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20",
+                    q.difficulty === "HARD" && "bg-red/10 text-red border border-red/20"
+                  )}>
+                    {q.difficulty === "EASY" ? "Dễ" : q.difficulty === "MEDIUM" ? "T.Bình" : "Khó"}
+                  </span>
+                )}
               </div>
 
               <div className="flex-1 space-y-8">

@@ -4,4 +4,5 @@ export * from "./bulk-question-modal";
 export * from "./question-editor-modal";
 export * from "./import-questions-panel";
 export * from "./pool-type-selector";
+export * from "./difficulty-selector";
 export * from "./question-detail-modal";

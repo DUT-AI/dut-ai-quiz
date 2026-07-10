@@ -10,19 +10,21 @@ import { Check, Trash2, Upload, AlertCircle, Save, Loader2, X, FileText } from "
 import { motion, AnimatePresence } from "framer-motion";
 
 interface PdfImportProps {
+  lessonId?: string;
   onSuccess: () => void;
   onClose?: () => void;
 }
 
-export function PdfImport({ onSuccess, onClose }: PdfImportProps) {
+export function PdfImport({ lessonId: propLessonId, onSuccess, onClose }: PdfImportProps) {
   const [file, setFile] = useState<File | null>(null);
   const [delimiter, setDelimiter] = useState("Câu \\\\d+[:.]");
   const [prefixes, setPrefixes] = useState("A,B,C,D");
   const [marker, setMarker] = useState("");
   const [questions, setQuestions] = useState<ParsedQuestionPreview[]>([]);
   const [isPreviewing, setIsPreviewing] = useState(false);
-  const [lessonId, setLessonId] = useState("");
+  const [lessonId, setLessonId] = useState(propLessonId || "");
   const [poolType, setPoolType] = useState<PoolType>("PRACTICE");
+  const [defaultDifficulty, setDefaultDifficulty] = useState("EASY");
 
   const { data: lessons = [] } = useLessons();
   const parseMutation = useParsePDF();
@@ -42,7 +44,11 @@ export function PdfImport({ onSuccess, onClose }: PdfImportProps) {
 
     try {
       const data = await parseMutation.mutateAsync(formData);
-      setQuestions(data.questions);
+      const mapped = data.questions.map((q: any) => ({
+        ...q,
+        difficulty: defaultDifficulty
+      }));
+      setQuestions(mapped);
       setIsPreviewing(true);
     } catch (err: any) {
       alert(err.message || "Lỗi khi xử lý PDF");
@@ -76,6 +82,12 @@ export function PdfImport({ onSuccess, onClose }: PdfImportProps) {
     setQuestions(newQs);
   };
 
+  const handleUpdateDifficulty = (index: number, difficulty: string) => {
+    const newQs = [...questions];
+    newQs[index].difficulty = difficulty;
+    setQuestions(newQs);
+  };
+
   const handleRemoveQuestion = (index: number) => {
     setQuestions(questions.filter((_, i) => i !== index));
   };
@@ -102,7 +114,8 @@ export function PdfImport({ onSuccess, onClose }: PdfImportProps) {
             is_correct: o.is_correct,
             fixed: o.fixed
           })),
-          solution: q.solution || undefined
+          solution: q.solution || undefined,
+          difficulty: q.difficulty || "EASY"
         })),
         pool_type: poolType,
         lesson_id: lessonId || undefined
@@ -166,6 +179,24 @@ export function PdfImport({ onSuccess, onClose }: PdfImportProps) {
                   </button>
 
                   <div className="space-y-4">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate/10 dark:border-white/10 pb-4">
+                      <div>
+                        <span className="text-xs font-bold text-slate-400 uppercase">Câu hỏi #{qIdx + 1}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <label className="text-xs font-semibold text-gray-500 dark:text-light-blue uppercase">Độ khó:</label>
+                        <select
+                          value={q.difficulty || "EASY"}
+                          onChange={(e) => handleUpdateDifficulty(qIdx, e.target.value)}
+                          className="rounded border border-slate-300 dark:border-white/20 bg-white dark:bg-slate-800 px-3 py-1.5 text-xs outline-none focus:border-primary text-slate-700 dark:text-white"
+                        >
+                          <option value="EASY">Dễ</option>
+                          <option value="MEDIUM">Trung bình</option>
+                          <option value="HARD">Khó</option>
+                        </select>
+                      </div>
+                    </div>
+
                     <div>
                       <label className="block text-xs font-semibold mb-1 text-gray-navy dark:text-light-blue uppercase">
                         Nội dung câu hỏi
@@ -298,13 +329,13 @@ export function PdfImport({ onSuccess, onClose }: PdfImportProps) {
           </h3>
           
           <div className="space-y-4 bg-slate-50/50 dark:bg-white/5 p-6 rounded-3xl border border-slate/10 shadow-inner">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div>
                 <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Loại câu hỏi</label>
                 <select
                   value={poolType}
                   onChange={(e) => setPoolType(e.target.value as any)}
-                  className="w-full rounded border border-slate/30 dark:border-white/20 bg-white dark:bg-slate/30 px-2 py-2 text-xs outline-none focus:border-primary"
+                  className="w-full rounded border border-slate/30 dark:border-white/20 bg-white dark:bg-slate/30 px-2 py-2 text-xs outline-none focus:border-primary text-slate-700 dark:text-white"
                 >
                   <option value="PRACTICE">Luyện tập</option>
                   <option value="EXAM">Kiểm tra</option>
@@ -316,7 +347,7 @@ export function PdfImport({ onSuccess, onClose }: PdfImportProps) {
                 <select
                   value={lessonId}
                   onChange={(e) => setLessonId(e.target.value)}
-                  className="w-full rounded border border-slate/30 dark:border-white/20 bg-white dark:bg-slate/30 px-2 py-2 text-xs outline-none focus:border-primary"
+                  className="w-full rounded border border-slate/30 dark:border-white/20 bg-white dark:bg-slate/30 px-2 py-2 text-xs outline-none focus:border-primary text-slate-700 dark:text-white"
                 >
                   <option value="">— Mặc định —</option>
                   {lessons.map((l) => (
@@ -324,6 +355,18 @@ export function PdfImport({ onSuccess, onClose }: PdfImportProps) {
                       {l.order > 0 ? `${l.order}. ` : ""}{l.name}
                     </option>
                   ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Độ khó mặc định</label>
+                <select
+                  value={defaultDifficulty}
+                  onChange={(e) => setDefaultDifficulty(e.target.value)}
+                  className="w-full rounded border border-slate/30 dark:border-white/20 bg-white dark:bg-slate/30 px-2 py-2 text-xs outline-none focus:border-primary text-slate-700 dark:text-white"
+                >
+                  <option value="EASY">Dễ</option>
+                  <option value="MEDIUM">Trung bình</option>
+                  <option value="HARD">Khó</option>
                 </select>
               </div>
             </div>
