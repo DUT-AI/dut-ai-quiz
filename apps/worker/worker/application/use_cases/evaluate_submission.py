@@ -2,7 +2,7 @@ import os
 import posixpath
 import shutil
 import tempfile
-from datetime import datetime
+from datetime import datetime, timedelta
 from urllib.parse import unquote, urlparse
 from uuid import UUID
 
@@ -50,9 +50,6 @@ class EvaluateSubmissionUseCase:
     async def execute(
         self,
         submission_id: str,
-        script_s3_key: str,
-        ground_truth_s3_key: str,
-        metric_type: str,
     ) -> float | None:
         submission_uuid = UUID(str(submission_id))
         logger.info(f"Executing EvaluateSubmissionUseCase for {submission_uuid}...")
@@ -68,9 +65,6 @@ class EvaluateSubmissionUseCase:
         try:
             return await self._run_pipeline(
                 submission=submission,
-                script_s3_key=script_s3_key,
-                ground_truth_s3_key=ground_truth_s3_key,
-                metric_type=metric_type,
             )
         except Exception as exc:
             logger.exception(f"Unhandled worker failure for {submission_uuid}: {exc}")
@@ -83,12 +77,35 @@ class EvaluateSubmissionUseCase:
                 )
             return None
 
+    async def sweep_stale_submissions(
+        self,
+        uploading_timeout_seconds: int,
+        processing_timeout_seconds: int,
+    ) -> int:
+        now = datetime.now()
+        stale_submissions = await self.submission_repo.list_stale_active_submissions(
+            uploading_stale_before=now - timedelta(seconds=uploading_timeout_seconds),
+            processing_stale_before=now - timedelta(
+                seconds=processing_timeout_seconds
+            ),
+        )
+
+        for submission in stale_submissions:
+            await self._mark_failed(
+                submission,
+                error_message=(
+                    f"Submission stuck in {submission.status.value} past timeout."
+                ),
+                logs="",
+            )
+
+        if stale_submissions:
+            logger.warning(f"Marked {len(stale_submissions)} stale submissions failed.")
+        return len(stale_submissions)
+
     async def _run_pipeline(
         self,
         submission: HackathonSubmissionEntity,
-        script_s3_key: str,
-        ground_truth_s3_key: str,
-        metric_type: str,
     ) -> float | None:
         task = await self.submission_repo.get_task(submission.task_id)
         if not task:
@@ -116,10 +133,10 @@ class EvaluateSubmissionUseCase:
             ground_truth_path = os.path.join(private_dir, "ground_truth.csv")
             prediction_path = os.path.join(sandbox_dir, "predict.csv")
 
-            self.artifact_store.download_file(script_s3_key, script_path)
+            self.artifact_store.download_file(submission.script_url, script_path)
             self._download_model_if_present(submission, sandbox_dir)
             self._download_hidden_input_if_present(task.public_test_url, sandbox_dir)
-            self.artifact_store.download_file(ground_truth_s3_key, ground_truth_path)
+            self.artifact_store.download_file(task.private_test_url, ground_truth_path)
 
             if await self._is_cancelled(submission.id):
                 await self._mark_cancelled(submission)
@@ -170,7 +187,9 @@ class EvaluateSubmissionUseCase:
 
             try:
                 score = self.evaluator.evaluate(
-                    ground_truth_path, prediction_path, metric_type
+                    ground_truth_path,
+                    prediction_path,
+                    getattr(task.metric_type, "value", str(task.metric_type)),
                 )
             except Exception as exc:
                 await self._mark_failed(
@@ -180,7 +199,7 @@ class EvaluateSubmissionUseCase:
                 )
                 return None
 
-            predict_key = self._predict_key(script_s3_key)
+            predict_key = self._predict_key(submission.script_url)
             self.artifact_store.upload_file(
                 prediction_path, predict_key, content_type="text/csv"
             )
@@ -231,7 +250,11 @@ class EvaluateSubmissionUseCase:
 
         submission.status = status
         submission.updated_at = datetime.now()
-        return await self.submission_repo.update_submission(submission)
+        submission = await self.submission_repo.update_submission(submission)
+        await self.event_publisher.publish_submission_update(
+            submission, f"submission.{status.value.lower()}"
+        )
+        return submission
 
     async def _mark_failed(
         self,

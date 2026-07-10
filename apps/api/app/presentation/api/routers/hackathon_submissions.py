@@ -49,10 +49,6 @@ async def submit_task_route(
         submission_id=body.submission_id,
         task_id=task_id,
         user_id=user.id,
-        script_s3_key=body.script_s3_key,
-        script_url=body.script_url,
-        model_s3_key=body.model_s3_key,
-        model_url=body.model_url,
     )
 
 

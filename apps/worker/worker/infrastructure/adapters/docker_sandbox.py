@@ -10,9 +10,12 @@ from worker.domain.interfaces.sandbox import CancelCheck, ISandbox
 
 
 class DockerSandbox(ISandbox):
-    def __init__(self, image_name: str = "python:3.12-slim"):
+    def __init__(
+        self, image_name: str = "python:3.12-slim", log_tail_lines: int = 200
+    ):
         self.client = docker.from_env()
         self.image_name = image_name
+        self.log_tail_lines = log_tail_lines
 
     async def run_script(
         self,
@@ -141,7 +144,9 @@ class DockerSandbox(ISandbox):
 
     async def _read_logs(self, container) -> str:
         try:
-            raw_logs = await asyncio.to_thread(container.logs)
+            raw_logs = await asyncio.to_thread(
+                container.logs, stdout=True, stderr=True, tail=self.log_tail_lines
+            )
             return raw_logs.decode("utf-8", errors="replace")
         except Exception as exc:
             logger.warning(f"Could not read sandbox logs: {exc}")

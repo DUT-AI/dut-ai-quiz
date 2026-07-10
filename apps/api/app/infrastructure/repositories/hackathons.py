@@ -1,3 +1,4 @@
+import hashlib
 from uuid import UUID
 
 from sqlalchemy import select, func
@@ -319,7 +320,9 @@ class HackathonSubmissionRepository(IHackathonSubmissionRepository):
 
     async def get(self, submission_id: UUID) -> HackathonSubmissionEntity | None:
         r = await self._s.execute(
-            select(HackathonSubmission).where(HackathonSubmission.id == submission_id)
+            select(HackathonSubmission)
+            .where(HackathonSubmission.id == submission_id)
+            .execution_options(populate_existing=True)
         )
         model = r.scalar_one_or_none()
         return model.to_entity() if model else None
@@ -367,9 +370,15 @@ class HackathonSubmissionRepository(IHackathonSubmissionRepository):
     async def count_submissions(
         self, task_id: UUID, user_id: int | None = None, team_id: UUID | None = None
     ) -> int:
+        counted_statuses = (
+            SubmissionStatus.EXTRACTING,
+            SubmissionStatus.RUNNING,
+            SubmissionStatus.EVALUATING,
+            SubmissionStatus.PUBLISHED,
+        )
         stmt = select(func.count(HackathonSubmission.id)).where(
             HackathonSubmission.task_id == task_id,
-            HackathonSubmission.status != SubmissionStatus.CANCELLED,
+            HackathonSubmission.status.in_(counted_statuses),
         )
         if team_id:
             stmt = stmt.where(HackathonSubmission.team_id == team_id)
@@ -381,6 +390,19 @@ class HackathonSubmissionRepository(IHackathonSubmissionRepository):
 
         r = await self._s.execute(stmt)
         return r.scalar() or 0
+
+    async def acquire_quota_lock(
+        self, task_id: UUID, user_id: int | None = None, team_id: UUID | None = None
+    ) -> None:
+        participant = f"team:{team_id}" if team_id else f"user:{user_id}"
+        digest = hashlib.sha256(f"{task_id}:{participant}".encode("utf-8")).digest()
+        lock_id = int.from_bytes(digest[:8], "big", signed=False) % (
+            2**63 - 1
+        )
+        await self._s.execute(select(func.pg_advisory_xact_lock(lock_id)))
+
+    async def commit(self) -> None:
+        await self._s.commit()
 
     async def get_last_submission(
         self, task_id: UUID, user_id: int | None = None, team_id: UUID | None = None
