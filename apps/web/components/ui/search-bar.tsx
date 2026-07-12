@@ -4,14 +4,15 @@ import { cn } from "@/lib/utils"
 
 export interface SearchBarProps extends React.ComponentProps<"input"> {
   onClear?: () => void
+  containerClassName?: string
 }
 
 const SearchBar = React.forwardRef<HTMLInputElement, SearchBarProps>(
-  ({ className, value, onChange, onClear, placeholder = "Tìm kiếm bài học...", ...props }, ref) => {
+  ({ className, value, onChange, onClear, placeholder = "Tìm kiếm bài học...", containerClassName, ...props }, ref) => {
     const hasValue = !!value
 
     return (
-      <div className="relative w-full max-w-md group">
+      <div className={cn("relative w-full max-w-md group", containerClassName)}>
         <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-gray-navy/70 dark:text-light-blue/70">
           <Search className="size-5 transition-colors group-focus-within:text-primary" />
         </div>

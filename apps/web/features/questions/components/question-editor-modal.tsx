@@ -15,12 +15,14 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { usePresignUpload, useCreateQuestion, useUpdateQuestion } from "@/lib/queries";
+import { usePresignUpload, useCreateQuestion, useUpdateQuestion, useTags } from "@/lib/queries";
 import { uploadImage, handlePasteImage } from "@/lib/upload-utils";
 import type { QuestionOut } from "@/lib/types";
 import { QuestionFormSchema, type QuestionFormValues } from "@/features/questions/types";
 import { renderMathInHTML } from "@/lib/render-math";
 import { PoolTypeSelector } from "./pool-type-selector";
+import { DifficultySelector } from "./difficulty-selector";
+import { TagSelector } from "./tag-selector";
 
 interface Props {
   lessonId: string;
@@ -49,23 +51,37 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
         newOption(),
       ];
 
+  const { data: allTags = [] } = useTags();
+
   const {
     control,
     register,
     handleSubmit,
     watch,
     setValue,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<QuestionFormValues>({
     resolver: zodResolver(QuestionFormSchema),
     defaultValues: {
       pool_type: initialData?.pool_type ?? "PRACTICE",
+      difficulty: (initialData?.difficulty as any) ?? "EASY",
       content: initialData?.content ?? "",
       options: defaultOptions,
       solution: initialData?.solution ?? "",
       lesson_id: lessonId,
+      tags: [],
     },
   });
+
+  React.useEffect(() => {
+    if (initialData?.tags && allTags.length) {
+      const tagIds = allTags
+        .filter((tag) => initialData.tags.includes(tag.name))
+        .map((tag) => tag.id);
+      setValue("tags", tagIds);
+    }
+  }, [initialData?.tags, allTags, setValue]);
 
   const { fields, append, remove, update } = useFieldArray({ control, name: "options" });
 
@@ -85,12 +101,15 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
         const markdown = `\n![image](${url})`;
 
         if (target === "content") {
-          setValue("content", (watchContent ?? "") + markdown);
+          setValue("content", (getValues("content") ?? "") + markdown);
         } else if (target === "solution") {
-          setValue("solution", (watchSolution ?? "") + markdown);
+          setValue("solution", (getValues("solution") ?? "") + markdown);
         } else {
           const idx = fields.findIndex((f) => f.id === target);
-          if (idx !== -1) update(idx, { ...fields[idx], text: fields[idx].text + markdown });
+          if (idx !== -1) {
+            const currentText = getValues(`options.${idx}.text`) ?? "";
+            update(idx, { ...fields[idx], text: currentText + markdown });
+          }
         }
       } catch (err) {
         console.error("Upload failed", err);
@@ -98,17 +117,18 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
         setUploading(null);
       }
     },
-    [presign.mutateAsync, watchContent, watchSolution, fields, setValue, update]
+    [presign.mutateAsync, getValues, fields, setValue, update]
   );
 
   const onSubmit = async (values: QuestionFormValues) => {
     try {
       const payload = {
         pool_type: values.pool_type,
+        difficulty: values.difficulty,
         content: values.content,
         options: values.options,
         solution: values.solution || undefined,
-        tags: [],
+        tags: values.tags || [],
         lesson_id: lessonId,
       };
       if (initialData) {
@@ -176,17 +196,43 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
           {/* Body */}
           <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
             <form id="question-form" onSubmit={handleSubmit(onSubmit)} className="space-y-10 text-left">
-              {/* Pool type selector */}
-              <Controller
-                control={control}
-                name="pool_type"
-                render={({ field }) => (
-                  <PoolTypeSelector
-                    value={field.value}
-                    onChange={field.onChange}
-                  />
-                )}
-              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Pool type selector */}
+                <Controller
+                  control={control}
+                  name="pool_type"
+                  render={({ field }) => (
+                    <PoolTypeSelector
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
+                />
+
+                {/* Difficulty selector */}
+                <Controller
+                  control={control}
+                  name="difficulty"
+                  render={({ field }) => (
+                    <DifficultySelector
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
+                />
+
+                {/* Tag selector */}
+                <Controller
+                  control={control}
+                  name="tags"
+                  render={({ field }) => (
+                    <TagSelector
+                      value={field.value || []}
+                      onChange={field.onChange}
+                    />
+                  )}
+                />
+              </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                 {/* Left: Inputs */}
@@ -203,7 +249,7 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
                         onPaste={(e) => handlePasteImage(e, (file) => handleUpload(file, "content"))}
                         placeholder="Nhập nội dung câu hỏi, $...$ cho LaTeX, hỗ trợ dán ảnh (Ctrl+V)..."
                         rows={5}
-                        className={`w-full px-8 py-6 rounded-3xl bg-gray-50 dark:bg-white/5 border-2 outline-none transition-all font-medium text-lg leading-relaxed resize-none ${
+                        className={`w-full px-8 py-6 rounded-3xl bg-gray-50 dark:bg-white/5 border-2 outline-none transition-all font-medium text-lg leading-relaxed resize-y ${
                           errors.content ? "border-red/50" : "border-transparent focus:border-primary/30"
                         }`}
                       />
@@ -249,9 +295,12 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
                               <button
                                 type="button"
                                 onClick={() => {
-                                  fields.forEach((_, i) => {
-                                    setValue(`options.${i}.is_correct`, i === idx);
-                                  });
+                                  const currentOptions = watchOptions || [];
+                                  const updated = currentOptions.map((opt, i) => ({
+                                    ...opt,
+                                    is_correct: i === idx,
+                                  }));
+                                  setValue("options", updated, { shouldDirty: true, shouldValidate: true });
                                 }}
                                 className={`mt-4 size-8 rounded-xl flex items-center justify-center border-2 transition-all font-black text-xs shrink-0 ${
                                   f.value
@@ -270,8 +319,8 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
                                 {...register(`options.${idx}.text`)}
                                 onPaste={(e) => handlePasteImage(e, (file) => handleUpload(file, field.id))}
                                 placeholder={`Đáp án ${String.fromCharCode(65 + idx)}...`}
-                                rows={1}
-                                className={`w-full px-6 py-4 rounded-2xl bg-gray-50/50 dark:bg-white/5 border outline-none transition-all font-medium min-h-[56px] resize-none overflow-hidden ${
+                                rows={2}
+                                className={`w-full px-6 py-4 rounded-2xl bg-gray-50/50 dark:bg-white/5 border outline-none transition-all font-medium min-h-[56px] resize-y overflow-y-auto ${
                                   errors.options?.[idx]?.text ? "border-red/40" : "border-transparent focus:border-primary/30"
                                 }`}
                               />
@@ -327,7 +376,7 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
                         onPaste={(e) => handlePasteImage(e, (file) => handleUpload(file, "solution"))}
                         placeholder="Hướng dẫn giải bài tập..."
                         rows={3}
-                        className="w-full px-8 py-6 rounded-3xl bg-gray-50 dark:bg-white/5 border border-transparent focus:border-primary/30 outline-none transition-all font-medium text-sm resize-none"
+                        className="w-full px-8 py-6 rounded-3xl bg-gray-50 dark:bg-white/5 border border-transparent focus:border-primary/30 outline-none transition-all font-medium text-sm resize-y"
                       />
                       <div className="absolute right-4 bottom-4">
                         <label className="cursor-pointer p-2 rounded-xl bg-white dark:bg-white/10 shadow-sm hover:scale-110 transition-all text-primary opacity-40 hover:opacity-100 block">

@@ -25,7 +25,11 @@ export function JsonImport({ onSuccess }: JsonImportProps) {
       try {
         const json = JSON.parse(event.target?.result as string);
         if (Array.isArray(json)) {
-          setQuestions(json);
+          const initialized = json.map(q => ({
+            ...q,
+            difficulty: q.difficulty || "EASY"
+          }));
+          setQuestions(initialized);
           setIsLoaded(true);
         } else {
           alert("JSON must be an array of questions");
@@ -49,7 +53,9 @@ export function JsonImport({ onSuccess }: JsonImportProps) {
         questions: questions.map(q => ({
           question: q.question || q.content,
           options: q.options,
-          solution: q.solution
+          solution: q.solution,
+          difficulty: q.difficulty || "EASY",
+          tags: q.tags || []
         })),
         pool_type: "PRACTICE"
       });
@@ -96,9 +102,25 @@ export function JsonImport({ onSuccess }: JsonImportProps) {
                   >
                     <Trash2 className="w-5 h-5" />
                   </button>
-                  <p className="font-bold text-slate-800 dark:text-white mb-4 pr-8 leading-relaxed">
+                  <p className="font-bold text-slate-800 dark:text-white mb-2 pr-8 leading-relaxed">
                     {q.question || q.content}
                   </p>
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="text-xs font-semibold text-slate-400 uppercase">Độ khó:</span>
+                    <select
+                      value={q.difficulty || "EASY"}
+                      onChange={(e) => {
+                        const updated = [...questions];
+                        updated[i].difficulty = e.target.value;
+                        setQuestions(updated);
+                      }}
+                      className="rounded border border-slate-300 dark:border-white/20 bg-white dark:bg-slate-800 px-2 py-1 text-xs outline-none focus:border-primary text-slate-700 dark:text-white"
+                    >
+                      <option value="EASY">Dễ</option>
+                      <option value="MEDIUM">Trung bình</option>
+                      <option value="HARD">Khó</option>
+                    </select>
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {q.options?.map((opt: any, oi: number) => (
                       <div 
@@ -142,6 +164,7 @@ export function JsonImport({ onSuccess }: JsonImportProps) {
 {`[
   {
     "question": "The question content here?",
+    "difficulty": "EASY",
     "options": [
       { "text": "Correct option", "is_correct": true },
       { "text": "Wrong option", "is_correct": false }

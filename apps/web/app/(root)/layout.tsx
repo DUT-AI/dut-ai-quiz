@@ -26,7 +26,7 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  const isPracticeGame = pathname && pathname.includes("/practice") && pathname !== "/lessons/practice";
+  const isPracticeGame = pathname && pathname.includes("/game") && pathname !== "/lessons/game";
 
   if (isPracticeGame) {
     return (

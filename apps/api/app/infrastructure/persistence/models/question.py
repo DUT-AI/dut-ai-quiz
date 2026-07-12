@@ -31,8 +31,8 @@ class Question(Base):
         JSONB, nullable=False, default=list
     )
     solution: Mapped[str | None] = mapped_column(nullable=True)
-    tags: Mapped[list[str]] = mapped_column(
-        ARRAY(String()), nullable=False, default=list
+    tags: Mapped[list[UUID]] = mapped_column(
+        ARRAY(pgUUID(as_uuid=True)), nullable=False, default=list
     )
     lesson_id: Mapped[UUID | None] = mapped_column(
         pgUUID(as_uuid=True), ForeignKey("lessons.id"), index=True, nullable=True

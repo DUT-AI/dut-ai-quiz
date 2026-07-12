@@ -2,7 +2,8 @@ from uuid import uuid4
 
 from app.core.datetime_utils import now_ict
 from app.domain.entities.question import QuestionEntity, QuestionOptionEntity
-from app.domain.interfaces import IQuestionRepository
+from app.domain.entities.tag import TagEntity
+from app.domain.interfaces import IQuestionRepository, ITagRepository
 from app.presentation.schemas.questions import QuestionBulkCreate, QuestionCreate
 
 
@@ -37,10 +38,34 @@ class CreateQuestionUseCase:
 
 
 class BulkCreateQuestionsUseCase:
-    def __init__(self, question_repo: IQuestionRepository):
+    def __init__(self, question_repo: IQuestionRepository, tag_repo: ITagRepository):
         self._question_repo = question_repo
+        self._tag_repo = tag_repo
 
     async def execute(self, payload: QuestionBulkCreate) -> list[QuestionEntity]:
+        # Collect all unique tag names
+        all_tag_names = set()
+        for item in payload.questions:
+            for tag_name in item.tags:
+                cleaned = tag_name.strip()
+                if cleaned:
+                    all_tag_names.add(cleaned)
+
+        # Resolve tag names to UUIDs, creating them if they don't exist
+        tag_name_to_uuid = {}
+        for name in all_tag_names:
+            existing = await self._tag_repo.get_by_name(name)
+            if existing:
+                tag_name_to_uuid[name] = existing.id
+            else:
+                new_tag = TagEntity(
+                    id=uuid4(),
+                    name=name,
+                    created_at=now_ict(),
+                )
+                created = await self._tag_repo.add(new_tag)
+                tag_name_to_uuid[name] = created.id
+
         entities: list[QuestionEntity] = []
         created_at = now_ict()
 
@@ -56,6 +81,16 @@ class BulkCreateQuestionsUseCase:
                     )
                 )
 
+            # Map tag names to UUIDs
+            item_tag_uuids = []
+            for tag_name in item.tags:
+                cleaned = tag_name.strip()
+                if cleaned in tag_name_to_uuid:
+                    item_tag_uuids.append(tag_name_to_uuid[cleaned])
+
+            # If tags are specified in the JSON item, use them. Otherwise fall back to batch-level tags.
+            tags = item_tag_uuids if item.tags else payload.tags
+
             entities.append(
                 QuestionEntity(
                     id=uuid4(),
@@ -65,7 +100,7 @@ class BulkCreateQuestionsUseCase:
                     content=item.question,
                     options=options,
                     solution=item.solution,
-                    tags=payload.tags,
+                    tags=tags,
                     created_by=payload.created_by or 1,
                     created_at=created_at,
                 )

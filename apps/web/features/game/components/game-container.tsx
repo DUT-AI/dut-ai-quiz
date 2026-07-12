@@ -8,9 +8,9 @@ import { toast } from "sonner";
 
 import BossHud from "./boss-hud";
 import ItemHotbar, { ItemType } from "./item-hotbar";
-import PracticeStartScreen from "./practice-start-screen";
-import PracticeQuestionCard from "./practice-question-card";
-import PracticeGameResult from "./practice-game-result";
+import GameStartScreen from "./game-start-screen";
+import GameQuestionCard from "./game-question-card";
+import GameResult from "./game-result";
 
 import {
   useActiveGameSession,
@@ -27,11 +27,11 @@ const getBossName = (stageNum: number) => {
   return "MA NHÃN TỐI THƯỢNG";
 };
 
-interface PracticeGameContainerProps {
+interface GameContainerProps {
   lessonSlug: string;
 }
 
-export default function PracticeGameContainer({ lessonSlug }: PracticeGameContainerProps) {
+export default function GameContainer({ lessonSlug }: GameContainerProps) {
   const router = useRouter();
 
   // 1. Fetch active session on load
@@ -492,7 +492,7 @@ export default function PracticeGameContainer({ lessonSlug }: PracticeGameContai
   if (isLoadingActiveSession) {
     return (
       <div
-        className="min-h-screen text-zinc-950 dark:text-slate-100 flex flex-col items-center justify-center font-sans relative select-none p-4 md:p-6"
+        className="min-h-screen text-zinc-955 dark:text-slate-100 flex flex-col items-center justify-center font-sans relative select-none p-4 md:p-6"
         style={{
           backgroundImage: `
             radial-gradient(circle, rgba(139,92,26,0.05) 1.5px, transparent 1.5px),
@@ -519,7 +519,7 @@ export default function PracticeGameContainer({ lessonSlug }: PracticeGameContai
 
   return (
     <div
-      className={`min-h-screen text-zinc-950 dark:text-slate-100 flex flex-col font-sans relative select-none p-4 md:p-6 transition-all duration-300 ${
+      className={`min-h-screen text-zinc-955 dark:text-slate-100 flex flex-col font-sans relative select-none p-4 md:p-6 transition-all duration-300 ${
         screenShake ? "animate-[shake_0.5s_infinite]" : ""
       }`}
       style={{
@@ -573,7 +573,7 @@ export default function PracticeGameContainer({ lessonSlug }: PracticeGameContai
       `}</style>
 
       {screen === "start" ? (
-        <PracticeStartScreen
+        <GameStartScreen
           lessonSlug={lessonSlug}
           hasActiveSession={hasActiveSession}
           isStarting={startSessionMutation.isPending}
@@ -599,10 +599,10 @@ export default function PracticeGameContainer({ lessonSlug }: PracticeGameContai
                     btnClass = "bg-amber-400 dark:bg-amber-500 border-zinc-900 dark:border-slate-700 text-zinc-900 dark:text-white scale-110";
                   } else if (status === "correct") {
                     icon = <Trophy className="w-3 h-3 md:w-4 md:h-4 text-emerald-800 dark:text-emerald-300" />;
-                    btnClass = "bg-emerald-400 dark:bg-emerald-600 border-zinc-900 dark:border-slate-700";
+                    btnClass = "bg-emerald-400 dark:bg-emerald-650 border-zinc-900 dark:border-slate-700";
                   } else if (status === "incorrect") {
                     icon = <Skull className="w-3 h-3 md:w-4 md:h-4 text-red-800 dark:text-red-300" />;
-                    btnClass = "bg-red-400 dark:bg-red-600 border-zinc-900 dark:border-slate-700";
+                    btnClass = "bg-red-400 dark:bg-red-650 border-zinc-900 dark:border-slate-700";
                   } else {
                     icon = <Lock className="w-2.5 h-2.5 md:w-3 md:h-3 text-zinc-400 dark:text-slate-600" />;
                   }
@@ -663,7 +663,7 @@ export default function PracticeGameContainer({ lessonSlug }: PracticeGameContai
               {/* ─── RIGHT COLUMN: TIMER, QUESTIONS & ITEMS ─── */}
               <div className="lg:col-span-7 flex flex-col gap-4 w-full items-center">
                 {questions[currentIdx] && (
-                  <PracticeQuestionCard
+                  <GameQuestionCard
                     currentQuestion={questions[currentIdx]}
                     currentIdx={currentIdx}
                     totalQuestions={questions.length}
@@ -686,7 +686,7 @@ export default function PracticeGameContainer({ lessonSlug }: PracticeGameContai
           </main>
         </>
       ) : (
-        <PracticeGameResult
+        <GameResult
           lessonSlug={lessonSlug}
           gameResult={gameResult === "victory" ? "victory" : "defeat"}
           score={gamification?.final_score ?? score}
@@ -700,7 +700,7 @@ export default function PracticeGameContainer({ lessonSlug }: PracticeGameContai
       <AnimatePresence>
         {showBossWarning && (
           <motion.div
-            className="absolute inset-0 bg-red-950/80 flex flex-col items-center justify-center text-center z-50 pointer-events-none select-none border-4 border-red-600/40"
+            className="absolute inset-0 bg-red-955/80 flex flex-col items-center justify-center text-center z-50 pointer-events-none select-none border-4 border-red-650/40"
             initial={{ opacity: 0 }}
             animate={{ opacity: [0, 1, 0.8, 1, 0.9, 1] }}
             exit={{ opacity: 0 }}
@@ -708,47 +708,20 @@ export default function PracticeGameContainer({ lessonSlug }: PracticeGameContai
             onAnimationComplete={() => {
               setTimeout(() => {
                 setShowBossWarning(false);
-              }, 2000);
+              }, 1200);
             }}
           >
-            <div className="absolute inset-0 bg-red-600/5 animate-[pulse_0.4s_infinite]" />
             <motion.div
-              initial={{ scale: 0.8, y: -20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.8, y: 20 }}
-              className="px-8 py-6 bg-white dark:bg-slate-900 border-3 border-zinc-900 dark:border-slate-700 shadow-lg rounded-none max-w-md relative z-10 text-zinc-955 dark:text-slate-100 font-mono"
+              className="text-red-500 font-extrabold text-5xl md:text-7xl font-mono tracking-widest animate-pulse"
+              initial={{ scale: 0.5 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 120 }}
             >
-              <Skull className="w-16 h-16 text-red-500 mx-auto mb-4 animate-[bounce_0.6s_infinite]" />
-              <h1 className="text-2xl md:text-3xl font-black tracking-widest text-red-600 dark:text-red-400 mb-2">
-                CẢNH BÁO: ĐẤU BOSS!
-              </h1>
-              <p className="text-[10px] text-zinc-500 dark:text-slate-400 tracking-wider border-t-2 border-zinc-150 dark:border-slate-800 pt-2.5 font-bold">
-                GIÁ VẬT PHẨM X2 | ĐIỂM SỐ X2 | THỜI GIAN SUY NGHĨ 10 GIÂY
-              </p>
+              WARNING!
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ─── 3-SECOND COUNTDOWN OVERLAY ─── */}
-      <AnimatePresence>
-        {countdown !== null && (
-          <motion.div
-            className="absolute inset-0 bg-zinc-950 dark:bg-slate-950 flex flex-col items-center justify-center z-50 select-none pointer-events-none"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              key={countdown}
-              initial={{ scale: 0.2, opacity: 0 }}
-              animate={{ scale: [0.2, 1.2, 1], opacity: 1 }}
-              exit={{ scale: 1.5, opacity: 0 }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-              className="text-7xl md:text-8xl lg:text-9xl font-black font-mono text-amber-400 drop-shadow-[0_4px_12px_rgba(245,158,11,0.5)] select-none text-center"
-            >
-              {countdown === 0 ? "BẮT ĐẦU!" : countdown}
-            </motion.div>
+            <div className="text-zinc-100 font-extrabold mt-4 font-mono text-sm md:text-base max-w-sm px-4">
+              BOSS {getBossName(stage)} XUẤT HIỆN. HP TRỪ GẤP ĐÔI NẾU TRẢ LỜI SAI!
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

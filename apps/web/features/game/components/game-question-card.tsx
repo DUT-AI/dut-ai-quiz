@@ -6,7 +6,7 @@ import { Timer, Zap, Swords } from "lucide-react";
 import { type GameQuestion } from "../types";
 import { Markdown } from "@/components/markdown";
 
-interface PracticeQuestionCardProps {
+interface GameQuestionCardProps {
   currentQuestion: GameQuestion;
   currentIdx: number;
   totalQuestions: number;
@@ -24,7 +24,7 @@ interface PracticeQuestionCardProps {
   correctOptionId: string | null;
 }
 
-export default function PracticeQuestionCard({
+export default function GameQuestionCard({
   currentQuestion,
   currentIdx,
   totalQuestions,
@@ -40,7 +40,7 @@ export default function PracticeQuestionCard({
   onSubmitAnswer,
   onNextQuestion,
   correctOptionId,
-}: PracticeQuestionCardProps) {
+}: GameQuestionCardProps) {
   return (
     <div className="w-full flex flex-col gap-4 items-center">
       {/* ⏳ DYNAMIC TIMER BAR (Cartoon Progress Bar) */}
@@ -116,7 +116,7 @@ export default function PracticeQuestionCard({
               }
             } else if (selectedOptionId) {
               if (isSelected) {
-                btnStyles = "border-amber-500 bg-amber-50 dark:bg-amber-950/20 text-zinc-900 dark:text-white animate-pulse shadow-sm";
+                btnStyles = "border-amber-500 bg-amber-55/20 dark:bg-amber-950/20 text-zinc-900 dark:text-white animate-pulse shadow-sm";
               } else {
                 btnStyles = "border-zinc-200 dark:border-slate-800 text-zinc-300 dark:text-slate-700 bg-zinc-50 dark:bg-slate-950 opacity-30 cursor-default shadow-none pointer-events-none";
               }

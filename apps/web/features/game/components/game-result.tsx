@@ -4,9 +4,9 @@ import React from "react";
 import { Trophy, Skull, RotateCcw, BookOpen } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import PracticePersonalBest from "./practice-personal-best";
+import GamePersonalBest from "./game-personal-best";
 
-interface PracticeGameResultProps {
+interface GameResultProps {
   lessonSlug: string;
   gameResult: "victory" | "defeat";
   score: number;
@@ -15,14 +15,14 @@ interface PracticeGameResultProps {
   onRetry: () => void;
 }
 
-export default function PracticeGameResult({
+export default function GameResult({
   lessonSlug,
   gameResult,
   score,
   gold,
   highestIdx,
   onRetry,
-}: PracticeGameResultProps) {
+}: GameResultProps) {
   const router = useRouter();
 
   return (
@@ -90,7 +90,7 @@ export default function PracticeGameResult({
             <button
               type="button"
               onClick={() => router.push(`/lessons/${lessonSlug}`)}
-              className="py-2.5 px-4 font-extrabold rounded-none bg-indigo-500 hover:bg-indigo-400 dark:bg-indigo-600 dark:hover:bg-indigo-500 text-white font-mono text-xs border-2 border-zinc-900 dark:border-slate-700 shadow-sm active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all flex items-center justify-center gap-2"
+              className="py-2.5 px-4 font-extrabold rounded-none bg-indigo-500 hover:bg-indigo-400 dark:bg-indigo-600 dark:hover:bg-indigo-550 text-white font-mono text-xs border-2 border-zinc-900 dark:border-slate-700 shadow-sm active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all flex items-center justify-center gap-2"
             >
               <BookOpen className="w-4 h-4" />
               <span>VỀ BÀI HỌC</span>
@@ -101,7 +101,7 @@ export default function PracticeGameResult({
 
       {/* Leaderboard Column (5 cols) */}
       <div className="lg:col-span-5 w-full">
-        <PracticePersonalBest lessonSlug={lessonSlug} />
+        <GamePersonalBest lessonSlug={lessonSlug} />
       </div>
     </div>
   );
