@@ -6,6 +6,7 @@ from uuid import UUID, uuid4
 from app.application.services.user_service import UserService
 from app.config import settings
 from app.domain.entities.hackathon import RegistrationStatus
+from app.domain.entities.submission import HackathonSubmissionEntity, SubmissionStatus
 from app.domain.exceptions.exceptions import AppException
 from app.domain.interfaces import (
     IHackathonRegistrationRepository,
@@ -51,7 +52,7 @@ class PresignSubmitUseCase:
         task_id: UUID,
         user_id: int,
         script_filename: str,
-        model_filename: str,
+        model_filename: str | None = None,
     ) -> PresignSubmitOut:
         now = datetime.now()
 
@@ -129,27 +130,41 @@ class PresignSubmitUseCase:
             download_url=script_download_url,
         )
 
-        # 9. Tạo Presigned PUT URL cho Model (bắt buộc)
-        model_ext = (
-            model_filename.split(".")[-1] if "." in model_filename else "bin"
+        # 9. Create a presigned upload URL for optional model weights.
+        model_download_url = None
+        model_info = None
+        if model_filename:
+            model_ext = (
+                model_filename.split(".")[-1] if "." in model_filename else "bin"
+            )
+            model_s3_key = f"hackathons/{hackathon_slug}/{sender_slug}/{submission_id}/model.{model_ext}"
+            model_upload_url = self._s3_client.generate_presigned_upload_url(
+                bucket=settings.minio_bucket_name,
+                key=model_s3_key,
+                content_type="application/octet-stream",
+                expires_in=settings.presigned_url_expire_seconds,
+            )
+            model_download_url = self._s3_client.get_object_url(
+                settings.minio_bucket_name, model_s3_key
+            )
+            model_info = PresignURLInfo(
+                upload_url=model_upload_url,
+                s3_key=model_s3_key,
+                download_url=model_download_url,
+            )
+
+        submission_entity = HackathonSubmissionEntity(
+            id=submission_id,
+            task_id=task.id,
+            user_id=user_id,
+            team_id=team_id,
+            script_url=script_download_url,
+            model_url=model_download_url,
+            status=SubmissionStatus.UPLOADING,
+            created_at=now,
         )
-        model_s3_key = f"hackathons/{hackathon_slug}/{sender_slug}/{submission_id}/model.{model_ext}"
-        model_upload_url = self._s3_client.generate_presigned_upload_url(
-            bucket=settings.minio_bucket_name,
-            key=model_s3_key,
-            content_type="application/octet-stream",
-            expires_in=settings.presigned_url_expire_seconds
-            if hasattr(settings, "presigned_url_expire_seconds")
-            else 3600,
-        )
-        model_download_url = self._s3_client.get_object_url(
-            settings.minio_bucket_name, model_s3_key
-        )
-        model_info = PresignURLInfo(
-            upload_url=model_upload_url,
-            s3_key=model_s3_key,
-            download_url=model_download_url,
-        )
+        await self._sub_repo.add(submission_entity)
+        await self._sub_repo.commit()
 
         return PresignSubmitOut(
             submission_id=submission_id,

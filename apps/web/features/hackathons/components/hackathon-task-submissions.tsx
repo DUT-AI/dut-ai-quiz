@@ -6,17 +6,18 @@ import {
   useSubmissions,
   useSubmitTask,
   useCancelSubmission,
+  useHackathonSubmissionEvents,
 } from "../queries";
-import { type HackathonSubmission } from "../types";
 import { UploadForm } from "./submissions/upload-form";
 import { HistoryTable } from "./submissions/history-table";
 import { LogsModal } from "./submissions/logs-modal";
 
 interface HackathonTaskSubmissionsProps {
+  hackathonId: string;
   taskId: string;
 }
 
-export function HackathonTaskSubmissions({ taskId }: HackathonTaskSubmissionsProps) {
+export function HackathonTaskSubmissions({ hackathonId, taskId }: HackathonTaskSubmissionsProps) {
   // Upload progress state
   const [isUploading, setIsUploading] = useState(false);
   const [isCommitting, setIsCommitting] = useState(false); // POST /submit phase
@@ -37,20 +38,8 @@ export function HackathonTaskSubmissions({ taskId }: HackathonTaskSubmissionsPro
   const submitMutation = useSubmitTask(taskId);
   const cancelMutation = useCancelSubmission(taskId);
 
-  // Poll submissions every 3 seconds if any submission is active (non-final state)
-  const { data: submissions = [], isLoading: isSubmissionsLoading } = useSubmissions(taskId, {
-    refetchInterval: (query: any) => {
-      // Tạm dừng polling khi đang tải file hoặc xử lý để tránh tranh chấp kết nối mạng
-      if (isUploading || isCommitting) return false;
-
-      const data = query.state.data as HackathonSubmission[] | undefined;
-      if (!data) return false;
-      const hasActive = data.some((sub) =>
-        ["UPLOADING", "EXTRACTING", "RUNNING", "EVALUATING"].includes(sub.status)
-      );
-      return hasActive ? 3000 : false;
-    },
-  });
+  const { data: submissions = [], isLoading: isSubmissionsLoading } = useSubmissions(taskId);
+  useHackathonSubmissionEvents(hackathonId, !isUploading && !isCommitting);
 
   const handleUploadProgress = (phase: "script" | "model" | "commit", loaded: number, total: number) => {
     setUploadPhase(phase);
@@ -88,11 +77,6 @@ export function HackathonTaskSubmissions({ taskId }: HackathonTaskSubmissionsPro
   };
 
   const handleSubmit = async (scriptFile: File, modelFile: File | null) => {
-    if (!modelFile) {
-      toast.error("Vui lòng chọn đầy đủ cả 2 tệp (Script và Model Weight)!");
-      return;
-    }
-
     setIsUploading(true);
     setIsCommitting(false);
     setUploadPhase("script");
@@ -108,9 +92,9 @@ export function HackathonTaskSubmissions({ taskId }: HackathonTaskSubmissionsPro
     try {
       await submitMutation.mutateAsync({
         scriptFile,
-        modelFile, // Now TypeScript knows this is File (non-null)
+        modelFile,
         onProgress: (phase, loaded, total) => {
-          if (phase === "model") {
+          if (phase === "model" && modelFile) {
             setCurrentFileName(modelFile.name);
           }
           handleUploadProgress(phase, loaded, total);

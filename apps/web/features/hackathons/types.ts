@@ -108,7 +108,7 @@ export type PresignURLInfo = z.infer<typeof PresignURLInfoSchema>;
 export const PresignSubmitOutSchema = z.object({
   submission_id: z.string(),
   script: PresignURLInfoSchema,
-  model: PresignURLInfoSchema,
+  model: PresignURLInfoSchema.nullable().optional(),
 });
 export type PresignSubmitOut = z.infer<typeof PresignSubmitOutSchema>;
 

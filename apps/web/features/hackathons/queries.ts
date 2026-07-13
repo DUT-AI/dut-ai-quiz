@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { apiGet, apiPost, apiPatch, apiClient } from "@/lib/api";
 import { HackathonSchema, type Hackathon, HackathonRegistrationSchema, type HackathonRegistration, type RegistrationStatus, HackathonTaskSchema, type HackathonTask, type MetricType, HackathonTeamSchema, type HackathonTeam, HackathonSubmissionSchema, type HackathonSubmission, PresignSubmitOutSchema, type PresignSubmitOut } from "./types";
 import { z } from "zod";
@@ -222,7 +223,7 @@ function uploadFileToS3WithProgress(
 
 interface SubmitTaskInput {
   scriptFile: File;
-  modelFile: File;
+  modelFile: File | null;
   onProgress: (phase: "script" | "model" | "commit", loaded: number, total: number) => void;
 }
 
@@ -239,7 +240,7 @@ export function useSubmitTask(taskId: string) {
         `/api/v1/hackathons/tasks/${taskId}/presign-submit`,
         {
           script_filename: scriptFile.name,
-          model_filename: modelFile.name,
+          model_filename: modelFile?.name ?? null,
         },
         PresignSubmitOutSchema
       );
@@ -256,16 +257,18 @@ export function useSubmitTask(taskId: string) {
       );
       console.log(`[SUBMIT_PERF] 2a. Upload Script lên S3 (gồm cả ghi đĩa): ${(performance.now() - scriptStart).toFixed(2)} ms`);
 
-      // Step 2b: Upload model weights directly to S3 (bắt buộc)
-      const modelStart = performance.now();
-      await uploadFileToS3WithProgress(
-        presign.model.upload_url,
-        modelFile,
-        (loaded, total) => {
-          onProgress("model", loaded, total);
-        }
-      );
-      console.log(`[SUBMIT_PERF] 2b. Upload Model Weights lên S3 (gồm cả ghi đĩa): ${(performance.now() - modelStart).toFixed(2)} ms`);
+      // Step 2b: Upload model weights directly to S3 if provided
+      if (modelFile && presign.model) {
+        const modelStart = performance.now();
+        await uploadFileToS3WithProgress(
+          presign.model.upload_url,
+          modelFile,
+          (loaded, total) => {
+            onProgress("model", loaded, total);
+          }
+        );
+        console.log(`[SUBMIT_PERF] 2b. Upload Model Weights lên S3 (gồm cả ghi đĩa): ${(performance.now() - modelStart).toFixed(2)} ms`);
+      }
 
       // Step 3: Commit to backend — save DB record and enqueue evaluation job
       const commitStart = performance.now();
@@ -274,10 +277,6 @@ export function useSubmitTask(taskId: string) {
         `/api/v1/hackathons/tasks/${taskId}/submit`,
         {
           submission_id: presign.submission_id,
-          script_s3_key: presign.script.s3_key,
-          script_url: presign.script.download_url,
-          model_s3_key: presign.model.s3_key,
-          model_url: presign.model.download_url,
         },
         HackathonSubmissionSchema
       );
@@ -307,7 +306,54 @@ export function useSubmissions(taskId: string, options?: any) {
   });
 }
 
+export function useHackathonLeaderboard(hackathonId: string) {
+  return useQuery<any[]>({
+    queryKey: ["hackathons", hackathonId, "leaderboard"],
+    queryFn: () =>
+      apiGet<{ leaderboard: any[] }>(`/api/v1/hackathons/${hackathonId}/leaderboard`).then(
+        (res) => res.leaderboard
+      ),
+    staleTime: 5_000,
+    enabled: !!hackathonId,
+  });
+}
 
+export function useHackathonSubmissionEvents(hackathonId: string, enabled = true) {
+  const qc = useQueryClient();
+
+  useEffect(() => {
+    if (!hackathonId || !enabled || typeof window === "undefined") return;
+
+    const url = `${API_BASE}/api/v1/hackathons/${hackathonId}/leaderboard/events`;
+    const source = new EventSource(url, { withCredentials: true });
+
+    const handleUpdate = (event: Event) => {
+      const message = event as MessageEvent<string>;
+      try {
+        const payload = JSON.parse(message.data);
+        qc.setQueryData(
+          ["hackathons", hackathonId, "leaderboard"],
+          payload.leaderboard ?? []
+        );
+      } catch {
+        /* ignore malformed realtime payloads */
+      }
+
+      // TODO: We might want to invalidate submissions if needed, but since submissions are per task, it's harder here.
+      // For now, we'll just invalidate all hackathon tasks submissions if any update happens, or maybe skip.
+      qc.invalidateQueries({
+        queryKey: ["hackathons", "tasks"],
+      });
+    };
+
+    source.addEventListener("hackathon.leaderboard.updated", handleUpdate);
+
+    return () => {
+      source.removeEventListener("hackathon.leaderboard.updated", handleUpdate);
+      source.close();
+    };
+  }, [hackathonId, enabled, qc]);
+}
 
 export function useCancelSubmission(taskId: string) {
   const qc = useQueryClient();
@@ -338,5 +384,4 @@ export function useSubmissionLogs(submissionId: string, options?: any) {
     ...options,
   });
 }
-
 

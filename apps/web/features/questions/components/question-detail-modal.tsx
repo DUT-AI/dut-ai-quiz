@@ -48,8 +48,13 @@ export function QuestionDetailModal({ question, correctRate, onClose }: Question
                 Tỉ lệ đúng: {Math.round(correctRate * 100)}%
               </span>
               {question.difficulty && (
-                <span className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-500 text-[10px] font-black uppercase tracking-widest">
-                  {question.difficulty}
+                <span className={cn(
+                  "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border",
+                  question.difficulty === "EASY" && "bg-green-500/10 text-green-500 border-green-500/20",
+                  question.difficulty === "MEDIUM" && "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
+                  question.difficulty === "HARD" && "bg-red/10 text-red border-red/20"
+                )}>
+                  Độ khó: {question.difficulty === "EASY" ? "Dễ" : question.difficulty === "MEDIUM" ? "Trung bình" : "Khó"}
                 </span>
               )}
             </div>

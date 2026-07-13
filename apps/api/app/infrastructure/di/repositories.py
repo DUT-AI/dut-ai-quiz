@@ -8,6 +8,7 @@ from app.domain.interfaces import (
     ILessonRepository,
     IGameSessionRepository,
     IQuestionRepository,
+    ITagRepository,
     IUserRepository,
 )
 from app.domain.interfaces.hackathon_repo import (
@@ -24,6 +25,7 @@ from app.infrastructure.repositories.focus_events import FocusEventRepository
 from app.infrastructure.repositories.lessons import LessonRepository
 from app.infrastructure.repositories.game_sessions import GameSessionRepository
 from app.infrastructure.repositories.questions import QuestionRepository
+from app.infrastructure.repositories.tags import TagRepository
 from app.infrastructure.repositories.users import UserRepository
 from app.infrastructure.repositories.hackathons import (
     HackathonRepository,
@@ -45,6 +47,7 @@ class RepositoryProvider(Provider):
         ExamQuestionRepository, provides=IExamQuestionRepository
     )
     question_repo = provide(QuestionRepository, provides=IQuestionRepository)
+    tag_repo = provide(TagRepository, provides=ITagRepository)
     focus_event_repo = provide(FocusEventRepository, provides=IFocusEventRepository)
     game_session_repo = provide(
         GameSessionRepository, provides=IGameSessionRepository

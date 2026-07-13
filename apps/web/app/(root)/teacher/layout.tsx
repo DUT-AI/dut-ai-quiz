@@ -12,9 +12,7 @@ export default function TeacherLayout({
 }) {
   return (
     <ProtectedRoute allowedRoles={["admin", "MENTOR"]}>
-      <div className="min-h-screen bg-gray-50 dark:bg-slate/30">
-        <div className="max-w-7xl mx-auto px-4 py-6">{children}</div>
-      </div>
+      <div className="w-full bg-slate-50 dark:bg-zinc-950">{children}</div>
     </ProtectedRoute>
   );
 }

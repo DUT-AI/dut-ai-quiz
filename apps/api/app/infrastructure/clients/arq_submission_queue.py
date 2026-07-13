@@ -14,15 +14,9 @@ class ArqSubmissionQueue(ISubmissionQueue):
     async def enqueue_evaluation(
         self,
         submission_id: UUID,
-        script_s3_key: str,
-        ground_truth_s3_key: str,
-        metric_type: str,
     ) -> None:
         """Enqueues the evaluate submission job reusing the injected Redis connection pool."""
         await self._arq_redis.enqueue_job(
             "evaluate_submission_job",
             submission_id=str(submission_id),
-            script_s3_key=script_s3_key,
-            ground_truth_s3_key=ground_truth_s3_key,
-            metric_type=metric_type,
         )

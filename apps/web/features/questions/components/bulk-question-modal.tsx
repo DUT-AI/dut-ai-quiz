@@ -39,7 +39,14 @@ export default function BulkQuestionModal({ lessonId, onClose, onSuccess }: Prop
       }
 
       await bulkMut.mutateAsync({
-        questions: parsed,
+        questions: parsed.map((item: any) => ({
+          question: item.question,
+          options: item.options,
+          solution: item.solution,
+          difficulty: item.difficulty,
+          pool_type: item.pool_type,
+          tags: item.tags || []
+        })),
         lesson_id: lessonId,
         pool_type: "PRACTICE"
       });
@@ -101,6 +108,8 @@ export default function BulkQuestionModal({ lessonId, onClose, onSuccess }: Prop
   {
     "question": "Nội dung câu hỏi...",
     "pool_type": "PRACTICE",
+    "difficulty": "EASY",
+    "tags": ["CNN", "Deep Learning"],
     "options": [
       { "text": "Đáp án A", "is_correct": true },
       { "text": "Đáp án B", "is_correct": false }
@@ -125,9 +134,9 @@ export default function BulkQuestionModal({ lessonId, onClose, onSuccess }: Prop
                 <h4 className="font-bold text-sm text-indigo-500">💡 Hướng dẫn:</h4>
                 <ul className="text-xs space-y-2 opacity-70 list-disc pl-4">
                   <li>Dữ liệu phải là một mảng các đối tượng.</li>
-                  <li>Mỗi đối tượng cần có: <code className="bg-white/10 px-1 rounded">question</code> (string), <code className="bg-white/10 px-1 rounded">options</code> (array).</li>
-                  <li>Trường <code className="bg-white/10 px-1 rounded">solution</code> (string) và <code className="bg-white/10 px-1 rounded">pool_type</code> (<code className="bg-white/15 px-1 rounded">"PRACTICE"</code> | <code className="bg-white/15 px-1 rounded">"EXAM"</code> | <code className="bg-white/15 px-1 rounded">"GAME"</code>) là không bắt buộc.</li>
-                  <li>Hệ thống sẽ tự động gán ID cho các đáp án và liên kết với bài học hiện tại.</li>
+                  <li>Mỗi đối tượng cần có: <code className="bg-white/10 px-1 rounded">question</code> (string), <code className="bg-white/10 px-1 rounded">options</code> (mảng).</li>
+                  <li>Các trường <code className="bg-white/10 px-1 rounded">solution</code> (string), <code className="bg-white/10 px-1 rounded">tags</code> (mảng tên tag dạng chuỗi, ví dụ: <code className="bg-white/10 px-1 rounded">["CNN", "Deep Learning"]</code>), <code className="bg-white/10 px-1 rounded">pool_type</code> (<code className="bg-white/15 px-1 rounded">"PRACTICE"</code> | <code className="bg-white/15 px-1 rounded">"EXAM"</code> | <code className="bg-white/15 px-1 rounded">"GAME"</code>) và <code className="bg-white/10 px-1 rounded">difficulty</code> (<code className="bg-white/15 px-1 rounded">"EASY"</code> | <code className="bg-white/15 px-1 rounded">"MEDIUM"</code> | <code className="bg-white/15 px-1 rounded">"HARD"</code>) là không bắt buộc.</li>
+                  <li>Hệ thống sẽ tự động gán ID cho các đáp án và liên kết với bài học hiện tại. Nếu tên tag chưa tồn tại trong cơ sở dữ liệu, hệ thống sẽ tự động tạo mới tag đó.</li>
                 </ul>
               </div>
             </div>

@@ -24,7 +24,7 @@ class SubmissionOut(BaseModel):
 
 class PresignSubmitIn(BaseModel):
     script_filename: str
-    model_filename: str
+    model_filename: str | None = None
 
 
 class PresignURLInfo(BaseModel):
@@ -36,14 +36,10 @@ class PresignURLInfo(BaseModel):
 class PresignSubmitOut(BaseModel):
     submission_id: UUID
     script: PresignURLInfo
-    model: PresignURLInfo
+    model: PresignURLInfo | None = None
 
 
 class SubmitTaskIn(BaseModel):
     submission_id: UUID
-    script_s3_key: str
-    script_url: str
-    model_s3_key: str
-    model_url: str
 
 

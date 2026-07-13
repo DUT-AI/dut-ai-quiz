@@ -3,7 +3,7 @@ import { create } from "zustand";
 import { apiPost, apiPatch } from "@/lib/api";
 import type { PracticeSnapshot, QuizQuestion } from "@/lib/types";
 
-interface PracticeState {
+interface GameState {
   sessionId: string | null;
   questions: QuizQuestion[];
   currentQuestion: number;
@@ -12,17 +12,8 @@ interface PracticeState {
   error: string | null;
   snapshot: PracticeSnapshot | null;
 
-  /**
-   * Bắt đầu phiên luyện tập / kiểm tra.
-   *
-   * mode="practice": lesson_id đơn, lấy câu PRACTICE
-   * mode="test":     lesson_ids nhiều, lấy câu EXAM
-   */
   startSession: (opts: {
-    lessonId?: string | null;
-    lessonIds?: string[];
-    limit?: number;
-    mode?: "practice" | "test";
+    lessonSlug: string;
   }) => Promise<void>;
   selectAnswer: (questionId: string, optionId: string) => Promise<void>;
   goNext: () => void;
@@ -31,7 +22,7 @@ interface PracticeState {
   reset: () => void;
 }
 
-export const usePracticeStore = create<PracticeState>((set, get) => ({
+export const useGameStore = create<GameState>((set, get) => ({
   sessionId: null,
   questions: [],
   currentQuestion: 0,
@@ -41,21 +32,15 @@ export const usePracticeStore = create<PracticeState>((set, get) => ({
   snapshot: null,
 
   startSession: async ({
-    lessonId = null,
-    lessonIds = [],
-    limit = 10,
-    mode = "practice",
+    lessonSlug,
   }) => {
     set({ loading: true, error: null });
     try {
       const res = await apiPost<{
         session_id: string;
         snapshot: PracticeSnapshot;
-      }>("/api/v1/practice/sessions", {
-        lesson_id: lessonId ?? undefined,
-        lesson_ids: lessonIds,
-        limit,
-        mode,
+      }>("/api/v1/game/sessions", {
+        lesson_slug: lessonSlug,
       });
       const questions: QuizQuestion[] = res.snapshot.presentation.map((p) => ({
         question_id: p.question_id,
@@ -90,7 +75,7 @@ export const usePracticeStore = create<PracticeState>((set, get) => ({
     });
 
     try {
-      await apiPatch(`/api/v1/practice/sessions/${sessionId}/answers`, {
+      await apiPatch(`/api/v1/game/sessions/${sessionId}/answers`, {
         answers: [{ question_id: questionId, selected_option_id: optionId }],
       });
     } catch {
@@ -114,7 +99,7 @@ export const usePracticeStore = create<PracticeState>((set, get) => ({
     if (!sessionId) return;
     set({ loading: true });
     try {
-      await apiPost(`/api/v1/practice/sessions/${sessionId}/finish`, {});
+      await apiPost(`/api/v1/game/sessions/${sessionId}/finish`, {});
       set({ hasFinished: true, loading: false });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Lỗi khi nộp bài";

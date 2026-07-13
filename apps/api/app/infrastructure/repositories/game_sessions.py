@@ -79,22 +79,22 @@ class GameSessionRepository(IGameSessionRepository):
             .distinct(GameSession.user_id)
             .order_by(
                 GameSession.user_id,
-                cast(GameSession.snapshot['gamification']['final_score'].astext, Float).desc(),
-                cast(GameSession.snapshot['gamification']['gold'].astext, Integer).desc(),
-                cast(GameSession.snapshot['gamification']['total_time_response'].astext, Float).asc(),
-                cast(GameSession.snapshot['gamification']['attempt_count'].astext, Integer).asc(),
+                cast(GameSession.snapshot['gamification']['final_score'].astext, Float).desc().nulls_last(),
+                cast(GameSession.snapshot['gamification']['gold'].astext, Integer).desc().nulls_last(),
+                cast(GameSession.snapshot['gamification']['total_time_response'].astext, Float).asc().nulls_last(),
+                cast(GameSession.snapshot['gamification']['attempt_count'].astext, Integer).asc().nulls_last(),
             )
         ).subquery()
         
         stmt = (
             select(GameSession, User)
-            .join(User, User.id == GameSession.user_id)
+            .outerjoin(User, User.id == GameSession.user_id)
             .join(subq, GameSession.id == subq.c.id)
             .order_by(
-                cast(GameSession.snapshot['gamification']['final_score'].astext, Float).desc(),
-                cast(GameSession.snapshot['gamification']['gold'].astext, Integer).desc(),
-                cast(GameSession.snapshot['gamification']['total_time_response'].astext, Float).asc(),
-                cast(GameSession.snapshot['gamification']['attempt_count'].astext, Integer).asc(),
+                cast(GameSession.snapshot['gamification']['final_score'].astext, Float).desc().nulls_last(),
+                cast(GameSession.snapshot['gamification']['gold'].astext, Integer).desc().nulls_last(),
+                cast(GameSession.snapshot['gamification']['total_time_response'].astext, Float).asc().nulls_last(),
+                cast(GameSession.snapshot['gamification']['attempt_count'].astext, Integer).asc().nulls_last(),
             )
             .limit(limit)
         )
@@ -106,9 +106,9 @@ class GameSessionRepository(IGameSessionRepository):
         for row in rows:
             ps = row.GameSession.snapshot.get('gamification', {})
             result.append({
-                "user_id": row.User.id,
-                "username": row.User.name,
-                "avatar_url": row.User.avatar_url,
+                "user_id": row.User.id if row.User else row.GameSession.user_id,
+                "username": row.User.name if row.User else None,
+                "avatar_url": row.User.avatar_url if row.User else None,
                 "final_score": float(ps.get('final_score', 0)),
                 "gold": int(ps.get('gold', 0)),
                 "total_time_response": float(ps.get('total_time_response', 0)),

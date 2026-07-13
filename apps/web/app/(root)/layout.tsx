@@ -26,11 +26,11 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  const isPracticeGame = pathname && pathname.includes("/practice") && pathname !== "/lessons/practice";
+  const isPracticeGame = pathname && pathname.includes("/game") && pathname !== "/lessons/game";
 
   if (isPracticeGame) {
     return (
-      <div className="w-full min-h-screen bg-slate-50 dark:bg-zinc-950 overflow-hidden">
+      <div className="w-full min-h-screen bg-slate-50 dark:bg-zinc-950">
         {children}
       </div>
     );

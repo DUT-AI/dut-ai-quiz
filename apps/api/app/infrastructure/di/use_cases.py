@@ -55,7 +55,10 @@ from app.application.use_cases.hackathon.submissions import (
     ListSubmissionsUseCase,
     SubmitTaskUseCase,
     PresignSubmitUseCase,
+    ViewHackathonLeaderboardUseCase,
 )
+from app.application.services.hackathon_leaderboard import HackathonLeaderboardAppService
+from app.domain.services.hackathon_leaderboard import HackathonLeaderboardDomainService
 from app.application.use_cases.leaderboard.leaderboard_use_case import (
     GetLeaderboardUseCase,
 )
@@ -88,6 +91,11 @@ from app.application.use_cases.questions import (
     GetQuestionUseCase,
     ListQuestionsUseCase,
     UpdateQuestionUseCase,
+)
+from app.application.use_cases.tags.tags_use_case import (
+    ListTagsUseCase,
+    CreateTagUseCase,
+    DeleteTagUseCase,
 )
 from app.application.use_cases.uploads.presign_upload import PresignUploadUseCase
 from app.domain.events.bus import EventBus
@@ -154,6 +162,15 @@ class UseCaseProvider(Provider):
     get_submission_logs_use_case = provide(
         GetSubmissionLogsUseCase, scope=Scope.REQUEST
     )
+    hackathon_leaderboard_app_service = provide(
+        HackathonLeaderboardAppService, scope=Scope.REQUEST
+    )
+    hackathon_leaderboard_domain_service = provide(
+        HackathonLeaderboardDomainService, scope=Scope.REQUEST
+    )
+    view_hackathon_leaderboard_use_case = provide(
+        ViewHackathonLeaderboardUseCase, scope=Scope.REQUEST
+    )
     list_submissions_use_case = provide(ListSubmissionsUseCase, scope=Scope.REQUEST)
     presign_upload_use_case = provide(PresignUploadUseCase, scope=Scope.REQUEST)
 
@@ -166,6 +183,11 @@ class UseCaseProvider(Provider):
     bulk_create_questions_use_case = provide(
         BulkCreateQuestionsUseCase, scope=Scope.REQUEST
     )
+
+    # tags
+    list_tags_use_case = provide(ListTagsUseCase, scope=Scope.REQUEST)
+    create_tag_use_case = provide(CreateTagUseCase, scope=Scope.REQUEST)
+    delete_tag_use_case = provide(DeleteTagUseCase, scope=Scope.REQUEST)
 
     # attempts
     start_attempt_use_case = provide(StartAttemptUseCase, scope=Scope.REQUEST)

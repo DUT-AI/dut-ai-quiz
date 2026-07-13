@@ -260,7 +260,9 @@ class HackathonSubmission(Base):
         default=SubmissionStatus.UPLOADING,
         server_default="UPLOADING",
     )
-    score: Mapped[float | None] = mapped_column(nullable=True)
+    public_score: Mapped[float | None] = mapped_column(nullable=True)
+    private_score: Mapped[float | None] = mapped_column(nullable=True)
+    inference_time: Mapped[float | None] = mapped_column(nullable=True)
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     logs: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(nullable=False)
@@ -275,7 +277,9 @@ class HackathonSubmission(Base):
             script_url=self.script_url,
             model_url=self.model_url,
             status=self.status,
-            score=self.score,
+            public_score=self.public_score,
+            private_score=self.private_score,
+            inference_time=self.inference_time,
             error_message=self.error_message,
             logs=self.logs,
             created_at=self.created_at,
@@ -292,7 +296,9 @@ class HackathonSubmission(Base):
             script_url=entity.script_url,
             model_url=entity.model_url,
             status=entity.status,
-            score=entity.score,
+            public_score=entity.public_score,
+            private_score=entity.private_score,
+            inference_time=entity.inference_time,
             error_message=entity.error_message,
             logs=entity.logs,
             created_at=entity.created_at,
