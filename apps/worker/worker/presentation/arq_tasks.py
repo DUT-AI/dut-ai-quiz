@@ -88,18 +88,15 @@ async def sweep_stale_submissions_job(ctx):
 
 
 def _redis_url_from_settings() -> str:
-    redis_host = str(settings.redis_host)
-    if redis_host.startswith(("redis://", "rediss://")):
-        return redis_host
-    return f"redis://{redis_host}:{settings.redis_port}/0"
+    return settings.redis_url
 
 
 def _redis_settings_from_config() -> RedisSettings:
     parsed = urlparse(_redis_url_from_settings())
     database = int(parsed.path.lstrip("/") or 0)
     return RedisSettings(
-        host=parsed.hostname or str(settings.redis_host),
-        port=parsed.port or settings.redis_port,
+        host=parsed.hostname or "127.0.0.1",
+        port=parsed.port or 6379,
         database=database,
     )
 

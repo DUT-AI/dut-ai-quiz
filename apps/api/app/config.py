@@ -27,8 +27,7 @@ class Settings(BaseSettings):
 
     cors_origins: str = "http://localhost:3000,https://quiz.dutai.site"
 
-    redis_host: str = "redis://127.0.0.1:6379/0"
-    redis_port: int = 6379
+    redis_url: str = "redis://127.0.0.1:6379/0"
 
     auth_cache_ttl: int = 600
 

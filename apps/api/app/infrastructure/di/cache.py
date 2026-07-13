@@ -19,7 +19,7 @@ class CacheProvider(Provider):
     def redis(self) -> Redis:
         """Provide concrete Redis client."""
         return from_url(
-            f"redis://{settings.redis_host}:{settings.redis_port}",
+            settings.redis_url,
             decode_responses=True,
         )
 
