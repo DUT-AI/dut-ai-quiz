@@ -10,7 +10,7 @@ export default function LessonQuestionsPage() {
   const lesson = lessons?.find((l) => l.id === lessonId);
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20 text-left">
+    <div className="w-full py-2 animate-in fade-in slide-in-from-bottom-4 duration-500 text-left">
       {/* Questions Tab Section */}
       <QuestionsTab
         lessonId={lessonId}

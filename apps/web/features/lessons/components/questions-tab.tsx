@@ -161,7 +161,7 @@ export function QuestionsTab({ lessonId, isAdminView = false, lessonName }: Ques
 
           {/* Filter and Search Section */}
           <div className="flex flex-col gap-4 pb-4 border-b border-slate-100 dark:border-zinc-800/80">
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:flex-wrap justify-between gap-4">
               <Tabs
                 value={activePoolType}
                 onValueChange={(val) => {
@@ -204,7 +204,7 @@ export function QuestionsTab({ lessonId, isAdminView = false, lessonName }: Ques
                 </TabsList>
               </Tabs>
 
-              <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto shrink-0">
+              <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
                 <div className="w-full sm:w-44 shrink-0">
                   <DifficultyFilter
                     value={difficultyFilter}
@@ -218,7 +218,7 @@ export function QuestionsTab({ lessonId, isAdminView = false, lessonName }: Ques
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onClear={handleClearSearch}
                   placeholder="Tìm kiếm câu hỏi..."
-                  containerClassName="w-full sm:max-w-xs shrink-0"
+                  containerClassName="w-full sm:max-w-xs"
                 />
               </div>
             </div>
@@ -237,7 +237,7 @@ export function QuestionsTab({ lessonId, isAdminView = false, lessonName }: Ques
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto shrink-0">
+          <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
             <div className="w-full sm:w-44 shrink-0">
               <DifficultyFilter
                 value={difficultyFilter}
@@ -251,7 +251,7 @@ export function QuestionsTab({ lessonId, isAdminView = false, lessonName }: Ques
               onChange={(e) => setSearchQuery(e.target.value)}
               onClear={handleClearSearch}
               placeholder="Tìm kiếm câu hỏi..."
-              containerClassName="w-full sm:max-w-xs shrink-0"
+              containerClassName="w-full sm:max-w-xs"
             />
           </div>
         </div>

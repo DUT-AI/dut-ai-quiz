@@ -109,7 +109,7 @@ export const QuestionCard = React.memo(
                 )}
               </div>
 
-              <div className="flex-1 space-y-8">
+              <div className="flex-1 space-y-8 min-w-0">
                 <div className="text-xl font-medium text-dark-blue dark:text-white leading-relaxed select-text">
                   <Markdown content={q.content} />
                 </div>
@@ -161,7 +161,7 @@ export const QuestionCard = React.memo(
                             String.fromCharCode(65 + i)
                           )}
                         </div>
-                        <span className="font-medium select-text">
+                        <span className="font-medium select-text min-w-0 flex-1">
                           <Markdown content={opt.text} />
                         </span>
 

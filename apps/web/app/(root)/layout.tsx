@@ -119,9 +119,8 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
           </div>
         </header>
 
-        {/* This is the ONLY area that scrolls */}
         <main className="flex-1 overflow-y-auto custom-scrollbar relative transition-all duration-300 ease-in-out">
-          <div className="p-6 md:p-10 xl:p-14 w-full max-w-7xl mx-auto transition-all duration-300 ease-in-out">
+          <div className="p-4 sm:p-5 md:p-6 xl:p-8 w-full max-w-7xl mx-auto transition-all duration-300 ease-in-out">
             {children}
           </div>
         </main>
