@@ -73,7 +73,7 @@ class QuestionRepository(IQuestionRepository):
                 stmt = stmt.where(func.array_position(Question.tags, uuid4()).isnot(None))
 
         stmt = (
-            stmt.order_by(Question.created_at.asc(), Question.id.asc())
+            stmt.order_by(Question.created_at.desc(), Question.id.desc())
             .offset(offset)
             .limit(limit)
         )
