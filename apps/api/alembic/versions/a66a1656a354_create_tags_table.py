@@ -27,10 +27,65 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_tags_name'), 'tags', ['name'], unique=True)
-    op.add_column('hackathon_submissions', sa.Column('score', sa.Float(), nullable=True))
-    op.drop_column('hackathon_submissions', 'public_score')
-    op.drop_column('hackathon_submissions', 'private_score')
-    op.drop_column('hackathon_submissions', 'inference_time')
+    
+    # Data migration for tags
+    import uuid
+    from datetime import datetime
+    
+    bind = op.get_bind()
+    
+    # Get all questions and their tags
+    res = bind.execute(sa.text("SELECT id, tags FROM questions"))
+    rows = res.fetchall()
+    
+    # Collect unique tag names
+    unique_tag_names = set()
+    for row in rows:
+        tags_list = row[1]  # tags column is index 1
+        if tags_list:
+            for tag in tags_list:
+                if tag and tag.strip():
+                    unique_tag_names.add(tag.strip())
+                    
+    # Map tag name to UUID
+    tag_to_uuid = {}
+    for tag_name in unique_tag_names:
+        # Check if it's already a valid UUID
+        try:
+            parsed_uuid = uuid.UUID(tag_name)
+            tag_to_uuid[tag_name] = parsed_uuid
+        except ValueError:
+            # Create a new UUID
+            new_uuid = uuid.uuid4()
+            tag_to_uuid[tag_name] = new_uuid
+            # Insert into tags table
+            bind.execute(
+                sa.text("INSERT INTO tags (id, name, created_at) VALUES (:id, :name, :created_at) ON CONFLICT (name) DO NOTHING"),
+                {"id": new_uuid, "name": tag_name, "created_at": datetime.utcnow()}
+            )
+            
+    # Update questions with UUIDs
+    for row in rows:
+        q_id = row[0]
+        tags_list = row[1]
+        if tags_list:
+            new_tags = []
+            for tag in tags_list:
+                if tag and tag.strip():
+                    name_stripped = tag.strip()
+                    if name_stripped in tag_to_uuid:
+                        new_tags.append(str(tag_to_uuid[name_stripped]))
+                    else:
+                        new_tags.append(name_stripped)
+                else:
+                    new_tags.append(tag)
+            
+            # Update with array of UUID strings
+            bind.execute(
+                sa.text("UPDATE questions SET tags = :tags WHERE id = :id"),
+                {"tags": new_tags, "id": q_id}
+            )
+
     op.alter_column('questions', 'tags',
                existing_type=postgresql.ARRAY(sa.VARCHAR()),
                type_=postgresql.ARRAY(sa.UUID()),
@@ -46,10 +101,6 @@ def downgrade() -> None:
                type_=postgresql.ARRAY(sa.VARCHAR()),
                existing_nullable=False,
                postgresql_using='tags::text[]')
-    op.add_column('hackathon_submissions', sa.Column('inference_time', sa.DOUBLE_PRECISION(precision=53), autoincrement=False, nullable=True))
-    op.add_column('hackathon_submissions', sa.Column('private_score', sa.DOUBLE_PRECISION(precision=53), autoincrement=False, nullable=True))
-    op.add_column('hackathon_submissions', sa.Column('public_score', sa.DOUBLE_PRECISION(precision=53), autoincrement=False, nullable=True))
-    op.drop_column('hackathon_submissions', 'score')
     op.drop_index(op.f('ix_tags_name'), table_name='tags')
     op.drop_table('tags')
     # ### end Alembic commands ###

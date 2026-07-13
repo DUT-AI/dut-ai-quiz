@@ -5,14 +5,15 @@ import { Lesson } from "../types";
 
 interface LessonHeaderProps {
   lesson: Partial<Lesson>;
+  backUrl?: string;
 }
 
-export function LessonHeader({ lesson }: LessonHeaderProps) {
+export function LessonHeader({ lesson, backUrl = "/lessons" }: LessonHeaderProps) {
   return (
     <>
       {/* Back button */}
       <Link
-        href="/lessons"
+        href={backUrl}
         className="inline-flex items-center gap-2 text-primary font-bold hover:gap-3 transition-all mb-4 group"
       >
         <ArrowLeft className="size-5" />
