@@ -4,7 +4,7 @@ import React from "react";
 import { HelpCircle, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { renderMathInHTML } from "@/lib/render-math";
+import { Markdown } from "@/components/markdown";
 import { QuestionDetailModal } from "@/features/questions/components";
 import type { QuestionOut } from "@/features/questions/types";
 
@@ -45,9 +45,9 @@ export function QuestionAnalysisTab({ questionStats, questionMap }: QuestionAnal
               }}
             >
               <div className="flex justify-between items-start gap-4">
-                <div 
+                <Markdown 
+                  content={`${idx + 1}. ${q.content}`}
                   className="text-sm font-bold text-dark-blue dark:text-white line-clamp-2"
-                  dangerouslySetInnerHTML={{ __html: renderMathInHTML(`${idx + 1}. ${q.content}`) }}
                 />
                 <span className={cn(
                   "text-xs font-black shrink-0 flex items-center gap-1",

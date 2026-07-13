@@ -145,3 +145,12 @@ export function useDeleteTag() {
   });
 }
 
+export function useQuestion(id: string) {
+  return useQuery({
+    queryKey: ["question", id],
+    queryFn: () => apiGet<QuestionOut>(`/api/v1/questions/${id}`, QuestionOutSchema),
+    enabled: !!id,
+  });
+}
+
+

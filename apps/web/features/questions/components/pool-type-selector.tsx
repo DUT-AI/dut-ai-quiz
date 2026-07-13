@@ -26,11 +26,10 @@ export function PoolTypeSelector({ value, onChange }: PoolTypeSelectorProps) {
               key={opt.id}
               type="button"
               onClick={() => onChange(opt.id)}
-              className={`px-6 py-3 rounded-2xl text-sm font-bold border-2 transition-all duration-200 flex items-center gap-2 ${
-                isActive
+              className={`px-6 py-3 rounded-2xl text-sm font-bold border-2 transition-all duration-200 flex items-center gap-2 ${isActive
                   ? "border-primary bg-primary/10 text-primary dark:bg-primary/20"
                   : "border-gray-100 dark:border-white/10 bg-transparent text-gray-navy dark:text-light-blue opacity-55 hover:opacity-100"
-              }`}
+                }`}
             >
               <span>{opt.icon}</span>
               <span>{opt.label}</span>

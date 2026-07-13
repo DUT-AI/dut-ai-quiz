@@ -4,7 +4,7 @@ import React, { useMemo } from "react";
 import { motion } from "framer-motion";
 import { Sparkles, X, Lightbulb, CheckCircle2 } from "lucide-react";
 
-import { renderMathInHTML } from "@/lib/render-math";
+import { Markdown } from "@/components/markdown";
 import type { QuestionOut } from "@/lib/types";
 
 interface AIExplanationModalProps {
@@ -13,11 +13,6 @@ interface AIExplanationModalProps {
 }
 
 export function AIExplanationModal({ question, onClose }: AIExplanationModalProps) {
-  const solutionHtml = useMemo(() => {
-    return question.solution
-      ? renderMathInHTML(question.solution)
-      : "Bài học này hiện chưa có lời giải chi tiết. Hãy thử thảo luận cùng giảng viên nhé!";
-  }, [question.solution]);
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 sm:p-10">
@@ -71,9 +66,9 @@ export function AIExplanationModal({ question, onClose }: AIExplanationModalProp
                     Lời giải / Gợi ý
                   </h3>
                   <div className="bg-primary/5 dark:bg-white/5 p-6 rounded-3xl border border-primary/10">
-                    <div
+                    <Markdown
+                      content={question.solution || "Bài học này hiện chưa có lời giải chi tiết. Hãy thử thảo luận cùng giảng viên nhé!"}
                       className="text-dark-blue dark:text-white leading-relaxed font-medium text-lg"
-                      dangerouslySetInnerHTML={{ __html: solutionHtml }}
                     />
                   </div>
                 </div>

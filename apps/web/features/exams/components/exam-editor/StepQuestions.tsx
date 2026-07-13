@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence, Reorder } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { renderMathInHTML } from "@/lib/render-math";
+import { Markdown } from "@/components/markdown";
 
 interface Props {
   selectedIds: string[];
@@ -141,9 +141,9 @@ export default function StepQuestions({ selectedIds, onChange }: Props) {
                     {idx + 1}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div
+                    <Markdown
+                      content={q.content.substring(0, 150) + (q.content.length > 150 ? "..." : "")}
                       className="text-sm font-medium leading-relaxed line-clamp-2 break-words"
-                      dangerouslySetInnerHTML={{ __html: renderMathInHTML(q.content.substring(0, 150)) }}
                     />
                     <div className="flex gap-2 mt-2">
                       {q.tags.map(tag => (

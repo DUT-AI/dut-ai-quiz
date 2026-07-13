@@ -3,7 +3,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { X, CheckCircle2, Lightbulb } from "lucide-react";
-import { renderMathInHTML } from "@/lib/render-math";
+import { Markdown } from "@/components/markdown";
 import type { QuestionOut } from "@/features/questions/types";
 import { cn } from "@/lib/utils";
 
@@ -14,13 +14,6 @@ interface QuestionDetailModalProps {
 }
 
 export function QuestionDetailModal({ question, correctRate, onClose }: QuestionDetailModalProps) {
-  const contentHtml = React.useMemo(() => {
-    return renderMathInHTML(question.content);
-  }, [question.content]);
-
-  const solutionHtml = React.useMemo(() => {
-    return question.solution ? renderMathInHTML(question.solution) : null;
-  }, [question.solution]);
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 sm:p-10">
@@ -72,9 +65,9 @@ export function QuestionDetailModal({ question, correctRate, onClose }: Question
               <h3 className="font-black text-dark-blue dark:text-white uppercase tracking-widest text-[10px] opacity-40">
                 Câu hỏi
               </h3>
-              <div 
+              <Markdown 
+                content={question.content}
                 className="text-lg font-bold text-dark-blue dark:text-white leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: contentHtml }}
               />
             </div>
 
@@ -102,9 +95,9 @@ export function QuestionDetailModal({ question, correctRate, onClose }: Question
                       )}>
                         {letter}
                       </span>
-                      <div 
+                      <Markdown 
+                        content={opt.text}
                         className="flex-1 text-sm font-medium"
-                        dangerouslySetInnerHTML={{ __html: renderMathInHTML(opt.text) }}
                       />
                       {opt.is_correct && <CheckCircle2 className="size-4 text-green-500 shrink-0 mt-1" />}
                     </div>
@@ -114,16 +107,16 @@ export function QuestionDetailModal({ question, correctRate, onClose }: Question
             </div>
 
             {/* Solution */}
-            {solutionHtml && (
+            {question.solution?.trim() && (
               <div className="space-y-3 pt-4 border-t border-gray-100 dark:border-white/5">
                 <h3 className="flex items-center gap-2 font-black text-dark-blue dark:text-white uppercase tracking-widest text-[10px] opacity-40">
                   <Lightbulb className="size-3" />
                   Hướng dẫn giải chi tiết
                 </h3>
                 <div className="bg-primary/5 dark:bg-white/5 p-5 rounded-2xl border border-primary/10">
-                  <div
+                  <Markdown
+                    content={question.solution}
                     className="text-dark-blue dark:text-white leading-relaxed text-sm font-medium"
-                    dangerouslySetInnerHTML={{ __html: solutionHtml }}
                   />
                 </div>
               </div>

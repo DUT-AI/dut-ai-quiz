@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 import { useQuestions, useDeleteQuestion } from "@/lib/queries";
 import type { QuestionOut } from "@/lib/types";
@@ -15,7 +16,6 @@ import { cn } from "@/lib/utils";
 
 import {
   AIExplanationModal,
-  QuestionEditorModal,
   BulkQuestionModal,
   DifficultyFilter,
   QuestionsList,
@@ -30,6 +30,7 @@ interface QuestionsTabProps {
 }
 
 export function QuestionsTab({ lessonId, isAdminView = false, lessonName }: QuestionsTabProps) {
+  const router = useRouter();
   const [activePoolType, setActivePoolType] = useState<PoolType>("PRACTICE");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -42,10 +43,8 @@ export function QuestionsTab({ lessonId, isAdminView = false, lessonName }: Ques
   const isTeacher = isAdminView && canManage;
 
   const [explainingQuestion, setExplainingQuestion] = useState<QuestionOut | null>(null);
-  const [showAddModal, setShowAddModal] = useState(false);
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [showPdfModal, setShowPdfModal] = useState(false);
-  const [editingQuestion, setEditingQuestion] = useState<QuestionOut | null>(null);
   const [deletingQuestion, setDeletingQuestion] = useState<QuestionOut | null>(null);
 
   const deleteMut = useDeleteQuestion();
@@ -119,8 +118,8 @@ export function QuestionsTab({ lessonId, isAdminView = false, lessonName }: Ques
   }, [searchQuery, searchedQuestions, activePoolType]);
 
   const handleEdit = useCallback((q: QuestionOut) => {
-    setEditingQuestion(q);
-  }, []);
+    router.push(`/teacher/lessons/${lessonId}/questions/${q.id}/edit`);
+  }, [router, lessonId]);
 
   const handleDelete = useCallback(
     (q: QuestionOut) => {
@@ -155,7 +154,7 @@ export function QuestionsTab({ lessonId, isAdminView = false, lessonName }: Ques
             activePoolType={activePoolType}
             isTeacher={isTeacher}
             questionsCount={filteredQuestions.length}
-            onAddClick={() => setShowAddModal(true)}
+            onAddClick={() => router.push(`/teacher/lessons/${lessonId}/questions/new`)}
             onBulkClick={() => setShowBulkModal(true)}
             onPdfClick={() => setShowPdfModal(true)}
           />
@@ -278,21 +277,7 @@ export function QuestionsTab({ lessonId, isAdminView = false, lessonName }: Ques
         {explainingQuestion && (
           <AIExplanationModal question={explainingQuestion} onClose={handleCloseModal} />
         )}
-        {showAddModal && (
-          <QuestionEditorModal
-            lessonId={lessonId}
-            onClose={() => setShowAddModal(false)}
-            onSuccess={() => { }}
-          />
-        )}
-        {editingQuestion && (
-          <QuestionEditorModal
-            lessonId={lessonId}
-            initialData={editingQuestion}
-            onClose={() => setEditingQuestion(null)}
-            onSuccess={() => { }}
-          />
-        )}
+
         {showBulkModal && (
           <BulkQuestionModal
             lessonId={lessonId}

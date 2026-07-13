@@ -18,7 +18,7 @@ import { useAttemptReview } from "@/lib/queries";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import { motion } from "framer-motion";
-import { renderMathInHTML } from "@/lib/render-math";
+import { Markdown } from "@/components/markdown";
 import { AttemptReviewResponse } from "@/lib/types";
 
 export default function ReviewPage() {
@@ -156,9 +156,9 @@ export default function ReviewPage() {
                                         <span className="shrink-0 size-8 rounded-full bg-gray-navy/10 flex items-center justify-center text-sm font-black text-gray-navy">
                                             {idx + 1}
                                         </span>
-                                        <div
+                                        <Markdown
+                                            content={q.content}
                                             className="text-lg font-bold text-dark-blue prose dark:prose-invert max-w-none"
-                                            dangerouslySetInnerHTML={{ __html: renderMathInHTML(q.content) }}
                                         />
                                     </div>
 
@@ -200,8 +200,9 @@ export default function ReviewPage() {
                                                         <div
                                                             style={{ color: textColor }}
                                                             className="prose prose-sm font-bold flex-1 max-w-none"
-                                                            dangerouslySetInnerHTML={{ __html: renderMathInHTML(opt.text) }}
-                                                        />
+                                                        >
+                                                            <Markdown content={opt.text} />
+                                                        </div>
                                                         <div className="shrink-0 mt-1">
                                                             {icon}
                                                         </div>
@@ -230,9 +231,9 @@ export default function ReviewPage() {
                                                 <Info className="size-4" />
                                                 Lời giải chi tiết
                                             </div>
-                                            <div
+                                            <Markdown
+                                                content={q.solution}
                                                 className="text-sm text-gray-navy leading-relaxed prose prose-sm max-w-none"
-                                                dangerouslySetInnerHTML={{ __html: renderMathInHTML(q.solution) }}
                                             />
                                         </div>
                                     )}

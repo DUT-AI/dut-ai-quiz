@@ -163,6 +163,14 @@ export const markdownComponents = {
   },
 };
 
+const preprocessMath = (text: string) => {
+  if (!text) return "";
+  // Ensure $$ math $$ has newlines before, after, and inside so remark-math parses it as block display math
+  return text.replace(/\$\$([\s\S]+?)\$\$/g, (match, math) => {
+    return `\n\n$$\n${math.trim()}\n$$\n\n`;
+  });
+};
+
 export const Markdown = React.memo(function Markdown({ content, className = "" }: MarkdownProps) {
   const [activeImg, setActiveImg] = React.useState<string | null>(null);
 
@@ -189,10 +197,18 @@ export const Markdown = React.memo(function Markdown({ content, className = "" }
             overflow-x: auto;
             overflow-y: hidden;
             user-select: all;
+            text-align: center !important;
+            display: block !important;
+          }
+          .theory-markdown-content p:has(.katex-display) {
+            text-align: center !important;
           }
           .theory-markdown-content .katex {
             font-size: 1.05em;
             user-select: all;
+          }
+          .theory-markdown-content .katex-display .katex {
+            font-size: 1.25em !important;
           }
           .theory-markdown-content > *:first-child {
             margin-top: 0 !important;
@@ -210,7 +226,7 @@ export const Markdown = React.memo(function Markdown({ content, className = "" }
         rehypePlugins={[rehypeRaw, rehypeKatex, rehypeHeadingIds]}
         components={customComponents}
       >
-        {content}
+        {preprocessMath(content)}
       </ReactMarkdown>
 
       <AnimatePresence>

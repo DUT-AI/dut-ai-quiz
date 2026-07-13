@@ -20,7 +20,7 @@ import {
   Shield
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { renderMathInHTML } from "@/lib/render-math";
+import { Markdown } from "@/components/markdown";
 import { cn } from "@/lib/utils";
 import { useAntiCheat, VIOLATION_MESSAGES } from "@/hooks/use-anti-cheat";
 
@@ -355,9 +355,9 @@ export default function TestEnvironmentPage() {
                      </span>
                      <h3 className="text-[10px] font-black uppercase text-primary tracking-[0.2em]">CÂU HỎI TRẮC NGHIỆM</h3>
                   </div>
-                  <div 
+                  <Markdown 
+                    content={currentQuestion?.content || ""}
                     className="text-xl md:text-2xl font-bold text-dark-blue dark:text-white leading-relaxed question-content select-none"
-                    dangerouslySetInnerHTML={{ __html: renderMathInHTML(currentQuestion?.content || "") }}
                   />
                </div>
 
@@ -382,10 +382,10 @@ export default function TestEnvironmentPage() {
                        )}>
                          {String.fromCharCode(65 + currentQuestion.options.indexOf(opt))}
                        </div>
-                       <span 
-                         className="text-base md:text-lg font-bold leading-relaxed"
-                         dangerouslySetInnerHTML={{ __html: renderMathInHTML(opt.text || "") }}
-                       />
+                        <Markdown 
+                          content={opt.text || ""}
+                          className="text-base md:text-lg font-bold leading-relaxed"
+                        />
                     </button>
                   ))}
                </div>
