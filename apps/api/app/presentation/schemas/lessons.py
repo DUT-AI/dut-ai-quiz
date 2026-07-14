@@ -14,6 +14,7 @@ class LessonCreate(BaseModel):
     content_md: str | None = None
     order: int = 0
     slug: str | None = None
+    module_id: UUID | None = None
 
 
 class LessonUpdate(BaseModel):
@@ -24,6 +25,7 @@ class LessonUpdate(BaseModel):
     content_md: str | None = None
     order: int | None = None
     slug: str | None = None
+    module_id: UUID | None = None
 
 
 class LessonOut(BaseModel):
@@ -35,6 +37,7 @@ class LessonOut(BaseModel):
     order: int
     slug: str | None
     created_at: datetime
+    module_id: UUID | None = None
     content_md: str | None = None
 
     model_config = {"from_attributes": True}

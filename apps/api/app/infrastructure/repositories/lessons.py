@@ -45,6 +45,7 @@ class LessonRepository(ILessonRepository):
             m.description = entity.description
             m.order = entity.order
             m.slug = entity.slug
+            m.module_id = entity.module_id
             await self._session.flush()
             await self._session.refresh(m)
             return m.to_entity()

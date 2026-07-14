@@ -16,6 +16,7 @@ from .hackathon_repo import (
 )
 from .hackathon_submission_store import IHackathonSubmissionStore
 from .lesson_repo import ILessonRepository
+from .module_repo import IModuleRepository
 from .manage_cache import IDUTAIManageCache
 from .manage_service import IManageService
 from .game_session_repo import IGameSessionRepository
@@ -33,6 +34,7 @@ __all__ = [
     "IExamRepository",
     "IFocusEventRepository",
     "ILessonRepository",
+    "IModuleRepository",
     "IGameSessionRepository",
     "IQuestionRepository",
     "ITagRepository",

@@ -55,3 +55,9 @@ class MaxAttemptsReachedException(AppException):
 class ExamNoQuestionsException(AppException):
     status_code = 400
     message = "No questions in exam"
+
+
+class BadRequestException(AppException):
+    def __init__(self, message: str):
+        super().__init__(message, 400)
+

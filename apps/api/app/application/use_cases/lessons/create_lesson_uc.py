@@ -21,6 +21,7 @@ class CreateLessonUseCase:
             content_md=payload.content_md,
             order=payload.order,
             slug=payload.slug,
+            module_id=payload.module_id,
             created_at=now_ict(),
         )
         return await self._repo.add(entity)

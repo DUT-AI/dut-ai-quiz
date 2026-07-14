@@ -4,6 +4,7 @@ from .exam import Exam, ExamQuestion
 from .attempt import Attempt, AttemptAnswer, FocusEvent
 from .game import GameSession
 from .lesson import Lesson
+from .module import Module
 from .user import User
 from .hackathon import Hackathon, HackathonTask, HackathonTeam, HackathonRegistration, HackathonSubmission
 
@@ -18,6 +19,7 @@ __all__ = [
     "FocusEvent",
     "GameSession",
     "Lesson",
+    "Module",
     "User",
     "Hackathon",
     "HackathonTask",

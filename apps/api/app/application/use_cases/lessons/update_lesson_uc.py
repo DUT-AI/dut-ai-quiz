@@ -29,5 +29,7 @@ class UpdateLessonUseCase:
             entity.order = payload.order
         if payload.slug is not None:
             entity.slug = payload.slug
+        if "module_id" in payload.model_fields_set:
+            entity.module_id = payload.module_id
 
         return await self._repo.update(entity)
