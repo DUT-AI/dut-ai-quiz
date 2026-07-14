@@ -78,7 +78,6 @@ from app.application.use_cases.modules import (
     ListModulesUseCase,
     UpdateModuleUseCase,
     ReorderModulesUseCase,
-    SuggestModulesUseCase,
 )
 from app.application.use_cases.me.me_use_case import GetProfileUseCase
 from app.application.use_cases.game import (
@@ -263,7 +262,6 @@ class UseCaseProvider(Provider):
     update_module_use_case = provide(UpdateModuleUseCase, scope=Scope.REQUEST)
     delete_module_use_case = provide(DeleteModuleUseCase, scope=Scope.REQUEST)
     reorder_modules_use_case = provide(ReorderModulesUseCase, scope=Scope.REQUEST)
-    suggest_modules_use_case = provide(SuggestModulesUseCase, scope=Scope.REQUEST)
 
     # auth & me
     proxy_login_use_case = provide(LoginByManageAccountUseCase, scope=Scope.REQUEST)
