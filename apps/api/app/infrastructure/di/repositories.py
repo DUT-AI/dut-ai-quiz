@@ -6,6 +6,7 @@ from app.domain.interfaces import (
     IExamRepository,
     IFocusEventRepository,
     ILessonRepository,
+    IModuleRepository,
     IGameSessionRepository,
     IQuestionRepository,
     ITagRepository,
@@ -23,6 +24,7 @@ from app.infrastructure.repositories.exam_questions import ExamQuestionRepositor
 from app.infrastructure.repositories.exams import ExamRepository
 from app.infrastructure.repositories.focus_events import FocusEventRepository
 from app.infrastructure.repositories.lessons import LessonRepository
+from app.infrastructure.repositories.modules import ModuleRepository
 from app.infrastructure.repositories.game_sessions import GameSessionRepository
 from app.infrastructure.repositories.questions import QuestionRepository
 from app.infrastructure.repositories.tags import TagRepository
@@ -41,6 +43,7 @@ class RepositoryProvider(Provider):
 
     # Đăng ký kèm theo tham số provides để map concrete class với interface của nó
     lesson_repo = provide(LessonRepository, provides=ILessonRepository)
+    module_repo = provide(ModuleRepository, provides=IModuleRepository)
     user_repo = provide(UserRepository, provides=IUserRepository)
     exam_repo = provide(ExamRepository, provides=IExamRepository)
     exam_question_repo = provide(
