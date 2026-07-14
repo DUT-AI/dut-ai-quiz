@@ -79,6 +79,7 @@ export const QuestionCard = React.memo(
         initial={{ opacity: 0, x: -10 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: idx * 0.05 }}
+        className="w-full min-w-0"
       >
         <Card
           className={cn(
