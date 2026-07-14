@@ -12,7 +12,7 @@ interface ThemeProviderProps {
 const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const { darkMode } = useThemeStore();
   const pathname = usePathname();
-  const isPracticeGame = pathname && pathname.includes("/practice") && pathname !== "/lessons/practice";
+  const isPracticeGame = pathname && pathname.includes("/game") && pathname !== "/lessons/game";
 
   return (
     <div className={cn(
