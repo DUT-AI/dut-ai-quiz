@@ -2,7 +2,6 @@
 
 import { cn } from "@/lib/utils";
 import { useThemeStore } from "@/store/theme-store";
-import { usePathname } from "next/navigation";
 import React, { ReactNode } from "react";
 
 interface ThemeProviderProps {
@@ -11,15 +10,11 @@ interface ThemeProviderProps {
 
 const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const { darkMode } = useThemeStore();
-  const pathname = usePathname();
-  const isPracticeGame = pathname && pathname.includes("/game") && pathname !== "/lessons/game";
 
   return (
     <div className={cn(
       darkMode && "dark",
-      isPracticeGame
-        ? "h-auto w-full overflow-visible transition-all"
-        : "xs:min-h-screen lg:h-full w-full lg:overflow-hidden transition-all",
+      "min-h-screen w-full transition-all"
     )}>
       {children}
     </div>

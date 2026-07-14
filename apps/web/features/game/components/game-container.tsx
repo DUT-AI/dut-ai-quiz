@@ -86,6 +86,9 @@ export default function GameContainer({ lessonSlug }: GameContainerProps) {
   const [timerFrozen, setTimerFrozen] = useState(false);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Right column ref for auto-scrolling
+  const rightColRef = useRef<HTMLDivElement | null>(null);
+
   // Sync timeLeft when current question changes
   useEffect(() => {
     if (currentQuestion) {
@@ -110,6 +113,29 @@ export default function GameContainer({ lessonSlug }: GameContainerProps) {
 
     return () => clearInterval(interval);
   }, [countdown]);
+
+  // Scroll to bottom of right column when question is answered
+  useEffect(() => {
+    if (isAnswered && rightColRef.current) {
+      const timer = setTimeout(() => {
+        rightColRef.current?.scrollTo({
+          top: rightColRef.current.scrollHeight,
+          behavior: "smooth",
+        });
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isAnswered]);
+
+  // Scroll back to top when question changes
+  useEffect(() => {
+    if (rightColRef.current) {
+      rightColRef.current.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    }
+  }, [currentIdx]);
 
   // Visual effects
   const [screenShake, setScreenShake] = useState(false);
@@ -519,7 +545,7 @@ export default function GameContainer({ lessonSlug }: GameContainerProps) {
 
   return (
     <div
-      className={`min-h-screen text-zinc-955 dark:text-slate-100 flex flex-col font-sans relative select-none p-4 md:p-6 transition-all duration-300 ${
+      className={`h-screen overflow-y-auto lg:overflow-hidden text-zinc-955 dark:text-slate-100 flex flex-col font-sans relative select-none p-2 md:p-4 px-1.5 md:px-2 transition-all duration-300 ${
         screenShake ? "animate-[shake_0.5s_infinite]" : ""
       }`}
       style={{
@@ -582,7 +608,7 @@ export default function GameContainer({ lessonSlug }: GameContainerProps) {
       ) : screen === "playing" ? (
         <>
           {/* ─── HEADER HUD (RPG STATUS BAR) ─── */}
-          <header className="relative w-full max-w-7xl mx-auto flex justify-between items-center bg-white dark:bg-slate-900 border-3 border-zinc-900 dark:border-slate-700 p-3 md:p-4 rounded-none mb-3 z-10 shadow-md">
+          <header className="relative w-full max-w-[98%] mx-auto flex justify-between items-center bg-white dark:bg-slate-900 border-3 border-zinc-900 dark:border-slate-700 p-3 md:p-4 rounded-none mb-3 z-10 shadow-md">
             {/* Left Side: Stage progress dot */}
             <div className="flex flex-col items-start select-none">
               <div className="text-[10px] md:text-xs text-zinc-500 dark:text-slate-400 mb-1 tracking-wider font-extrabold font-mono">
@@ -634,8 +660,8 @@ export default function GameContainer({ lessonSlug }: GameContainerProps) {
           </header>
 
           {/* ─── MAIN CONTENT WINDOW (RPG HUD VIEWPORT) ─── */}
-          <main className="flex-1 w-full max-w-7xl mx-auto flex flex-col items-center justify-start relative z-10 py-2">
-            <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          <main className="flex-1 min-h-0 w-full max-w-[98%] mx-auto flex flex-col items-center justify-start relative z-10 py-2">
+            <div className="w-full lg:h-full grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
               {/* ─── LEFT COLUMN: BATTLE ARENA, HP STATS & ITEM HOTBAR ─── */}
               <div className="lg:col-span-5 flex flex-col gap-4 w-full">
                 <BossHud
@@ -661,7 +687,10 @@ export default function GameContainer({ lessonSlug }: GameContainerProps) {
               </div>
 
               {/* ─── RIGHT COLUMN: TIMER, QUESTIONS & ITEMS ─── */}
-              <div className="lg:col-span-7 flex flex-col gap-4 w-full items-center">
+              <div
+                ref={rightColRef}
+                className="lg:col-span-7 flex flex-col gap-4 w-full items-center lg:h-full lg:overflow-y-auto lg:pr-2 custom-scrollbar"
+              >
                 {questions[currentIdx] && (
                   <GameQuestionCard
                     currentQuestion={questions[currentIdx]}
