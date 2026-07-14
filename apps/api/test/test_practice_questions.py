@@ -93,3 +93,74 @@ def test_question_output_schema_serialization():
     assert data["options"][0]["is_correct"] is True
     assert data["options"][1]["id"] == "opt-2"
     assert data["options"][1]["is_correct"] is False
+
+
+@pytest.mark.asyncio
+async def test_answer_question_use_case():
+    """Test that AnswerQuestionUseCase correctly validates user's answer option."""
+    question_repo = AsyncMock()
+    
+    lesson_id = uuid4()
+    option_1 = QuestionOptionEntity(id="opt-1", text="Option A", is_correct=True)
+    option_2 = QuestionOptionEntity(id="opt-2", text="Option B", is_correct=False)
+    
+    question = QuestionEntity(
+        id=uuid4(),
+        pool_type=PoolType.PRACTICE,
+        difficulty=Difficulty.EASY,
+        content="What is Backprop?",
+        options=[option_1, option_2],
+        solution="Detailed backprop explanation.",
+        lesson_id=lesson_id,
+        tags=["ML"],
+        created_by=1,
+        created_at=datetime.utcnow()
+    )
+    
+    question_repo.get.return_value = question
+    
+    from app.application.use_cases.questions.answer_question_uc import AnswerQuestionUseCase
+    use_case = AnswerQuestionUseCase(question_repo)
+    
+    # Test correct option selection
+    res_correct = await use_case.execute(question.id, "opt-1")
+    assert res_correct["is_correct"] is True
+    assert res_correct["correct_option_id"] == "opt-1"
+    assert res_correct["solution"] == "Detailed backprop explanation."
+    
+    # Test incorrect option selection
+    res_incorrect = await use_case.execute(question.id, "opt-2")
+    assert res_incorrect["is_correct"] is False
+    assert res_incorrect["correct_option_id"] == "opt-1"
+    
+    # Test non-existent question
+    question_repo.get.return_value = None
+    res_none = await use_case.execute(uuid4(), "opt-1")
+    assert res_none is None
+
+
+def test_sanitize_questions_for_student():
+    """Test that sanitize_questions_for_student strips solutions and options' correctness."""
+    from app.presentation.api.routers.questions import sanitize_questions_for_student
+    
+    option_1 = QuestionOptionEntity(id="opt-1", text="Option A", is_correct=True)
+    option_2 = QuestionOptionEntity(id="opt-2", text="Option B", is_correct=False)
+    
+    question = QuestionEntity(
+        id=uuid4(),
+        pool_type=PoolType.PRACTICE,
+        difficulty=Difficulty.EASY,
+        content="What is Backprop?",
+        options=[option_1, option_2],
+        solution="Detailed backprop explanation.",
+        lesson_id=uuid4(),
+        tags=["ML"],
+        created_by=1,
+        created_at=datetime.utcnow()
+    )
+    
+    sanitized = sanitize_questions_for_student([question])
+    assert len(sanitized) == 1
+    assert sanitized[0].solution is None
+    assert sanitized[0].options[0].is_correct is None
+    assert sanitized[0].options[1].is_correct is None

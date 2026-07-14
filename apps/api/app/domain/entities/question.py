@@ -10,7 +10,7 @@ from app.domain.value_objects import Difficulty, PoolType
 class QuestionOptionEntity:
     id: str
     text: str
-    is_correct: bool
+    is_correct: bool | None
     fixed: bool = False
 
     def to_dict(self) -> dict[str, Any]:

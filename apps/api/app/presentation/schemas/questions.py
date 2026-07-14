@@ -16,7 +16,7 @@ class QuestionOptionIn(BaseModel):
 class QuestionOptionOut(BaseModel):
     id: str
     text: str
-    is_correct: bool
+    is_correct: bool | None = None
     fixed: bool
 
     model_config = {"from_attributes": True}
@@ -50,7 +50,7 @@ class QuestionOut(BaseModel):
     difficulty: Difficulty
     content: str
     options: list[QuestionOptionOut]
-    solution: str | None
+    solution: str | None = None
     lesson_id: UUID | None
     tags: list[str]
     created_by: int
@@ -84,3 +84,13 @@ class QuestionBulkCreate(BaseModel):
     lesson_id: UUID | None = None
     tags: list[UUID] = Field(default_factory=list)
     created_by: int | None = None
+
+
+class QuestionAnswerIn(BaseModel):
+    option_id: str
+
+
+class QuestionAnswerOut(BaseModel):
+    is_correct: bool
+    correct_option_id: str
+    solution: str | None = None

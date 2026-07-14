@@ -99,6 +99,7 @@ from app.application.use_cases.questions import (
     GetQuestionUseCase,
     ListQuestionsUseCase,
     UpdateQuestionUseCase,
+    AnswerQuestionUseCase,
 )
 from app.application.use_cases.tags.tags_use_case import (
     ListTagsUseCase,
@@ -191,6 +192,7 @@ class UseCaseProvider(Provider):
     bulk_create_questions_use_case = provide(
         BulkCreateQuestionsUseCase, scope=Scope.REQUEST
     )
+    answer_question_use_case = provide(AnswerQuestionUseCase, scope=Scope.REQUEST)
 
     # tags
     list_tags_use_case = provide(ListTagsUseCase, scope=Scope.REQUEST)
