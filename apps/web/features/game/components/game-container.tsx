@@ -14,11 +14,9 @@ import { useThemeStore } from "@/store/theme-store";
 import SwitchTheme from "@/components/atoms/switch-theme";
 
 import {
-  useActiveGameSession,
   useStartGameSession,
   usePatchGameAnswer,
   useUseGameItem,
-  useFinishGameSession,
 } from "../queries";
 import { type GameQuestion, type GamificationState } from "../types";
 
@@ -30,9 +28,10 @@ const getBossName = (stageNum: number) => {
 
 interface GameContainerProps {
   lessonSlug: string;
+  initialSession: any; // StartGameSessionResponse | null
 }
 
-export default function GameContainer({ lessonSlug }: GameContainerProps) {
+export default function GameContainer({ lessonSlug, initialSession }: GameContainerProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const hasInitializedRef = useRef(false);
@@ -50,19 +49,10 @@ export default function GameContainer({ lessonSlug }: GameContainerProps) {
     };
   }, [darkMode]);
 
-  // 1. Fetch active session on load
-  const {
-    data: activeSession,
-    isLoading: isLoadingActiveSession,
-    error: activeSessionError,
-    refetch: refetchActiveSession,
-  } = useActiveGameSession(lessonSlug);
-
   // Mutations
   const startSessionMutation = useStartGameSession();
   const patchAnswerMutation = usePatchGameAnswer();
   const useItemMutation = useUseGameItem();
-  const finishSessionMutation = useFinishGameSession();
 
   // Game core state
   const [screen, setScreen] = useState<"start" | "playing" | "result">("start");
@@ -158,144 +148,97 @@ export default function GameContainer({ lessonSlug }: GameContainerProps) {
   const [gameResult, setGameResult] = useState<"playing" | "victory" | "defeat">("playing");
   const [stageProgress, setStageProgress] = useState<("correct" | "incorrect" | "idle")[]>([]);
 
-  // 2. Handle active session lookup
-  const hasActiveSession = !!activeSession?.session_id;
+
 
   // Initialize game state from session data
   const initializeGame = (sessionData: { session_id: string; snapshot: any }) => {
-    const snap = sessionData.snapshot;
-    setSessionId(sessionData.session_id);
-    setQuestions(snap.questions);
-    setGamification(snap.gamification);
+    try {
+      console.log("[GameDebug] initializeGame called with data:", sessionData);
+      const snap = sessionData.snapshot;
+      if (!snap) {
+        throw new Error("Dữ liệu snapshot không hợp lệ (null/undefined)!");
+      }
+      setSessionId(sessionData.session_id);
+      setQuestions(snap.questions || []);
+      setGamification(snap.gamification);
 
-    // Reset all answer states
-    setIsAnswered(false);
-    setSelectedOptionId(null);
-    setHiddenOptions([]);
-    setTimerFrozen(false);
-    setDoubleActive(false);
-    setShieldActive(false);
-    setIsSelectedCorrect(false);
-    setCorrectOptionId(null);
+      // Reset all answer states
+      setIsAnswered(false);
+      setSelectedOptionId(null);
+      setHiddenOptions([]);
+      setTimerFrozen(false);
+      setDoubleActive(false);
+      setShieldActive(false);
+      setIsSelectedCorrect(false);
+      setCorrectOptionId(null);
 
-    const idx = snap.gamification.last_question_index;
-    setCurrentIdx(idx);
+      const gamificationState = snap.gamification || {};
+      const idx = gamificationState.last_question_index || 0;
+      setCurrentIdx(idx);
 
-    if (idx === 0) {
-      setCountdown(3);
-    } else {
-      setCountdown(null);
+      if (idx === 0) {
+        setCountdown(3);
+      } else {
+        setCountdown(null);
+      }
+      setHp(gamificationState.lives ?? 3);
+      setGold(gamificationState.gold ?? 0);
+      setScore(gamificationState.points ?? 0);
+
+      // Reconstruct progress dots based on answers
+      const totalQCount = (snap.questions || []).length;
+      const progress: ("correct" | "incorrect" | "idle")[] = Array.from({ length: totalQCount }).map(() => "idle");
+      for (let i = 0; i < idx; i++) {
+        progress[i] = "correct"; 
+      }
+      setStageProgress(progress);
+
+      // Check if the current question is a boss fight
+      const currentQ = (snap.questions || [])[idx];
+      if (currentQ) {
+        const bossMode = currentQ.is_boss;
+        setIsBossMode(bossMode);
+        setBossHp(gamificationState.boss_hp === 1 ? 5 : 0);
+        setBossMaxHp(5);
+      }
+
+      setGameResult("playing");
+      setScreen("playing");
+      console.log("[GameDebug] initializeGame completed successfully, screen set to playing");
+    } catch (err: any) {
+      console.error("[GameDebug] initializeGame CRITICAL ERROR:", err);
+      toast.error(`Lỗi khởi tạo game: ${err.message || err}`);
+      router.push(`/lessons/${lessonSlug}`);
     }
-    setHp(snap.gamification.lives);
-    setGold(snap.gamification.gold);
-    setScore(snap.gamification.points);
-
-    // Reconstruct progress dots based on answers
-    const totalQCount = snap.questions.length;
-    const progress: ("correct" | "incorrect" | "idle")[] = Array.from({ length: totalQCount }).map(() => "idle");
-    
-    // Server snapshot.answers contains: { [question_id]: option_id }
-    // But does not tell us correct/incorrect directly, except if we deduce it or we just look up matching.
-    // Wait, the client answers dict doesn't need to reconstruct past correct/incorrect perfectly,
-    // but we can assume completed questions before `last_question_index` were answered.
-    // To keep it simple, past answered questions can just show completed green/red. 
-    // Since we don't have is_correct for past questions in snapshot, we can show "correct" for simplicity,
-    // or keep it blank. Let's just mark past ones as "correct" or "incorrect" if we can, or just keep them green.
-    // Actually, in the database session, since we only resume in-progress, we can mark all past questions as "correct"
-    // to keep the visual indicator clean, or track them. Let's just set the past dots as "correct" for now.
-    for (let i = 0; i < idx; i++) {
-      progress[i] = "correct"; 
-    }
-    setStageProgress(progress);
-
-    // Check if the current question is a boss fight
-    const currentQ = snap.questions[idx];
-    if (currentQ) {
-      const bossMode = currentQ.is_boss;
-      setIsBossMode(bossMode);
-      setBossHp(snap.gamification.boss_hp === 1 ? 5 : 0);
-      setBossMaxHp(5);
-    }
-
-    setGameResult("playing");
-    setScreen("playing");
   };
 
   // Auto-initialize game session based on query params (continue or new game)
   useEffect(() => {
-    if ((isLoadingActiveSession && !activeSessionError) || hasInitializedRef.current) return;
+    if (hasInitializedRef.current) return;
 
-    const action = searchParams?.get("action");
-
-    if (action === "new") {
+    if (initialSession) {
+      console.log("[GameDebug] Initializing game with active session data:", initialSession);
       hasInitializedRef.current = true;
-      if (hasActiveSession && activeSession) {
-        // Finish the active session first
-        finishSessionMutation.mutate(activeSession.session_id, {
-          onSuccess: () => {
-            // Start a new session
-            startSessionMutation.mutate(
-              { lesson_slug: lessonSlug },
-              {
-                onSuccess: (data) => {
-                  initializeGame(data);
-                },
-                onError: (err: any) => {
-                  toast.error(err.message || "Không thể khởi tạo đấu trường!");
-                  router.push(`/lessons/${lessonSlug}`);
-                },
-              }
-            );
-          },
-          onError: () => {
-            // Force start new session if finish fails
-            startSessionMutation.mutate(
-              { lesson_slug: lessonSlug },
-              {
-                onSuccess: (data) => {
-                  initializeGame(data);
-                },
-              }
-            );
-          },
-        });
-      } else {
-        // Start a new session directly
-        startSessionMutation.mutate(
-          { lesson_slug: lessonSlug },
-          {
-            onSuccess: (data) => {
-              initializeGame(data);
-            },
-            onError: (err: any) => {
-              toast.error(err.message || "Không thể khởi tạo đấu trường!");
-              router.push(`/lessons/${lessonSlug}`);
-            },
-          }
-        );
-      }
+      initializeGame(initialSession);
     } else {
-      // Continue or default
+      console.log("[GameDebug] Initializing game: starting new session");
       hasInitializedRef.current = true;
-      if (hasActiveSession && activeSession) {
-        initializeGame(activeSession);
-      } else {
-        // Start new session
-        startSessionMutation.mutate(
-          { lesson_slug: lessonSlug },
-          {
-            onSuccess: (data) => {
-              initializeGame(data);
-            },
-            onError: (err: any) => {
-              toast.error(err.message || "Không thể khởi tạo đấu trường!");
-              router.push(`/lessons/${lessonSlug}`);
-            },
-          }
-        );
-      }
+      startSessionMutation.mutate(
+        { lesson_slug: lessonSlug },
+        {
+          onSuccess: (data) => {
+            console.log("[GameDebug] startSessionMutation Success", data);
+            initializeGame(data);
+          },
+          onError: (err: any) => {
+            console.error("[GameDebug] startSessionMutation Error", err);
+            toast.error(err.message || "Không thể khởi tạo đấu trường!");
+            router.push(`/lessons/${lessonSlug}`);
+          },
+        }
+      );
     }
-  }, [isLoadingActiveSession, activeSessionError, hasActiveSession, activeSession, lessonSlug, searchParams, router]);
+  }, [initialSession, lessonSlug, router]);
 
   // Timer management
   useEffect(() => {
@@ -529,43 +472,24 @@ export default function GameContainer({ lessonSlug }: GameContainerProps) {
 
   // Replay retry
   const handleRetry = () => {
-    // Finish active session if any
-    if (sessionId) {
-      finishSessionMutation.mutate(sessionId, {
-        onSuccess: () => {
-          // Invalidate active session and refetch
-          refetchActiveSession().then(() => {
-            // Trigger start
-            startSessionMutation.mutate(
-              { lesson_slug: lessonSlug },
-              {
-                onSuccess: (data) => {
-                  initializeGame(data);
-                  toast.success("Trận đấu mới đã bắt đầu!");
-                },
-              }
-            );
-          });
+    // Directly start a new session — the backend's StartGameSessionUseCase
+    // will auto-finish any IN_PROGRESS session before creating the new one.
+    startSessionMutation.mutate(
+      { lesson_slug: lessonSlug },
+      {
+        onSuccess: (data) => {
+          initializeGame(data);
+          toast.success("Trận đấu mới đã bắt đầu!");
         },
-        onError: () => {
-          // If finish fails, just force start
-          startSessionMutation.mutate(
-            { lesson_slug: lessonSlug },
-            {
-              onSuccess: (data) => {
-                initializeGame(data);
-              },
-            }
-          );
+        onError: (err: any) => {
+          toast.error(err.message || "Không thể bắt đầu trận đấu mới!");
         },
-      });
-    }
+      }
+    );
   };
 
   const isInitializing =
-    (isLoadingActiveSession && !activeSessionError) ||
     startSessionMutation.isPending ||
-    finishSessionMutation.isPending ||
     !hasInitializedRef.current;
 
   if (isInitializing) {
