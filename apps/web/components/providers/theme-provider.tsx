@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { useThemeStore } from "@/store/theme-store";
-import React, { ReactNode } from "react";
+import React, { ReactNode, useEffect } from "react";
 
 interface ThemeProviderProps {
   children: ReactNode;
@@ -10,6 +10,15 @@ interface ThemeProviderProps {
 
 const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const { darkMode } = useThemeStore();
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (darkMode) {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+  }, [darkMode]);
 
   return (
     <div className={cn(

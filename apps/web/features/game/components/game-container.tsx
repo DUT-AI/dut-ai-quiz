@@ -11,6 +11,7 @@ import ItemHotbar, { ItemType } from "./item-hotbar";
 import GameStartScreen from "./game-start-screen";
 import GameQuestionCard from "./game-question-card";
 import GameResult from "./game-result";
+import { useThemeStore } from "@/store/theme-store";
 
 import {
   useActiveGameSession,
@@ -33,6 +34,19 @@ interface GameContainerProps {
 
 export default function GameContainer({ lessonSlug }: GameContainerProps) {
   const router = useRouter();
+  const { darkMode } = useThemeStore();
+
+  const gameBackgroundStyle = useMemo(() => {
+    return {
+      backgroundImage: darkMode
+        ? `radial-gradient(circle, rgba(255,255,255,0.02) 1.5px, transparent 1.5px),
+           linear-gradient(to bottom right, #09090b, #030712)`
+        : `radial-gradient(circle, rgba(139,92,26,0.05) 1.5px, transparent 1.5px),
+           linear-gradient(to bottom right, #f4eedb, #eae2c6)`,
+      backgroundSize: "24px 24px, 100% 100%",
+      backgroundAttachment: "fixed",
+    };
+  }, [darkMode]);
 
   // 1. Fetch active session on load
   const {
@@ -518,25 +532,11 @@ export default function GameContainer({ lessonSlug }: GameContainerProps) {
   if (isLoadingActiveSession) {
     return (
       <div
-        className="min-h-screen text-zinc-955 dark:text-slate-100 flex flex-col items-center justify-center font-sans relative select-none p-4 md:p-6"
-        style={{
-          backgroundImage: `
-            radial-gradient(circle, rgba(139,92,26,0.05) 1.5px, transparent 1.5px),
-            linear-gradient(to bottom right, #f4eedb, #eae2c6)
-          `,
-          backgroundSize: "24px 24px, 100% 100%",
-          backgroundAttachment: "fixed",
-        }}
+        className="min-h-screen text-zinc-955 dark:text-zinc-100 flex flex-col items-center justify-center font-sans relative select-none p-4 md:p-6"
+        style={gameBackgroundStyle}
       >
-        {/* Style tag to support dark mode background override */}
-        <style jsx global>{`
-          .dark-bg-override {
-            background-image: radial-gradient(circle, rgba(255,255,255,0.02) 1.5px, transparent 1.5px),
-              linear-gradient(to bottom right, #09090b, #030712) !important;
-          }
-        `}</style>
         <div className="size-12 border-4 border-indigo-500 border-t-transparent animate-spin rounded-full mb-6" />
-        <p className="font-extrabold text-lg text-zinc-700 dark:text-slate-350 font-mono animate-pulse">
+        <p className="font-extrabold text-lg text-zinc-700 dark:text-zinc-400 font-mono animate-pulse">
           ĐANG KHỞI TẠO ĐẤU TRƯỜNG...
         </p>
       </div>
@@ -545,34 +545,10 @@ export default function GameContainer({ lessonSlug }: GameContainerProps) {
 
   return (
     <div
-      className={`h-screen overflow-y-auto lg:overflow-hidden text-zinc-955 dark:text-slate-100 flex flex-col font-sans relative select-none p-2 md:p-4 px-1.5 md:px-2 transition-all duration-300 ${
+      className={`h-screen overflow-y-auto lg:overflow-hidden text-zinc-955 dark:text-zinc-100 flex flex-col font-sans relative select-none p-2 md:p-4 px-1.5 md:px-2 transition-all duration-300 ${
         screenShake ? "animate-[shake_0.5s_infinite]" : ""
       }`}
-      style={{
-        backgroundImage: `
-          radial-gradient(circle, rgba(139,92,26,0.05) 1.5px, transparent 1.5px),
-          linear-gradient(to bottom right, #f4eedb, #eae2c6)
-        `,
-        backgroundSize: "24px 24px, 100% 100%",
-        backgroundAttachment: "fixed",
-      }}
-      ref={(el) => {
-        if (el) {
-          // Check if dark mode is active to override background inline style
-          const isDark = document.documentElement.classList.contains("dark");
-          if (isDark) {
-            el.style.backgroundImage = `
-              radial-gradient(circle, rgba(255,255,255,0.02) 1.5px, transparent 1.5px),
-              linear-gradient(to bottom right, #09090b, #030712)
-            `;
-          } else {
-            el.style.backgroundImage = `
-              radial-gradient(circle, rgba(139,92,26,0.05) 1.5px, transparent 1.5px),
-              linear-gradient(to bottom right, #f4eedb, #eae2c6)
-            `;
-          }
-        }
-      }}
+      style={gameBackgroundStyle}
     >
       <style jsx global>{`
         html, body {
@@ -608,29 +584,29 @@ export default function GameContainer({ lessonSlug }: GameContainerProps) {
       ) : screen === "playing" ? (
         <>
           {/* ─── HEADER HUD (RPG STATUS BAR) ─── */}
-          <header className="relative w-full max-w-[98%] mx-auto flex justify-between items-center bg-white dark:bg-slate-900 border-3 border-zinc-900 dark:border-slate-700 p-3 md:p-4 rounded-none mb-3 z-10 shadow-md">
+          <header className="relative w-full max-w-[98%] mx-auto flex justify-between items-center bg-white dark:bg-navy-blue border-3 border-zinc-900 dark:border-zinc-700 p-3 md:p-4 rounded-none mb-3 z-10 shadow-md">
             {/* Left Side: Stage progress dot */}
             <div className="flex flex-col items-start select-none">
-              <div className="text-[10px] md:text-xs text-zinc-500 dark:text-slate-400 mb-1 tracking-wider font-extrabold font-mono">
+              <div className="text-[10px] md:text-xs text-zinc-500 dark:text-zinc-400 mb-1 tracking-wider font-extrabold font-mono">
                 TIẾN TRÌNH THỬ THÁCH
               </div>
               <div className="flex items-center gap-1.5 overflow-x-auto max-w-[200px] sm:max-w-md md:max-w-none py-1">
                 {stageProgress.map((status, i) => {
                   const isActive = i === currentIdx;
                   let icon = null;
-                  let btnClass = "bg-zinc-100 dark:bg-slate-950 border-zinc-300 dark:border-slate-800 text-zinc-400 dark:text-slate-600 cursor-not-allowed";
+                  let btnClass = "bg-zinc-100 dark:bg-zinc-950 border-zinc-300 dark:border-zinc-800 text-zinc-400 dark:text-zinc-500 cursor-not-allowed";
 
                   if (isActive) {
                     icon = <Swords className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 text-zinc-900 dark:text-white animate-pulse" />;
-                    btnClass = "bg-amber-400 dark:bg-amber-500 border-zinc-900 dark:border-slate-700 text-zinc-900 dark:text-white scale-110";
+                    btnClass = "bg-amber-400 dark:bg-amber-500 border-zinc-900 dark:border-zinc-700 text-zinc-900 dark:text-white scale-110";
                   } else if (status === "correct") {
                     icon = <Trophy className="w-3 h-3 md:w-4 md:h-4 text-emerald-800 dark:text-emerald-300" />;
-                    btnClass = "bg-emerald-400 dark:bg-emerald-650 border-zinc-900 dark:border-slate-700";
+                    btnClass = "bg-emerald-400 dark:bg-emerald-650 border-zinc-900 dark:border-zinc-700";
                   } else if (status === "incorrect") {
                     icon = <Skull className="w-3 h-3 md:w-4 md:h-4 text-red-800 dark:text-red-300" />;
-                    btnClass = "bg-red-400 dark:bg-red-650 border-zinc-900 dark:border-slate-700";
+                    btnClass = "bg-red-400 dark:bg-red-650 border-zinc-900 dark:border-zinc-700";
                   } else {
-                    icon = <Lock className="w-2.5 h-2.5 md:w-3 md:h-3 text-zinc-400 dark:text-slate-600" />;
+                    icon = <Lock className="w-2.5 h-2.5 md:w-3 md:h-3 text-zinc-400 dark:text-zinc-500" />;
                   }
 
                   return (
@@ -652,7 +628,7 @@ export default function GameContainer({ lessonSlug }: GameContainerProps) {
 
             {/* Right Side: Score */}
             <div className="flex flex-col items-end">
-              <span className="text-[10px] md:text-xs text-zinc-500 dark:text-slate-400 font-extrabold font-mono">ĐIỂM SỐ</span>
+              <span className="text-[10px] md:text-xs text-zinc-500 dark:text-zinc-400 font-extrabold font-mono">ĐIỂM SỐ</span>
               <span className="text-cyan-600 dark:text-cyan-400 font-extrabold tracking-wide font-mono text-lg md:text-xl">
                 {score} PTS
               </span>

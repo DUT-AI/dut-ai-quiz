@@ -21,7 +21,7 @@ export default function GameStartScreen({
   return (
     <div className="w-full max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 items-start py-6 px-4 md:px-0">
       {/* Rules / Intro Column (7 columns) */}
-      <div className="lg:col-span-7 flex flex-col bg-white dark:bg-slate-900 border-3 border-zinc-900 dark:border-slate-700 p-6 md:p-8 relative shadow-lg text-zinc-900 dark:text-slate-100 font-mono">
+      <div className="lg:col-span-7 flex flex-col bg-white dark:bg-navy-blue border-3 border-zinc-900 dark:border-zinc-700 p-6 md:p-8 relative shadow-lg text-zinc-900 dark:text-zinc-100 font-mono">
         <div className="size-16 rounded-none bg-indigo-500/10 border-2 border-dashed border-indigo-500/30 flex items-center justify-center text-indigo-500 dark:text-indigo-400 mb-6 mx-auto animate-bounce">
           <Swords className="size-8" />
         </div>
@@ -30,12 +30,12 @@ export default function GameStartScreen({
           ĐẤU TRƯỜNG LUYỆN TẬP
         </h3>
         
-        <p className="text-zinc-600 dark:text-slate-400 max-w-md mx-auto text-center text-xs md:text-sm leading-relaxed mb-6 font-bold">
+        <p className="text-zinc-600 dark:text-zinc-400 max-w-md mx-auto text-center text-xs md:text-sm leading-relaxed mb-6 font-bold">
           Chinh phục các câu hỏi leo tháp, thu thập vàng và sử dụng các vật phẩm phép thuật để đánh bại các Boss canh giữ!
         </p>
 
         {/* Rules Board */}
-        <div className="bg-zinc-50 dark:bg-slate-950 border-2 border-zinc-900 dark:border-slate-800 p-4 mb-6 text-xs md:text-sm space-y-3 font-bold text-zinc-700 dark:text-slate-350">
+        <div className="bg-zinc-50 dark:bg-zinc-950 border-2 border-zinc-900 dark:border-zinc-800 p-4 mb-6 text-xs md:text-sm space-y-3 font-bold text-zinc-700 dark:text-zinc-400">
           <div className="flex items-start gap-2">
             <span className="text-amber-500">▶</span>
             <p>Mỗi lượt chơi bắt đầu với <span className="text-red-500">3 Mạng (HP)</span>. Trả lời sai sẽ bị mất HP.</p>
@@ -63,7 +63,7 @@ export default function GameStartScreen({
           <Button
             onClick={onStart}
             disabled={isStarting}
-            className="py-6 px-10 rounded-none bg-indigo-500 text-white font-black uppercase tracking-widest hover:bg-indigo-600 dark:bg-indigo-600 dark:hover:bg-indigo-700 shadow-md border-2 border-zinc-900 dark:border-slate-700 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all text-sm flex items-center gap-3 w-full sm:w-auto"
+            className="py-6 px-10 rounded-none bg-indigo-500 text-white font-black uppercase tracking-widest hover:bg-indigo-600 dark:bg-indigo-600 dark:hover:bg-indigo-700 shadow-md border-2 border-zinc-900 dark:border-zinc-700 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all text-sm flex items-center gap-3 w-full sm:w-auto"
           >
             {isStarting ? (
               <div className="size-4 border-2 border-white border-t-transparent animate-spin rounded-full" />
