@@ -1,14 +1,13 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Timer, Swords, Skull, Trophy, Lock, Heart, Shield, Zap, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 
 import BossHud from "./boss-hud";
 import ItemHotbar, { ItemType } from "./item-hotbar";
-import GameStartScreen from "./game-start-screen";
 import GameQuestionCard from "./game-question-card";
 import GameResult from "./game-result";
 import { useThemeStore } from "@/store/theme-store";
@@ -35,6 +34,8 @@ interface GameContainerProps {
 
 export default function GameContainer({ lessonSlug }: GameContainerProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const hasInitializedRef = useRef(false);
   const { darkMode } = useThemeStore();
 
   const gameBackgroundStyle = useMemo(() => {
@@ -220,50 +221,81 @@ export default function GameContainer({ lessonSlug }: GameContainerProps) {
     setScreen("playing");
   };
 
-  // Synchronize state when activeSession query changes (e.g., on browser back navigation)
+  // Auto-initialize game session based on query params (continue or new game)
   useEffect(() => {
-    // Only synchronize when the local sessionId is empty (i.e. on mount / back navigation)
-    if (!isLoadingActiveSession && sessionId === "") {
-      if (!activeSession?.session_id) {
-        // If there's no active session on the server but we are stuck in playing state,
-        // reset to the start screen.
-        if (screen === "playing") {
-          setScreen("start");
-          setQuestions([]);
-          setGamification(null);
-          setGameResult("playing");
-        }
+    if ((isLoadingActiveSession && !activeSessionError) || hasInitializedRef.current) return;
+
+    const action = searchParams?.get("action");
+
+    if (action === "new") {
+      hasInitializedRef.current = true;
+      if (hasActiveSession && activeSession) {
+        // Finish the active session first
+        finishSessionMutation.mutate(activeSession.session_id, {
+          onSuccess: () => {
+            // Start a new session
+            startSessionMutation.mutate(
+              { lesson_slug: lessonSlug },
+              {
+                onSuccess: (data) => {
+                  initializeGame(data);
+                },
+                onError: (err: any) => {
+                  toast.error(err.message || "Không thể khởi tạo đấu trường!");
+                  router.push(`/lessons/${lessonSlug}`);
+                },
+              }
+            );
+          },
+          onError: () => {
+            // Force start new session if finish fails
+            startSessionMutation.mutate(
+              { lesson_slug: lessonSlug },
+              {
+                onSuccess: (data) => {
+                  initializeGame(data);
+                },
+              }
+            );
+          },
+        });
       } else {
-        // If the server has an active session and we are stuck in playing state,
-        // but our local sessionId is not set yet (e.g. on mount / back navigation),
-        // initialize the game state.
-        if (screen === "playing") {
-          initializeGame(activeSession);
-        }
+        // Start a new session directly
+        startSessionMutation.mutate(
+          { lesson_slug: lessonSlug },
+          {
+            onSuccess: (data) => {
+              initializeGame(data);
+            },
+            onError: (err: any) => {
+              toast.error(err.message || "Không thể khởi tạo đấu trường!");
+              router.push(`/lessons/${lessonSlug}`);
+            },
+          }
+        );
+      }
+    } else {
+      // Continue or default
+      hasInitializedRef.current = true;
+      if (hasActiveSession && activeSession) {
+        initializeGame(activeSession);
+      } else {
+        // Start new session
+        startSessionMutation.mutate(
+          { lesson_slug: lessonSlug },
+          {
+            onSuccess: (data) => {
+              initializeGame(data);
+            },
+            onError: (err: any) => {
+              toast.error(err.message || "Không thể khởi tạo đấu trường!");
+              router.push(`/lessons/${lessonSlug}`);
+            },
+          }
+        );
       }
     }
-  }, [activeSession, isLoadingActiveSession, screen, sessionId]);
-
-  // Start game challenge
-  const handleStartGame = () => {
-    if (hasActiveSession && activeSession) {
-      initializeGame(activeSession);
-      toast.success("Đã khôi phục phiên thi đấu trước đó!");
-    } else {
-      startSessionMutation.mutate(
-        { lesson_slug: lessonSlug },
-        {
-          onSuccess: (data) => {
-            initializeGame(data);
-            toast.success("Trận đấu mới đã bắt đầu!");
-          },
-          onError: (err: any) => {
-            toast.error(err.message || "Không thể khởi tạo đấu trường!");
-          },
-        }
-      );
-    }
-  };
+  }, [isLoadingActiveSession, activeSessionError, hasActiveSession, activeSession, lessonSlug, searchParams, router]);
 
   // Timer management
   useEffect(() => {
@@ -530,7 +562,13 @@ export default function GameContainer({ lessonSlug }: GameContainerProps) {
     }
   };
 
-  if (isLoadingActiveSession) {
+  const isInitializing =
+    (isLoadingActiveSession && !activeSessionError) ||
+    startSessionMutation.isPending ||
+    finishSessionMutation.isPending ||
+    !hasInitializedRef.current;
+
+  if (isInitializing) {
     return (
       <div
         className="min-h-screen text-zinc-955 dark:text-zinc-100 flex flex-col items-center justify-center font-sans relative select-none p-4 md:p-6"
@@ -546,20 +584,19 @@ export default function GameContainer({ lessonSlug }: GameContainerProps) {
 
   return (
     <div
-      className={`text-zinc-955 dark:text-zinc-100 flex flex-col font-sans relative select-none p-2 md:p-4 px-1.5 md:px-2 transition-all duration-300 ${
-        screen === "playing" ? "h-screen overflow-y-auto lg:overflow-hidden" : ""
+      className={`text-zinc-955 dark:text-zinc-100 flex flex-col font-sans relative select-none p-2 md:p-4 px-1.5 md:px-2 transition-all duration-300 h-screen overflow-y-auto custom-scrollbar ${
+        screen === "playing" ? "lg:overflow-hidden" : ""
       } ${screenShake ? "animate-[shake_0.5s_infinite]" : ""}`}
       style={gameBackgroundStyle}
     >
       <style jsx global>{`
         html, body {
-          height: auto !important;
-          overflow: auto !important;
-          overflow-y: auto !important;
+          height: 100% !important;
+          overflow: hidden !important;
         }
         #__next, main, [data-nextjs-scroll-focus-boundary], #root, .dark, body > div {
-          height: auto !important;
-          overflow: visible !important;
+          height: 100% !important;
+          overflow: hidden !important;
         }
         @keyframes shake {
           0%, 100% { transform: translate(0, 0) rotate(0deg); }
@@ -588,12 +625,9 @@ export default function GameContainer({ lessonSlug }: GameContainerProps) {
       </div>
 
       {screen === "start" ? (
-        <GameStartScreen
-          lessonSlug={lessonSlug}
-          hasActiveSession={hasActiveSession}
-          isStarting={startSessionMutation.isPending}
-          onStart={handleStartGame}
-        />
+        <div className="flex-1 flex items-center justify-center font-mono text-zinc-500">
+          <p className="animate-pulse">ĐANG KHỞI TẠO ĐẤU TRƯỜNG...</p>
+        </div>
       ) : screen === "playing" ? (
         <>
           {/* ─── HEADER HUD (RPG STATUS BAR) ─── */}

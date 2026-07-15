@@ -10,8 +10,17 @@ export function Providers({ children }: { children: React.ReactNode }) {
     () =>
       new QueryClient({
         queryCache: new QueryCache({
-          onError: (error: any) => {
+          onError: (error: any, query) => {
             if (error?.status === 401) return;
+            // Ignore 404 No Active Session check error toast
+            if (
+              error?.status === 404 &&
+              query.queryKey?.[0] === "game" &&
+              query.queryKey?.[1] === "sessions" &&
+              query.queryKey?.[2] === "active"
+            ) {
+              return;
+            }
             const message = error?.message || "Đã có lỗi xảy ra ở hệ thống vui lòng liên hệ admin!";
             toast.error(message);
           },
