@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Timer, Swords, Skull, Trophy, Lock, Heart, Shield, Zap, BookOpen } from "lucide-react";
 import { toast } from "sonner";
@@ -33,7 +33,6 @@ interface GameContainerProps {
 
 export default function GameContainer({ lessonSlug, initialSession }: GameContainerProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const hasInitializedRef = useRef(false);
   const { darkMode } = useThemeStore();
 
@@ -159,6 +158,8 @@ export default function GameContainer({ lessonSlug, initialSession }: GameContai
         throw new Error("Dữ liệu snapshot không hợp lệ (null/undefined)!");
       }
       setSessionId(sessionData.session_id);
+
+
       setQuestions(snap.questions || []);
       setGamification(snap.gamification);
 
