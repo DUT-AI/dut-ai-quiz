@@ -509,7 +509,7 @@ export default function GameContainer({ lessonSlug, initialSession }: GameContai
 
   return (
     <div
-      className={`text-zinc-955 dark:text-zinc-100 flex flex-col font-sans relative select-none p-2 md:p-4 px-1.5 md:px-2 transition-all duration-300 h-screen overflow-y-auto custom-scrollbar ${
+      className={`text-zinc-955 dark:text-zinc-100 flex flex-col font-sans relative select-none p-2 md:p-4 px-1.5 md:px-2 transition-all duration-300 h-screen overflow-y-auto custom-scrollbar game-layout-container ${
         screen === "playing" ? "lg:overflow-hidden" : ""
       } ${screenShake ? "animate-[shake_0.5s_infinite]" : ""}`}
       style={gameBackgroundStyle}
@@ -534,6 +534,14 @@ export default function GameContainer({ lessonSlug, initialSession }: GameContai
           70% { transform: translate(-2px, -1px) rotate(0.5deg); }
           80% { transform: translate(1px, 2px) rotate(-0.5deg); }
           90% { transform: translate(-2px, -2px) rotate(0.5deg); }
+        }
+        .game-main-content {
+          overflow: visible !important;
+        }
+        @media (min-width: 1024px) and (max-height: 920px) {
+          .game-layout-container {
+            overflow-y: auto !important;
+          }
         }
       `}</style>
 
@@ -608,8 +616,8 @@ export default function GameContainer({ lessonSlug, initialSession }: GameContai
           </header>
 
           {/* ─── MAIN CONTENT WINDOW (RPG HUD VIEWPORT) ─── */}
-          <main className="flex-1 min-h-0 w-full max-w-[98%] mx-auto flex flex-col items-center justify-start relative z-10 py-2">
-            <div className="w-full lg:h-full grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          <main className="flex-1 min-h-0 w-full max-w-[98%] mx-auto flex flex-col items-center justify-start relative z-10 py-2 game-main-content">
+            <div className="w-full lg:h-full grid grid-cols-1 lg:grid-cols-12 gap-6 items-start game-grid-layout">
               {/* ─── LEFT COLUMN: BATTLE ARENA, HP STATS & ITEM HOTBAR ─── */}
               <div className="lg:col-span-5 flex flex-col gap-4 w-full">
                 <BossHud
@@ -637,7 +645,7 @@ export default function GameContainer({ lessonSlug, initialSession }: GameContai
               {/* ─── RIGHT COLUMN: TIMER, QUESTIONS & ITEMS ─── */}
               <div
                 ref={rightColRef}
-                className="lg:col-span-7 flex flex-col gap-4 w-full items-center lg:h-full lg:overflow-y-auto lg:pr-2 custom-scrollbar"
+                className="lg:col-span-7 flex flex-col gap-4 w-full items-center lg:h-full lg:overflow-y-auto lg:pr-2 custom-scrollbar game-right-column"
               >
                 {questions[currentIdx] && (
                   <GameQuestionCard
