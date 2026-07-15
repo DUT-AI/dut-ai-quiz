@@ -388,32 +388,39 @@ export default function GameContainer({ lessonSlug }: GameContainerProps) {
       return;
     }
 
-    // Check if we evolved stage
-    const nextQ = questions[nextIdx];
-    if (nextQ) {
-      if (currentQuestion && nextQ.tier > currentQuestion.tier) {
-        toast.info(`ẢI TẦNG THỨ ${nextQ.tier}: MỨC ĐỘ ${nextQ.tier === 2 ? "TRUNG BÌNH" : "KHÓ"}`);
-      }
+    refetchActiveSession().then(({ data: updatedSession }) => {
+      if (updatedSession?.snapshot) {
+        const updatedQuestions = updatedSession.snapshot.questions;
+        setQuestions(updatedQuestions);
 
-      if (nextQ.is_boss) {
-        setIsBossMode(true);
-        setBossHp(5);
-        setBossMaxHp(5);
-        setBossStatus("idle");
-        setShowBossWarning(true);
-      } else {
-        setIsBossMode(false);
-        setBossHp(0);
-      }
-    }
+        // Check if we evolved stage
+        const nextQ = updatedQuestions[nextIdx];
+        if (nextQ) {
+          if (currentQuestion && nextQ.tier > currentQuestion.tier) {
+            toast.info(`ẢI TẦNG THỨ ${nextQ.tier}: MỨC ĐỘ ${nextQ.tier === 2 ? "TRUNG BÌNH" : "KHÓ"}`);
+          }
 
-    // Reset components states
-    setCurrentIdx(nextIdx);
-    setIsAnswered(false);
-    setSelectedOptionId(null);
-    setCorrectOptionId(null);
-    setHiddenOptions([]);
-    setTimerFrozen(false);
+          if (nextQ.is_boss) {
+            setIsBossMode(true);
+            setBossHp(5);
+            setBossMaxHp(5);
+            setBossStatus("idle");
+            setShowBossWarning(true);
+          } else {
+            setIsBossMode(false);
+            setBossHp(0);
+          }
+        }
+
+        // Reset components states
+        setCurrentIdx(nextIdx);
+        setIsAnswered(false);
+        setSelectedOptionId(null);
+        setCorrectOptionId(null);
+        setHiddenOptions([]);
+        setTimerFrozen(false);
+      }
+    });
   };
 
   // Use Support Items

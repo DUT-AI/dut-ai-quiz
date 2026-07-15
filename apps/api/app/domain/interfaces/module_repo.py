@@ -7,8 +7,15 @@ from app.domain.entities.module import ModuleEntity
 class IModuleRepository(Protocol):
     """Interface protocol for ModuleRepository database operations."""
 
-    async def list_all(self) -> list[ModuleEntity]:
-        """List all module entities in ascending order of their order and creation time."""
+    async def list_all(
+        self,
+        *,
+        q: str | None = None,
+        name: str | None = None,
+        description: str | None = None,
+        order: int | None = None,
+    ) -> list[ModuleEntity]:
+        """List module entities with optional filtering, sorted by order and creation time."""
         ...
 
     async def get(self, module_id: UUID) -> ModuleEntity | None:
@@ -17,10 +24,6 @@ class IModuleRepository(Protocol):
 
     async def get_by_name(self, name: str) -> ModuleEntity | None:
         """Get a single module entity by name (case-insensitive)."""
-        ...
-
-    async def search_by_name_prefix(self, prefix: str) -> list[ModuleEntity]:
-        """Search module entities where name starts with prefix (case-insensitive)."""
         ...
 
     async def add(self, entity: ModuleEntity) -> ModuleEntity:

@@ -9,7 +9,6 @@ from app.application.use_cases.modules import (
     ListModulesUseCase,
     UpdateModuleUseCase,
     ReorderModulesUseCase,
-    SuggestModulesUseCase,
 )
 from app.core.datetime_utils import now_ict
 from app.domain.entities.lesson import LessonEntity
@@ -24,8 +23,24 @@ class MockModuleRepository(IModuleRepository):
     def __init__(self):
         self.db = {}
 
-    async def list_all(self) -> list[ModuleEntity]:
-        return sorted(list(self.db.values()), key=lambda x: (x.order, x.created_at))
+    async def list_all(
+        self,
+        *,
+        q: str | None = None,
+        name: str | None = None,
+        description: str | None = None,
+        order: int | None = None,
+    ) -> list[ModuleEntity]:
+        res = list(self.db.values())
+        if q is not None and q.strip():
+            res = [m for m in res if m.name.lower().startswith(q.strip().lower())]
+        if name is not None and name.strip():
+            res = [m for m in res if m.name.lower() == name.strip().lower()]
+        if description is not None and description.strip():
+            res = [m for m in res if description.strip().lower() in m.description.lower()]
+        if order is not None:
+            res = [m for m in res if m.order == order]
+        return sorted(res, key=lambda x: (x.order, x.created_at))
 
     async def get(self, module_id: UUID) -> ModuleEntity | None:
         return self.db.get(module_id)
@@ -35,13 +50,6 @@ class MockModuleRepository(IModuleRepository):
             if m.name.lower() == name.lower():
                 return m
         return None
-
-    async def search_by_name_prefix(self, prefix: str) -> list[ModuleEntity]:
-        res = []
-        for m in self.db.values():
-            if m.name.lower().startswith(prefix.lower()):
-                res.append(m)
-        return res
 
     async def add(self, entity: ModuleEntity) -> ModuleEntity:
         self.db[entity.id] = entity
@@ -157,12 +165,11 @@ async def test_modules_flow():
         await update_uc.execute(str(another_module.id), ModuleUpdate(name="intro to machine learning"))
 
     # 4d. Test autocomplete suggest search
-    suggest_uc = SuggestModulesUseCase(module_repo)
-    suggestions = await suggest_uc.execute("adva")
+    suggestions = await list_uc.execute(q="adva", include_lessons=False)
     assert len(suggestions) == 1
-    assert suggestions[0].name == "Advanced Neural Networks"
+    assert suggestions[0]["name"] == "Advanced Neural Networks"
 
-    suggestions_empty = await suggest_uc.execute("nonexistent")
+    suggestions_empty = await list_uc.execute(q="nonexistent", include_lessons=False)
     assert len(suggestions_empty) == 0
 
     # 5. Delete Module

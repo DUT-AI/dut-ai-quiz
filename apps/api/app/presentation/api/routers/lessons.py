@@ -74,7 +74,11 @@ async def list_lesson_questions(
         offset=offset,
         limit=limit,
     )
-    return await use_case.execute(query)
+    rows = await use_case.execute(query)
+    if user.quiz_role not in ("admin", "MENTOR"):
+        from app.presentation.api.routers.questions import sanitize_questions_for_student
+        rows = sanitize_questions_for_student(rows)
+    return rows
 
 
 @router.get("/{lesson_id}", response_model=LessonDetailOut)
@@ -87,6 +91,11 @@ async def get_lesson(
     res = await use_case.execute(lesson_id, is_teacher=user.quiz_role in ("admin", "MENTOR"))
     if not res:
         raise HTTPException(status_code=404, detail="Lesson not found")
+    if user.quiz_role not in ("admin", "MENTOR"):
+        from app.presentation.api.routers.questions import sanitize_questions_for_student
+        import copy
+        res = copy.deepcopy(res)
+        res["questions"] = sanitize_questions_for_student(res["questions"])
     return res
 
 

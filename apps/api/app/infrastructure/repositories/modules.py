@@ -12,8 +12,25 @@ class ModuleRepository(IModuleRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def list_all(self) -> list[ModuleEntity]:
-        stmt = select(Module).order_by(Module.order.asc(), Module.created_at.asc())
+    async def list_all(
+        self,
+        *,
+        q: str | None = None,
+        name: str | None = None,
+        description: str | None = None,
+        order: int | None = None,
+    ) -> list[ModuleEntity]:
+        stmt = select(Module)
+        if q is not None and q.strip():
+            stmt = stmt.where(func.lower(Module.name).startswith(func.lower(q.strip())))
+        if name is not None and name.strip():
+            stmt = stmt.where(func.lower(Module.name) == func.lower(name.strip()))
+        if description is not None and description.strip():
+            stmt = stmt.where(func.lower(Module.description).contains(func.lower(description.strip())))
+        if order is not None:
+            stmt = stmt.where(Module.order == order)
+        
+        stmt = stmt.order_by(Module.order.asc(), Module.created_at.asc())
         result = await self._session.execute(stmt)
         return [m.to_entity() for m in result.scalars().all()]
 
@@ -28,11 +45,6 @@ class ModuleRepository(IModuleRepository):
         result = await self._session.execute(stmt)
         m = result.scalar_one_or_none()
         return m.to_entity() if m else None
-
-    async def search_by_name_prefix(self, prefix: str) -> list[ModuleEntity]:
-        stmt = select(Module).where(func.lower(Module.name).startswith(func.lower(prefix)))
-        result = await self._session.execute(stmt)
-        return [m.to_entity() for m in result.scalars().all()]
 
     async def add(self, entity: ModuleEntity) -> ModuleEntity:
         m = Module.from_entity(entity)

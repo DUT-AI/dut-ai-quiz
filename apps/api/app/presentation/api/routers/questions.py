@@ -10,6 +10,7 @@ from app.application.use_cases.questions import (
     GetQuestionUseCase,
     ListQuestionsUseCase,
     UpdateQuestionUseCase,
+    AnswerQuestionUseCase,
 )
 from app.domain.value_objects import Difficulty, PoolType
 from app.presentation.api.deps import CurrentUser, AdminOrMentorUser
@@ -19,9 +20,59 @@ from app.presentation.schemas.questions import (
     QuestionListQuery,
     QuestionOut,
     QuestionUpdate,
+    QuestionAnswerIn,
+    QuestionAnswerOut,
 )
 
 router = APIRouter(prefix="/questions", tags=["questions"])
+
+
+def sanitize_questions_for_student(questions: list) -> list:
+    import copy
+    from app.domain.entities.question import QuestionEntity, QuestionOptionEntity
+    sanitized = []
+    for q in questions:
+        if isinstance(q, dict):
+            q_copy = copy.deepcopy(q)
+            q_copy["solution"] = None
+            if "options" in q_copy:
+                for opt in q_copy["options"]:
+                    if isinstance(opt, dict):
+                        opt["is_correct"] = None
+            sanitized.append(q_copy)
+        elif hasattr(q, "model_copy"):
+            q_copy = q.model_copy(deep=True)
+            q_copy.solution = None
+            if hasattr(q_copy, "options"):
+                for opt in q_copy.options:
+                    opt.is_correct = None
+            sanitized.append(q_copy)
+        else:
+            options_copy = []
+            for opt in q.options:
+                options_copy.append(
+                    QuestionOptionEntity(
+                        id=opt.id,
+                        text=opt.text,
+                        is_correct=None,
+                        fixed=opt.fixed,
+                    )
+                )
+            sanitized.append(
+                QuestionEntity(
+                    id=q.id,
+                    pool_type=q.pool_type,
+                    difficulty=q.difficulty,
+                    content=q.content,
+                    options=options_copy,
+                    solution=None,
+                    lesson_id=q.lesson_id,
+                    tags=q.tags,
+                    created_by=q.created_by,
+                    created_at=q.created_at,
+                )
+            )
+    return sanitized
 
 
 @router.get("", response_model=list[QuestionOut])
@@ -49,6 +100,8 @@ async def list_questions_route(
         limit=limit,
     )
     rows = await use_case.execute(q)
+    if user.quiz_role not in ("admin", "MENTOR"):
+        rows = sanitize_questions_for_student(rows)
     return rows
 
 
@@ -112,3 +165,17 @@ async def bulk_create_questions_route(
 ):
     body.created_by = user.id
     return await use_case.execute(body)
+
+
+@router.post("/{question_id}/answer", response_model=QuestionAnswerOut)
+@inject
+async def answer_question_route(
+    user: CurrentUser,
+    question_id: UUID,
+    body: QuestionAnswerIn,
+    use_case: FromDishka[AnswerQuestionUseCase],
+):
+    result = await use_case.execute(question_id, body.option_id)
+    if result is None:
+        raise HTTPException(status_code=404, detail="Question not found")
+    return result
