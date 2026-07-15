@@ -38,22 +38,20 @@ export function GameTab({ lessonId, slug }: GameTabProps) {
             isLoadingSession={isLoadingSession} 
           />
 
-          {/* Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 items-stretch">
-            
-            {/* Left Side (7 cols): Rules and Personal Best */}
-            <div className="lg:col-span-7 flex flex-col gap-6 md:gap-8">
-              <GameTabRules />
-              <div className="w-full">
-                <GamePersonalBest lessonSlug={slug} variant="modern" />
-              </div>
+          {/* Content Stack */}
+          <div className="flex flex-col gap-8">
+            {/* Rules Section */}
+            <GameTabRules />
+
+            {/* Personal Best Section (Full Width) */}
+            <div className="w-full">
+              <GamePersonalBest lessonSlug={slug} variant="modern" />
             </div>
 
-            {/* Right Side (5 cols): Leaderboard */}
-            <div className="lg:col-span-5 w-full flex flex-col">
+            {/* Leaderboard Section (Full Width) */}
+            <div className="w-full">
               <GameLeaderboard lessonSlug={slug} variant="modern" />
             </div>
-
           </div>
 
         </div>

@@ -1,8 +1,10 @@
 "use client";
 
-import React from "react";
-import { Trophy, Crown, Medal, Coins, Clock, Gamepad2, X } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import { Trophy, Crown, Medal, Coins, Clock, Gamepad2, X, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import GameFireworks from "./game-fireworks";
 
 interface LeaderboardRow {
   user_id: number;
@@ -24,6 +26,20 @@ export default function GameLeaderboardModal({
   leaderboard,
   onClose,
 }: GameLeaderboardModalProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    
+    // Prevent background scrolling while modal is active
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, []);
+
   const top3 = leaderboard.slice(0, 3);
   const remaining = leaderboard.slice(3);
 
@@ -40,8 +56,10 @@ export default function GameLeaderboardModal({
     visible: { opacity: 1, y: 0, transition: { duration: 0.35 } },
   };
 
-  return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 sm:p-6 md:p-10 font-sans">
+  if (!mounted) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 md:p-10 font-sans">
       {/* Backdrop overlay */}
       <motion.div
         initial={{ opacity: 0 }}
@@ -50,6 +68,9 @@ export default function GameLeaderboardModal({
         onClick={onClose}
         className="absolute inset-0 bg-white/70 dark:bg-black/75 backdrop-blur-md"
       />
+
+      {/* Fireworks canvas animation overlay */}
+      <GameFireworks />
 
       {/* Modal Content */}
       <motion.div
@@ -89,128 +110,178 @@ export default function GameLeaderboardModal({
 
           {/* Scrollable Content */}
           <div className="flex-1 overflow-y-auto pr-1 md:pr-2 custom-scrollbar space-y-8 pb-4">
-            
-            {/* Podium (Top 3) */}
+            {/* Top 3 Podium Cards */}
             {top3.length > 0 && (
-              <div className="grid grid-cols-3 gap-3 md:gap-6 items-end justify-center py-4 max-w-2xl mx-auto border-b border-gray-100 dark:border-white/5 pb-8">
+              <div className="relative flex items-end justify-center gap-3 md:gap-8 py-6 border-b border-gray-100 dark:border-white/5 pb-8 max-w-xl mx-auto w-full">
                 
-                {/* 2nd Place (Left) */}
-                <div className="flex flex-col items-center">
+                {/* Neon floor and reflection lines under columns */}
+                <div className="absolute bottom-[2px] left-[5%] right-[5%] h-[2.5px] bg-gradient-to-r from-transparent via-indigo-500/40 dark:via-indigo-400/40 to-transparent blur-[1px] pointer-events-none" />
+                <div className="absolute bottom-0 left-[15%] right-[15%] h-[1px] bg-gradient-to-r from-transparent via-purple-500/25 to-transparent pointer-events-none" />
+
+                {/* 2nd Place (Left - Silver) */}
+                <div className="flex flex-col items-center flex-1 max-w-[120px] relative group/pod-item">
                   {top3[1] ? (
                     <motion.div
-                      whileHover={{ y: -5 }}
-                      className="w-full flex flex-col items-center p-4 rounded-3xl border border-indigo-500/15 dark:border-indigo-400/20 bg-gradient-to-br from-indigo-500/[0.07] via-purple-500/[0.03] to-pink-500/[0.07] dark:from-indigo-500/[0.12] dark:via-purple-500/[0.04] dark:to-pink-500/[0.12] hover:from-indigo-500/[0.12] hover:via-purple-500/[0.06] hover:to-pink-500/[0.12] text-center shadow-md relative"
+                      initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.1 }}
+                      whileHover={{ y: -4 }}
+                      className="flex flex-col items-center text-center w-full"
                     >
-                      <div className="absolute -top-4 bg-zinc-200/90 dark:bg-zinc-800/90 text-zinc-700 dark:text-zinc-300 text-[10px] font-black px-2.5 py-0.5 rounded-full border border-zinc-300 dark:border-zinc-700">
-                        HẠNG 2
-                      </div>
-                      <div className="relative mt-2">
+                      <div className="relative mb-2 mt-4">
+                        <motion.div
+                          animate={{ y: [0, -3, 0] }}
+                          transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                          className="absolute -top-6 left-1/2 -translate-x-1/2 text-slate-500 dark:text-slate-300 z-20"
+                        >
+                          <Medal className="size-5 md:size-6 fill-slate-100 dark:fill-slate-800 drop-shadow" />
+                        </motion.div>
+
                         {top3[1].avatar_url ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
-                            src={top3[1].avatar_url || undefined}
+                            src={top3[1].avatar_url}
                             alt={top3[1].username || "Dũng Sĩ"}
-                            className="size-16 md:size-20 rounded-full object-cover border-2 border-zinc-350 dark:border-zinc-500 shadow-md"
+                            className="size-12 md:size-16 rounded-full object-cover border-2 border-slate-350 dark:border-slate-500 shadow-md group-hover/pod-item:shadow-slate-400/20"
                           />
                         ) : (
-                          <div className="size-16 md:size-20 bg-zinc-250 dark:bg-zinc-850 rounded-full border-2 border-zinc-350 dark:border-zinc-500 flex items-center justify-center text-sm font-black text-zinc-500">
+                          <div className="size-12 md:size-16 bg-slate-250 dark:bg-slate-855 rounded-full border-2 border-slate-350 dark:border-slate-500 flex items-center justify-center text-xs font-black text-slate-500">
                             DS
                           </div>
                         )}
-                        <div className="absolute -bottom-1 -right-1 bg-zinc-400 dark:bg-zinc-500 text-white rounded-full p-1 border border-white dark:border-navy-blue shadow">
-                          <Medal className="size-4" />
-                        </div>
                       </div>
-                      <h4 className="mt-3 text-xs md:text-sm font-black text-dark-blue dark:text-zinc-200 text-wrap break-words max-w-full leading-snug">
+                      <h5 className="text-[10px] md:text-xs font-black truncate max-w-full text-dark-blue dark:text-zinc-200 px-1">
                         {top3[1].username || `Dũng Sĩ #${top3[1].user_id}`}
-                      </h4>
-                      <span className="text-[10px] md:text-xs text-zinc-650 dark:text-zinc-300 font-black mt-1.5 bg-zinc-500/10 dark:bg-zinc-400/25 px-2 py-0.5 rounded-full border border-zinc-300/10 dark:border-zinc-500/10">
+                      </h5>
+                      <span className="text-[9px] md:text-[10px] text-slate-500 dark:text-slate-400 font-extrabold mb-2">
                         {top3[1].final_score.toFixed(0)} PTS
                       </span>
                     </motion.div>
                   ) : (
-                    <div className="w-full opacity-20 border border-dashed border-gray-300 dark:border-white/5 rounded-3xl h-28" />
+                    <div className="h-16 w-full" />
                   )}
+                  {/* Visual Podium Column */}
+                  <div className="w-full h-18 md:h-24 bg-slate-100/30 dark:bg-white/[0.05] bg-gradient-to-t from-slate-400/30 via-slate-400/10 to-transparent dark:from-slate-500/25 dark:via-slate-500/10 dark:to-transparent border-t-2 border-x-0 border-b-0 border-sky-400 dark:border-t-sky-300 rounded-t-2xl flex items-center justify-center relative shadow-[0_0_15px_rgba(148,163,184,0.08)] dark:shadow-[0_0_25px_rgba(148,163,184,0.12)] transition-all duration-300 group-hover/pod-item:border-t-sky-300 dark:group-hover/pod-item:border-t-sky-200 group-hover/pod-item:shadow-[0_0_30px_rgba(148,163,184,0.2)]">
+                    <span className="text-3xl md:text-5xl font-black text-sky-600 dark:text-sky-300 select-none font-mono tracking-tighter drop-shadow-[0_0_10px_rgba(56,189,248,0.4)]">
+                      2
+                    </span>
+                  </div>
                 </div>
 
-                {/* 1st Place (Center) */}
-                <div className="flex flex-col items-center">
-                  {top3[0] && (
+                {/* 1st Place (Center - Main Gold Card) */}
+                <div className="flex flex-col items-center flex-1 max-w-[140px] z-10 relative group/pod-item">
+                  {top3[0] ? (
                     <motion.div
-                      whileHover={{ y: -5 }}
-                      className="w-full flex flex-col items-center p-5 rounded-3xl border border-indigo-500/20 dark:border-indigo-400/25 bg-gradient-to-br from-indigo-500/[0.09] via-purple-500/[0.04] to-pink-500/[0.09] dark:from-indigo-500/[0.15] dark:via-purple-500/[0.05] dark:to-pink-500/[0.15] hover:from-indigo-500/[0.14] hover:via-purple-500/[0.07] hover:to-pink-500/[0.14] text-center shadow-xl relative pb-6 z-20"
+                      initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      transition={{ duration: 0.5 }}
+                      whileHover={{ y: -4 }}
+                      className="flex flex-col items-center text-center w-full relative"
                     >
-                      <motion.div
-                        animate={{ y: [0, -4, 0] }}
-                        transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-                        className="absolute -top-8 text-amber-500 animate-pulse"
-                      >
-                        <Crown className="size-9 fill-amber-500" />
-                      </motion.div>
-                      <div className="absolute -top-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-black px-3 py-0.5 rounded-full border border-amber-600 shadow-md">
-                        TRẠNG NGUYÊN
-                      </div>
-                      <div className="relative mt-3">
+                      {/* Gold crown and sparkles decoration */}
+                      <div className="relative mb-2 mt-4">
+                        <motion.div
+                          animate={{ y: [0, -3, 0] }}
+                          transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                          className="absolute -top-6 left-1/2 -translate-x-1/2 text-amber-500 z-20"
+                        >
+                          <Crown className="size-6 md:size-7 fill-amber-500 drop-shadow" />
+                        </motion.div>
+                        
+                        <motion.div
+                          animate={{ opacity: [0.4, 1, 0.4], scale: [0.9, 1.1, 0.9] }}
+                          transition={{ repeat: Infinity, duration: 1.5, delay: 0.2 }}
+                          className="absolute -top-7 -right-3 text-amber-400"
+                        >
+                          <Sparkles className="size-3 fill-amber-400" />
+                        </motion.div>
+                        <motion.div
+                          animate={{ opacity: [0.3, 0.9, 0.3], scale: [0.8, 1, 0.8] }}
+                          transition={{ repeat: Infinity, duration: 1.8, delay: 0.5 }}
+                          className="absolute -top-6 -left-5 text-amber-400"
+                        >
+                          <Sparkles className="size-2.5 fill-amber-500" />
+                        </motion.div>
+
                         {top3[0].avatar_url ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
-                            src={top3[0].avatar_url || undefined}
+                            src={top3[0].avatar_url}
                             alt={top3[0].username || "Dũng Sĩ"}
-                            className="size-20 md:size-24 rounded-full object-cover border-4 border-amber-450 dark:border-amber-500 shadow-lg"
+                            className="size-16 md:size-20 rounded-full object-cover border-4 border-amber-400 dark:border-amber-500 shadow-lg group-hover/pod-item:shadow-amber-500/25"
                           />
                         ) : (
-                          <div className="size-20 md:size-24 bg-amber-100/50 dark:bg-amber-950/20 rounded-full border-4 border-amber-450 dark:border-amber-500 flex items-center justify-center text-lg font-black text-amber-600 dark:text-amber-400">
+                          <div className="size-16 md:size-20 bg-amber-500/10 dark:bg-amber-950/20 rounded-full border-4 border-amber-400 dark:border-amber-500 flex items-center justify-center text-sm font-black text-amber-600 dark:text-amber-400">
                             DS
                           </div>
                         )}
                       </div>
-                      <h3 className="mt-3 text-sm md:text-base font-black text-dark-blue dark:text-white text-wrap break-words max-w-full leading-snug">
+                      <h5 className="text-xs md:text-sm font-black truncate max-w-full text-dark-blue dark:text-white px-1">
                         {top3[0].username || `Dũng Sĩ #${top3[0].user_id}`}
-                      </h3>
-                      <span className="text-xs md:text-sm text-amber-650 dark:text-amber-400 font-black mt-1.5 bg-amber-500/10 dark:bg-amber-400/25 px-3 py-0.5 rounded-full border border-amber-500/10 dark:border-amber-400/10">
+                      </h5>
+                      <span className="text-[10px] md:text-xs text-amber-650 dark:text-amber-400 font-extrabold mb-2">
                         {top3[0].final_score.toFixed(0)} PTS
                       </span>
                     </motion.div>
+                  ) : (
+                    <div className="h-16 w-full" />
                   )}
+                  {/* Visual Podium Column */}
+                  <div className="w-full h-24 md:h-32 bg-slate-100/30 dark:bg-white/[0.05] bg-gradient-to-t from-amber-500/30 via-amber-500/15 to-transparent dark:from-amber-500/25 dark:via-amber-500/10 dark:to-transparent border-t-4 border-x-0 border-b-0 border-amber-400 dark:border-t-amber-400 rounded-t-2xl flex items-center justify-center relative shadow-[0_0_15px_rgba(245,158,11,0.1)] dark:shadow-[0_0_25px_rgba(245,158,11,0.15)] transition-all duration-300 group-hover/pod-item:border-t-amber-300 dark:group-hover/pod-item:border-t-amber-300 group-hover/pod-item:shadow-[0_0_30px_rgba(245,158,11,0.25)]">
+                    <span className="text-4xl md:text-6xl font-black text-amber-600 dark:text-amber-300 select-none font-mono tracking-tighter drop-shadow-[0_0_10px_rgba(245,158,11,0.4)]">
+                      1
+                    </span>
+                  </div>
                 </div>
 
-                {/* 3rd Place (Right) */}
-                <div className="flex flex-col items-center">
+                {/* 3rd Place (Right - Bronze) */}
+                <div className="flex flex-col items-center flex-1 max-w-[120px] relative group/pod-item">
                   {top3[2] ? (
                     <motion.div
-                      whileHover={{ y: -5 }}
-                      className="w-full flex flex-col items-center p-4 rounded-3xl border border-indigo-500/15 dark:border-indigo-400/20 bg-gradient-to-br from-indigo-500/[0.07] via-purple-500/[0.03] to-pink-500/[0.07] dark:from-indigo-500/[0.12] dark:via-purple-500/[0.04] dark:to-pink-500/[0.12] hover:from-indigo-500/[0.12] hover:via-purple-500/[0.06] hover:to-pink-500/[0.12] text-center shadow-md relative"
+                      initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.2 }}
+                      whileHover={{ y: -4 }}
+                      className="flex flex-col items-center text-center w-full"
                     >
-                      <div className="absolute -top-4 bg-orange-200/90 dark:bg-orange-950/80 text-orange-700 dark:text-orange-300 text-[10px] font-black px-2.5 py-0.5 rounded-full border border-orange-300 dark:border-orange-900">
-                        HẠNG 3
-                      </div>
-                      <div className="relative mt-2">
+                      <div className="relative mb-2 mt-4">
+                        <motion.div
+                          animate={{ y: [0, -3, 0] }}
+                          transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                          className="absolute -top-5 left-1/2 -translate-x-1/2 text-orange-700 dark:text-orange-400 z-20"
+                        >
+                          <Medal className="size-4 md:size-5 fill-orange-100 dark:fill-orange-900/60 drop-shadow" />
+                        </motion.div>
+
                         {top3[2].avatar_url ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
-                            src={top3[2].avatar_url || undefined}
+                            src={top3[2].avatar_url}
                             alt={top3[2].username || "Dũng Sĩ"}
-                            className="size-14 md:size-16 rounded-full object-cover border-2 border-orange-400/60 dark:border-orange-500 shadow-md"
+                            className="size-10 md:size-14 rounded-full object-cover border-2 border-orange-400/60 dark:border-orange-500 shadow-md group-hover/pod-item:shadow-orange-500/20"
                           />
                         ) : (
-                          <div className="size-14 md:size-16 bg-orange-100/50 dark:bg-orange-950/20 rounded-full border-2 border-orange-450 dark:border-orange-600 flex items-center justify-center text-xs font-black text-orange-600 dark:text-orange-450">
+                          <div className="size-10 md:size-14 bg-orange-500/10 dark:bg-orange-950/20 rounded-full border-2 border-orange-400 dark:border-orange-600 flex items-center justify-center text-xs font-black text-orange-600 dark:text-orange-500">
                             DS
                           </div>
                         )}
-                        <div className="absolute -bottom-1 -right-1 bg-orange-500 dark:bg-orange-600 text-white rounded-full p-1 border border-white dark:border-navy-blue shadow animate-pulse">
-                          <Medal className="size-4" />
-                        </div>
                       </div>
-                      <h4 className="mt-3 text-xs md:text-sm font-black text-dark-blue dark:text-zinc-200 text-wrap break-words max-w-full leading-snug">
+                      <h5 className="text-[10px] md:text-xs font-black truncate max-w-full text-dark-blue dark:text-zinc-300 px-1">
                         {top3[2].username || `Dũng Sĩ #${top3[2].user_id}`}
-                      </h4>
-                      <span className="text-[10px] md:text-xs text-orange-650 dark:text-orange-400 font-black mt-1.5 bg-orange-500/10 dark:bg-orange-400/25 px-2 py-0.5 rounded-full border border-orange-500/10 dark:border-orange-400/10">
+                      </h5>
+                      <span className="text-[9px] md:text-[10px] text-orange-500 dark:text-orange-400 font-extrabold mb-2">
                         {top3[2].final_score.toFixed(0)} PTS
                       </span>
                     </motion.div>
                   ) : (
-                    <div className="w-full opacity-20 border border-dashed border-gray-300 dark:border-white/5 rounded-3xl h-28" />
+                    <div className="h-16 w-full" />
                   )}
+                  {/* Visual Podium Column */}
+                  <div className="w-full h-12 md:h-16 bg-slate-100/30 dark:bg-white/[0.05] bg-gradient-to-t from-orange-500/30 via-orange-500/15 to-transparent dark:from-orange-550/25 dark:via-orange-550/10 dark:to-transparent border-t-2 border-x-0 border-b-0 border-orange-400 dark:border-t-orange-400 rounded-t-2xl flex items-center justify-center relative shadow-[0_0_15px_rgba(249,115,22,0.08)] dark:shadow-[0_0_25px_rgba(249,115,22,0.12)] transition-all duration-300 group-hover/pod-item:border-t-orange-300 dark:group-hover/pod-item:border-t-orange-300 group-hover/pod-item:shadow-[0_0_30px_rgba(249,115,22,0.2)]">
+                    <span className="text-2xl md:text-4xl font-black text-orange-600 dark:text-orange-300 select-none font-mono tracking-tighter drop-shadow-[0_0_10px_rgba(249,115,22,0.4)]">
+                      3
+                    </span>
+                  </div>
                 </div>
 
               </div>
@@ -302,6 +373,7 @@ export default function GameLeaderboardModal({
         </div>
 
       </motion.div>
-    </div>
+    </div>,
+    document.body
   );
 }
