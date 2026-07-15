@@ -61,7 +61,7 @@ async def hackathon_leaderboard_events(
                 continue
 
             if event.get("task_id") in task_ids:
-                data = await view_uc(hackathon_id)
+                data = await view_uc(hackathon_id, force_refresh=True)
                 yield _sse_message(
                     event="hackathon.leaderboard.updated",
                     data={

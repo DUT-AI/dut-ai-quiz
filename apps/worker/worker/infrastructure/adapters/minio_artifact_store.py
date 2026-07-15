@@ -20,7 +20,13 @@ class MinioArtifactStore(IArtifactStore):
             endpoint_url=self._endpoint_url,
             aws_access_key_id=settings.minio_access_key,
             aws_secret_access_key=settings.minio_secret_key,
-            config=Config(signature_version="s3v4"),
+            config=Config(
+                signature_version="s3v4",
+                s3={"addressing_style": "path"},
+                retries={"max_attempts": 5, "mode": "standard"},
+                connect_timeout=10,
+                read_timeout=60,
+            ),
             region_name="us-east-1",
         )
 
@@ -51,7 +57,12 @@ class MinioArtifactStore(IArtifactStore):
             return
         except (BotoCoreError, ClientError):
             parsed = urlparse(key_or_url)
-            if parsed.scheme not in {"http", "https"}:
+            configured_endpoint = urlparse(self._endpoint_url)
+            is_configured_minio_url = (
+                parsed.scheme in {"http", "https"}
+                and parsed.netloc == configured_endpoint.netloc
+            )
+            if parsed.scheme not in {"http", "https"} or is_configured_minio_url:
                 raise
 
         urlretrieve(key_or_url, destination_path)

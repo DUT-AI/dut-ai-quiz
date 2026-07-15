@@ -9,3 +9,7 @@ class IHackathonLeaderboardCache(Protocol):
     async def set(self, hackathon_id: UUID, leaderboard: list[dict], is_private: bool = False) -> None:
         """Lưu bảng xếp hạng vào cache."""
         ...
+
+    async def invalidate(self, hackathon_id: UUID) -> None:
+        """Remove public and private cached leaderboards for a hackathon."""
+        ...

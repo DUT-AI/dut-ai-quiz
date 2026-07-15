@@ -46,4 +46,4 @@ class CacheProvider(Provider):
     def hackathon_leaderboard_cache(
         self, redis: Redis
     ) -> IHackathonLeaderboardCache:
-        return RedisHackathonLeaderboardCache(redis, ttl=300)
+        return RedisHackathonLeaderboardCache(redis, ttl=5)

@@ -19,4 +19,5 @@ class ArqSubmissionQueue(ISubmissionQueue):
         await self._arq_redis.enqueue_job(
             "evaluate_submission_job",
             submission_id=str(submission_id),
+            _job_id=f"submission:{submission_id}",
         )
