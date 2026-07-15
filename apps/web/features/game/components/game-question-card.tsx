@@ -70,21 +70,19 @@ export default function GameQuestionCard({
             let btnStyles = "border-zinc-900 dark:border-zinc-700 hover:bg-amber-50 dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-100 bg-stone-50 dark:bg-zinc-950 shadow-sm active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all duration-200";
             
             if (isAnswered) {
-              const isCorrectOption = correctOptionId === option.id;
               if (isSelected) {
                 btnStyles = isSelectedCorrect 
                   ? "border-emerald-500 bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 shadow-sm shadow-emerald-500/20" 
-                  : "border-red-500 bg-red-100 dark:bg-red-950/40 text-red-800 dark:text-red-300 shadow-sm shadow-red-500/20";
-              } else if (isCorrectOption) {
-                btnStyles = "border-emerald-500 bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 shadow-sm shadow-emerald-500/20";
+                  : "border-rose-500 bg-rose-100 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 shadow-sm shadow-rose-500/20";
               } else {
-                btnStyles = "border-zinc-200 dark:border-zinc-800 text-zinc-300 dark:text-zinc-500 bg-zinc-50 dark:bg-zinc-950 opacity-30 cursor-default shadow-none pointer-events-none";
+                // Dim non-selected answers but make them more readable (opacity-60 and text-zinc-700 / dark:text-zinc-300)
+                btnStyles = "border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 bg-zinc-50 dark:bg-zinc-950 opacity-60 cursor-default shadow-none pointer-events-none";
               }
             } else if (selectedOptionId) {
               if (isSelected) {
                 btnStyles = "border-amber-500 bg-amber-55/20 dark:bg-amber-950/20 text-zinc-900 dark:text-white animate-pulse shadow-sm";
               } else {
-                btnStyles = "border-zinc-200 dark:border-zinc-800 text-zinc-300 dark:text-zinc-500 bg-zinc-50 dark:bg-zinc-950 opacity-30 cursor-default shadow-none pointer-events-none";
+                btnStyles = "border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 bg-zinc-50 dark:bg-zinc-950 opacity-60 cursor-default shadow-none pointer-events-none";
               }
             } else if (isHidden) {
               btnStyles = "border-zinc-100 dark:border-zinc-800 text-zinc-200 dark:text-zinc-650 bg-zinc-50 dark:bg-zinc-950 opacity-10 cursor-not-allowed pointer-events-none shadow-none";
