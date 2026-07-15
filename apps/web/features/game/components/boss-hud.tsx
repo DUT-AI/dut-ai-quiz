@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Skull, Swords, Heart } from "lucide-react";
 import dynamic from "next/dynamic";
+import CircularTimer from "./circular-timer";
 
 interface BossHudProps {
   status: "idle" | "attack" | "damage" | "defeat"; // Enemy status
@@ -16,6 +17,13 @@ interface BossHudProps {
   playerMaxHp: number; // Player max HP
   monsterType: "slime" | "spider" | "bat" | "golem" | "eye";
   playerLvl: number; // Player character level (1 to 4)
+  // Timer props
+  timerMax: number;
+  timerFrozen: boolean;
+  isAnswered: boolean;
+  questionId: string;
+  timeLeftRef: React.MutableRefObject<number>;
+  onTimeOut: () => void;
 }
 
 // Client-only Rive Player to avoid Next.js SSR document/window issues
@@ -259,6 +267,12 @@ export default function BossHud({
   playerMaxHp,
   monsterType,
   playerLvl,
+  timerMax,
+  timerFrozen,
+  isAnswered,
+  questionId,
+  timeLeftRef,
+  onTimeOut,
 }: BossHudProps) {
   const [activeProjectile, setActiveProjectile] = useState<"player-slash" | "boss-fireball" | null>(null);
   const [playerParticles, setPlayerParticles] = useState<{ id: number; x: number; y: number }[]>([]);
@@ -406,8 +420,20 @@ export default function BossHud({
           <div className="absolute top-4 left-1/4 w-12 h-6 bg-white/50 dark:bg-white/10 rounded-full blur-[1px] pointer-events-none animate-[float-slow_12s_infinite_linear]" />
         )}
 
-        {/* Decorative Grid Line in middle */}
-        <div className="absolute left-1/2 top-0 bottom-0 w-[2px] bg-zinc-900/10 dark:bg-zinc-950/20 border-l border-dashed border-zinc-900/20 pointer-events-none" />
+        {/* Decorative Grid Line in middle (shifted down to clear the stopwatch timer) */}
+        <div className="absolute left-1/2 top-20 md:top-24 lg:top-28 bottom-0 w-[2px] bg-zinc-900/10 dark:bg-zinc-950/20 border-l border-dashed border-zinc-900/20 pointer-events-none" />
+
+        {/* ⏳ HIGH-PERFORMANCE CIRCULAR STOPWATCH TIMER */}
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30">
+          <CircularTimer
+            timerMax={timerMax}
+            timerFrozen={timerFrozen}
+            isAnswered={isAnswered}
+            questionId={questionId}
+            timeLeftRef={timeLeftRef}
+            onTimeOut={onTimeOut}
+          />
+        </div>
 
         {/* ─── 1. PLAYER VISUAL MODEL (LEFT) ─── */}
         <div className="relative flex flex-col items-center w-28 md:w-36 lg:w-48 mb-1 md:mb-2">

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Timer, Swords, Skull, Trophy, Lock, Heart, Shield, Zap, BookOpen } from "lucide-react";
+import { Swords, Skull, Trophy, Lock, Heart, Shield, Zap, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 
 import BossHud from "./boss-hud";
@@ -87,9 +87,8 @@ export default function GameContainer({ lessonSlug, initialSession }: GameContai
 
   // Timer state
   const [countdown, setCountdown] = useState<number | null>(null);
-  const [timeLeft, setTimeLeft] = useState(60);
+  const timeLeftRef = useRef(60);
   const [timerFrozen, setTimerFrozen] = useState(false);
-  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Right column ref for auto-scrolling
   const rightColRef = useRef<HTMLDivElement | null>(null);
@@ -97,7 +96,7 @@ export default function GameContainer({ lessonSlug, initialSession }: GameContai
   // Sync timeLeft when current question changes
   useEffect(() => {
     if (currentQuestion) {
-      setTimeLeft(currentQuestion.time_limit);
+      timeLeftRef.current = currentQuestion.time_limit;
     }
   }, [currentIdx, currentQuestion]);
 
@@ -241,32 +240,6 @@ export default function GameContainer({ lessonSlug, initialSession }: GameContai
     }
   }, [initialSession, lessonSlug, router]);
 
-  // Timer management
-  useEffect(() => {
-    if (screen !== "playing" || gameResult !== "playing" || showBossWarning || isAnswered || countdown !== null) {
-      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
-      return;
-    }
-
-    timerIntervalRef.current = setInterval(() => {
-      if (timerFrozen) return;
-
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timerIntervalRef.current!);
-          handleTimeOut();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => {
-      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentIdx, timerFrozen, showBossWarning, isAnswered, gameResult, screen, countdown]);
-
   // Handle timeout
   const handleTimeOut = () => {
     toast.error("Hết thời gian suy nghĩ mất rồi!");
@@ -282,7 +255,7 @@ export default function GameContainer({ lessonSlug, initialSession }: GameContai
     if (!currentQuestion) return;
 
     // Calculate response time
-    const timeResponse = timerMax - timeLeft;
+    const timeResponse = timerMax - timeLeftRef.current;
 
     // Call API patch answer
     patchAnswerMutation.mutate(
@@ -535,12 +508,36 @@ export default function GameContainer({ lessonSlug, initialSession }: GameContai
           80% { transform: translate(1px, 2px) rotate(-0.5deg); }
           90% { transform: translate(-2px, -2px) rotate(0.5deg); }
         }
+        @keyframes active-dot-pulse {
+          0% {
+            box-shadow: 0 0 0 0px rgba(245, 158, 11, 0.8);
+          }
+          100% {
+            box-shadow: 0 0 0 8px rgba(245, 158, 11, 0);
+          }
+        }
+        .animate-active-dot {
+          animation: active-dot-pulse 1.5s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+        }
         .game-main-content {
           overflow: visible !important;
+        }
+        .game-layout-container {
+          scrollbar-gutter: stable;
+        }
+        .game-right-column {
+          scrollbar-gutter: stable;
         }
         @media (min-width: 1024px) and (max-height: 920px) {
           .game-layout-container {
             overflow-y: auto !important;
+          }
+          .game-main-content {
+            height: auto !important;
+            flex: none !important;
+          }
+          .game-grid-layout {
+            height: auto !important;
           }
         }
       `}</style>
@@ -597,7 +594,7 @@ export default function GameContainer({ lessonSlug, initialSession }: GameContai
                       className={`relative w-8 h-8 md:w-10 md:h-10 border-2 transition-all duration-300 flex items-center justify-center rounded-none font-bold ${btnClass}`}
                     >
                       {isActive && (
-                        <span className="absolute inset-0 rounded-none border-2 border-amber-500 dark:border-amber-400 animate-ping opacity-60 pointer-events-none" />
+                        <span className="absolute inset-0 rounded-none border-2 border-amber-500 dark:border-amber-400 animate-active-dot opacity-80 pointer-events-none" />
                       )}
                       {icon}
                     </button>
@@ -617,7 +614,7 @@ export default function GameContainer({ lessonSlug, initialSession }: GameContai
 
           {/* ─── MAIN CONTENT WINDOW (RPG HUD VIEWPORT) ─── */}
           <main className="flex-1 min-h-0 w-full max-w-[98%] mx-auto flex flex-col items-center justify-start relative z-10 py-2 game-main-content">
-            <div className="w-full lg:h-full grid grid-cols-1 lg:grid-cols-12 gap-6 items-start game-grid-layout">
+            <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-6 items-start lg:items-stretch game-grid-layout">
               {/* ─── LEFT COLUMN: BATTLE ARENA, HP STATS & ITEM HOTBAR ─── */}
               <div className="lg:col-span-5 flex flex-col gap-4 w-full">
                 <BossHud
@@ -631,6 +628,12 @@ export default function GameContainer({ lessonSlug, initialSession }: GameContai
                   playerHp={hp}
                   playerMaxHp={5}
                   playerLvl={stage}
+                  timerMax={timerMax}
+                  timerFrozen={timerFrozen}
+                  isAnswered={isAnswered}
+                  questionId={currentQuestion?.id || ""}
+                  timeLeftRef={timeLeftRef}
+                  onTimeOut={handleTimeOut}
                 />
 
                 <ItemHotbar
@@ -645,26 +648,25 @@ export default function GameContainer({ lessonSlug, initialSession }: GameContai
               {/* ─── RIGHT COLUMN: TIMER, QUESTIONS & ITEMS ─── */}
               <div
                 ref={rightColRef}
-                className="lg:col-span-7 flex flex-col gap-4 w-full items-center lg:h-full lg:overflow-y-auto lg:pr-2 custom-scrollbar game-right-column"
+                className="lg:col-span-7 w-full relative lg:h-full overflow-hidden game-right-column"
               >
                 {questions[currentIdx] && (
-                  <GameQuestionCard
-                    currentQuestion={questions[currentIdx]}
-                    currentIdx={currentIdx}
-                    totalQuestions={questions.length}
-                    stage={stage}
-                    doubleActive={doubleActive}
-                    timeLeft={timeLeft}
-                    timerMax={timerMax}
-                    timerFrozen={timerFrozen}
-                    selectedOptionId={selectedOptionId}
-                    isAnswered={isAnswered}
-                    isSelectedCorrect={isSelectedCorrect}
-                    hiddenOptions={hiddenOptions}
-                    onSubmitAnswer={submitAnswer}
-                    onNextQuestion={nextQuestion}
-                    correctOptionId={correctOptionId}
-                  />
+                  <div className="lg:absolute lg:inset-0 lg:flex lg:flex-col lg:pr-2 custom-scrollbar overflow-y-hidden">
+                    <GameQuestionCard
+                      currentQuestion={questions[currentIdx]}
+                      currentIdx={currentIdx}
+                      totalQuestions={questions.length}
+                      stage={stage}
+                      doubleActive={doubleActive}
+                      selectedOptionId={selectedOptionId}
+                      isAnswered={isAnswered}
+                      isSelectedCorrect={isSelectedCorrect}
+                      hiddenOptions={hiddenOptions}
+                      onSubmitAnswer={submitAnswer}
+                      onNextQuestion={nextQuestion}
+                      correctOptionId={correctOptionId}
+                    />
+                  </div>
                 )}
               </div>
             </div>
