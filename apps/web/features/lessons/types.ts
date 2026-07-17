@@ -7,6 +7,17 @@ export const LessonSchema = z.object({
   order: z.number(),
   slug: z.string().nullable().optional(),
   content_md: z.string().nullable().optional(),
+  module_id: z.string().nullable().optional(),
 });
 
 export type Lesson = z.infer<typeof LessonSchema>;
+
+export const ModuleSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string().optional(),
+  order: z.number(),
+  lessons: z.array(LessonSchema).optional(),
+});
+
+export type Module = z.infer<typeof ModuleSchema>;

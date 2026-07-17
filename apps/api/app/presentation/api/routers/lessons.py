@@ -12,6 +12,9 @@ from app.application.use_cases.lessons.get_lesson_from_blog_uc import (
     GetLessonBySlugUseCase,
 )
 from app.application.use_cases.lessons.list_lessons_uc import ListLessonsUseCase
+from app.application.use_cases.lessons.reorder_lessons_uc import (
+    ReorderLessonsUseCase,
+)
 from app.application.use_cases.lessons.update_lesson_uc import UpdateLessonUseCase
 from app.application.use_cases.questions import ListQuestionsUseCase
 from app.domain.value_objects import Difficulty, PoolType
@@ -20,6 +23,7 @@ from app.presentation.schemas.lessons import (
     LessonCreate,
     LessonDetailOut,
     LessonOut,
+    LessonReorder,
     LessonUpdate,
 )
 from app.presentation.schemas.questions import QuestionListQuery, QuestionOut
@@ -98,6 +102,18 @@ async def create_lesson(
     use_case: FromDishka[CreateLessonUseCase],
 ):
     return await use_case.execute(body)
+
+
+@router.post("/reorder")
+@inject
+async def reorder_lessons(
+    user: AdminOrMentorUser,
+    body: LessonReorder,
+    use_case: FromDishka[ReorderLessonsUseCase],
+):
+    """Reorder lessons in the system. Admin or Mentor only."""
+    await use_case.execute(body)
+    return {"ok": True}
 
 
 @router.patch("/{lesson_id}", response_model=LessonOut)

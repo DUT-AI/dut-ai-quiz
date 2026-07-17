@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiGet, apiPost, apiPatch, apiClient } from "@/lib/api";
-import { LessonSchema, type Lesson } from "./types";
+import { LessonSchema, ModuleSchema, type Lesson, type Module } from "./types";
 import { z } from "zod";
 
 export function useLessons(options?: any) {
@@ -46,6 +46,36 @@ export function useLessonBySlug(slug: string, options?: any) {
     staleTime: 60_000,
     enabled: !!slug,
     ...options,
+  });
+}
+
+export function useModules(options?: any) {
+  return useQuery<Module[]>({
+    queryKey: ["modules"],
+    queryFn: () => apiGet<Module[]>("/api/v1/modules", z.array(ModuleSchema)),
+    staleTime: 60_000,
+    ...options,
+  });
+}
+
+export function useReorderModules() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { module_ids: string[] }) =>
+      apiClient.post("/api/v1/modules/reorder", body).then((r) => r.data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["modules"] }),
+  });
+}
+
+export function useReorderLessons() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { items: { id: string; order: number; module_id: string | null }[] }) =>
+      apiClient.post("/api/v1/lessons/reorder", body).then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["lessons"] });
+      qc.invalidateQueries({ queryKey: ["modules"] });
+    },
   });
 }
 

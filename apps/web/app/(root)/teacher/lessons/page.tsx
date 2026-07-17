@@ -1,40 +1,48 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useLessons, useDeleteLesson } from "@/lib/queries";
-import type { Lesson } from "@/lib/types";
-import { LessonFormModal, TeacherLessonRow } from "@/features/lessons/components";
-import { AnimatePresence, motion } from "framer-motion";
+import { useLessons, useModules, useDeleteLesson, useReorderModules, useReorderLessons } from "@/features/lessons/queries";
+import type { Lesson } from "@/features/lessons/types";
+import { LessonFormModal } from "@/features/lessons/components/lesson-form-modal";
 import { ConfirmModal } from "@/components/molecules/confirm-modal";
 import { SearchBar } from "@/components/ui/search-bar";
-import { BookOpen, Sparkles, AlertCircle, Plus, ClipboardList, Layers } from "lucide-react";
+import { BookOpen, AlertCircle, Plus, ClipboardList, Layers } from "lucide-react";
+import { LessonDndContext } from "@/features/lessons/components/dnd/lesson-dnd-context";
 
 export default function LessonsPage() {
-  const { data: lessons, isLoading, error } = useLessons();
+  const { data: lessons, isLoading: lessonsLoading, error: lessonsError } = useLessons();
+  const { data: modules, isLoading: modulesLoading } = useModules();
+  
+  const reorderModulesMut = useReorderModules();
+  const reorderLessonsMut = useReorderLessons();
   const deleteMut = useDeleteLesson();
+  
   const [showCreate, setShowCreate] = useState(false);
   const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
   const [deletingLesson, setDeletingLesson] = useState<Lesson | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
+  const isLoading = lessonsLoading || modulesLoading;
+
   const filteredLessons = useMemo(() => {
     if (!lessons) return [];
-    return lessons
-      .filter((l) => l.name.toLowerCase().includes(searchQuery.toLowerCase()))
-      .sort((a, b) => a.order - b.order); // Keep sorted by order for better user experience
+    return lessons.filter((l) => l.name.toLowerCase().includes(searchQuery.toLowerCase()));
   }, [lessons, searchQuery]);
 
-  // Compute stats metrics
   const totalLessons = lessons?.length || 0;
+  
   const nextOrder = useMemo(() => {
     if (!lessons || lessons.length === 0) return 1;
     return Math.max(...lessons.map((l) => l.order)) + 1;
   }, [lessons]);
 
-  const latestLesson = useMemo(() => {
-    if (!lessons || lessons.length === 0) return null;
-    return [...lessons].sort((a, b) => b.order - a.order)[0];
-  }, [lessons]);
+  const handleModulesReorder = (moduleIds: string[]) => {
+    reorderModulesMut.mutate({ module_ids: moduleIds });
+  };
+
+  const handleLessonsReorder = (updatedLessons: { id: string; order: number; module_id: string | null }[]) => {
+    reorderLessonsMut.mutate({ items: updatedLessons });
+  };
 
   return (
     <div className="w-full space-y-8 pb-12">
@@ -46,7 +54,7 @@ export default function LessonsPage() {
             Quản lý <span className="text-primary">Bài học</span>
           </h1>
           <p className="text-slate-500 dark:text-zinc-400 text-sm max-w-xl">
-            Tạo mới, chỉnh sửa nội dung bài học và cấu trúc sơ đồ câu hỏi luyện tập cho học viên.
+            Tạo mới, chỉnh sửa nội dung bài học và sắp xếp cấu trúc chương trình học qua các Module. Kéo thả để sắp xếp lại.
           </p>
         </div>
         
@@ -62,13 +70,10 @@ export default function LessonsPage() {
       {/* Metrics Section */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Total Lessons Card */}
-        <motion.div
-          whileHover={{ y: -2 }}
-          className="p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800/80 shadow-sm flex items-center justify-between text-left"
-        >
+        <div className="p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800/80 shadow-sm flex items-center justify-between text-left">
           <div className="space-y-1">
             <p className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-zinc-500">
-              Tổng số chương
+              Tổng số bài học
             </p>
             <p className="text-2xl font-black text-slate-800 dark:text-white">
               {isLoading ? "..." : totalLessons} bài học
@@ -77,13 +82,10 @@ export default function LessonsPage() {
           <div className="size-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
             <BookOpen className="size-6" />
           </div>
-        </motion.div>
+        </div>
 
         {/* Next Order Suggestion Card */}
-        <motion.div
-          whileHover={{ y: -2 }}
-          className="p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800/80 shadow-sm flex items-center justify-between text-left"
-        >
+        <div className="p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800/80 shadow-sm flex items-center justify-between text-left">
           <div className="space-y-1">
             <p className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-zinc-500">
               Thứ tự tiếp theo
@@ -95,25 +97,7 @@ export default function LessonsPage() {
           <div className="size-12 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
             <Layers className="size-6" />
           </div>
-        </motion.div>
-
-        {/* Latest Lesson Card */}
-        <motion.div
-          whileHover={{ y: -2 }}
-          className="p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800/80 shadow-sm flex items-center justify-between text-left sm:col-span-2 lg:col-span-1"
-        >
-          <div className="space-y-1 w-full max-w-[200px] lg:max-w-none">
-            <p className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-zinc-500">
-              Bài học mới nhất
-            </p>
-            <p className="text-lg font-black text-slate-800 dark:text-white truncate" title={latestLesson?.name || "Chưa có bài học"}>
-              {isLoading ? "..." : latestLesson ? latestLesson.name : "Chưa có"}
-            </p>
-          </div>
-          <div className="size-12 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center shrink-0">
-            <Sparkles className="size-6" />
-          </div>
-        </motion.div>
+        </div>
       </div>
 
       {/* Search Bar */}
@@ -133,99 +117,60 @@ export default function LessonsPage() {
           <div className="flex flex-col items-center justify-center py-24 bg-white dark:bg-zinc-900 rounded-3xl border border-dashed border-slate-200 dark:border-zinc-800">
             <div className="size-10 border-4 border-primary border-t-transparent animate-spin rounded-full mb-4" />
             <p className="font-bold text-slate-500 dark:text-zinc-400 text-sm">
-              Đang tải danh sách bài học...
+              Đang tải danh sách bài học và module...
             </p>
           </div>
         )}
 
-        {error && (
+        {lessonsError && (
           <div className="flex flex-col items-center justify-center p-8 bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 rounded-2xl border border-rose-100 dark:border-rose-950/50 text-center">
             <AlertCircle className="size-10 mb-2" />
-            <p className="font-bold text-sm">Lỗi xảy ra khi tải dữ liệu bài học</p>
+            <p className="font-bold text-sm">Lỗi xảy ra khi tải dữ liệu</p>
             <p className="text-xs opacity-80 mt-1">
-              {error instanceof Error ? error.message : "Đã có lỗi hệ thống xảy ra."}
+              {lessonsError instanceof Error ? lessonsError.message : "Đã có lỗi hệ thống xảy ra."}
             </p>
           </div>
         )}
 
-        {!isLoading && !error && (
+        {!isLoading && !lessonsError && modules && lessons && (
           <div className="space-y-3">
-            <AnimatePresence mode="popLayout">
-              {/* Empty state: No lessons in database */}
-              {lessons?.length === 0 && !showCreate && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.98 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.98 }}
-                  className="flex flex-col items-center justify-center py-16 text-center bg-white dark:bg-zinc-900 rounded-3xl border border-dashed border-slate-200 dark:border-zinc-800"
-                >
-                  <BookOpen className="size-16 text-slate-300 dark:text-zinc-700 mb-4 animate-pulse" />
-                  <h3 className="text-lg font-bold text-slate-800 dark:text-white">
-                    Chưa có bài học nào
-                  </h3>
-                  <p className="text-sm text-slate-500 dark:text-zinc-400 mt-1 max-w-sm">
-                    Hệ thống hiện tại chưa cấu hình bài học nào cho khóa học này. Hãy tạo bài học đầu tiên ngay.
-                  </p>
-                  <button
-                    onClick={() => setShowCreate(true)}
-                    className="mt-5 px-5 py-2.5 bg-primary text-white dark:text-slate-950 font-bold rounded-xl text-xs hover:scale-105 active:scale-95 transition-all cursor-pointer"
-                  >
-                    Tạo bài học đầu tiên
-                  </button>
-                </motion.div>
-              )}
-
-              {/* Empty state: Search query yielded no results */}
-              {lessons && lessons.length > 0 && filteredLessons.length === 0 && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.98 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.98 }}
-                  className="flex flex-col items-center justify-center py-16 text-center bg-white dark:bg-zinc-900 rounded-3xl border border-dashed border-slate-200 dark:border-zinc-800"
-                >
-                  <AlertCircle className="size-16 text-slate-300 dark:text-zinc-700 mb-4" />
-                  <h3 className="text-lg font-bold text-slate-800 dark:text-white">
-                    Không tìm thấy kết quả phù hợp
-                  </h3>
-                  <p className="text-sm text-slate-500 dark:text-zinc-400 mt-1 max-w-sm">
-                    Không tìm thấy bài học nào khớp với từ khóa &quot;{searchQuery}&quot;. Hãy thử nhập từ khóa khác.
-                  </p>
-                  <button
-                    onClick={() => setSearchQuery("")}
-                    className="mt-4 text-xs font-extrabold text-primary hover:underline cursor-pointer"
-                  >
-                    Xóa bộ lọc tìm kiếm
-                  </button>
-                </motion.div>
-              )}
-
-              {/* Lesson Items */}
-              {filteredLessons.map((l, index) => (
-                <TeacherLessonRow
-                  key={l.id}
-                  lesson={l}
-                  index={index}
-                  onEdit={() => setEditingLesson(l)}
-                  onDelete={() => setDeletingLesson(l)}
-                />
-              ))}
-            </AnimatePresence>
+            {searchQuery ? (
+              <div className="flex flex-col gap-3">
+                <p className="text-sm text-slate-500 dark:text-zinc-400 mb-2">Kết quả tìm kiếm ({filteredLessons.length}):</p>
+                {/* Search result view - just simple list */}
+                {filteredLessons.map((l) => (
+                   <div key={l.id} className="p-4 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl">
+                      <h4 className="font-bold text-sm text-slate-800 dark:text-white">{l.name}</h4>
+                      <p className="text-xs text-slate-500 mt-1">Thuộc module: {modules.find(m => m.id === l.module_id)?.name || "Chưa phân loại"}</p>
+                   </div>
+                ))}
+                {filteredLessons.length === 0 && (
+                  <div className="text-center py-10 text-slate-500">Không tìm thấy kết quả phù hợp.</div>
+                )}
+              </div>
+            ) : (
+              <LessonDndContext
+                modules={modules}
+                lessons={lessons}
+                onModulesReorder={handleModulesReorder}
+                onLessonsReorder={handleLessonsReorder}
+                onEditLesson={setEditingLesson}
+                onDeleteLesson={setDeletingLesson}
+              />
+            )}
           </div>
         )}
       </div>
 
-      {/* Modals and Overlays */}
-      <AnimatePresence>
-        {showCreate && (
-          <LessonFormModal onClose={() => setShowCreate(false)} />
-        )}
-        {editingLesson && (
-          <LessonFormModal
-            initialData={editingLesson}
-            onClose={() => setEditingLesson(null)}
-          />
-        )}
-      </AnimatePresence>
+      {showCreate && (
+        <LessonFormModal onClose={() => setShowCreate(false)} />
+      )}
+      {editingLesson && (
+        <LessonFormModal
+          initialData={editingLesson}
+          onClose={() => setEditingLesson(null)}
+        />
+      )}
 
       <ConfirmModal
         isOpen={!!deletingLesson}
