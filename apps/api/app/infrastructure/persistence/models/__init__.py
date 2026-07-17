@@ -7,6 +7,8 @@ from .lesson import Lesson
 from .module import Module
 from .user import User
 from .hackathon import Hackathon, HackathonTask, HackathonTeam, HackathonRegistration, HackathonSubmission
+from .comment import Comment
+from .comment_reaction import CommentReaction
 
 __all__ = [
     "Base",
@@ -26,6 +28,8 @@ __all__ = [
     "HackathonTeam",
     "HackathonRegistration",
     "HackathonSubmission",
+    "Comment",
+    "CommentReaction",
 ]
 
 export_globals = globals()

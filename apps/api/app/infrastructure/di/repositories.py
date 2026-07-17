@@ -11,6 +11,8 @@ from app.domain.interfaces import (
     IQuestionRepository,
     ITagRepository,
     IUserRepository,
+    ICommentRepository,
+    ICommentReactionRepository,
 )
 from app.domain.interfaces.hackathon_repo import (
     IHackathonRepository,
@@ -36,6 +38,8 @@ from app.infrastructure.repositories.hackathons import (
     HackathonRegistrationRepository,
     HackathonSubmissionRepository,
 )
+from app.infrastructure.repositories.comments import CommentRepository
+from app.infrastructure.repositories.comment_reactions import CommentReactionRepository
 
 
 class RepositoryProvider(Provider):
@@ -69,3 +73,5 @@ class RepositoryProvider(Provider):
     hackathon_submission_repo = provide(
         HackathonSubmissionRepository, provides=IHackathonSubmissionRepository
     )
+    comment_repo = provide(CommentRepository, provides=ICommentRepository)
+    comment_reaction_repo = provide(CommentReactionRepository, provides=ICommentReactionRepository)
