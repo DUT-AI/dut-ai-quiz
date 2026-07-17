@@ -25,6 +25,8 @@ from .tag_repo import ITagRepository
 from .s3_client import IS3Client
 from .submission_queue import ISubmissionQueue
 from .user_repo import IUserRepository
+from .comment_repository import ICommentRepository, SortMode
+from .comment_reaction_repository import ICommentReactionRepository
 
 __all__ = [
     "IAttemptAnswerRepository",
@@ -52,5 +54,7 @@ __all__ = [
     "IHackathonSubmissionStore",
     "SubmissionStorageInfo",
     "ISubmissionQueue",
+    "ICommentRepository",
+    "ICommentReactionRepository",
+    "SortMode",
 ]
-

@@ -105,6 +105,12 @@ from app.application.use_cases.tags.tags_use_case import (
     CreateTagUseCase,
     DeleteTagUseCase,
 )
+from app.application.use_cases.comment import (
+    CreateCommentUseCase,
+    GetCommentsUseCase,
+    ToggleReactionUseCase,
+    DeleteCommentUseCase,
+)
 from app.application.use_cases.uploads.presign_upload import PresignUploadUseCase
 from app.domain.events.bus import EventBus
 from app.domain.interfaces import (
@@ -291,3 +297,9 @@ class UseCaseProvider(Provider):
         manage_client: IManageService,
     ) -> UserService:
         return UserService(user_repo, manage_client)
+
+    # comments
+    create_comment_use_case = provide(CreateCommentUseCase, scope=Scope.REQUEST)
+    get_comments_use_case = provide(GetCommentsUseCase, scope=Scope.REQUEST)
+    toggle_reaction_use_case = provide(ToggleReactionUseCase, scope=Scope.REQUEST)
+    delete_comment_use_case = provide(DeleteCommentUseCase, scope=Scope.REQUEST)
