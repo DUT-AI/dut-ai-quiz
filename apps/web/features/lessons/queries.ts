@@ -58,6 +58,33 @@ export function useModules(options?: any) {
   });
 }
 
+export function useCreateModule() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { name: string; description?: string; order?: number }) =>
+      apiPost<Module>("/api/v1/modules", body, ModuleSchema),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["modules"] }),
+  });
+}
+
+export function useUpdateModule(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { name?: string; description?: string; order?: number }) =>
+      apiPatch<Module>(`/api/v1/modules/${id}`, body, ModuleSchema),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["modules"] }),
+  });
+}
+
+export function useDeleteModule() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      apiClient.delete(`/api/v1/modules/${id}`).then((r) => r.data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["modules"] }),
+  });
+}
+
 export function useReorderModules() {
   const qc = useQueryClient();
   return useMutation({

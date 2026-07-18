@@ -13,6 +13,8 @@ interface Props {
   lessons: Lesson[];
   onModulesReorder: (moduleIds: string[]) => void;
   onLessonsReorder: (lessons: { id: string; order: number; module_id: string | null }[]) => void;
+  onEditModule: (module: Module) => void;
+  onDeleteModule: (module: Module) => void;
   onEditLesson: (lesson: Lesson) => void;
   onDeleteLesson: (lesson: Lesson) => void;
 }
@@ -22,6 +24,8 @@ export function LessonDndContext({
   lessons: initialLessons,
   onModulesReorder,
   onLessonsReorder,
+  onEditModule,
+  onDeleteModule,
   onEditLesson,
   onDeleteLesson
 }: Props) {
@@ -202,7 +206,9 @@ export function LessonDndContext({
               <SortableModule 
                 key={module.id} 
                 module={module} 
-                lessons={assignedLessons.filter(l => l.module_id === module.id)} 
+                lessons={assignedLessons.filter(l => l.module_id === module.id)}
+                onEditModule={onEditModule}
+                onDeleteModule={onDeleteModule}
                 onEditLesson={onEditLesson}
                 onDeleteLesson={onDeleteLesson}
               />
@@ -223,6 +229,8 @@ export function LessonDndContext({
             <SortableModule 
               module={activeModule} 
               lessons={[]} 
+              onEditModule={() => {}}
+              onDeleteModule={() => {}}
               onEditLesson={() => {}} 
               onDeleteLesson={() => {}} 
             />
