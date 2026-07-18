@@ -74,11 +74,11 @@ export function SortableModule({ module, lessons, onEditModule, onDeleteModule, 
     <div
       ref={setNodeRef}
       style={style}
-      className={`bg-white dark:bg-navy-blue border border-gray-200 dark:border-white/10 rounded-2xl overflow-hidden shadow-md shadow-slate-100/50 dark:shadow-[0_8px_30px_rgba(0,0,0,0.45)] hover:shadow-lg dark:hover:shadow-[0_12px_40px_rgba(0,0,0,0.6)] hover:border-indigo-500/30 dark:hover:border-indigo-500/50 border-l-4 border-l-indigo-550 transition-all duration-300 ${isDragging ? "opacity-50 ring-2 ring-primary border-primary" : ""
+      className={`bg-white dark:bg-navy-blue border border-gray-200 dark:border-white/10 rounded-2xl shadow-md shadow-slate-100/50 dark:shadow-[0_8px_30px_rgba(0,0,0,0.45)] hover:shadow-lg dark:hover:shadow-[0_12px_40px_rgba(0,0,0,0.6)] hover:border-indigo-500/30 dark:hover:border-indigo-500/50 border-l-4 border-l-indigo-500 transition-all duration-300 ${isDragging ? "opacity-50 ring-2 ring-primary border-primary" : ""
         }`}
     >
       {/* Module Header */}
-      <div className="flex items-center gap-3 p-4 bg-gray-50/50 dark:bg-dark-blue/30 border-b border-gray-150 dark:border-white/10 group">
+      <div className="flex items-center gap-3 p-4 bg-gray-50/50 dark:bg-dark-blue/30 border-b border-gray-150 dark:border-white/10 group rounded-t-[15px]">
         <button
           {...attributes}
           {...listeners}
@@ -120,28 +120,23 @@ export function SortableModule({ module, lessons, onEditModule, onDeleteModule, 
             <AnimatePresence>
               {showDescription && module.description && (
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.95, y: 12 }}
+                  initial={{ opacity: 0, scale: 0.95, y: -12 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: 12 }}
+                  exit={{ opacity: 0, scale: 0.95, y: -12 }}
                   transition={{ duration: 0.18, ease: "easeOut" }}
-                  className="absolute top-full left-0 mt-3 w-96 p-4 bg-white dark:bg-navy-blue border border-gray-200 dark:border-indigo-500/30 border-l-4 border-l-indigo-500 rounded-2xl shadow-[0_10px_30px_rgba(99,102,241,0.15)] dark:shadow-[0_10px_30px_rgba(99,102,241,0.25)] z-50 pointer-events-auto text-left"
+                  className="absolute bottom-full left-0 mb-3 w-96 p-4 bg-[#ffffff] dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-xl shadow-lg z-50 pointer-events-auto text-left"
                 >
-                  {/* Upward pointing speech bubble arrow */}
-                  <div className="absolute -top-1.5 left-6 size-3 bg-white dark:bg-navy-blue border-t border-l border-gray-200 dark:border-indigo-500/30 rotate-45 z-10" />
+                  {/* Downward pointing speech bubble arrow */}
+                  <div className="absolute -bottom-1.5 left-8 size-3 bg-[#ffffff] dark:bg-zinc-950 border-b border-r border-gray-200 dark:border-zinc-800 rotate-45 z-10" />
 
-                  <div className="flex items-start gap-3 relative z-20">
-                    <div className="size-8 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-100 dark:border-indigo-500/20 shadow-sm">
-                      <Folder className="size-4" />
-                    </div>
-                    <div className="space-y-1.5 flex-1 min-w-0">
-                      <p className="text-[9px] font-black uppercase tracking-[0.18em] text-indigo-600 dark:text-indigo-400">
-                        Mô tả chương
+                  <div className="space-y-1.5 relative z-20">
+                    <p className="text-[9px] font-black uppercase tracking-[0.18em] text-indigo-600 dark:text-indigo-400">
+                      Mô tả chương
+                    </p>
+                    <div className="max-h-24 overflow-y-auto custom-scrollbar pr-1.5">
+                      <p className="text-xs text-dark-blue dark:text-zinc-300 leading-relaxed font-semibold whitespace-pre-wrap break-words">
+                        {module.description}
                       </p>
-                      <div className="max-h-24 overflow-y-auto custom-scrollbar pr-1.5">
-                        <p className="text-xs text-dark-blue dark:text-light-blue/90 leading-relaxed font-semibold whitespace-pre-wrap break-words">
-                          {module.description}
-                        </p>
-                      </div>
                     </div>
                   </div>
                 </motion.div>
@@ -180,7 +175,14 @@ export function SortableModule({ module, lessons, onEditModule, onDeleteModule, 
             <div className="p-4 space-y-6">
               <SortableContext items={orders.map(o => `order-group-${module.id}-${o}`)} strategy={verticalListSortingStrategy}>
                 {orders.length === 0 ? (
-                  <div className="text-center py-8 text-sm text-gray-navy dark:text-light-blue border-2 border-dashed border-gray-200 dark:border-white/5 rounded-2xl bg-gray-50/20 dark:bg-navy-blue/10">
+                  <div 
+                    ref={setDropRef}
+                    className={`text-center py-8 text-sm border-2 border-dashed rounded-2xl transition-all duration-300 ${
+                      isDropOver
+                        ? "border-primary bg-primary/10 text-primary shadow-inner scale-[1.01]"
+                        : "text-gray-navy dark:text-light-blue border-gray-200 dark:border-white/5 bg-gray-50/20 dark:bg-navy-blue/10"
+                    }`}
+                  >
                     Module này chưa có bài học nào. Kéo thả bài học vào đây.
                   </div>
                 ) : (
