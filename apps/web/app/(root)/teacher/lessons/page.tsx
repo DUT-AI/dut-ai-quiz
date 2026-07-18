@@ -39,9 +39,9 @@ export default function LessonsPage() {
 
   const totalLessons = lessons?.length || 0;
 
-  const nextOrder = useMemo(() => {
-    if (!lessons || lessons.length === 0) return 1;
-    return Math.max(...lessons.map((l) => l.order)) + 1;
+  const unassignedCount = useMemo(() => {
+    if (!lessons) return 0;
+    return lessons.filter((l) => !l.module_id).length;
   }, [lessons]);
 
   const handleModulesReorder = (moduleIds: string[]) => {
@@ -72,7 +72,7 @@ export default function LessonsPage() {
             className="px-5 py-3 bg-indigo-500 hover:bg-indigo-600 text-white font-bold rounded-2xl text-xs md:text-sm transition-all duration-300 flex items-center gap-2 shrink-0 self-start md:self-auto shadow-lg shadow-indigo-500/20 hover:scale-[1.02] active:scale-95 cursor-pointer"
           >
             <Folder className="size-4 md:size-5" />
-            <span>Thêm Module</span>
+            <span>Thêm Chương</span>
           </button>
           <button
             onClick={() => setShowCreate(true)}
@@ -96,23 +96,38 @@ export default function LessonsPage() {
               {isLoading ? "..." : totalLessons} bài học
             </p>
           </div>
-          <div className="size-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center border border-primary/20">
+          <div className="size-12 rounded-xl bg-primary/10 dark:bg-emerald-500/10 text-primary dark:text-emerald-400 flex items-center justify-center border border-primary/20 dark:border-emerald-500/20">
             <BookOpen className="size-6" />
           </div>
         </div>
 
-        {/* Next Order Suggestion Card */}
+        {/* Total Chapters Card */}
         <div className="p-5 rounded-2xl bg-white dark:bg-navy-blue border border-gray-200 dark:border-white/10 shadow-md dark:shadow-[0_8px_30px_rgba(0,0,0,0.3)] hover:border-gray-300 dark:hover:border-white/15 transition-all duration-300 flex items-center justify-between text-left">
           <div className="space-y-1">
             <p className="text-xs font-bold uppercase tracking-widest text-gray-navy/80 dark:text-light-blue/70">
-              Thứ tự tiếp theo
+              Tổng số chương học
             </p>
             <p className="text-2xl font-black text-dark-blue dark:text-white">
-              Chương số {isLoading ? "..." : nextOrder}
+              {isLoading ? "..." : modules?.length || 0} chương
             </p>
           </div>
-          <div className="size-12 rounded-xl bg-amber-500/10 text-amber-550 flex items-center justify-center border border-amber-500/20">
-            <Layers className="size-6" />
+          <div className="size-12 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-650 dark:text-indigo-400 flex items-center justify-center border border-indigo-500/20">
+            <Folder className="size-6" />
+          </div>
+        </div>
+
+        {/* Unassigned Lessons Card */}
+        <div className="p-5 rounded-2xl bg-white dark:bg-navy-blue border border-gray-200 dark:border-white/10 shadow-md dark:shadow-[0_8px_30px_rgba(0,0,0,0.3)] hover:border-gray-300 dark:hover:border-white/15 transition-all duration-300 flex items-center justify-between text-left">
+          <div className="space-y-1">
+            <p className="text-xs font-bold uppercase tracking-widest text-gray-navy/80 dark:text-light-blue/70">
+              Bài học chưa phân loại
+            </p>
+            <p className="text-2xl font-black text-dark-blue dark:text-white">
+              {isLoading ? "..." : unassignedCount} bài học
+            </p>
+          </div>
+          <div className="size-12 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/20">
+            <AlertCircle className="size-6" />
           </div>
         </div>
       </div>
