@@ -3,7 +3,7 @@
 import { useSortable, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { useDroppable, useDndContext } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
-import { GripHorizontal, Folder, ChevronRight, Plus, Edit2, Trash2 } from "lucide-react";
+import { GripHorizontal, Folder, ChevronRight, Plus, Edit2, Trash2, HelpCircle } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Module, Lesson } from "@/features/lessons/types";
@@ -17,9 +17,8 @@ function InsertDropZone({ id, order, moduleId }: { id: string; order: number; mo
   return (
     <div
       ref={setNodeRef}
-      className={`h-3.5 w-full -my-3.5 rounded-full transition-all z-10 relative ${
-        isOver ? "bg-primary opacity-100 scale-y-125 shadow-md shadow-primary/30" : "bg-transparent opacity-0 hover:bg-primary/30"
-      }`}
+      className={`h-3.5 w-full -my-3.5 rounded-full transition-all z-10 relative ${isOver ? "bg-primary opacity-100 scale-y-125 shadow-md shadow-primary/30" : "bg-transparent opacity-0 hover:bg-primary/30"
+        }`}
     />
   );
 }
@@ -35,7 +34,9 @@ interface Props {
 
 export function SortableModule({ module, lessons, onEditModule, onDeleteModule, onEditLesson, onDeleteLesson }: Props) {
   const [isExpanded, setIsExpanded] = useState(true);
-  
+  const [showDescription, setShowDescription] = useState(false);
+
+
   const {
     attributes,
     listeners,
@@ -65,7 +66,7 @@ export function SortableModule({ module, lessons, onEditModule, onDeleteModule, 
     acc[order].push(lesson);
     return acc;
   }, {} as Record<number, Lesson[]>);
-  
+
   // Sort orders
   const orders = Object.keys(lessonsByOrder).map(Number).sort((a, b) => a - b);
 
@@ -73,9 +74,8 @@ export function SortableModule({ module, lessons, onEditModule, onDeleteModule, 
     <div
       ref={setNodeRef}
       style={style}
-      className={`bg-white dark:bg-navy-blue border border-gray-200 dark:border-white/10 rounded-2xl overflow-hidden shadow-md shadow-slate-100/50 dark:shadow-[0_8px_30px_rgba(0,0,0,0.45)] hover:shadow-lg dark:hover:shadow-[0_12px_40px_rgba(0,0,0,0.6)] hover:border-indigo-500/30 dark:hover:border-indigo-500/50 border-l-4 border-l-indigo-550 transition-all duration-300 ${
-        isDragging ? "opacity-50 ring-2 ring-primary border-primary" : ""
-      }`}
+      className={`bg-white dark:bg-navy-blue border border-gray-200 dark:border-white/10 rounded-2xl overflow-hidden shadow-md shadow-slate-100/50 dark:shadow-[0_8px_30px_rgba(0,0,0,0.45)] hover:shadow-lg dark:hover:shadow-[0_12px_40px_rgba(0,0,0,0.6)] hover:border-indigo-500/30 dark:hover:border-indigo-500/50 border-l-4 border-l-indigo-550 transition-all duration-300 ${isDragging ? "opacity-50 ring-2 ring-primary border-primary" : ""
+        }`}
     >
       {/* Module Header */}
       <div className="flex items-center gap-3 p-4 bg-gray-50/50 dark:bg-dark-blue/30 border-b border-gray-150 dark:border-white/10 group">
@@ -87,28 +87,69 @@ export function SortableModule({ module, lessons, onEditModule, onDeleteModule, 
         >
           <GripHorizontal className="size-5" />
         </button>
-        
-        <button 
+
+        <button
           onClick={() => setIsExpanded(!isExpanded)}
           className="p-1.5 text-gray-navy/60 hover:text-gray-navy dark:text-light-blue/60 dark:hover:text-light-blue hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg transition-colors duration-200 shrink-0"
         >
           <ChevronRight className={`size-5 transition-transform duration-200 ${isExpanded ? "rotate-90" : ""}`} />
         </button>
-        
+
         <div className="flex-1 flex items-center gap-3 min-w-0">
           <div className="size-9 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-650 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-500/20 shadow-inner">
             <Folder className="size-4.5" />
           </div>
-          <div className="min-w-0">
-            <h3 className="font-extrabold text-dark-blue dark:text-white truncate text-base md:text-lg group-hover:text-indigo-650 dark:group-hover:text-indigo-400 transition-colors duration-200">
-              {module.name}
-            </h3>
-            <p className="text-xs text-gray-navy dark:text-light-blue/70 font-medium">
+          <div
+            className="min-w-0 relative group/desc"
+            onMouseEnter={() => setShowDescription(true)}
+            onMouseLeave={() => setShowDescription(false)}
+          >
+              <div className="flex items-center gap-1.5 cursor-help">
+              <h3 className="font-extrabold text-dark-blue dark:text-white truncate text-base md:text-lg group-hover:text-indigo-650 dark:group-hover:text-indigo-400 transition-colors duration-200">
+                {module.name}
+              </h3>
+              {module.description && (
+                <HelpCircle className="size-4 text-gray-navy/60 dark:text-light-blue/50 shrink-0" />
+              )}
+            </div>
+            <p className="text-xs text-gray-navy dark:text-light-blue/70 font-medium mt-0.5">
               Chương {module.order} • {lessons.length} bài học
             </p>
+
+            {/* Floating Description Tooltip */}
+            <AnimatePresence>
+              {showDescription && module.description && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: 12 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 12 }}
+                  transition={{ duration: 0.18, ease: "easeOut" }}
+                  className="absolute top-full left-0 mt-3 w-96 p-4 bg-white dark:bg-navy-blue border border-gray-200 dark:border-indigo-500/30 border-l-4 border-l-indigo-500 rounded-2xl shadow-[0_10px_30px_rgba(99,102,241,0.15)] dark:shadow-[0_10px_30px_rgba(99,102,241,0.25)] z-50 pointer-events-auto text-left"
+                >
+                  {/* Upward pointing speech bubble arrow */}
+                  <div className="absolute -top-1.5 left-6 size-3 bg-white dark:bg-navy-blue border-t border-l border-gray-200 dark:border-indigo-500/30 rotate-45 z-10" />
+
+                  <div className="flex items-start gap-3 relative z-20">
+                    <div className="size-8 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-100 dark:border-indigo-500/20 shadow-sm">
+                      <Folder className="size-4" />
+                    </div>
+                    <div className="space-y-1.5 flex-1 min-w-0">
+                      <p className="text-[9px] font-black uppercase tracking-[0.18em] text-indigo-600 dark:text-indigo-400">
+                        Mô tả chương
+                      </p>
+                      <div className="max-h-24 overflow-y-auto custom-scrollbar pr-1.5">
+                        <p className="text-xs text-dark-blue dark:text-light-blue/90 leading-relaxed font-semibold whitespace-pre-wrap break-words">
+                          {module.description}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-1.5 ml-auto opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300">
           <button
             onClick={() => onEditModule(module)}
@@ -126,7 +167,7 @@ export function SortableModule({ module, lessons, onEditModule, onDeleteModule, 
           </button>
         </div>
       </div>
-      
+
       {/* Module Content (Order Groups) */}
       <AnimatePresence initial={false}>
         {isExpanded && (
@@ -159,16 +200,15 @@ export function SortableModule({ module, lessons, onEditModule, onDeleteModule, 
                   ))
                 )}
               </SortableContext>
-              
+
               {/* Dedicated drop zone for new order */}
               {orders.length > 0 && isDraggingLesson && (
                 <div
                   ref={setDropRef}
-                  className={`w-full mt-4 p-4 rounded-2xl border-2 border-dashed flex items-center justify-center gap-2 transition-all duration-300 ${
-                    isDropOver 
-                      ? "border-primary bg-primary/10 text-primary shadow-inner" 
-                      : "border-gray-200 dark:border-white/10 text-gray-navy/70 dark:text-light-blue/70 hover:border-gray-300 dark:hover:border-white/20"
-                  }`}
+                  className={`w-full mt-4 p-4 rounded-2xl border-2 border-dashed flex items-center justify-center gap-2 transition-all duration-300 ${isDropOver
+                    ? "border-primary bg-primary/10 text-primary shadow-inner"
+                    : "border-gray-200 dark:border-white/10 text-gray-navy/70 dark:text-light-blue/70 hover:border-gray-300 dark:hover:border-white/20"
+                    }`}
                 >
                   <Plus className="size-4" />
                   <span className="text-sm font-semibold">Thả bài học vào đây để tạo thứ tự mới</span>

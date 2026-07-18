@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DndContext, DragOverlay, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragStartEvent, DragEndEvent, DragOverEvent } from "@dnd-kit/core";
 import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import { SortableModule } from "./sortable-module";
@@ -31,6 +31,14 @@ export function LessonDndContext({
 }: Props) {
   const [modules, setModules] = useState(initialModules);
   const [lessons, setLessons] = useState(initialLessons);
+
+  useEffect(() => {
+    setModules(initialModules);
+  }, [initialModules]);
+
+  useEffect(() => {
+    setLessons(initialLessons);
+  }, [initialLessons]);
   
   const [activeModule, setActiveModule] = useState<Module | null>(null);
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
