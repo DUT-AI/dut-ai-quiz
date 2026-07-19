@@ -140,7 +140,7 @@ export function QuestionsList({
   }
 
   return (
-    <div className="grid gap-6">
+    <div className="grid grid-cols-1 gap-6 w-full min-w-0">
       {questions.map((q, idx) => (
         <QuestionCard
           key={q.id}

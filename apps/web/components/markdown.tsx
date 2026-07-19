@@ -206,6 +206,10 @@ export const Markdown = React.memo(function Markdown({ content, className = "" }
           .theory-markdown-content .katex {
             font-size: 1.05em;
             user-select: all;
+            max-width: 100%;
+            overflow-x: auto;
+            overflow-y: hidden;
+            vertical-align: middle;
           }
           .theory-markdown-content .katex-display .katex {
             font-size: 1.25em !important;

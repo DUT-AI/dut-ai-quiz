@@ -71,6 +71,9 @@ from app.application.use_cases.lessons.get_lesson_from_blog_uc import (
     GetLessonBySlugUseCase,
 )
 from app.application.use_cases.lessons.list_lessons_uc import ListLessonsUseCase
+from app.application.use_cases.lessons.reorder_lessons_uc import (
+    ReorderLessonsUseCase,
+)
 from app.application.use_cases.lessons.update_lesson_uc import UpdateLessonUseCase
 from app.application.use_cases.modules import (
     CreateModuleUseCase,
@@ -256,6 +259,7 @@ class UseCaseProvider(Provider):
     delete_lesson_use_case = provide(DeleteLessonUseCase, scope=Scope.REQUEST)
     get_lesson_detail_use_case = provide(GetLessonDetailUseCase, scope=Scope.REQUEST)
     get_lesson_by_slug_use_case = provide(GetLessonBySlugUseCase, scope=Scope.REQUEST)
+    reorder_lessons_use_case = provide(ReorderLessonsUseCase, scope=Scope.REQUEST)
 
     list_modules_use_case = provide(ListModulesUseCase, scope=Scope.REQUEST)
     create_module_use_case = provide(CreateModuleUseCase, scope=Scope.REQUEST)
