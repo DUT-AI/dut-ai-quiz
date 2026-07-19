@@ -23,7 +23,7 @@ const SearchBar = React.forwardRef<HTMLInputElement, SearchBarProps>(
           onChange={onChange}
           placeholder={placeholder}
           className={cn(
-            "w-full pl-12 pr-10 py-3.5 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-medium text-dark-blue dark:text-white placeholder:text-gray-navy/50 dark:placeholder:text-light-blue/40 shadow-sm text-sm",
+            "w-full pl-12 pr-10 py-3.5 rounded-2xl bg-gray-50/50 dark:bg-navy-blue border border-gray-200 dark:border-white/10 focus:border-primary focus:ring-2 focus:ring-primary/20 hover:border-gray-300 hover:dark:border-white/15 outline-none transition-all font-medium text-dark-blue dark:text-white placeholder:text-gray-navy/55 dark:placeholder:text-light-blue/50 shadow-sm dark:shadow-[0_4px_12px_rgba(0,0,0,0.2)] text-sm",
             className
           )}
           {...props}

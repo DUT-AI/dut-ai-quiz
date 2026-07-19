@@ -1,98 +1,115 @@
 "use client";
 
-import React, { useState } from "react";
-import { Trophy, Crown, Medal, Coins, Clock, Gamepad2, Maximize2, Sparkles } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import { Trophy, Crown, Medal, Coins, Clock, Gamepad2, X, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useGameLeaderboard } from "../queries";
-import GameLeaderboardModal from "./game-leaderboard-modal";
 import GameFireworks from "./game-fireworks";
 
-interface GameLeaderboardProps {
-  lessonSlug: string;
-  variant?: "retro" | "modern";
+interface LeaderboardRow {
+  user_id: number;
+  username?: string | null;
+  avatar_url?: string | null;
+  final_score: number;
+  gold: number;
+  total_time_response: number;
+  attempt_count: number;
 }
 
-export default function GameLeaderboard({ lessonSlug, variant = "retro" }: GameLeaderboardProps) {
-  const { data: leaderboard = [], isLoading } = useGameLeaderboard(lessonSlug);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+interface GameLeaderboardModalProps {
+  lessonSlug: string;
+  leaderboard: LeaderboardRow[];
+  onClose: () => void;
+}
 
-  const isModern = variant === "modern";
+export default function GameLeaderboardModal({
+  leaderboard,
+  onClose,
+}: GameLeaderboardModalProps) {
+  const [mounted, setMounted] = useState(false);
 
-  if (isLoading) {
-    return (
-      <div className={`flex flex-col items-center justify-center py-12 ${isModern ? "font-sans" : "font-mono"}`}>
-        <div className={`size-10 border-4 ${isModern ? "border-primary" : "border-amber-500"} border-t-transparent animate-spin rounded-full mb-4`} />
-        <span className={`text-xs ${isModern ? "text-gray-navy dark:text-light-blue font-black tracking-wider" : "text-zinc-500 dark:text-zinc-400 font-extrabold"} animate-pulse`}>
-          ĐANG TẢI BẢNG XẾP HẠNG...
-        </span>
-      </div>
-    );
-  }
-
-  // Modern Variant Design
-  if (isModern) {
-    const top3 = leaderboard.slice(0, 3);
-    const remaining = leaderboard.slice(3);
-
-    // Grid order: 2nd on left, 1st in center, 3rd on right
-    const podiumItems = [
-      { rank: 2, data: top3[1], color: "text-zinc-450 dark:text-zinc-300", bgClass: "bg-zinc-500/10 dark:bg-zinc-400/5", borderClass: "border-zinc-300/60 dark:border-zinc-700/50", glowClass: "shadow-zinc-500/5", avatarSize: "size-16 md:size-20" },
-      { rank: 1, data: top3[0], color: "text-amber-500", bgClass: "bg-amber-500/10 dark:bg-amber-400/5", borderClass: "border-amber-400 dark:border-amber-600/60", glowClass: "shadow-amber-500/15 dark:shadow-amber-500/10", avatarSize: "size-20 md:size-24" },
-      { rank: 3, data: top3[2], color: "text-orange-500", bgClass: "bg-orange-500/10 dark:bg-orange-400/5", borderClass: "border-orange-400/60 dark:border-orange-700/50", glowClass: "shadow-orange-500/5", avatarSize: "size-14 md:size-16" }
-    ];
-
-    const containerVariants = {
-      hidden: { opacity: 0 },
-      visible: {
-        opacity: 1,
-        transition: { staggerChildren: 0.05 }
-      }
+  useEffect(() => {
+    setMounted(true);
+    
+    // Prevent background scrolling while modal is active
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    
+    return () => {
+      document.body.style.overflow = originalOverflow;
     };
+  }, []);
 
-    const rowVariants = {
-      hidden: { opacity: 0, y: 10 },
-      visible: { opacity: 1, y: 0, transition: { duration: 0.3 } }
-    };
+  const top3 = leaderboard.slice(0, 3);
+  const remaining = leaderboard.slice(3);
 
-    return (
-      <>
-        <div 
-          onClick={() => setIsModalOpen(true)}
-          className="w-full font-sans text-dark-blue dark:text-white flex flex-col h-full relative cursor-pointer group/card py-4 overflow-hidden rounded-3xl"
-        >
-          {/* Fireworks canvas animation directly on the card */}
-          <GameFireworks />
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.05 },
+    },
+  };
 
-          {/* Soft aura glow behind leaderboards */}
-          <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-indigo-500/10 dark:bg-indigo-500/15 blur-3xl rounded-full pointer-events-none" />
+  const rowVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.35 } },
+  };
 
-          <div className="flex items-center justify-between border-b border-gray-150/80 dark:border-white/10 pb-3 mb-6 relative z-10">
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-indigo-500/10 dark:bg-indigo-500/5 border border-indigo-500/20 rounded-full text-xs font-black tracking-wider text-indigo-600 dark:text-indigo-400 uppercase">
-                <Trophy className="w-3.5 h-3.5" />
-                <span>BẢNG VÀNG DŨNG SĨ</span>
+  if (!mounted) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 md:p-10 font-sans">
+      {/* Backdrop overlay */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="absolute inset-0 bg-white/70 dark:bg-black/75 backdrop-blur-md"
+      />
+
+      {/* Fireworks canvas animation overlay */}
+      <GameFireworks />
+
+      {/* Modal Content */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9, y: 30 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.9, y: 30 }}
+        className="bg-white dark:bg-navy-blue w-full max-w-4xl rounded-[2.5rem] shadow-2xl relative z-10 overflow-hidden border border-gray-150 dark:border-white/10 max-h-[90vh] md:max-h-[85vh] flex flex-col transition-all duration-300"
+      >
+        {/* Glowing backdrop blobs */}
+        <div className="absolute top-0 left-1/4 w-80 h-80 bg-gradient-to-tr from-indigo-500/10 via-purple-500/10 to-transparent blur-3xl rounded-full pointer-events-none" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-gradient-to-br from-pink-500/10 via-amber-500/5 to-transparent blur-3xl rounded-full pointer-events-none" />
+
+        <div className="p-6 md:p-8 flex flex-col flex-1 min-h-0 overflow-hidden relative z-10">
+          
+          {/* Header */}
+          <div className="flex items-center justify-between border-b border-gray-100 dark:border-white/5 pb-4 mb-6 shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="size-11 rounded-2xl bg-indigo-500/10 dark:bg-indigo-400/10 flex items-center justify-center text-indigo-550 dark:text-indigo-400">
+                <Trophy className="size-6 animate-pulse" />
+              </div>
+              <div>
+                <h2 className="text-xl md:text-2xl font-black text-dark-blue dark:text-white uppercase tracking-wide">
+                  Bảng Vàng Dũng Sĩ
+                </h2>
+                <p className="text-xs text-gray-navy dark:text-light-blue/60 font-medium">
+                  Danh sách vinh danh tất cả dũng sĩ tham gia đấu trường
+                </p>
               </div>
             </div>
-            {leaderboard.length > 0 && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsModalOpen(true);
-                }}
-                className="p-1.5 rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 text-gray-navy dark:text-light-blue transition-colors flex items-center gap-1 group/expand"
-                title="Xem bảng vàng đầy đủ"
-              >
-                <Maximize2 className="size-4 group-hover/expand:scale-110 transition-transform" />
-              </button>
-            )}
+            <button
+              onClick={onClose}
+              className="p-2.5 rounded-full bg-gray-55/50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-navy dark:text-light-blue transition-colors border border-gray-150 dark:border-white/5"
+            >
+              <X className="size-5" />
+            </button>
           </div>
 
-        {leaderboard.length === 0 ? (
-          <div className="text-center py-12 text-xs text-gray-navy dark:text-light-blue/50 font-bold relative z-10">
-            Chưa có dũng sĩ nào ghi danh trên bảng vàng.
-          </div>
-        ) : (
-          <div className="flex flex-col gap-6 relative z-10 flex-1 justify-between">
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto pr-1 md:pr-2 custom-scrollbar space-y-8 pb-4">
             {/* Top 3 Podium Cards */}
             {top3.length > 0 && (
               <div className="relative flex items-end justify-center gap-3 md:gap-8 py-6 border-b border-gray-100 dark:border-white/5 pb-8 max-w-xl mx-auto w-full">
@@ -266,63 +283,83 @@ export default function GameLeaderboard({ lessonSlug, variant = "retro" }: GameL
                     </span>
                   </div>
                 </div>
+
               </div>
             )}
 
-            {/* Rest of the leaderboard list */}
-            {remaining.length > 0 ? (
+            {/* Complete Rankings List Table */}
+            <div className="w-full">
+              <h4 className="text-sm font-black text-dark-blue dark:text-white/60 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <Gamepad2 className="size-4 text-indigo-500" />
+                Danh sách chi tiết xếp hạng
+              </h4>
+              
               <motion.div
                 variants={containerVariants}
-                className="flex flex-col gap-2 max-h-[260px] overflow-y-auto pr-1 custom-scrollbar"
+                initial="hidden"
+                animate="visible"
+                className="flex flex-col gap-2.5 w-full"
               >
-                {remaining.map((row, idx) => {
-                  const actualRank = idx + 4;
+                {leaderboard.map((row, idx) => {
+                  const rank = idx + 1;
+                  const isTop3 = rank <= 3;
+                  
                   return (
                     <motion.div
                       key={row.user_id}
                       variants={rowVariants}
-                      whileHover={{ scale: 1.01, x: 3 }}
-                      className="flex items-center justify-between p-3 bg-white/40 dark:bg-[#1E2A3A]/20 hover:bg-gradient-to-r hover:from-white hover:to-indigo-50/20 dark:hover:from-[#1E2A3A]/40 dark:hover:to-indigo-950/10 rounded-2xl border border-gray-100 dark:border-white/5 hover:border-indigo-500/30 dark:hover:border-indigo-500/20 transition-all text-xs font-semibold"
+                      whileHover={{ scale: 1.01, x: 4 }}
+                      className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-3xl border transition-all text-sm ${
+                        isTop3 
+                          ? "bg-indigo-500/5 dark:bg-indigo-400/5 border-indigo-500/20" 
+                          : "bg-slate-50/50 dark:bg-navy-blue/20 hover:bg-slate-50 dark:hover:bg-white/5 border-gray-100 dark:border-white/5"
+                      }`}
                     >
-                      {/* Left: Rank, Avatar and Username */}
-                      <div className="flex items-center gap-3">
-                        <span className="w-5 text-center font-black text-gray-navy dark:text-light-blue/70">
-                          {actualRank}
+                      {/* Left Block: Rank & User Profile */}
+                      <div className="flex items-center gap-4">
+                        <span className={`w-8 text-center font-black text-sm ${
+                          rank === 1 ? "text-amber-500" : rank === 2 ? "text-zinc-450 dark:text-zinc-300" : rank === 3 ? "text-orange-500" : "text-gray-navy dark:text-light-blue/50"
+                        }`}>
+                          #{rank}
                         </span>
-                        
+
                         {row.avatar_url ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
-                            src={row.avatar_url}
+                            src={row.avatar_url || undefined}
                             alt={row.username || "Dũng Sĩ"}
-                            className="size-7 rounded-full border border-gray-150 dark:border-white/10 object-cover"
+                            className="size-8 rounded-full border border-gray-150 dark:border-white/10 object-cover shadow-sm"
                           />
                         ) : (
-                          <div className="size-7 bg-indigo-500/10 dark:bg-indigo-400/5 rounded-full border border-gray-150 dark:border-white/10 flex items-center justify-center text-[9px] text-indigo-550 dark:text-indigo-400 font-black">
+                          <div className="size-8 bg-indigo-500/10 dark:bg-indigo-400/5 rounded-full border border-gray-150 dark:border-white/10 flex items-center justify-center text-[10px] text-indigo-550 dark:text-indigo-400 font-black">
                             DS
                           </div>
                         )}
-                        <span className="truncate max-w-[100px] sm:max-w-none text-dark-blue dark:text-white font-extrabold">
+
+                        <span className="text-dark-blue dark:text-white font-black text-wrap break-all max-w-[200px] sm:max-w-none leading-snug">
                           {row.username || `Dũng Sĩ #${row.user_id}`}
                         </span>
                       </div>
 
-                      {/* Right: PTS, Gold, Response Time */}
-                      <div className="flex items-center gap-3 md:gap-5 text-right font-black">
-                        <div className="flex flex-col text-right">
-                          <span className="text-indigo-650 dark:text-indigo-400 text-[11px] md:text-xs">
+                      {/* Right Block: Complete Metrics */}
+                      <div className="flex items-center justify-between sm:justify-end gap-6 mt-3 sm:mt-0 pt-3 sm:pt-0 border-t sm:border-t-0 border-gray-100 dark:border-white/5 font-black text-xs">
+                        {/* Score and Gold */}
+                        <div className="flex items-center gap-4">
+                          <span className="text-primary bg-primary/10 dark:bg-primary/20 px-3 py-1 rounded-full text-xs">
                             {row.final_score.toFixed(0)} PTS
                           </span>
-                          <span className="text-[10px] text-amber-500 flex items-center justify-end gap-0.5">
-                            🪙 {row.gold}
+                          <span className="text-amber-500 flex items-center gap-1">
+                            🪙 {row.gold} Vàng
                           </span>
                         </div>
-                        <div className="hidden sm:flex flex-col text-right text-[10px] text-gray-navy dark:text-light-blue/60 font-medium">
-                          <span className="flex items-center gap-1">
-                            <Clock className="size-3" /> {row.total_time_response.toFixed(1)}s
+
+                        {/* Extra details */}
+                        <div className="flex items-center gap-4 text-gray-navy dark:text-light-blue/70 font-semibold text-[11px]">
+                          <span className="flex items-center gap-1.5">
+                            <Clock className="size-3 text-indigo-500" /> {row.total_time_response.toFixed(1)}s
                           </span>
-                          <span className="flex items-center gap-1 justify-end">
-                            <Gamepad2 className="size-3" /> {row.attempt_count} lượt
+                          <span className="flex items-center gap-1.5">
+                            <Gamepad2 className="size-3 text-emerald-500" /> {row.attempt_count} lượt
                           </span>
                         </div>
                       </div>
@@ -330,130 +367,13 @@ export default function GameLeaderboard({ lessonSlug, variant = "retro" }: GameL
                   );
                 })}
               </motion.div>
-            ) : (
-              remaining.length === 0 && top3.length > 0 && (
-                <div className="text-center text-[10px] text-gray-navy dark:text-light-blue/40 font-medium py-2">
-                  Chỉ các dũng sĩ trên bục vinh quang hiện đang dẫn đầu!
-                </div>
-              )
-            )}
+            </div>
+
           </div>
-        )}
-
-      </div>
-
-        {/* Full-screen detailed rankings popup */}
-        <AnimatePresence>
-          {isModalOpen && (
-            <GameLeaderboardModal
-              lessonSlug={lessonSlug}
-              leaderboard={leaderboard}
-              onClose={() => setIsModalOpen(false)}
-            />
-          )}
-        </AnimatePresence>
-      </>
-    );
-  }
-
-  // Retro Design (Untouched for compatibility)
-  const containerClasses = "w-full bg-white dark:bg-navy-blue border-3 border-zinc-900 dark:border-zinc-700 p-4 font-mono text-zinc-900 dark:text-zinc-100 shadow-md";
-  const headerClasses = "flex items-center gap-2 border-b-2 border-zinc-900 dark:border-zinc-700 pb-2 mb-3";
-  const headerTitleClasses = "text-sm font-extrabold tracking-wider";
-  const tableHeaderClasses = "border-b border-zinc-200 dark:border-zinc-800 text-zinc-550 dark:text-zinc-400 font-extrabold";
-  const tableRowClasses = "hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors font-bold";
-  const tableBorderClasses = "divide-y divide-zinc-100 dark:divide-zinc-800/50";
-
-  return (
-    <div className={containerClasses}>
-      <div className={headerClasses}>
-        <Trophy className="w-5 h-5 text-amber-500" />
-        <span className={headerTitleClasses}>
-          BẢNG VÀNG DŨNG SĨ
-        </span>
-      </div>
-
-      {leaderboard.length === 0 ? (
-        <div className="text-center py-8 text-xs text-zinc-450 dark:text-zinc-500 font-bold">
-          Chưa có dũng sĩ nào ghi danh trên bảng vàng.
         </div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className={tableHeaderClasses}>
-                <th className="py-2 pr-2 text-center w-10">Hạng</th>
-                <th className="py-2">Dũng Sĩ</th>
-                <th className="py-2 text-right">Điểm Số</th>
-                <th className="py-2 text-right">Vàng</th>
-                <th className="py-2 text-right hidden sm:table-cell">Thời Gian</th>
-                <th className="py-2 text-right hidden sm:table-cell">Lượt Chơi</th>
-              </tr>
-            </thead>
-            <tbody className={tableBorderClasses}>
-              {leaderboard.map((row, idx) => {
-                const isTop3 = idx < 3;
-                
-                const retroRankColors = [
-                  "bg-amber-400 border-zinc-900 text-zinc-900 font-black", // 1st Gold
-                  "bg-zinc-300 border-zinc-900 text-zinc-900 font-black", // 2nd Silver
-                  "bg-amber-600 border-zinc-900 text-white font-black", // 3rd Bronze
-                ];
 
-                return (
-                  <tr
-                    key={row.user_id}
-                    className={tableRowClasses}
-                  >
-                    <td className="py-2 pr-2 text-center">
-                      {isTop3 ? (
-                        <span className={`inline-flex items-center justify-center w-6 h-6 border border-2 text-[10px] ${retroRankColors[idx]}`}>
-                          {idx + 1}
-                        </span>
-                      ) : (
-                        <span className="text-zinc-500 dark:text-zinc-400">
-                          {idx + 1}
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-2">
-                      <div className="flex items-center gap-2">
-                        {row.avatar_url ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={row.avatar_url}
-                            alt={row.username || "Dũng Sĩ"}
-                            className="size-5 rounded-none border border-zinc-900 dark:border-zinc-700 object-cover"
-                          />
-                        ) : (
-                          <div className="size-5 bg-zinc-200 dark:bg-zinc-800 border border-zinc-900 dark:border-zinc-700 flex items-center justify-center text-[9px] text-zinc-550 font-bold">
-                            DS
-                          </div>
-                        )}
-                        <span className="truncate max-w-[120px] sm:max-w-none text-zinc-900 dark:text-zinc-200">
-                          {row.username || `Dũng Sĩ #${row.user_id}`}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="py-2 text-right text-cyan-600 dark:text-cyan-400">
-                      {row.final_score.toFixed(0)} PTS
-                    </td>
-                    <td className="py-2 text-right text-amber-500 font-black">
-                      🪙{row.gold}
-                    </td>
-                    <td className="py-2 text-right hidden sm:table-cell text-zinc-500 dark:text-zinc-400">
-                      {row.total_time_response.toFixed(1)}s
-                    </td>
-                    <td className="py-2 text-right hidden sm:table-cell text-zinc-500 dark:text-zinc-400">
-                      {row.attempt_count}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
+      </motion.div>
+    </div>,
+    document.body
   );
 }

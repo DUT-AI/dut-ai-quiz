@@ -39,7 +39,12 @@ export function useStartGameSession() {
         body,
         StartGameSessionResponseSchema
       ),
-    onSuccess: (_, variables) => {
+    onSuccess: (data, variables) => {
+      // Pre-populate the active session cache with the newly created session
+      qc.setQueryData(
+        ["game", "sessions", "active", variables.lesson_slug],
+        data
+      );
       void qc.invalidateQueries({
         queryKey: ["game", "sessions", "active", variables.lesson_slug],
       });

@@ -47,3 +47,13 @@ class LessonDetailOut(LessonOut):
     """Schema for detailed lesson output including questions."""
 
     questions: list[QuestionOut] = []
+
+
+class LessonReorderItem(BaseModel):
+    id: UUID
+    order: int
+    module_id: UUID | None = None
+
+
+class LessonReorder(BaseModel):
+    items: list[LessonReorderItem]

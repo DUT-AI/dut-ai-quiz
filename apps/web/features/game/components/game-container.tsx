@@ -3,21 +3,20 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Timer, Swords, Skull, Trophy, Lock, Heart, Shield, Zap, BookOpen } from "lucide-react";
+import { Swords, Skull, Trophy, Lock, Heart, Shield, Zap, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 
 import BossHud from "./boss-hud";
 import ItemHotbar, { ItemType } from "./item-hotbar";
-import GameStartScreen from "./game-start-screen";
 import GameQuestionCard from "./game-question-card";
 import GameResult from "./game-result";
+import { useThemeStore } from "@/store/theme-store";
+import SwitchTheme from "@/components/atoms/switch-theme";
 
 import {
-  useActiveGameSession,
   useStartGameSession,
   usePatchGameAnswer,
   useUseGameItem,
-  useFinishGameSession,
 } from "../queries";
 import { type GameQuestion, type GamificationState } from "../types";
 
@@ -29,24 +28,30 @@ const getBossName = (stageNum: number) => {
 
 interface GameContainerProps {
   lessonSlug: string;
+  initialSession: any; // StartGameSessionResponse | null
 }
 
-export default function GameContainer({ lessonSlug }: GameContainerProps) {
+export default function GameContainer({ lessonSlug, initialSession }: GameContainerProps) {
   const router = useRouter();
+  const hasInitializedRef = useRef(false);
+  const { darkMode } = useThemeStore();
 
-  // 1. Fetch active session on load
-  const {
-    data: activeSession,
-    isLoading: isLoadingActiveSession,
-    error: activeSessionError,
-    refetch: refetchActiveSession,
-  } = useActiveGameSession(lessonSlug);
+  const gameBackgroundStyle = useMemo(() => {
+    return {
+      backgroundImage: darkMode
+        ? `radial-gradient(circle, rgba(255,255,255,0.02) 1.5px, transparent 1.5px),
+           linear-gradient(to bottom right, #09090b, #030712)`
+        : `radial-gradient(circle, rgba(139,92,26,0.05) 1.5px, transparent 1.5px),
+           linear-gradient(to bottom right, #f4eedb, #eae2c6)`,
+      backgroundSize: "24px 24px, 100% 100%",
+      backgroundAttachment: "fixed",
+    };
+  }, [darkMode]);
 
   // Mutations
   const startSessionMutation = useStartGameSession();
   const patchAnswerMutation = usePatchGameAnswer();
   const useItemMutation = useUseGameItem();
-  const finishSessionMutation = useFinishGameSession();
 
   // Game core state
   const [screen, setScreen] = useState<"start" | "playing" | "result">("start");
@@ -82,14 +87,16 @@ export default function GameContainer({ lessonSlug }: GameContainerProps) {
 
   // Timer state
   const [countdown, setCountdown] = useState<number | null>(null);
-  const [timeLeft, setTimeLeft] = useState(60);
+  const timeLeftRef = useRef(60);
   const [timerFrozen, setTimerFrozen] = useState(false);
-  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Right column ref for auto-scrolling
+  const rightColRef = useRef<HTMLDivElement | null>(null);
 
   // Sync timeLeft when current question changes
   useEffect(() => {
     if (currentQuestion) {
-      setTimeLeft(currentQuestion.time_limit);
+      timeLeftRef.current = currentQuestion.time_limit;
     }
   }, [currentIdx, currentQuestion]);
 
@@ -111,144 +118,127 @@ export default function GameContainer({ lessonSlug }: GameContainerProps) {
     return () => clearInterval(interval);
   }, [countdown]);
 
+  // Scroll to bottom of right column when question is answered
+  useEffect(() => {
+    if (isAnswered && rightColRef.current) {
+      const timer = setTimeout(() => {
+        rightColRef.current?.scrollTo({
+          top: rightColRef.current.scrollHeight,
+          behavior: "smooth",
+        });
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isAnswered]);
+
+  // Scroll back to top when question changes
+  useEffect(() => {
+    if (rightColRef.current) {
+      rightColRef.current.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    }
+  }, [currentIdx]);
+
   // Visual effects
   const [screenShake, setScreenShake] = useState(false);
   const [gameResult, setGameResult] = useState<"playing" | "victory" | "defeat">("playing");
   const [stageProgress, setStageProgress] = useState<("correct" | "incorrect" | "idle")[]>([]);
 
-  // 2. Handle active session lookup
-  const hasActiveSession = !!activeSession?.session_id;
+
 
   // Initialize game state from session data
   const initializeGame = (sessionData: { session_id: string; snapshot: any }) => {
-    const snap = sessionData.snapshot;
-    setSessionId(sessionData.session_id);
-    setQuestions(snap.questions);
-    setGamification(snap.gamification);
+    try {
+      console.log("[GameDebug] initializeGame called with data:", sessionData);
+      const snap = sessionData.snapshot;
+      if (!snap) {
+        throw new Error("Dữ liệu snapshot không hợp lệ (null/undefined)!");
+      }
+      setSessionId(sessionData.session_id);
 
-    // Reset all answer states
-    setIsAnswered(false);
-    setSelectedOptionId(null);
-    setHiddenOptions([]);
-    setTimerFrozen(false);
-    setDoubleActive(false);
-    setShieldActive(false);
-    setIsSelectedCorrect(false);
-    setCorrectOptionId(null);
 
-    const idx = snap.gamification.last_question_index;
-    setCurrentIdx(idx);
+      setQuestions(snap.questions || []);
+      setGamification(snap.gamification);
 
-    if (idx === 0) {
-      setCountdown(3);
-    } else {
-      setCountdown(null);
+      // Reset all answer states
+      setIsAnswered(false);
+      setSelectedOptionId(null);
+      setHiddenOptions([]);
+      setTimerFrozen(false);
+      setDoubleActive(false);
+      setShieldActive(false);
+      setIsSelectedCorrect(false);
+      setCorrectOptionId(null);
+
+      const gamificationState = snap.gamification || {};
+      const idx = gamificationState.last_question_index || 0;
+      setCurrentIdx(idx);
+
+      if (idx === 0) {
+        setCountdown(3);
+      } else {
+        setCountdown(null);
+      }
+      setHp(gamificationState.lives ?? 3);
+      setGold(gamificationState.gold ?? 0);
+      setScore(gamificationState.points ?? 0);
+
+      // Reconstruct progress dots based on answers
+      const totalQCount = (snap.questions || []).length;
+      const progress: ("correct" | "incorrect" | "idle")[] = Array.from({ length: totalQCount }).map(() => "idle");
+      for (let i = 0; i < idx; i++) {
+        progress[i] = "correct"; 
+      }
+      setStageProgress(progress);
+
+      // Check if the current question is a boss fight
+      const currentQ = (snap.questions || [])[idx];
+      if (currentQ) {
+        const bossMode = currentQ.is_boss;
+        setIsBossMode(bossMode);
+        setBossHp(gamificationState.boss_hp === 1 ? 5 : 0);
+        setBossMaxHp(5);
+      }
+
+      setGameResult("playing");
+      setScreen("playing");
+      console.log("[GameDebug] initializeGame completed successfully, screen set to playing");
+    } catch (err: any) {
+      console.error("[GameDebug] initializeGame CRITICAL ERROR:", err);
+      toast.error(`Lỗi khởi tạo game: ${err.message || err}`);
+      router.push(`/lessons/${lessonSlug}`);
     }
-    setHp(snap.gamification.lives);
-    setGold(snap.gamification.gold);
-    setScore(snap.gamification.points);
-
-    // Reconstruct progress dots based on answers
-    const totalQCount = snap.questions.length;
-    const progress: ("correct" | "incorrect" | "idle")[] = Array.from({ length: totalQCount }).map(() => "idle");
-    
-    // Server snapshot.answers contains: { [question_id]: option_id }
-    // But does not tell us correct/incorrect directly, except if we deduce it or we just look up matching.
-    // Wait, the client answers dict doesn't need to reconstruct past correct/incorrect perfectly,
-    // but we can assume completed questions before `last_question_index` were answered.
-    // To keep it simple, past answered questions can just show completed green/red. 
-    // Since we don't have is_correct for past questions in snapshot, we can show "correct" for simplicity,
-    // or keep it blank. Let's just mark past ones as "correct" or "incorrect" if we can, or just keep them green.
-    // Actually, in the database session, since we only resume in-progress, we can mark all past questions as "correct"
-    // to keep the visual indicator clean, or track them. Let's just set the past dots as "correct" for now.
-    for (let i = 0; i < idx; i++) {
-      progress[i] = "correct"; 
-    }
-    setStageProgress(progress);
-
-    // Check if the current question is a boss fight
-    const currentQ = snap.questions[idx];
-    if (currentQ) {
-      const bossMode = currentQ.is_boss;
-      setIsBossMode(bossMode);
-      setBossHp(snap.gamification.boss_hp === 1 ? 5 : 0);
-      setBossMaxHp(5);
-    }
-
-    setGameResult("playing");
-    setScreen("playing");
   };
 
-  // Synchronize state when activeSession query changes (e.g., on browser back navigation)
+  // Auto-initialize game session based on query params (continue or new game)
   useEffect(() => {
-    // Only synchronize when the local sessionId is empty (i.e. on mount / back navigation)
-    if (!isLoadingActiveSession && sessionId === "") {
-      if (!activeSession?.session_id) {
-        // If there's no active session on the server but we are stuck in playing state,
-        // reset to the start screen.
-        if (screen === "playing") {
-          setScreen("start");
-          setQuestions([]);
-          setGamification(null);
-          setGameResult("playing");
-        }
-      } else {
-        // If the server has an active session and we are stuck in playing state,
-        // but our local sessionId is not set yet (e.g. on mount / back navigation),
-        // initialize the game state.
-        if (screen === "playing") {
-          initializeGame(activeSession);
-        }
-      }
-    }
-  }, [activeSession, isLoadingActiveSession, screen, sessionId]);
+    if (hasInitializedRef.current) return;
 
-  // Start game challenge
-  const handleStartGame = () => {
-    if (hasActiveSession && activeSession) {
-      initializeGame(activeSession);
-      toast.success("Đã khôi phục phiên thi đấu trước đó!");
+    if (initialSession) {
+      console.log("[GameDebug] Initializing game with active session data:", initialSession);
+      hasInitializedRef.current = true;
+      initializeGame(initialSession);
     } else {
+      console.log("[GameDebug] Initializing game: starting new session");
+      hasInitializedRef.current = true;
       startSessionMutation.mutate(
         { lesson_slug: lessonSlug },
         {
           onSuccess: (data) => {
+            console.log("[GameDebug] startSessionMutation Success", data);
             initializeGame(data);
-            toast.success("Trận đấu mới đã bắt đầu!");
           },
           onError: (err: any) => {
+            console.error("[GameDebug] startSessionMutation Error", err);
             toast.error(err.message || "Không thể khởi tạo đấu trường!");
+            router.push(`/lessons/${lessonSlug}`);
           },
         }
       );
     }
-  };
-
-  // Timer management
-  useEffect(() => {
-    if (screen !== "playing" || gameResult !== "playing" || showBossWarning || isAnswered || countdown !== null) {
-      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
-      return;
-    }
-
-    timerIntervalRef.current = setInterval(() => {
-      if (timerFrozen) return;
-
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timerIntervalRef.current!);
-          handleTimeOut();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => {
-      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentIdx, timerFrozen, showBossWarning, isAnswered, gameResult, screen, countdown]);
+  }, [initialSession, lessonSlug, router]);
 
   // Handle timeout
   const handleTimeOut = () => {
@@ -265,7 +255,7 @@ export default function GameContainer({ lessonSlug }: GameContainerProps) {
     if (!currentQuestion) return;
 
     // Calculate response time
-    const timeResponse = timerMax - timeLeft;
+    const timeResponse = timerMax - timeLeftRef.current;
 
     // Call API patch answer
     patchAnswerMutation.mutate(
@@ -463,61 +453,34 @@ export default function GameContainer({ lessonSlug }: GameContainerProps) {
 
   // Replay retry
   const handleRetry = () => {
-    // Finish active session if any
-    if (sessionId) {
-      finishSessionMutation.mutate(sessionId, {
-        onSuccess: () => {
-          // Invalidate active session and refetch
-          refetchActiveSession().then(() => {
-            // Trigger start
-            startSessionMutation.mutate(
-              { lesson_slug: lessonSlug },
-              {
-                onSuccess: (data) => {
-                  initializeGame(data);
-                  toast.success("Trận đấu mới đã bắt đầu!");
-                },
-              }
-            );
-          });
+    // Directly start a new session — the backend's StartGameSessionUseCase
+    // will auto-finish any IN_PROGRESS session before creating the new one.
+    startSessionMutation.mutate(
+      { lesson_slug: lessonSlug },
+      {
+        onSuccess: (data) => {
+          initializeGame(data);
+          toast.success("Trận đấu mới đã bắt đầu!");
         },
-        onError: () => {
-          // If finish fails, just force start
-          startSessionMutation.mutate(
-            { lesson_slug: lessonSlug },
-            {
-              onSuccess: (data) => {
-                initializeGame(data);
-              },
-            }
-          );
+        onError: (err: any) => {
+          toast.error(err.message || "Không thể bắt đầu trận đấu mới!");
         },
-      });
-    }
+      }
+    );
   };
 
-  if (isLoadingActiveSession) {
+  const isInitializing =
+    startSessionMutation.isPending ||
+    !hasInitializedRef.current;
+
+  if (isInitializing) {
     return (
       <div
-        className="min-h-screen text-zinc-955 dark:text-slate-100 flex flex-col items-center justify-center font-sans relative select-none p-4 md:p-6"
-        style={{
-          backgroundImage: `
-            radial-gradient(circle, rgba(139,92,26,0.05) 1.5px, transparent 1.5px),
-            linear-gradient(to bottom right, #f4eedb, #eae2c6)
-          `,
-          backgroundSize: "24px 24px, 100% 100%",
-          backgroundAttachment: "fixed",
-        }}
+        className="min-h-screen text-zinc-955 dark:text-zinc-100 flex flex-col items-center justify-center font-sans relative select-none p-4 md:p-6"
+        style={gameBackgroundStyle}
       >
-        {/* Style tag to support dark mode background override */}
-        <style jsx global>{`
-          .dark-bg-override {
-            background-image: radial-gradient(circle, rgba(255,255,255,0.02) 1.5px, transparent 1.5px),
-              linear-gradient(to bottom right, #09090b, #030712) !important;
-          }
-        `}</style>
         <div className="size-12 border-4 border-indigo-500 border-t-transparent animate-spin rounded-full mb-6" />
-        <p className="font-extrabold text-lg text-zinc-700 dark:text-slate-350 font-mono animate-pulse">
+        <p className="font-extrabold text-lg text-zinc-700 dark:text-zinc-400 font-mono animate-pulse">
           ĐANG KHỞI TẠO ĐẤU TRƯỜNG...
         </p>
       </div>
@@ -526,44 +489,19 @@ export default function GameContainer({ lessonSlug }: GameContainerProps) {
 
   return (
     <div
-      className={`min-h-screen text-zinc-955 dark:text-slate-100 flex flex-col font-sans relative select-none p-4 md:p-6 transition-all duration-300 ${
-        screenShake ? "animate-[shake_0.5s_infinite]" : ""
-      }`}
-      style={{
-        backgroundImage: `
-          radial-gradient(circle, rgba(139,92,26,0.05) 1.5px, transparent 1.5px),
-          linear-gradient(to bottom right, #f4eedb, #eae2c6)
-        `,
-        backgroundSize: "24px 24px, 100% 100%",
-        backgroundAttachment: "fixed",
-      }}
-      ref={(el) => {
-        if (el) {
-          // Check if dark mode is active to override background inline style
-          const isDark = document.documentElement.classList.contains("dark");
-          if (isDark) {
-            el.style.backgroundImage = `
-              radial-gradient(circle, rgba(255,255,255,0.02) 1.5px, transparent 1.5px),
-              linear-gradient(to bottom right, #09090b, #030712)
-            `;
-          } else {
-            el.style.backgroundImage = `
-              radial-gradient(circle, rgba(139,92,26,0.05) 1.5px, transparent 1.5px),
-              linear-gradient(to bottom right, #f4eedb, #eae2c6)
-            `;
-          }
-        }
-      }}
+      className={`text-zinc-955 dark:text-zinc-100 flex flex-col font-sans relative select-none p-2 md:p-4 px-1.5 md:px-2 transition-all duration-300 h-screen overflow-y-auto custom-scrollbar game-layout-container ${
+        screen === "playing" ? "lg:overflow-hidden" : ""
+      } ${screenShake ? "animate-[shake_0.5s_infinite]" : ""}`}
+      style={gameBackgroundStyle}
     >
       <style jsx global>{`
         html, body {
-          height: auto !important;
-          overflow: auto !important;
-          overflow-y: auto !important;
+          height: 100% !important;
+          overflow: hidden !important;
         }
         #__next, main, [data-nextjs-scroll-focus-boundary], #root, .dark, body > div {
-          height: auto !important;
-          overflow: visible !important;
+          height: 100% !important;
+          overflow: hidden !important;
         }
         @keyframes shake {
           0%, 100% { transform: translate(0, 0) rotate(0deg); }
@@ -577,41 +515,82 @@ export default function GameContainer({ lessonSlug }: GameContainerProps) {
           80% { transform: translate(1px, 2px) rotate(-0.5deg); }
           90% { transform: translate(-2px, -2px) rotate(0.5deg); }
         }
+        @keyframes active-dot-pulse {
+          0% {
+            box-shadow: 0 0 0 0px rgba(245, 158, 11, 0.8);
+          }
+          100% {
+            box-shadow: 0 0 0 8px rgba(245, 158, 11, 0);
+          }
+        }
+        .animate-active-dot {
+          animation: active-dot-pulse 1.5s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+        }
+        .game-main-content {
+          overflow: visible !important;
+        }
+        .game-layout-container {
+          scrollbar-gutter: stable;
+        }
+        .game-right-column {
+          scrollbar-gutter: stable;
+        }
+        @media (min-width: 1024px) and (max-height: 920px) {
+          .game-layout-container {
+            overflow-y: auto !important;
+          }
+          .game-main-content {
+            height: auto !important;
+            flex: none !important;
+          }
+          .game-grid-layout {
+            height: auto !important;
+          }
+        }
       `}</style>
 
+      {/* ─── TOP BAR (NAVIGATION & THEME SELECTOR) ─── */}
+      <div className="w-full max-w-[98%] mx-auto flex justify-between items-center py-2 mb-2 px-1 relative z-20">
+        <button
+          onClick={() => router.push(`/lessons/${lessonSlug}`)}
+          className="flex items-center gap-2 px-3 py-2 text-xs md:text-sm font-bold uppercase tracking-wider bg-white dark:bg-navy-blue border-2 border-zinc-900 dark:border-zinc-700 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors text-zinc-700 dark:text-zinc-300 font-mono shadow-sm"
+        >
+          <BookOpen className="size-4" />
+          <span>Quay lại Bài học</span>
+        </button>
+        <SwitchTheme />
+      </div>
+
       {screen === "start" ? (
-        <GameStartScreen
-          lessonSlug={lessonSlug}
-          hasActiveSession={hasActiveSession}
-          isStarting={startSessionMutation.isPending}
-          onStart={handleStartGame}
-        />
+        <div className="flex-1 flex items-center justify-center font-mono text-zinc-500">
+          <p className="animate-pulse">ĐANG KHỞI TẠO ĐẤU TRƯỜNG...</p>
+        </div>
       ) : screen === "playing" ? (
         <>
           {/* ─── HEADER HUD (RPG STATUS BAR) ─── */}
-          <header className="relative w-full max-w-7xl mx-auto flex justify-between items-center bg-white dark:bg-slate-900 border-3 border-zinc-900 dark:border-slate-700 p-3 md:p-4 rounded-none mb-3 z-10 shadow-md">
+          <header className="relative w-full max-w-[98%] mx-auto flex justify-between items-center bg-white dark:bg-navy-blue border-3 border-zinc-900 dark:border-zinc-700 p-3 md:p-4 rounded-none mb-3 z-10 shadow-md">
             {/* Left Side: Stage progress dot */}
             <div className="flex flex-col items-start select-none">
-              <div className="text-[10px] md:text-xs text-zinc-500 dark:text-slate-400 mb-1 tracking-wider font-extrabold font-mono">
+              <div className="text-[10px] md:text-xs text-zinc-500 dark:text-zinc-400 mb-1 tracking-wider font-extrabold font-mono">
                 TIẾN TRÌNH THỬ THÁCH
               </div>
               <div className="flex items-center gap-1.5 overflow-x-auto max-w-[200px] sm:max-w-md md:max-w-none py-1">
                 {stageProgress.map((status, i) => {
                   const isActive = i === currentIdx;
                   let icon = null;
-                  let btnClass = "bg-zinc-100 dark:bg-slate-950 border-zinc-300 dark:border-slate-800 text-zinc-400 dark:text-slate-600 cursor-not-allowed";
+                  let btnClass = "bg-zinc-100 dark:bg-zinc-950 border-zinc-300 dark:border-zinc-800 text-zinc-400 dark:text-zinc-500 cursor-not-allowed";
 
                   if (isActive) {
                     icon = <Swords className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 text-zinc-900 dark:text-white animate-pulse" />;
-                    btnClass = "bg-amber-400 dark:bg-amber-500 border-zinc-900 dark:border-slate-700 text-zinc-900 dark:text-white scale-110";
+                    btnClass = "bg-amber-400 dark:bg-amber-500 border-zinc-900 dark:border-zinc-700 text-zinc-900 dark:text-white scale-110";
                   } else if (status === "correct") {
                     icon = <Trophy className="w-3 h-3 md:w-4 md:h-4 text-emerald-800 dark:text-emerald-300" />;
-                    btnClass = "bg-emerald-400 dark:bg-emerald-650 border-zinc-900 dark:border-slate-700";
+                    btnClass = "bg-emerald-400 dark:bg-emerald-650 border-zinc-900 dark:border-zinc-700";
                   } else if (status === "incorrect") {
                     icon = <Skull className="w-3 h-3 md:w-4 md:h-4 text-red-800 dark:text-red-300" />;
-                    btnClass = "bg-red-400 dark:bg-red-650 border-zinc-900 dark:border-slate-700";
+                    btnClass = "bg-red-400 dark:bg-red-650 border-zinc-900 dark:border-zinc-700";
                   } else {
-                    icon = <Lock className="w-2.5 h-2.5 md:w-3 md:h-3 text-zinc-400 dark:text-slate-600" />;
+                    icon = <Lock className="w-2.5 h-2.5 md:w-3 md:h-3 text-zinc-400 dark:text-zinc-500" />;
                   }
 
                   return (
@@ -622,7 +601,7 @@ export default function GameContainer({ lessonSlug }: GameContainerProps) {
                       className={`relative w-8 h-8 md:w-10 md:h-10 border-2 transition-all duration-300 flex items-center justify-center rounded-none font-bold ${btnClass}`}
                     >
                       {isActive && (
-                        <span className="absolute inset-0 rounded-none border-2 border-amber-500 dark:border-amber-400 animate-ping opacity-60 pointer-events-none" />
+                        <span className="absolute inset-0 rounded-none border-2 border-amber-500 dark:border-amber-400 animate-active-dot opacity-80 pointer-events-none" />
                       )}
                       {icon}
                     </button>
@@ -633,7 +612,7 @@ export default function GameContainer({ lessonSlug }: GameContainerProps) {
 
             {/* Right Side: Score */}
             <div className="flex flex-col items-end">
-              <span className="text-[10px] md:text-xs text-zinc-500 dark:text-slate-400 font-extrabold font-mono">ĐIỂM SỐ</span>
+              <span className="text-[10px] md:text-xs text-zinc-500 dark:text-zinc-400 font-extrabold font-mono">ĐIỂM SỐ</span>
               <span className="text-cyan-600 dark:text-cyan-400 font-extrabold tracking-wide font-mono text-lg md:text-xl">
                 {score} PTS
               </span>
@@ -641,8 +620,8 @@ export default function GameContainer({ lessonSlug }: GameContainerProps) {
           </header>
 
           {/* ─── MAIN CONTENT WINDOW (RPG HUD VIEWPORT) ─── */}
-          <main className="flex-1 w-full max-w-7xl mx-auto flex flex-col items-center justify-start relative z-10 py-2">
-            <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          <main className="flex-1 min-h-0 w-full max-w-[98%] mx-auto flex flex-col items-center justify-start relative z-10 py-2 game-main-content">
+            <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-6 items-start lg:items-stretch game-grid-layout">
               {/* ─── LEFT COLUMN: BATTLE ARENA, HP STATS & ITEM HOTBAR ─── */}
               <div className="lg:col-span-5 flex flex-col gap-4 w-full">
                 <BossHud
@@ -656,6 +635,12 @@ export default function GameContainer({ lessonSlug }: GameContainerProps) {
                   playerHp={hp}
                   playerMaxHp={5}
                   playerLvl={stage}
+                  timerMax={timerMax}
+                  timerFrozen={timerFrozen}
+                  isAnswered={isAnswered}
+                  questionId={currentQuestion?.id || ""}
+                  timeLeftRef={timeLeftRef}
+                  onTimeOut={handleTimeOut}
                 />
 
                 <ItemHotbar
@@ -668,25 +653,27 @@ export default function GameContainer({ lessonSlug }: GameContainerProps) {
               </div>
 
               {/* ─── RIGHT COLUMN: TIMER, QUESTIONS & ITEMS ─── */}
-              <div className="lg:col-span-7 flex flex-col gap-4 w-full items-center">
+              <div
+                ref={rightColRef}
+                className="lg:col-span-7 w-full relative lg:h-full overflow-hidden game-right-column"
+              >
                 {questions[currentIdx] && (
-                  <GameQuestionCard
-                    currentQuestion={questions[currentIdx]}
-                    currentIdx={currentIdx}
-                    totalQuestions={questions.length}
-                    stage={stage}
-                    doubleActive={doubleActive}
-                    timeLeft={timeLeft}
-                    timerMax={timerMax}
-                    timerFrozen={timerFrozen}
-                    selectedOptionId={selectedOptionId}
-                    isAnswered={isAnswered}
-                    isSelectedCorrect={isSelectedCorrect}
-                    hiddenOptions={hiddenOptions}
-                    onSubmitAnswer={submitAnswer}
-                    onNextQuestion={nextQuestion}
-                    correctOptionId={correctOptionId}
-                  />
+                  <div className="lg:absolute lg:inset-0 lg:flex lg:flex-col lg:pr-2 custom-scrollbar overflow-y-hidden">
+                    <GameQuestionCard
+                      currentQuestion={questions[currentIdx]}
+                      currentIdx={currentIdx}
+                      totalQuestions={questions.length}
+                      stage={stage}
+                      doubleActive={doubleActive}
+                      selectedOptionId={selectedOptionId}
+                      isAnswered={isAnswered}
+                      isSelectedCorrect={isSelectedCorrect}
+                      hiddenOptions={hiddenOptions}
+                      onSubmitAnswer={submitAnswer}
+                      onNextQuestion={nextQuestion}
+                      correctOptionId={correctOptionId}
+                    />
+                  </div>
                 )}
               </div>
             </div>

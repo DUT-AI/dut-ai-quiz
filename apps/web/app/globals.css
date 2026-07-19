@@ -101,3 +101,17 @@
   white-space: pre-wrap;
 }
 
+/* Custom View Transition styles for theme toggle ripple */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* Ensure the new view is always on top so it expands and covers the old view */
+::view-transition-old(root) {
+  z-index: 1;
+}
+::view-transition-new(root) {
+  z-index: 9999;
+}

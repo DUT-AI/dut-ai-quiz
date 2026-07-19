@@ -2,30 +2,27 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { Plus, X } from "lucide-react";
-import { useCreateLesson, useUpdateLesson, useModules } from "@/lib/queries";
-import { type Lesson } from "../types";
-import { LessonForm, type LessonFormInput } from "./lesson-form";
+import { Plus, X, Folder } from "lucide-react";
+import { useCreateModule, useUpdateModule } from "@/lib/queries";
+import { type Module } from "../types";
+import { ModuleForm, type ModuleFormInput } from "./module-form";
 
-interface LessonFormModalProps {
+interface ModuleFormModalProps {
   onClose: () => void;
-  initialData?: Lesson;
+  initialData?: Module;
 }
 
-export function LessonFormModal({ onClose, initialData }: LessonFormModalProps) {
-  const { data: modules = [] } = useModules();
-  const createMut = useCreateLesson();
-  const updateMut = useUpdateLesson(initialData?.id || "");
+export function ModuleFormModal({ onClose, initialData }: ModuleFormModalProps) {
+  const createMut = useCreateModule();
+  const updateMut = useUpdateModule(initialData?.id || "");
 
   const isEdit = !!initialData;
 
-  const onSubmit = async (data: LessonFormInput) => {
+  const onSubmit = async (data: ModuleFormInput) => {
     const payload = {
       name: data.name,
       description: data.description || "",
       order: data.order,
-      slug: data.slug || "",
-      module_id: data.module_id || null,
     };
 
     if (isEdit) {
@@ -57,31 +54,27 @@ export function LessonFormModal({ onClose, initialData }: LessonFormModalProps) 
         {/* Header - Fixed */}
         <div className="p-6 pb-4 md:p-10 md:pb-6 flex items-center justify-between border-b border-gray-100 dark:border-white/5 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="size-8 md:size-10 rounded-xl md:rounded-2xl bg-primary flex items-center justify-center text-white shrink-0">
-              <Plus className="size-4 md:size-5" />
+            <div className="size-8 md:size-10 rounded-xl md:rounded-2xl bg-indigo-500 flex items-center justify-center text-white shrink-0">
+              <Folder className="size-4 md:size-5" />
             </div>
-            <h2 className="text-xl md:text-2xl font-bold text-dark-blue dark:text-white leading-tight">
-              {isEdit ? (
-                <>
-                  Sửa <span className="text-primary">Bài học</span>
-                </>
-              ) : (
-                <>
-                  Thêm <span className="text-primary">Bài học mới</span>
-                </>
-              )}
-            </h2>
+            <div>
+              <h2 className="text-lg md:text-2xl font-black text-dark-blue dark:text-white">
+                {isEdit ? "Sửa Chương" : "Tạo Chương Mới"}
+              </h2>
+            </div>
           </div>
-          <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition-colors shrink-0">
-            <X className="size-5 md:size-6 text-gray-navy dark:text-light-blue/70" />
+          <button
+            onClick={onClose}
+            className="p-2 md:p-3 hover:bg-gray-50 dark:hover:bg-white/5 rounded-xl md:rounded-2xl transition-colors text-gray-navy/50 dark:text-white/50 hover:text-gray-navy dark:hover:text-white shrink-0"
+          >
+            <X className="size-5 md:size-6" />
           </button>
         </div>
 
         {/* Form Body - Scrollable */}
         <div className="p-6 md:p-10 overflow-y-auto min-h-0 flex-1 custom-scrollbar">
-          <LessonForm
+          <ModuleForm
             initialData={initialData}
-            modules={modules}
             onSubmit={onSubmit}
             onCancel={onClose}
             isPending={isPending}
