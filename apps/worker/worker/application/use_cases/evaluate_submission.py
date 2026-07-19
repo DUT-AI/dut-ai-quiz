@@ -58,6 +58,13 @@ class EvaluateSubmissionUseCase:
         if not submission:
             raise ValueError(f"Submission not found: {submission_uuid}")
 
+        if submission.status == SubmissionStatus.PUBLISHED:
+            logger.info(
+                "Submission {} is already published; skipping duplicate job.",
+                submission_uuid,
+            )
+            return submission.public_score
+
         if await self._is_cancelled(submission_uuid):
             await self._mark_cancelled(submission)
             return None
@@ -102,6 +109,32 @@ class EvaluateSubmissionUseCase:
         if stale_submissions:
             logger.warning(f"Marked {len(stale_submissions)} stale submissions failed.")
         return len(stale_submissions)
+
+    async def recover_stale_extracting_submissions(
+        self, stale_seconds: int
+    ) -> int:
+        now = datetime.now()
+        stale_submissions = await self.submission_repo.list_stale_active_submissions(
+            uploading_stale_before=now - timedelta(days=3650),
+            processing_stale_before=now - timedelta(seconds=stale_seconds),
+        )
+        extracting = [
+            submission
+            for submission in stale_submissions
+            if submission.status == SubmissionStatus.EXTRACTING
+        ]
+
+        for submission in extracting:
+            # Claim the stale row before running it so the next cron pass does not
+            # start the same recovery again.
+            submission.updated_at = now
+            await self.submission_repo.update_submission(submission)
+            logger.warning(
+                "Recovering stale extracting submission {}", submission.id
+            )
+            await self.execute(str(submission.id))
+
+        return len(extracting)
 
     async def _run_pipeline(
         self,
@@ -204,7 +237,8 @@ class EvaluateSubmissionUseCase:
                 prediction_path, predict_key, content_type="text/csv"
             )
 
-            submission.score = score
+            submission.public_score = score
+            submission.private_score = score
             submission.status = SubmissionStatus.PUBLISHED
             submission.error_message = None
             submission.logs = None
@@ -266,7 +300,8 @@ class EvaluateSubmissionUseCase:
             return await self._mark_cancelled(submission)
 
         submission.status = SubmissionStatus.FAILED
-        submission.score = None
+        submission.public_score = None
+        submission.private_score = None
         submission.error_message = error_message
         submission.logs = self._tail_logs(logs)
         submission.updated_at = datetime.now()

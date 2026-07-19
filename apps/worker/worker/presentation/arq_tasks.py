@@ -21,6 +21,13 @@ from worker.infrastructure.adapters import (
 async def startup(ctx):
     logger.info("Starting up worker entrypoint (Presentation layer)...")
     redis = from_url(_redis_url_from_settings(), decode_responses=True)
+    redis_settings = _redis_settings_from_config()
+    logger.info(
+        "Worker queue target: Redis {}:{} database {}",
+        redis_settings.host,
+        redis_settings.port,
+        redis_settings.database,
+    )
 
     sandbox = DockerSandbox(
         image_name=settings.sandbox_image_name,
@@ -33,7 +40,7 @@ async def startup(ctx):
     event_publisher = RedisSubmissionEventPublisher(redis)
 
     ctx["redis"] = redis
-    ctx["evaluate_use_case"] = EvaluateSubmissionUseCase(
+    evaluate_use_case = EvaluateSubmissionUseCase(
         sandbox=sandbox,
         evaluator=evaluator,
         artifact_store=artifact_store,
@@ -46,7 +53,13 @@ async def startup(ctx):
         log_max_lines=settings.log_max_lines,
         sandbox_workspace_root=os.getenv("WORKER_SANDBOX_ROOT"),
     )
+    ctx["evaluate_use_case"] = evaluate_use_case
     logger.info("Clean Architecture components successfully initialized.")
+    recovered = await evaluate_use_case.recover_stale_extracting_submissions(
+        stale_seconds=300
+    )
+    if recovered:
+        logger.info("Recovered {} stale extracting submissions on startup.", recovered)
 
 
 async def shutdown(ctx):
@@ -81,10 +94,14 @@ async def evaluate_submission_job(
 
 async def sweep_stale_submissions_job(ctx):
     use_case: EvaluateSubmissionUseCase = ctx["evaluate_use_case"]
-    return await use_case.sweep_stale_submissions(
+    recovered = await use_case.recover_stale_extracting_submissions(
+        stale_seconds=300
+    )
+    failed = await use_case.sweep_stale_submissions(
         uploading_timeout_seconds=settings.presigned_url_expire_seconds + 300,
         processing_timeout_seconds=settings.sandbox_timeout_seconds + 300,
     )
+    return recovered + failed
 
 
 def _redis_url_from_settings() -> str:
@@ -98,6 +115,9 @@ def _redis_settings_from_config() -> RedisSettings:
         host=parsed.hostname or "127.0.0.1",
         port=parsed.port or 6379,
         database=database,
+        username=parsed.username,
+        password=parsed.password,
+        ssl=parsed.scheme in {"rediss", "redis+ssl"},
     )
 
 

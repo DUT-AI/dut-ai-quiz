@@ -45,7 +45,9 @@ class PostgresSubmissionRepository(ISubmissionRepository):
                 raise ValueError(f"Submission not found: {submission.id}")
 
             model.status = submission.status
-            model.score = submission.score
+            model.public_score = submission.public_score
+            model.private_score = submission.private_score
+            model.inference_time = submission.inference_time
             model.error_message = submission.error_message
             model.logs = submission.logs
             model.updated_at = submission.updated_at or datetime.now()
