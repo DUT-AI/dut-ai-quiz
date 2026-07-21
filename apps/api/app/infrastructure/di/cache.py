@@ -2,11 +2,10 @@ from dishka import Provider, Scope, provide
 from redis.asyncio import Redis, from_url
 
 from app.config import settings
-from app.domain.interfaces import IBlogCache, IDUTAIManageCache, IHackathonLeaderboardCache
+from app.domain.interfaces import IDUTAIManageCache, IHackathonLeaderboardCache
 from app.infrastructure.cache import (
     DUTAIManageCache,
     ProfileCache,
-    RedisBlogCache,
     RedisHackathonLeaderboardCache,
 )
 from app.infrastructure.cache.game_leaderboard_cache import GameLeaderboardCache
@@ -27,11 +26,6 @@ class CacheProvider(Provider):
     def profile_cache(self, redis: Redis) -> ProfileCache:
         """Provide ProfileCache wrapper."""
         return ProfileCache(redis, ttl=settings.auth_cache_ttl)
-
-    @provide(scope=Scope.APP)
-    def blog_cache(self, redis: Redis) -> IBlogCache:
-        """Provide IBlogCache interface mapped to RedisBlogCache implementation."""
-        return RedisBlogCache(redis, ttl=300)
 
     @provide(scope=Scope.APP)
     def get_dut_ai_manage_cache(self, redis: Redis) -> IDUTAIManageCache:

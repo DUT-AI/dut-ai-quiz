@@ -1,6 +1,9 @@
 from dishka import Provider, Scope, provide
 
 from app.application.services.pdf_parser import PDFParserService
+from app.application.services.lesson_chunker import LessonChunker
+from app.application.services.lesson_embedding_indexer import LessonEmbeddingIndexer
+from app.config import settings
 from app.application.services.user_service import UserService
 from app.application.use_cases.attempts import (
     GetAttemptDetailUseCase,
@@ -67,7 +70,7 @@ from app.application.use_cases.lessons.delete_lesson_uc import DeleteLessonUseCa
 from app.application.use_cases.lessons.get_lesson_detail_uc import (
     GetLessonDetailUseCase,
 )
-from app.application.use_cases.lessons.get_lesson_from_blog_uc import (
+from app.application.use_cases.lessons.get_lesson_by_slug_uc import (
     GetLessonBySlugUseCase,
 )
 from app.application.use_cases.lessons.list_lessons_uc import ListLessonsUseCase
@@ -75,6 +78,7 @@ from app.application.use_cases.lessons.reorder_lessons_uc import (
     ReorderLessonsUseCase,
 )
 from app.application.use_cases.lessons.update_lesson_uc import UpdateLessonUseCase
+from app.application.use_cases.lessons.index_lesson_uc import IndexLessonUseCase
 from app.application.use_cases.modules import (
     CreateModuleUseCase,
     DeleteModuleUseCase,
@@ -102,6 +106,7 @@ from app.application.use_cases.questions import (
     ListQuestionsUseCase,
     UpdateQuestionUseCase,
     AnswerQuestionUseCase,
+    GetRelatedLessonsUseCase,
 )
 from app.application.use_cases.tags.tags_use_case import (
     ListTagsUseCase,
@@ -201,6 +206,9 @@ class UseCaseProvider(Provider):
         BulkCreateQuestionsUseCase, scope=Scope.REQUEST
     )
     answer_question_use_case = provide(AnswerQuestionUseCase, scope=Scope.REQUEST)
+    get_related_lessons_use_case = provide(
+        GetRelatedLessonsUseCase, scope=Scope.REQUEST
+    )
 
     # tags
     list_tags_use_case = provide(ListTagsUseCase, scope=Scope.REQUEST)
@@ -266,6 +274,17 @@ class UseCaseProvider(Provider):
     get_lesson_detail_use_case = provide(GetLessonDetailUseCase, scope=Scope.REQUEST)
     get_lesson_by_slug_use_case = provide(GetLessonBySlugUseCase, scope=Scope.REQUEST)
     reorder_lessons_use_case = provide(ReorderLessonsUseCase, scope=Scope.REQUEST)
+    index_lesson_use_case = provide(IndexLessonUseCase, scope=Scope.REQUEST)
+    lesson_embedding_indexer = provide(
+        LessonEmbeddingIndexer, scope=Scope.REQUEST
+    )
+
+    @provide(scope=Scope.REQUEST)
+    def lesson_chunker(self) -> LessonChunker:
+        return LessonChunker(
+            max_chars=settings.lesson_chunk_max_chars,
+            overlap_chars=settings.lesson_chunk_overlap_chars,
+        )
 
     list_modules_use_case = provide(ListModulesUseCase, scope=Scope.REQUEST)
     create_module_use_case = provide(CreateModuleUseCase, scope=Scope.REQUEST)

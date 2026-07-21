@@ -10,6 +10,7 @@ from .hackathons import (
     HackathonTeamRepository,
 )
 from .lessons import LessonRepository
+from .lesson_chunks import LessonChunkRepository
 from .modules import ModuleRepository
 from .game_sessions import GameSessionRepository
 from .questions import QuestionRepository
@@ -22,6 +23,7 @@ __all__ = [
     "UserRepository",
     "ModuleRepository",
     "LessonRepository",
+    "LessonChunkRepository",
     "QuestionRepository",
     "TagRepository",
     "ExamRepository",

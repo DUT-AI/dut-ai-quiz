@@ -8,7 +8,7 @@ from app.application.use_cases.lessons.delete_lesson_uc import DeleteLessonUseCa
 from app.application.use_cases.lessons.get_lesson_detail_uc import (
     GetLessonDetailUseCase,
 )
-from app.application.use_cases.lessons.get_lesson_from_blog_uc import (
+from app.application.use_cases.lessons.get_lesson_by_slug_uc import (
     GetLessonBySlugUseCase,
 )
 from app.application.use_cases.lessons.list_lessons_uc import ListLessonsUseCase
@@ -16,6 +16,8 @@ from app.application.use_cases.lessons.reorder_lessons_uc import (
     ReorderLessonsUseCase,
 )
 from app.application.use_cases.lessons.update_lesson_uc import UpdateLessonUseCase
+from app.application.use_cases.lessons.index_lesson_uc import IndexLessonUseCase
+from app.domain.interfaces import EmbeddingServiceError
 from app.application.use_cases.questions import ListQuestionsUseCase
 from app.domain.value_objects import Difficulty, PoolType
 from app.presentation.api.deps import CurrentUser, AdminOrMentorUser
@@ -25,6 +27,7 @@ from app.presentation.schemas.lessons import (
     LessonOut,
     LessonReorder,
     LessonUpdate,
+    LessonIndexOut,
 )
 from app.presentation.schemas.questions import QuestionListQuery, QuestionOut
 
@@ -46,7 +49,7 @@ async def get_lesson_by_slug(
 ):
     """
     Get lesson by slug.
-    If lesson not found locally, it will be fetched from blog service and created.
+    Lesson content is stored and managed locally by this service.
     """
     res = await use_case.execute(slug)
     if not res:
@@ -137,6 +140,24 @@ async def update_lesson(
     if not res:
         raise HTTPException(status_code=404, detail="Lesson not found")
     return res
+
+
+@router.post(
+    "/{lesson_id}/embeddings/reindex", response_model=LessonIndexOut
+)
+@inject
+async def reindex_lesson(
+    user: AdminOrMentorUser,
+    lesson_id: UUID,
+    use_case: FromDishka[IndexLessonUseCase],
+):
+    try:
+        result = await use_case.execute(lesson_id)
+    except EmbeddingServiceError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    if result is None:
+        raise HTTPException(status_code=404, detail="Lesson not found")
+    return result
 
 
 @router.delete("/{lesson_id}")

@@ -2,15 +2,17 @@
 
 import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { RotateCcw, Lightbulb, Edit3, Trash2, Sparkles, Check, XCircle } from "lucide-react";
+import { Lightbulb, Edit3, Trash2, Sparkles, Check, XCircle, BookOpen, ArrowRight } from "lucide-react";
+import Link from "next/link";
+import { z } from "zod";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Markdown } from "@/components/markdown";
-import type { QuestionOut } from "@/lib/types";
+import { RelatedLessonSchema, type QuestionOut, type RelatedLesson } from "@/lib/types";
 import { useAuth } from "@/context/auth-context";
-import { apiPost } from "@/lib/api";
+import { apiGet, apiPost } from "@/lib/api";
 
 interface QuestionCardProps {
   q: QuestionOut;
@@ -34,6 +36,7 @@ export const QuestionCard = React.memo(
       correctOptionId: string;
       solution: string | null;
     } | null>(null);
+    const [relatedLessons, setRelatedLessons] = useState<RelatedLesson[]>([]);
 
     // Load state from sessionStorage on mount
     React.useEffect(() => {
@@ -51,6 +54,28 @@ export const QuestionCard = React.memo(
         console.error("Failed to load progress", e);
       }
     }, [storageKey, q.id]);
+
+    React.useEffect(() => {
+      if (!isRevealed || q.pool_type !== "PRACTICE") {
+        setRelatedLessons([]);
+        return;
+      }
+      let cancelled = false;
+      apiGet<RelatedLesson[]>(
+        `/api/v1/questions/${q.id}/related-lessons?limit=3`,
+        z.array(RelatedLessonSchema)
+      )
+        .then((lessons) => {
+          if (!cancelled) setRelatedLessons(lessons);
+        })
+        .catch(() => {
+          // Answering still works when semantic search is disabled/unavailable.
+          if (!cancelled) setRelatedLessons([]);
+        });
+      return () => {
+        cancelled = true;
+      };
+    }, [isRevealed, q.id, q.pool_type]);
 
     const handleSelect = async (optionId: string) => {
       if (isRevealed) return;
@@ -244,6 +269,49 @@ export const QuestionCard = React.memo(
                         </h4>
                         <div className="text-dark-blue dark:text-white leading-relaxed font-medium select-text">
                           <Markdown content={result?.solution || q.solution || ""} />
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <AnimatePresence>
+                  {isRevealed && relatedLessons.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      className="overflow-hidden"
+                    >
+                      <div className="mt-6 space-y-3">
+                        <h4 className="flex items-center gap-2 text-[10px] font-black text-gray-navy dark:text-light-blue uppercase tracking-widest">
+                          <BookOpen className="size-4 text-primary" />
+                          Bài học liên quan
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          {relatedLessons.map((lesson) => {
+                            const content = (
+                              <div className="h-full p-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10 hover:border-primary/40 transition-colors">
+                                <p className="font-bold text-dark-blue dark:text-white line-clamp-2">
+                                  {lesson.name}
+                                </p>
+                                {lesson.description && (
+                                  <p className="mt-2 text-xs text-gray-navy dark:text-light-blue/70 line-clamp-2">
+                                    {lesson.description}
+                                  </p>
+                                )}
+                                <span className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-primary">
+                                  Xem bài học <ArrowRight className="size-3" />
+                                </span>
+                              </div>
+                            );
+                            return lesson.slug ? (
+                              <Link key={lesson.id} href={`/lessons/${lesson.slug}`}>
+                                {content}
+                              </Link>
+                            ) : (
+                              <div key={lesson.id}>{content}</div>
+                            );
+                          })}
                         </div>
                       </div>
                     </motion.div>

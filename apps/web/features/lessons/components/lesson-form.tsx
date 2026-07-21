@@ -59,6 +59,21 @@ export function LessonForm({ initialData, modules, onSubmit, onCancel, isPending
 
       <div className="space-y-2">
         <label className="text-xs font-black text-gray-navy dark:text-light-blue/80 opacity-50 dark:opacity-100 uppercase tracking-widest px-1">
+          Nội dung bài học (Markdown)
+        </label>
+        <textarea
+          placeholder="Viết nội dung lý thuyết của bài học bằng Markdown..."
+          rows={14}
+          {...register("content_md")}
+          className="w-full px-6 py-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 focus:border-primary outline-none transition-all font-mono text-sm resize-y text-dark-blue dark:text-white"
+        />
+        <p className="text-[11px] text-gray-navy/60 dark:text-light-blue/50 px-1">
+          Nội dung này được lưu trực tiếp trong hệ thống và dùng để tạo chỉ mục tìm kiếm bài học liên quan.
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-xs font-black text-gray-navy dark:text-light-blue/80 opacity-50 dark:opacity-100 uppercase tracking-widest px-1">
           Mô tả ngắn
         </label>
         <textarea

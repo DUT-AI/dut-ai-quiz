@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, Text
 from sqlalchemy.dialects.postgresql import UUID as pgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -21,6 +21,9 @@ class Lesson(Base):
     )
     name: Mapped[str] = mapped_column()
     description: Mapped[str] = mapped_column(default="", server_default="")
+    content_md: Mapped[str] = mapped_column(
+        Text, nullable=False, default="", server_default=""
+    )
     order: Mapped[int] = mapped_column(default=0, server_default="0")
     slug: Mapped[str | None] = mapped_column(
         default=None, nullable=True, unique=True, index=True
@@ -43,7 +46,7 @@ class Lesson(Base):
             slug=self.slug,
             created_at=self.created_at,
             module_id=self.module_id,
-            content_md=None,  # No longer stored in the DB
+            content_md=self.content_md,
         )
 
     @classmethod
@@ -53,6 +56,7 @@ class Lesson(Base):
             id=entity.id,
             name=entity.name,
             description=entity.description,
+            content_md=entity.content_md or "",
             order=entity.order,
             slug=entity.slug,
             module_id=entity.module_id,

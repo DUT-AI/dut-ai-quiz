@@ -11,7 +11,10 @@ from app.application.use_cases.questions import (
     ListQuestionsUseCase,
     UpdateQuestionUseCase,
     AnswerQuestionUseCase,
+    GetRelatedLessonsUseCase,
 )
+from app.config import settings
+from app.domain.interfaces import EmbeddingServiceError
 from app.domain.value_objects import Difficulty, PoolType
 from app.presentation.api.deps import CurrentUser, AdminOrMentorUser
 from app.presentation.schemas.questions import (
@@ -23,6 +26,7 @@ from app.presentation.schemas.questions import (
     QuestionAnswerIn,
     QuestionAnswerOut,
 )
+from app.presentation.schemas.lessons import RelatedLessonOut
 
 router = APIRouter(prefix="/questions", tags=["questions"])
 
@@ -178,4 +182,34 @@ async def answer_question_route(
     result = await use_case.execute(question_id, body.option_id)
     if result is None:
         raise HTTPException(status_code=404, detail="Question not found")
-    return result
+    return result
+
+
+@router.get(
+    "/{question_id}/related-lessons", response_model=list[RelatedLessonOut]
+)
+@inject
+async def get_related_lessons_route(
+    user: CurrentUser,
+    question_id: UUID,
+    use_case: FromDishka[GetRelatedLessonsUseCase],
+    limit: int = Query(3, ge=1, le=10),
+    min_score: float | None = Query(None, ge=-1, le=1),
+):
+    try:
+        result = await use_case.execute(
+            question_id,
+            limit=limit,
+            min_score=(
+                settings.related_lesson_min_score
+                if min_score is None
+                else min_score
+            ),
+        )
+    except EmbeddingServiceError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    if result is None:
+        raise HTTPException(status_code=404, detail="Question not found")
+    return result

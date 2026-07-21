@@ -54,6 +54,20 @@ class Settings(BaseSettings):
     minio_bucket_name: str = ""
     presigned_url_expire_seconds: int = 3600
 
+    # Lesson semantic search. The endpoint must implement the OpenAI embeddings
+    # request/response contract; it can point at OpenAI or a compatible service.
+    embedding_enabled: bool = True
+    embedding_provider: str = "local"
+    embedding_api_url: str = "https://api.openai.com/v1/embeddings"
+    embedding_api_key: str = ""
+    embedding_model: str = "text-embedding-3-small"
+    embedding_dimensions: int = 1536
+    embedding_batch_size: int = 64
+    embedding_timeout_seconds: float = 30.0
+    lesson_chunk_max_chars: int = 1800
+    lesson_chunk_overlap_chars: int = 240
+    related_lesson_min_score: float = 0.25
+
     # ================= SUBMISSION SYSTEM CONFIG =================
     submission_cooldown_seconds: int = 300  # 5 minutes
     submission_max_quota: int = 20  # Max 20 submissions per contest
