@@ -11,6 +11,7 @@ from app.domain.interfaces import (
     IHackathonSubmissionStore,
     ISubmissionQueue,
     IEmbeddingService,
+    ILessonIndexQueue,
 )
 from app.config import settings
 from app.infrastructure.clients import (
@@ -22,7 +23,9 @@ from app.infrastructure.clients.hackathon_submission_store import (
     MinIOHackathonSubmissionStore,
 )
 from app.infrastructure.clients.arq_submission_queue import ArqSubmissionQueue
+from app.infrastructure.clients.arq_lesson_index_queue import ArqLessonIndexQueue
 from app.infrastructure.clients.embedding_service import (
+    DutAiEmbeddingService,
     LocalHashingEmbeddingService,
     OpenAICompatibleEmbeddingService,
 )
@@ -67,9 +70,15 @@ class ClientProvider(Provider):
         return ArqSubmissionQueue(redis)
 
     @provide(scope=Scope.APP)
+    def get_arq_lesson_index_queue(self, redis: Redis) -> ILessonIndexQueue:
+        return ArqLessonIndexQueue(redis)
+
+    @provide(scope=Scope.APP)
     def get_embedding_service(
         self, client: httpx.AsyncClient
     ) -> IEmbeddingService:
         if settings.embedding_provider.casefold() == "local":
             return LocalHashingEmbeddingService(settings)
+        if settings.embedding_provider.casefold() == "dutai":
+            return DutAiEmbeddingService(client, settings)
         return OpenAICompatibleEmbeddingService(client, settings)

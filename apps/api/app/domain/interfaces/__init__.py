@@ -16,6 +16,7 @@ from .hackathon_repo import (
 from .hackathon_submission_store import IHackathonSubmissionStore
 from .lesson_repo import ILessonRepository
 from .lesson_chunk_repo import ILessonChunkRepository
+from .lesson_index_queue import ILessonIndexQueue
 from .embedding_service import EmbeddingServiceError, IEmbeddingService
 from .module_repo import IModuleRepository
 from .manage_cache import IDUTAIManageCache
@@ -37,6 +38,7 @@ __all__ = [
     "IFocusEventRepository",
     "ILessonRepository",
     "ILessonChunkRepository",
+    "ILessonIndexQueue",
     "IEmbeddingService",
     "EmbeddingServiceError",
     "IModuleRepository",

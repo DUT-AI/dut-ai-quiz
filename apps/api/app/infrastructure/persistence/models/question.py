@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID, uuid4
 
+from pgvector.sqlalchemy import Vector
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.dialects.postgresql import UUID as pgUUID
@@ -39,6 +40,11 @@ class Question(Base):
     )
     created_by: Mapped[int] = mapped_column(index=True)
     created_at: Mapped[datetime] = mapped_column(default=now_ict)
+    embedding: Mapped[list[float] | None] = mapped_column(Vector(768), nullable=True)
+    embedding_model: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    embedding_source_hash: Mapped[str | None] = mapped_column(
+        String(64), nullable=True
+    )
 
     def to_entity(self) -> QuestionEntity:
         return QuestionEntity(
@@ -52,6 +58,9 @@ class Question(Base):
             tags=self.tags,
             created_by=self.created_by,
             created_at=self.created_at,
+            embedding=self.embedding,
+            embedding_model=self.embedding_model,
+            embedding_source_hash=self.embedding_source_hash,
         )
 
     @classmethod
@@ -67,4 +76,7 @@ class Question(Base):
             tags=entity.tags,
             created_by=entity.created_by,
             created_at=entity.created_at,
+            embedding=entity.embedding,
+            embedding_model=entity.embedding_model,
+            embedding_source_hash=entity.embedding_source_hash,
         )

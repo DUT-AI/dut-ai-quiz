@@ -3,6 +3,8 @@ from dishka import Provider, Scope, provide
 from app.application.services.pdf_parser import PDFParserService
 from app.application.services.lesson_chunker import LessonChunker
 from app.application.services.lesson_embedding_indexer import LessonEmbeddingIndexer
+from app.application.services.lesson_index_scheduler import LessonIndexScheduler
+from app.application.services.question_embedding import QuestionEmbeddingService
 from app.config import settings
 from app.application.services.user_service import UserService
 from app.application.use_cases.attempts import (
@@ -278,12 +280,16 @@ class UseCaseProvider(Provider):
     lesson_embedding_indexer = provide(
         LessonEmbeddingIndexer, scope=Scope.REQUEST
     )
+    lesson_index_scheduler = provide(LessonIndexScheduler, scope=Scope.REQUEST)
+    question_embedding_service = provide(
+        QuestionEmbeddingService, scope=Scope.REQUEST
+    )
 
     @provide(scope=Scope.REQUEST)
     def lesson_chunker(self) -> LessonChunker:
         return LessonChunker(
-            max_chars=settings.lesson_chunk_max_chars,
-            overlap_chars=settings.lesson_chunk_overlap_chars,
+            target_tokens=settings.lesson_chunk_target_tokens,
+            max_tokens=settings.lesson_chunk_max_tokens,
         )
 
     list_modules_use_case = provide(ListModulesUseCase, scope=Scope.REQUEST)

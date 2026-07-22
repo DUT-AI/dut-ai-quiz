@@ -1,7 +1,8 @@
 from typing import Protocol
 from uuid import UUID
 
-from app.domain.entities.lesson_chunk import LessonChunkEntity, LessonChunkMatch
+from app.domain.entities.lesson_chunk import LessonChunkEntity
+from app.domain.value_objects import LessonChunkMatch
 
 
 class ILessonChunkRepository(Protocol):

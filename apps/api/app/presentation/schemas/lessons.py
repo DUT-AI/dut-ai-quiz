@@ -70,4 +70,4 @@ class RelatedLessonOut(BaseModel):
 
 class LessonIndexOut(BaseModel):
     lesson_id: UUID
-    chunks_indexed: int
+    status: str

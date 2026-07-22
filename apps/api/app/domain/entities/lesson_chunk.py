@@ -1,5 +1,6 @@
-from dataclasses import dataclass
 import hashlib
+from dataclasses import dataclass
+from typing import Any
 from uuid import UUID
 
 
@@ -9,23 +10,22 @@ class LessonChunkEntity:
     lesson_id: UUID
     chunk_index: int
     content: str
+    contextual_content: str
+    heading_path: tuple[str, ...]
+    token_count: int
+    metadata: dict[str, Any]
     source_hash: str
     embedding: list[float]
     embedding_model: str
 
 
-@dataclass(slots=True)
-class LessonChunkMatch:
-    lesson_id: UUID
-    lesson_name: str
-    lesson_description: str
-    lesson_slug: str | None
-    lesson_content_md: str
-    chunk_content: str
-    source_hash: str
-    score: float
-
-
 def lesson_source_hash(name: str, description: str, content_md: str) -> str:
+    """Return the source version used to detect stale lesson embeddings.
+
+    The checksum changes whenever searchable lesson text changes. Search results
+    whose checksum differs from the current lesson are ignored until the worker
+    finishes re-indexing the latest version.
+    """
+
     source = f"{name}\n{description}\n{content_md}"
     return hashlib.sha256(source.encode("utf-8")).hexdigest()

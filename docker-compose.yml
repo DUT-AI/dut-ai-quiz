@@ -76,6 +76,8 @@ services:
             - /var/run/docker.sock:/var/run/docker.sock
             - ${WORKER_SANDBOX_ROOT:-/tmp/dut-ai-worker}:${WORKER_SANDBOX_ROOT:-/tmp/dut-ai-worker}
         depends_on:
+            postgres:
+                condition: service_healthy
             redis:
                 condition: service_healthy
 

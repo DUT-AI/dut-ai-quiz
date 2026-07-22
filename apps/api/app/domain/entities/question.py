@@ -43,3 +43,6 @@ class QuestionEntity:
     tags: list[str]
     created_by: int
     created_at: datetime
+    embedding: list[float] | None = None
+    embedding_model: str | None = None
+    embedding_source_hash: str | None = None

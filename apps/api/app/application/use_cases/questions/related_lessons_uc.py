@@ -1,7 +1,9 @@
 from uuid import UUID
 
+from app.application.services.question_embedding import question_embedding_hash
 from app.domain.entities.lesson_chunk import lesson_source_hash
 from app.domain.interfaces import (
+    EmbeddingServiceError,
     IEmbeddingService,
     ILessonChunkRepository,
     IQuestionRepository,
@@ -28,13 +30,20 @@ class GetRelatedLessonsUseCase:
             return None
         if question.pool_type != PoolType.PRACTICE:
             raise ValueError("Related lessons are only available for practice questions")
+        if not self._embedding_service.enabled:
+            raise EmbeddingServiceError("Lesson embedding is not enabled")
+        if (
+            question.embedding is None
+            or question.embedding_model != self._embedding_service.model_name
+            or question.embedding_source_hash != question_embedding_hash(question)
+        ):
+            raise EmbeddingServiceError(
+                "Question embedding is not ready; save the question again to index it"
+            )
 
-        option_context = "\n".join(option.text for option in question.options)
-        query = f"Câu hỏi: {question.content}\nCác lựa chọn:\n{option_context}"
-        vector = (await self._embedding_service.embed([query]))[0]
         candidates = await self._chunk_repo.search(
-            vector,
-            self._embedding_service.model_name,
+            question.embedding,
+            question.embedding_model,
             candidate_limit=max(limit * 12, 30),
         )
 

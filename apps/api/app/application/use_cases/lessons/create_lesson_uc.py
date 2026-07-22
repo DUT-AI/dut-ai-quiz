@@ -3,16 +3,16 @@ from uuid import uuid4
 from app.core.datetime_utils import now_ict
 from app.domain.entities.lesson import LessonEntity
 from app.domain.interfaces import ILessonRepository
-from app.application.services.lesson_embedding_indexer import LessonEmbeddingIndexer
+from app.application.services.lesson_index_scheduler import LessonIndexScheduler
 from app.presentation.schemas.lessons import LessonCreate
 
 
 class CreateLessonUseCase:
     """Create a new lesson in the system."""
 
-    def __init__(self, repo: ILessonRepository, indexer: LessonEmbeddingIndexer) -> None:
+    def __init__(self, repo: ILessonRepository, scheduler: LessonIndexScheduler) -> None:
         self._repo = repo
-        self._indexer = indexer
+        self._scheduler = scheduler
 
     async def execute(self, payload: LessonCreate) -> LessonEntity:
         """Execute the use case to create a lesson."""
@@ -27,5 +27,5 @@ class CreateLessonUseCase:
             created_at=now_ict(),
         )
         saved = await self._repo.add(entity)
-        await self._indexer.index_if_enabled(saved)
+        await self._scheduler.schedule(saved)
         return saved

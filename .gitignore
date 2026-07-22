@@ -18,3 +18,5 @@ apps/web/node_modules/
 dist/
 *-local.*.log
 .DS_Store
+web-restart.err.log
+web-restart.out.log

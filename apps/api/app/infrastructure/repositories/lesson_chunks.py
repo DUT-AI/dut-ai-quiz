@@ -1,11 +1,11 @@
 from uuid import UUID
-import math
 
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domain.entities.lesson_chunk import LessonChunkEntity, LessonChunkMatch
+from app.domain.entities.lesson_chunk import LessonChunkEntity
 from app.domain.interfaces import ILessonChunkRepository
+from app.domain.value_objects import LessonChunkMatch
 from app.infrastructure.persistence.models import Lesson, LessonChunk
 
 
@@ -24,6 +24,10 @@ class LessonChunkRepository(ILessonChunkRepository):
                     lesson_id=chunk.lesson_id,
                     chunk_index=chunk.chunk_index,
                     content=chunk.content,
+                    contextual_content=chunk.contextual_content,
+                    heading_path=list(chunk.heading_path),
+                    token_count=chunk.token_count,
+                    chunk_metadata=chunk.metadata,
                     source_hash=chunk.source_hash,
                     embedding=chunk.embedding,
                     embedding_model=chunk.embedding_model,
@@ -45,13 +49,16 @@ class LessonChunkRepository(ILessonChunkRepository):
         embedding_model: str,
         candidate_limit: int,
     ) -> list[LessonChunkMatch]:
+        distance = LessonChunk.embedding.cosine_distance(embedding)
         stmt = (
-            select(Lesson, LessonChunk)
+            select(Lesson, LessonChunk, (1 - distance).label("score"))
             .join(Lesson, Lesson.id == LessonChunk.lesson_id)
             .where(LessonChunk.embedding_model == embedding_model)
+            .order_by(distance)
+            .limit(candidate_limit)
         )
         rows = (await self._session.execute(stmt)).all()
-        matches = [
+        return [
             LessonChunkMatch(
                 lesson_id=lesson.id,
                 lesson_name=lesson.name,
@@ -59,21 +66,9 @@ class LessonChunkRepository(ILessonChunkRepository):
                 lesson_slug=lesson.slug,
                 lesson_content_md=lesson.content_md,
                 chunk_content=chunk.content,
+                heading_path=tuple(chunk.heading_path),
                 source_hash=chunk.source_hash,
-                score=self._cosine_similarity(embedding, chunk.embedding),
+                score=float(score),
             )
-            for lesson, chunk in rows
+            for lesson, chunk, score in rows
         ]
-        matches.sort(key=lambda match: match.score, reverse=True)
-        return matches[:candidate_limit]
-
-    @staticmethod
-    def _cosine_similarity(left: list[float], right: list[float]) -> float:
-        if len(left) != len(right) or not left:
-            return -1.0
-        dot = sum(a * b for a, b in zip(left, right, strict=True))
-        left_norm = math.sqrt(sum(value * value for value in left))
-        right_norm = math.sqrt(sum(value * value for value in right))
-        if left_norm == 0 or right_norm == 0:
-            return -1.0
-        return dot / (left_norm * right_norm)

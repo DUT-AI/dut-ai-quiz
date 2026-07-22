@@ -155,6 +155,9 @@ class QuestionRepository(IQuestionRepository):
             model.options = [opt.to_dict() for opt in entity.options]
             model.solution = entity.solution
             model.lesson_id = entity.lesson_id
+            model.embedding = entity.embedding
+            model.embedding_model = entity.embedding_model
+            model.embedding_source_hash = entity.embedding_source_hash
             
             from uuid import UUID as pyUUID
             tag_uuids = []
