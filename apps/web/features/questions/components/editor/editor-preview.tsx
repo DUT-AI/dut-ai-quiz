@@ -7,9 +7,10 @@ interface EditorPreviewProps {
   content: string;
   options: Array<{ id: string; text: string; is_correct: boolean }>;
   solution?: string;
+  style?: React.CSSProperties;
 }
 
-export function EditorPreview({ viewMode, content, options, solution }: EditorPreviewProps) {
+export function EditorPreview({ viewMode, content, options, solution, style }: EditorPreviewProps) {
   const previewOptions = useMemo(
     () =>
       options.map((opt, i) => ({
@@ -21,17 +22,19 @@ export function EditorPreview({ viewMode, content, options, solution }: EditorPr
   );
 
   return (
-    <div className={`overflow-y-auto p-6 md:p-10 custom-scrollbar bg-gray-50/40 dark:bg-navy-blue/20 ${
-      viewMode === "preview" 
-        ? "flex-1 w-full max-w-none px-6 md:px-12 lg:px-20 mx-auto" 
+    <div
+      style={style}
+      className={`overflow-y-auto p-6 md:p-10 custom-scrollbar bg-gray-50/40 dark:bg-navy-blue/20 ${viewMode === "preview"
+        ? "flex-1 w-full max-w-none px-6 md:px-12 lg:px-20 mx-auto"
         : "lg:w-[40%] xl:w-[35%] border-t lg:border-t-0 lg:border-l border-gray-100 dark:border-white/10"
-    }`}>
+        }`}
+    >
       <div className="space-y-6">
         <label className="text-xs font-black text-gray-navy opacity-45 uppercase tracking-[0.2em] px-1 italic flex items-center gap-2">
           <Sparkles className="size-4 text-primary animate-pulse" /> Xem trước trực quan
         </label>
 
-        <div className="rounded-3xl bg-white dark:bg-navy-blue border border-gray-200/50 dark:border-white/5 p-6 md:p-8 space-y-6 shadow-sm">
+        <div className="rounded-3xl bg-white dark:bg-navy-blue  space-y-6 shadow-sm">
           {/* Content Preview */}
           {content?.trim() ? (
             <Markdown
@@ -49,18 +52,16 @@ export function EditorPreview({ viewMode, content, options, solution }: EditorPr
             {previewOptions.map((opt, i) => (
               <div
                 key={opt.id}
-                className={`flex items-start gap-3 px-5 py-4 rounded-2xl border text-sm font-medium transition-all ${
-                  opt.is_correct
-                    ? "bg-green/10 border-green/30 text-green"
-                    : "bg-gray-50/50 dark:bg-white/5 border-gray-100 dark:border-white/5 text-dark-blue dark:text-white opacity-85"
-                }`}
+                className={`flex items-start gap-3 px-5 py-4 rounded-2xl border text-sm font-medium transition-all ${opt.is_correct
+                  ? "bg-green/10 border-green/30 text-green"
+                  : "bg-gray-50/50 dark:bg-white/5 border-gray-100 dark:border-white/5 text-dark-blue dark:text-white opacity-85"
+                  }`}
               >
                 <span
-                  className={`size-7 rounded-xl flex items-center justify-center font-black text-xs shrink-0 border-2 ${
-                    opt.is_correct
-                      ? "bg-green text-white border-green"
-                      : "bg-white dark:bg-navy-blue border-gray-200 dark:border-white/10 text-primary"
-                  }`}
+                  className={`size-7 rounded-xl flex items-center justify-center font-black text-xs shrink-0 border-2 ${opt.is_correct
+                    ? "bg-green text-white border-green"
+                    : "bg-white dark:bg-navy-blue border-gray-200 dark:border-white/10 text-primary"
+                    }`}
                 >
                   {String.fromCharCode(65 + i)}
                 </span>

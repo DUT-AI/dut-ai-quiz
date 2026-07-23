@@ -45,6 +45,59 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
   const [viewMode, setViewMode] = React.useState<"split" | "editor" | "preview">("split");
   const [currentStep, setCurrentStep] = React.useState<1 | 2 | 3>(1);
 
+  const [editorWidth, setEditorWidth] = React.useState<number>(60); // percent
+  const [isDragging, setIsDragging] = React.useState(false);
+  const [isDesktop, setIsDesktop] = React.useState(false);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    setIsDesktop(window.innerWidth >= 1024);
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth >= 1024);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const startResize = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  React.useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMove = (clientX: number) => {
+      if (!containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const relativeX = clientX - rect.left;
+      const percentage = (relativeX / rect.width) * 100;
+      
+      // Clamp between 20% and 80%
+      const clamped = Math.max(20, Math.min(80, percentage));
+      setEditorWidth(clamped);
+    };
+
+    const onMouseMove = (e: MouseEvent) => handleMove(e.clientX);
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches[0]) handleMove(e.touches[0].clientX);
+    };
+
+    const stopResize = () => setIsDragging(false);
+
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", stopResize);
+    document.addEventListener("touchmove", onTouchMove);
+    document.addEventListener("touchend", stopResize);
+
+    return () => {
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", stopResize);
+      document.removeEventListener("touchmove", onTouchMove);
+      document.removeEventListener("touchend", stopResize);
+    };
+  }, [isDragging]);
+
   const defaultOptions = initialData?.options?.length
     ? initialData.options.map((o) => ({ id: o.id ?? newOption().id, text: o.text, is_correct: o.is_correct }))
     : [
@@ -125,24 +178,39 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
     [presign.mutateAsync, getValues, fields, setValue, update]
   );
 
-  // Auto adjust textarea height
+  // Auto adjust textarea height while preserving scroll position
   React.useEffect(() => {
     const contentTextarea = document.getElementById("editor-content") as HTMLTextAreaElement | null;
     if (contentTextarea) {
+      const parent = contentTextarea.closest(".overflow-y-auto");
+      const scrollTop = parent ? parent.scrollTop : 0;
       contentTextarea.style.height = "auto";
       contentTextarea.style.height = `${contentTextarea.scrollHeight}px`;
+      if (parent) {
+        parent.scrollTop = scrollTop;
+      }
     }
   }, [watchContent, currentStep]);
 
   React.useEffect(() => {
     const solutionTextarea = document.getElementById("editor-solution") as HTMLTextAreaElement | null;
     if (solutionTextarea) {
+      const parent = solutionTextarea.closest(".overflow-y-auto");
+      const scrollTop = parent ? parent.scrollTop : 0;
       solutionTextarea.style.height = "auto";
       solutionTextarea.style.height = `${solutionTextarea.scrollHeight}px`;
+      if (parent) {
+        parent.scrollTop = scrollTop;
+      }
     }
   }, [watchSolution, currentStep]);
 
   React.useEffect(() => {
+    if (fields.length === 0) return;
+    const firstTextarea = document.getElementById(`editor-option-${fields[0].id}`);
+    const parent = firstTextarea?.closest(".overflow-y-auto");
+    const scrollTop = parent ? parent.scrollTop : 0;
+
     fields.forEach((field) => {
       const textarea = document.getElementById(`editor-option-${field.id}`) as HTMLTextAreaElement | null;
       if (textarea) {
@@ -150,6 +218,10 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
         textarea.style.height = `${textarea.scrollHeight}px`;
       }
     });
+
+    if (parent) {
+      parent.scrollTop = scrollTop;
+    }
   }, [watchOptions, currentStep, fields]);
 
   // Helper to insert LaTeX or markdown format at the textarea selection/cursor
@@ -250,7 +322,9 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 15 }}
-      className="fixed inset-0 z-[110] bg-white dark:bg-navy-blue flex flex-col w-screen h-screen overflow-hidden text-left"
+      className={`fixed inset-0 z-[110] bg-white dark:bg-navy-blue flex flex-col w-screen h-screen overflow-hidden text-left ${
+        isDragging ? "select-none cursor-col-resize" : ""
+      }`}
     >
       {/* Header */}
       <div className="px-8 py-4 border-b border-gray-100 dark:border-white/10 flex items-center justify-between shrink-0 bg-white dark:bg-navy-blue z-20">
@@ -313,7 +387,10 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
       </div>
 
       {/* Editor Body */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
+      <div
+        ref={containerRef}
+        className="flex-1 flex flex-col lg:flex-row overflow-hidden relative"
+      >
         <FormProvider {...methods}>
           <form
             id="question-form"
@@ -321,8 +398,13 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
             className={`flex-1 flex flex-col overflow-y-auto custom-scrollbar ${
               viewMode === "preview" ? "hidden" : ""
             }`}
+            style={
+              viewMode === "split" && isDesktop
+                ? { width: `${editorWidth}%`, flex: "none" }
+                : undefined
+            }
           >
-            <div className="flex-1 px-8 md:px-12 py-10 max-w-4xl mx-auto w-full flex flex-col">
+            <div className="flex-1 px-4 md:px-6 py-6 w-full flex flex-col">
               {/* Stepper Tabs */}
               <div className="flex items-center justify-between border-b border-gray-100 dark:border-white/5 pb-6 mb-8 shrink-0">
                 <div className="flex items-center gap-3">
@@ -478,6 +560,23 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
           </form>
         </FormProvider>
 
+        {/* Divider / Drag Handle */}
+        {viewMode === "split" && (
+          <div
+            onMouseDown={startResize}
+            onTouchStart={startResize}
+            className={`hidden lg:flex items-center justify-center w-1.5 hover:w-2 cursor-col-resize hover:bg-primary/30 transition-all select-none relative z-30 bg-gray-100/50 dark:bg-white/10 ${
+              isDragging ? "bg-primary/50 w-2" : ""
+            }`}
+          >
+            {/* Grabber Handle */}
+            <div className="absolute top-1/2 -translate-y-1/2 w-5 h-12 bg-white dark:bg-navy-blue border border-gray-200 dark:border-white/10 rounded-full flex flex-col gap-0.5 items-center justify-center shadow-lg transition-transform hover:scale-110 active:scale-95 group z-40">
+              <span className="w-1 h-3 bg-gray-400 dark:bg-white/30 rounded-full" />
+              <span className="w-1 h-3 bg-gray-400 dark:bg-white/30 rounded-full" />
+            </div>
+          </div>
+        )}
+
         {/* Live Preview Area (always previews everything) */}
         {(viewMode === "split" || viewMode === "preview") && (
           <EditorPreview
@@ -485,6 +584,11 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
             content={watchContent}
             options={previewOptions}
             solution={watchSolution}
+            style={
+              viewMode === "split" && isDesktop
+                ? { width: `${100 - editorWidth}%`, flex: "none" }
+                : undefined
+            }
           />
         )}
       </div>
