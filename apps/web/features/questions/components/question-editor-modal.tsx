@@ -154,19 +154,46 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
   const handleUpload = useCallback(
     async (file: File, target: "content" | "solution" | string) => {
       setUploading(target);
+      const id = target === "content" ? "editor-content" : target === "solution" ? "editor-solution" : `editor-option-${target}`;
+      const textarea = document.getElementById(id) as HTMLTextAreaElement | null;
+
       try {
         const url = await uploadImage(file, presign.mutateAsync);
-        const markdown = `\n![image](${url})`;
+        const markdown = `\n![image](${url})\n`;
 
-        if (target === "content") {
-          setValue("content", (getValues("content") ?? "") + markdown, { shouldDirty: true, shouldValidate: true });
-        } else if (target === "solution") {
-          setValue("solution", (getValues("solution") ?? "") + markdown, { shouldDirty: true, shouldValidate: true });
+        if (textarea) {
+          const start = textarea.selectionStart ?? textarea.value.length;
+          const end = textarea.selectionEnd ?? textarea.value.length;
+          const currentText = textarea.value;
+          const newValue = currentText.substring(0, start) + markdown + currentText.substring(end);
+
+          if (target === "content") {
+            setValue("content", newValue, { shouldDirty: true, shouldValidate: true });
+          } else if (target === "solution") {
+            setValue("solution", newValue, { shouldDirty: true, shouldValidate: true });
+          } else {
+            const idx = fields.findIndex((f) => f.id === target);
+            if (idx !== -1) {
+              update(idx, { ...fields[idx], text: newValue });
+            }
+          }
+
+          setTimeout(() => {
+            textarea.focus();
+            textarea.setSelectionRange(start + markdown.length, start + markdown.length);
+          }, 10);
         } else {
-          const idx = fields.findIndex((f) => f.id === target);
-          if (idx !== -1) {
-            const currentText = getValues(`options.${idx}.text`) ?? "";
-            update(idx, { ...fields[idx], text: currentText + markdown });
+          // Fallback if textarea element is not found
+          if (target === "content") {
+            setValue("content", (getValues("content") ?? "") + markdown, { shouldDirty: true, shouldValidate: true });
+          } else if (target === "solution") {
+            setValue("solution", (getValues("solution") ?? "") + markdown, { shouldDirty: true, shouldValidate: true });
+          } else {
+            const idx = fields.findIndex((f) => f.id === target);
+            if (idx !== -1) {
+              const currentText = getValues(`options.${idx}.text`) ?? "";
+              update(idx, { ...fields[idx], text: currentText + markdown });
+            }
           }
         }
       } catch (err) {

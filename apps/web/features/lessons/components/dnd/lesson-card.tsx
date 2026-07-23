@@ -68,15 +68,15 @@ export function LessonCard({
             <HelpCircle className="size-3.5" />
             <span className="font-bold">Câu hỏi</span>
           </Link>
-          {onEdit && (
-            <button
-              onClick={onEdit}
+          {onEdit ? (
+            <Link
+              href={`/teacher/lessons/${lesson.id}/edit`}
               className="p-1.5 text-indigo-650 hover:text-white hover:bg-indigo-500 dark:text-indigo-400 dark:hover:text-navy-blue dark:hover:bg-indigo-400 rounded-lg border border-indigo-500/10 dark:border-indigo-400/20 transition-all duration-200 shadow-sm cursor-pointer flex items-center justify-center"
               title="Chỉnh sửa bài học"
             >
               <Edit2 className="size-3.5" />
-            </button>
-          )}
+            </Link>
+          ) : null}
           {onDelete && (
             <button
               onClick={onDelete}

@@ -8,6 +8,7 @@ import { ModuleFormModal } from "@/features/lessons/components/module-form-modal
 import { ConfirmModal } from "@/components/molecules/confirm-modal";
 import { SearchBar } from "@/components/ui/search-bar";
 import { BookOpen, AlertCircle, Plus, ClipboardList, Layers, Folder } from "lucide-react";
+import Link from "next/link";
 import { LessonDndContext } from "@/features/lessons/components/dnd/lesson-dnd-context";
 import { LessonCard } from "@/features/lessons/components/dnd/lesson-card";
 
@@ -74,13 +75,13 @@ export default function LessonsPage() {
             <Folder className="size-4 md:size-5" />
             <span>Thêm Chương</span>
           </button>
-          <button
-            onClick={() => setShowCreate(true)}
+          <Link
+            href="/teacher/lessons/new"
             className="px-5 py-3 bg-primary hover:bg-primary/95 text-white dark:text-slate-950 font-bold rounded-2xl text-xs md:text-sm transition-all duration-300 flex items-center gap-2 shrink-0 self-start md:self-auto shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 cursor-pointer"
           >
             <Plus className="size-4 md:size-5" />
             <span>Thêm bài học mới</span>
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -189,7 +190,7 @@ export default function LessonsPage() {
                 </div>
                 {filteredLessons.length === 0 && (
                   <div className="text-center py-16 text-gray-navy dark:text-light-blue border border-dashed border-gray-250 dark:border-white/5 rounded-3xl bg-gray-50/20 dark:bg-navy-blue/15">
-                    Không tìm thấy kết quả phù hợp cho "{searchQuery}".
+                    Không tìm thấy kết quả phù hợp cho &quot;{searchQuery}&quot;.
                   </div>
                 )}
               </div>

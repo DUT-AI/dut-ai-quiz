@@ -17,6 +17,7 @@ import {
   useStartGameSession,
   usePatchGameAnswer,
   useUseGameItem,
+  useActiveGameSession,
 } from "../queries";
 import { type GameQuestion, type GamificationState } from "../types";
 
@@ -35,6 +36,7 @@ export default function GameContainer({ lessonSlug, initialSession }: GameContai
   const router = useRouter();
   const hasInitializedRef = useRef(false);
   const { darkMode } = useThemeStore();
+  const { refetch: refetchActiveSession } = useActiveGameSession(lessonSlug, { enabled: false });
 
   const gameBackgroundStyle = useMemo(() => {
     return {
@@ -352,7 +354,7 @@ export default function GameContainer({ lessonSlug, initialSession }: GameContai
       return;
     }
 
-    refetchActiveSession().then(({ data: updatedSession }) => {
+    refetchActiveSession().then(({ data: updatedSession }: any) => {
       if (updatedSession?.snapshot) {
         const updatedQuestions = updatedSession.snapshot.questions;
         setQuestions(updatedQuestions);
