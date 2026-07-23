@@ -57,3 +57,17 @@ class LessonReorderItem(BaseModel):
 
 class LessonReorder(BaseModel):
     items: list[LessonReorderItem]
+
+
+class RelatedLessonOut(BaseModel):
+    id: UUID
+    name: str
+    description: str
+    slug: str | None
+    score: float
+    matched_chunk: str
+
+
+class LessonIndexOut(BaseModel):
+    lesson_id: UUID
+    status: str

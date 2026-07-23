@@ -23,6 +23,7 @@ export function LessonFormModal({ onClose, initialData }: LessonFormModalProps) 
     const payload = {
       name: data.name,
       description: data.description || "",
+      content_md: data.content_md || "",
       order: data.order,
       slug: data.slug || "",
       module_id: data.module_id || null,
@@ -52,7 +53,7 @@ export function LessonFormModal({ onClose, initialData }: LessonFormModalProps) 
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="bg-white dark:bg-navy-blue w-full max-w-lg max-h-[calc(100vh-2rem)] md:max-h-[85vh] rounded-[24px] md:rounded-[40px] shadow-2xl relative z-10 flex flex-col overflow-hidden border border-gray-100 dark:border-white/10 m-4"
+        className="bg-white dark:bg-navy-blue w-full max-w-4xl max-h-[calc(100vh-2rem)] md:max-h-[90vh] rounded-[24px] md:rounded-[40px] shadow-2xl relative z-10 flex flex-col overflow-hidden border border-gray-100 dark:border-white/10 m-4"
       >
         {/* Header - Fixed */}
         <div className="p-6 pb-4 md:p-10 md:pb-6 flex items-center justify-between border-b border-gray-100 dark:border-white/5 shrink-0">

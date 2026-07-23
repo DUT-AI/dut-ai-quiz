@@ -54,6 +54,20 @@ class Settings(BaseSettings):
     minio_bucket_name: str = ""
     presigned_url_expire_seconds: int = 3600
 
+    # Lesson semantic search. DUT-AI's Vietnamese SBERT service is the default;
+    # local hashing and OpenAI-compatible providers remain available for dev.
+    embedding_enabled: bool = True
+    embedding_provider: str = "dutai"
+    embedding_api_url: str = "https://embedding.dutai.site/v1/embeddings"
+    embedding_api_key: str = ""
+    embedding_model: str = "keepitreal/vietnamese-sbert"
+    embedding_dimensions: int = 768
+    embedding_batch_size: int = 64
+    embedding_timeout_seconds: float = 30.0
+    lesson_chunk_target_tokens: int = 180
+    lesson_chunk_max_tokens: int = 220
+    related_lesson_min_score: float = 0.25
+
     # ================= SUBMISSION SYSTEM CONFIG =================
     submission_cooldown_seconds: int = 300  # 5 minutes
     submission_max_quota: int = 20  # Max 20 submissions per contest

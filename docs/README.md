@@ -4,6 +4,7 @@ Mục lục tài liệu kỹ thuật (tách file để dễ bảo trì).
 
 | Tài liệu | Nội dung |
 | -------- | -------- |
+| [lesson-semantic-search.md](lesson-semantic-search.md) | Nội dung bài học nội bộ, chunk embedding và API bài học liên quan |
 | [general.md](general.md) | SRS tổng quan: mục tiêu, tech stack, quy tắc nghiệp vụ cốt lõi |
 | [auth.md](auth.md) | Tích hợp Auth (`manage.dutai.site`), cookie, domain, map vai trò |
 | [data-model.md](data-model.md) | Lược đồ PostgreSQL + bổ sung đã chốt (shuffle, tab-out) |

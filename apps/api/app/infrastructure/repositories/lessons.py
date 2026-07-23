@@ -43,6 +43,7 @@ class LessonRepository(ILessonRepository):
         if m:
             m.name = entity.name
             m.description = entity.description
+            m.content_md = entity.content_md or ""
             m.order = entity.order
             m.slug = entity.slug
             m.module_id = entity.module_id

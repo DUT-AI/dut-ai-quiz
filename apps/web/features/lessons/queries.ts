@@ -15,7 +15,7 @@ export function useLessons(options?: any) {
 export function useCreateLesson() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: { name: string; description?: string; order?: number; slug?: string }) =>
+    mutationFn: (body: { name: string; description?: string; content_md?: string; order?: number; slug?: string; module_id?: string | null }) =>
       apiPost<Lesson>("/api/v1/lessons", body, LessonSchema),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["lessons"] }),
   });
@@ -24,7 +24,7 @@ export function useCreateLesson() {
 export function useUpdateLesson(id: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: { name?: string; description?: string; order?: number; slug?: string }) =>
+    mutationFn: (body: { name?: string; description?: string; content_md?: string; order?: number; slug?: string; module_id?: string | null }) =>
       apiPatch<Lesson>(`/api/v1/lessons/${id}`, body, LessonSchema),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["lessons"] }),
   });

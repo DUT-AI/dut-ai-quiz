@@ -3,6 +3,7 @@ from .create_question_uc import CreateQuestionUseCase, BulkCreateQuestionsUseCas
 from .detete_question_uc import DeleteQuestionUseCase
 from .update_question_uc import UpdateQuestionUseCase
 from .answer_question_uc import AnswerQuestionUseCase
+from .related_lessons_uc import GetRelatedLessonsUseCase
 
 
 __all__ = [
@@ -13,5 +14,6 @@ __all__ = [
     "ListQuestionsUseCase",
     "UpdateQuestionUseCase",
     "AnswerQuestionUseCase",
+    "GetRelatedLessonsUseCase",
 ]
 

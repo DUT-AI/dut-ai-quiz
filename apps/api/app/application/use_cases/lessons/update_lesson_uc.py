@@ -2,14 +2,16 @@ from uuid import UUID
 
 from app.domain.entities.lesson import LessonEntity
 from app.domain.interfaces import ILessonRepository
+from app.application.services.lesson_index_scheduler import LessonIndexScheduler
 from app.presentation.schemas.lessons import LessonUpdate
 
 
 class UpdateLessonUseCase:
     """Update an existing lesson in the system."""
 
-    def __init__(self, repo: ILessonRepository) -> None:
+    def __init__(self, repo: ILessonRepository, scheduler: LessonIndexScheduler) -> None:
         self._repo = repo
+        self._scheduler = scheduler
 
     async def execute(
         self, lesson_id: str, payload: LessonUpdate
@@ -32,4 +34,10 @@ class UpdateLessonUseCase:
         if "module_id" in payload.model_fields_set:
             entity.module_id = payload.module_id
 
-        return await self._repo.update(entity)
+        saved = await self._repo.update(entity)
+        if any(
+            value is not None
+            for value in (payload.name, payload.description, payload.content_md)
+        ):
+            await self._scheduler.schedule(saved)
+        return saved

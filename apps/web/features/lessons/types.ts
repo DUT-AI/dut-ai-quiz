@@ -12,6 +12,17 @@ export const LessonSchema = z.object({
 
 export type Lesson = z.infer<typeof LessonSchema>;
 
+export const RelatedLessonSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string(),
+  slug: z.string().nullable(),
+  score: z.number(),
+  matched_chunk: z.string(),
+});
+
+export type RelatedLesson = z.infer<typeof RelatedLessonSchema>;
+
 export const ModuleSchema = z.object({
   id: z.string(),
   name: z.string(),
