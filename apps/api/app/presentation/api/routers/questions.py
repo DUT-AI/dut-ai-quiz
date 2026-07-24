@@ -89,7 +89,7 @@ async def list_questions_route(
     lesson_id: UUID | None = None,
     tag: str | None = None,
     offset: int = Query(0, ge=0),
-    limit: int = Query(50, ge=1, le=200),
+    limit: int = Query(50, ge=1, le=2000),
 ):
     # For guests, we only allow viewing PRACTICE questions.
     if user.quiz_role not in ("admin", "MENTOR"):

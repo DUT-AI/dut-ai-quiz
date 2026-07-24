@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from app.domain.value_objects import Difficulty, PoolType
 
@@ -58,6 +58,13 @@ class QuestionOut(BaseModel):
 
     model_config = {"from_attributes": True}
 
+    @field_validator("tags", mode="before")
+    @classmethod
+    def convert_tags_to_str(cls, v: list | None) -> list[str]:
+        if not v:
+            return []
+        return [str(item) for item in v]
+
 
 class QuestionListQuery(BaseModel):
     pool_type: PoolType | None = None
@@ -93,4 +100,4 @@ class QuestionAnswerIn(BaseModel):
 class QuestionAnswerOut(BaseModel):
     is_correct: bool
     correct_option_id: str
-    solution: str | None = None
+    solution: str | None = None
