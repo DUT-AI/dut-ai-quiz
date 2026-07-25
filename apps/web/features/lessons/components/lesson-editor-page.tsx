@@ -15,7 +15,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -37,6 +37,11 @@ interface LessonEditorPageProps {
 
 export function LessonEditorPage({ initialData }: LessonEditorPageProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const defaultModuleId = searchParams.get("moduleId") || searchParams.get("module_id");
+  const orderParam = searchParams.get("order");
+  const defaultOrder = orderParam ? parseInt(orderParam, 10) : 1;
+
   const { data: modules = [] } = useModules();
   const presign = usePresignUpload();
 
@@ -65,10 +70,10 @@ export function LessonEditorPage({ initialData }: LessonEditorPageProps) {
     defaultValues: {
       name: initialData?.name || "",
       description: initialData?.description || "",
-      order: initialData?.order || 1,
+      order: initialData?.order || defaultOrder || 1,
       slug: initialData?.slug || "",
       content_md: initialData?.content_md || "",
-      module_id: initialData?.module_id || null,
+      module_id: initialData?.module_id || defaultModuleId || null,
     },
   });
 
