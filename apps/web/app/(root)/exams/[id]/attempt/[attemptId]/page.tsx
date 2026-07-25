@@ -166,10 +166,12 @@ export default function TestEnvironmentPage() {
 
   // Auto-save logic (Debounced)
   useEffect(() => {
+    if (isSubmitting) return;
     const changedIds = Object.keys(answers).filter(id => answers[id] !== prevAnswersRef.current[id]);
     if (changedIds.length === 0) return;
 
     const timeout = setTimeout(() => {
+      if (isSubmitting) return;
       const payload = changedIds.map(id => ({
         question_id: id,
         selected_option_id: answers[id]
@@ -179,7 +181,7 @@ export default function TestEnvironmentPage() {
     }, 1500);
 
     return () => clearTimeout(timeout);
-  }, [answers, attemptId, patchAnswers]);
+  }, [answers, attemptId, patchAnswers, isSubmitting]);
 
   // Navigation Guarding
   useEffect(() => {
@@ -345,8 +347,8 @@ export default function TestEnvironmentPage() {
 
         {/* Right Side: Question Display */}
         <main className="flex-1 flex flex-col relative min-w-0 lg:ml-80">
-          <div className="flex-1 overflow-y-auto custom-scrollbar px-6 md:px-16 py-10 md:py-20">
-            <div className="max-w-3xl mx-auto space-y-12">
+          <div className="flex-1 overflow-y-auto custom-scrollbar px-4 sm:px-6 md:px-8 py-8 md:py-12">
+            <div className="w-full max-w-[1400px] mx-auto space-y-10">
                {/* Question Header */}
                <div className="space-y-4">
                   <div className="flex items-center gap-3">
