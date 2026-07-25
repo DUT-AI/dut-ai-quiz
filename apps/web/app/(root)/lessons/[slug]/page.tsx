@@ -33,13 +33,13 @@ export default function LessonSlugPage() {
     );
   }, [lessons, slug]);
 
-  const lessonId = resolvedLesson?.id || "";
-
   // Fetch the full lesson detail by slug
   const { data: lesson, isLoading: isLoadingDetail } = useLessonBySlug(
     resolvedLesson?.slug || slug,
     { enabled: !!resolvedLesson?.slug }
   );
+
+  const lessonId = resolvedLesson?.id || lesson?.id || "";
 
   const [activeTab, setActiveTab] = useState<"theory" | "questions" | "game">("theory");
 
@@ -129,7 +129,7 @@ export default function LessonSlugPage() {
             {!currentLesson.slug ? (
               <LessonDraft />
             ) : (
-              <TheoryTab contentMd={currentLesson.content_md} />
+              <TheoryTab contentMd={currentLesson.content_md} lessonId={lessonId} />
             )}
           </div>
         ) : (
@@ -144,7 +144,7 @@ export default function LessonSlugPage() {
                 {!currentLesson.slug ? (
                   <LessonDraft />
                 ) : (
-                  <TheoryTab contentMd={currentLesson.content_md} />
+                  <TheoryTab contentMd={currentLesson.content_md} lessonId={lessonId} />
                 )}
               </motion.div>
             )}

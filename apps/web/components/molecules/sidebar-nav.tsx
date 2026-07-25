@@ -13,7 +13,8 @@ import {
   PlusCircle,
   BarChart2,
   LogOut,
-  Award
+  Award,
+  MessageSquare
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -26,6 +27,7 @@ const STUDENT_NAV_ITEMS = [
   { icon: GraduationCap, label: "Đề thi", href: "/exams" },
   { icon: Award, label: "Hackathons", href: "/hackathons" },
   { icon: History, label: "Lịch sử làm bài", href: "/history" },
+  { icon: MessageSquare, label: "Phản hồi", href: "/feedback" },
 ];
 
 const TEACHER_NAV_ITEMS = [

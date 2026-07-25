@@ -33,3 +33,30 @@ class UserService:
             message=f"Không tìm thấy thông tin của user {user_id}",
             status_code=404,
         )
+
+    async def ensure_user_exists(self, user_id: int) -> None:
+        """Đảm bảo user tồn tại trong local database (cần cho các bảng có FK users.id)."""
+        u = await self.user_repo.get_by_id(user_id)
+        if u:
+            return
+
+        profile = await self.manage_client.get_profile(user_id)
+        if profile:
+            from app.domain.entities.user import UserEntity
+            from app.application.services.auth_roles import quiz_role_from_manage
+            
+            quiz_role = "guest"
+            try:
+                quiz_role = quiz_role_from_manage(profile.role_names)
+            except Exception:
+                pass
+                
+            new_user = UserEntity(
+                id=user_id,
+                email=profile.email,
+                role=quiz_role,
+                google_id="",
+                name=profile.name,
+                avatar_url=profile.avatar_url,
+            )
+            await self.user_repo.add(new_user)

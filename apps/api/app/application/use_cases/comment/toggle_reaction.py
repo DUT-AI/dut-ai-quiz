@@ -3,17 +3,22 @@ from uuid import UUID
 from app.domain.entities.comment import CommentReactionEntity, ReactionType
 from app.domain.interfaces import ICommentReactionRepository, ICommentRepository
 from app.domain.exceptions.exceptions import AppException
+from app.application.services.user_service import UserService
 
 class ToggleReactionUseCase:
-    def __init__(self, comment_reaction_repo: ICommentReactionRepository, comment_repo: ICommentRepository):
+    def __init__(self, comment_reaction_repo: ICommentReactionRepository, comment_repo: ICommentRepository, user_service: UserService):
         self._comment_reaction_repo = comment_reaction_repo
         self._comment_repo = comment_repo
+        self._user_service = user_service
 
     async def execute(self, user_id: int, comment_id: UUID, reaction_type: ReactionType) -> None:
         # Check if comment exists
         comment = await self._comment_repo.get_by_id(comment_id)
         if not comment:
             raise AppException(status_code=404, message="Bình luận không tồn tại.")
+
+        # Ensure user exists locally for Foreign Key constraint
+        await self._user_service.ensure_user_exists(user_id)
 
         existing = await self._comment_reaction_repo.get_reaction(comment_id, user_id)
         

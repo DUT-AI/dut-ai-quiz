@@ -14,16 +14,18 @@ class CommentRepository(ICommentRepository):
         self._session = session
 
     async def create(self, comment: CommentEntity) -> CommentEntity:
+        import uuid
+        from app.core.datetime_utils import now_ict
         m = Comment(
-            id=comment.id,
+            id=comment.id or uuid.uuid4(),
             target_type=comment.target_type.value,
             target_id=comment.target_id,
             user_id=comment.user_id,
             parent_id=comment.parent_id,
             content=comment.content,
             image_urls=comment.image_urls,
-            created_at=comment.created_at,
-            updated_at=comment.updated_at,
+            created_at=comment.created_at or now_ict(),
+            updated_at=comment.updated_at or now_ict(),
         )
         self._session.add(m)
         await self._session.flush()
