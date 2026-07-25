@@ -15,20 +15,13 @@ interface TheoryTabProps {
 
 export function TheoryTab({ contentMd, lessonId }: TheoryTabProps) {
   const [activeId, setActiveId] = useState<string>("");
-  const [isTocOpen, setIsTocOpen] = useState(true);
+  const [isTocOpen, setIsTocOpen] = useState(false);
   const [shiftAmount, setShiftAmount] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const headings = useMemo(() => {
     return extractHeadings(contentMd || "");
   }, [contentMd]);
-
-  // Initialize TOC open state based on screen width
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      setIsTocOpen(window.innerWidth >= 1024);
-    }
-  }, []);
 
   // Calculate dynamic shift on desktop to prevent overlap
   useEffect(() => {
