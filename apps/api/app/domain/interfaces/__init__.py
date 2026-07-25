@@ -29,6 +29,7 @@ from .submission_queue import ISubmissionQueue
 from .user_repo import IUserRepository
 from .comment_repository import ICommentRepository, SortMode
 from .comment_reaction_repository import ICommentReactionRepository
+from .import_session_repo import IImportSessionRepository
 
 __all__ = [
     "IAttemptAnswerRepository",
@@ -62,4 +63,5 @@ __all__ = [
     "ICommentRepository",
     "ICommentReactionRepository",
     "SortMode",
+    "IImportSessionRepository",
 ]

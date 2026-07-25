@@ -79,6 +79,20 @@ class Settings(BaseSettings):
     max_script_size_bytes: int = 10 * 1024 * 1024  # 10 MB
     max_model_size_bytes: int = 1024 * 1024 * 1024  # 1 GB
 
+    # ================= GEMINI AI (PDF IMPORT) ===================
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-2.0-flash"
+
+    # ================= PDF IMPORT CONFIG ========================
+    pdf_max_size_mb: int = 20
+    pdf_max_pages: int = 5
+    pdf_image_min_px: int = 80          # Ignore images smaller than 80x80px
+    pdf_duplicate_threshold: float = 0.85
+    review_lock_ttl_seconds: int = 60
+    review_lock_heartbeat_seconds: int = 30
+    pdf_upload_bucket: str = "lms-dev"  # Same MinIO bucket
+    pdf_images_prefix: str = "uploads/pdf-images"
+
     @field_validator("database_url")
     @classmethod
     def normalize_database_url(cls, value: str) -> str:
