@@ -12,9 +12,20 @@ import { toast } from "sonner";
 interface CommentListProps {
   targetType: TargetType;
   targetId?: string | null;
+  title?: string;
+  description?: string;
+  showIcon?: boolean;
+  onSuccess?: () => void;
 }
 
-export function CommentList({ targetType, targetId }: CommentListProps) {
+export function CommentList({
+  targetType,
+  targetId,
+  title,
+  description,
+  showIcon = false,
+  onSuccess,
+}: CommentListProps) {
   const [sortBy, setSortBy] = useState<SortMode>("best");
   const [limit, setLimit] = useState(15);
   const { data, isLoading, error, refetch, isFetching } = useComments(
@@ -35,6 +46,7 @@ export function CommentList({ targetType, targetId }: CommentListProps) {
         image_urls: imageUrls,
       });
       toast.success("Bình luận của bạn đã được đăng!");
+      if (onSuccess) onSuccess();
     } catch (err: any) {
       toast.error(err.message || "Không thể đăng bình luận.");
     }
@@ -48,17 +60,28 @@ export function CommentList({ targetType, targetId }: CommentListProps) {
 
   return (
     <div className="w-full space-y-6 text-left">
-      {/* Header section with count and sorting */}
-      <div className="flex items-center justify-between border-b border-gray-100 dark:border-white/10 pb-4">
-        <div className="flex items-center gap-2">
-          <MessageSquare className="size-5 text-primary" />
-          <h3 className="text-base font-black text-dark-blue dark:text-white">
-            Thảo luận ({data?.total ?? 0})
-          </h3>
+      {/* Header section with title, count, and sorting */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-gray-150 dark:border-white/10 pb-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2.5">
+            {showIcon && (
+              <div className="size-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                <MessageSquare className="size-4.5" />
+              </div>
+            )}
+            <h2 className="text-lg sm:text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+              {title ? `${title} (${data?.total ?? 0})` : `Thảo luận (${data?.total ?? 0})`}
+            </h2>
+          </div>
+          {description && (
+            <p className="text-xs sm:text-sm text-gray-navy/70 dark:text-light-blue/60 mt-0.5">
+              {description}
+            </p>
+          )}
         </div>
 
         {/* Sort controls */}
-        <div className="flex items-center gap-1.5 text-xs text-gray-navy/70 dark:text-light-blue/70">
+        <div className="flex items-center gap-1.5 text-xs text-gray-navy/70 dark:text-light-blue/70 self-start sm:self-auto shrink-0">
           <ArrowUpDown className="size-3.5" />
           <select
             value={sortBy}
