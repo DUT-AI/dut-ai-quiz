@@ -6,14 +6,12 @@ import { TheoryEmptyState } from "./theory-empty-state";
 import { TheoryContent } from "./theory-content";
 import { TableOfContents } from "./table-of-contents";
 
-import { LessonComments } from "@/features/comments/components/lesson-comments";
-
 interface TheoryTabProps {
   contentMd?: string | null;
-  lessonId: string;
+  lessonId?: string;
 }
 
-export function TheoryTab({ contentMd, lessonId }: TheoryTabProps) {
+export function TheoryTab({ contentMd }: TheoryTabProps) {
   const [activeId, setActiveId] = useState<string>("");
   const [isTocOpen, setIsTocOpen] = useState(false);
   const [shiftAmount, setShiftAmount] = useState(0);
@@ -171,12 +169,7 @@ export function TheoryTab({ contentMd, lessonId }: TheoryTabProps) {
   };
 
   if (!contentMd) {
-    return (
-      <div className="space-y-8">
-        <TheoryEmptyState />
-        <LessonComments lessonId={lessonId} />
-      </div>
-    );
+    return <TheoryEmptyState />;
   }
 
   const showTOC = headings.length > 0;
@@ -191,7 +184,6 @@ export function TheoryTab({ contentMd, lessonId }: TheoryTabProps) {
         className="transition-transform duration-300 ease-in-out"
       >
         <TheoryContent contentMd={contentMd} />
-        <LessonComments lessonId={lessonId} />
       </div>
 
       {showTOC && (

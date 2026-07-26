@@ -16,6 +16,7 @@ import {
   LessonDraft,
   LessonHeader,
 } from "@/features/lessons/components";
+import { LessonComments } from "@/features/comments/components/lesson-comments";
 
 export default function LessonSlugPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -173,6 +174,13 @@ export default function LessonSlugPage() {
           </AnimatePresence>
         )}
       </div>
+
+      {/* Persistent Comment Section at the bottom */}
+      {lessonId && (
+        <div className="mt-12 pt-8 border-t border-gray-150 dark:border-white/10">
+          <LessonComments lessonId={lessonId} />
+        </div>
+      )}
     </div>
   );
 }
