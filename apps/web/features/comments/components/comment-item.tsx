@@ -198,7 +198,7 @@ export function CommentItem({
       </div>
 
       {/* Comment Content */}
-      <div className="pl-0 sm:pl-10 text-sm text-dark-blue dark:text-slate-100 font-sans leading-relaxed break-words markdown-styles">
+      <div className="pl-0 sm:pl-10 text-sm text-dark-blue dark:text-zinc-100 font-sans leading-relaxed break-words markdown-styles">
         <Markdown content={comment.content} />
 
         {/* Attached images */}
