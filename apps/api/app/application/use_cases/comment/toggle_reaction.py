@@ -17,9 +17,6 @@ class ToggleReactionUseCase:
         if not comment:
             raise AppException(status_code=404, message="Bình luận không tồn tại.")
 
-        # Ensure user exists locally for Foreign Key constraint
-        await self._user_service.ensure_user_exists(user_id)
-
         existing = await self._comment_reaction_repo.get_reaction(comment_id, user_id)
         
         if not existing:

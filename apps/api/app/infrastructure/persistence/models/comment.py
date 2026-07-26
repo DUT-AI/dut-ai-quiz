@@ -17,7 +17,7 @@ class Comment(Base):
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     target_type: Mapped[str] = mapped_column(Enum(TargetType, native_enum=False, length=50), index=True)
     target_id: Mapped[UUID | None] = mapped_column(index=True, nullable=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    user_id: Mapped[int] = mapped_column(index=True)
     parent_id: Mapped[UUID | None] = mapped_column(ForeignKey("comments.id", ondelete="CASCADE"), index=True, nullable=True)
     content: Mapped[str] = mapped_column(Text)
     image_urls: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
@@ -26,7 +26,6 @@ class Comment(Base):
     created_at: Mapped[datetime] = mapped_column(default=now_ict, index=True)
     updated_at: Mapped[datetime] = mapped_column(default=now_ict, onupdate=now_ict)
 
-    user = relationship("User", lazy="joined")
     parent = relationship("Comment", remote_side=[id], backref="replies")
 
     def to_entity(self) -> CommentEntity:
@@ -42,7 +41,7 @@ class Comment(Base):
             dislike_count=self.dislike_count,
             created_at=self.created_at,
             updated_at=self.updated_at,
-            user_role=self.user.role if self.user else "guest",
-            user_name=self.user.name if self.user else None,
-            user_avatar=self.user.avatar_url if self.user else None
+            user_role="guest",
+            user_name=None,
+            user_avatar=None
         )

@@ -76,29 +76,7 @@ class GetProfileUseCase:
                 except Exception:
                     pass
 
-                # Synchronize user locally
-                from app.domain.entities.user import UserEntity
-                local_user = await self._user_repo.get_by_id(user_id)
-                if not local_user:
-                    await self._user_repo.add(UserEntity(
-                        id=user_id,
-                        email=profile.email,
-                        role=quiz_role,
-                        google_id="",
-                        name=profile.name,
-                        avatar_url=profile.avatar_url,
-                    ))
-                else:
-                    # Update local profile if it has changed
-                    if (local_user.name != profile.name or 
-                        local_user.avatar_url != profile.avatar_url or 
-                        local_user.role != quiz_role or
-                        local_user.email != profile.email):
-                        local_user.name = profile.name
-                        local_user.avatar_url = profile.avatar_url
-                        local_user.role = quiz_role
-                        local_user.email = profile.email
-                        await self._user_repo.update(local_user)
+
 
                 profile_data = {
                     "id": profile.id,

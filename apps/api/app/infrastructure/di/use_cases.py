@@ -1,4 +1,5 @@
 from dishka import Provider, Scope, provide
+from redis.asyncio import Redis
 
 from app.application.services.pdf_parser import PDFParserService
 from app.application.services.lesson_chunker import LessonChunker
@@ -324,8 +325,9 @@ class UseCaseProvider(Provider):
         self,
         user_repo: IUserRepository,
         manage_client: IManageService,
+        redis: Redis,
     ) -> UserService:
-        return UserService(user_repo, manage_client)
+        return UserService(user_repo, manage_client, redis)
 
     # comments
     create_comment_use_case = provide(CreateCommentUseCase, scope=Scope.REQUEST)
