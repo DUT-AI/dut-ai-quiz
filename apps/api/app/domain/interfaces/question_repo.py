@@ -1,8 +1,15 @@
+from dataclasses import dataclass
 from typing import Protocol
 from uuid import UUID
 
 from app.domain.entities.question import QuestionEntity
 from app.domain.value_objects import Difficulty, PoolType
+
+
+@dataclass(frozen=True, slots=True)
+class QuestionSimilarityMatch:
+    question: QuestionEntity
+    score: float
 
 
 class IQuestionRepository(Protocol):
@@ -39,4 +46,15 @@ class IQuestionRepository(Protocol):
 
     async def delete(self, entity: QuestionEntity) -> None:
         """Delete a question entity from the store."""
+        ...
+
+    async def search_similar(
+        self,
+        *,
+        embedding: list[float],
+        embedding_model: str,
+        pool_type: PoolType | None = None,
+        candidate_limit: int = 50,
+    ) -> list[QuestionSimilarityMatch]:
+        """Return public questions ordered by cosine similarity."""
         ...

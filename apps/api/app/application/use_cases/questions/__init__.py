@@ -4,6 +4,7 @@ from .detete_question_uc import DeleteQuestionUseCase
 from .update_question_uc import UpdateQuestionUseCase
 from .answer_question_uc import AnswerQuestionUseCase
 from .related_lessons_uc import GetRelatedLessonsUseCase
+from .related_questions_uc import FindRelatedQuestionsUseCase
 
 
 __all__ = [
@@ -15,5 +16,5 @@ __all__ = [
     "UpdateQuestionUseCase",
     "AnswerQuestionUseCase",
     "GetRelatedLessonsUseCase",
+    "FindRelatedQuestionsUseCase",
 ]
-

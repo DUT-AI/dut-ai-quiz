@@ -28,6 +28,7 @@
 | GET | `/api/v1/questions/{question_id}` | Chi tiết | Teacher |
 | PATCH | `/api/v1/questions/{question_id}` | Cập nhật | Teacher |
 | DELETE | `/api/v1/questions/{question_id}` | Xóa | Teacher |
+| POST | `/api/v1/questions/related` | Tìm câu hỏi liên quan theo nội dung bằng semantic search | User |
 
 ---
 
