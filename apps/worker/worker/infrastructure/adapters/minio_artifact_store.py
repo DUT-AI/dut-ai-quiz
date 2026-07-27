@@ -12,22 +12,25 @@ from worker.domain.interfaces.artifact_store import IArtifactStore
 
 class MinioArtifactStore(IArtifactStore):
     def __init__(self) -> None:
-        scheme = "https" if settings.minio_secure else "http"
-        self._endpoint_url = f"{scheme}://{settings.minio_endpoint}"
-        self._bucket_name = settings.minio_bucket_name
+        self._endpoint_url = settings.s3_endpoint_url
+        self._bucket_name = settings.s3_bucket_name
         self._client = boto3.client(
             "s3",
             endpoint_url=self._endpoint_url,
-            aws_access_key_id=settings.minio_access_key,
-            aws_secret_access_key=settings.minio_secret_key,
+            aws_access_key_id=settings.s3_access_key,
+            aws_secret_access_key=settings.s3_secret_key,
             config=Config(
                 signature_version="s3v4",
-                s3={"addressing_style": "path"},
+                s3={
+                    "addressing_style": (
+                        "path" if settings.s3_force_path_style else "virtual"
+                    )
+                },
                 retries={"max_attempts": 5, "mode": "standard"},
                 connect_timeout=10,
                 read_timeout=60,
             ),
-            region_name="us-east-1",
+            region_name=settings.s3_region,
         )
 
     def object_key_from_reference(self, key_or_url: str) -> str:
@@ -58,11 +61,11 @@ class MinioArtifactStore(IArtifactStore):
         except (BotoCoreError, ClientError):
             parsed = urlparse(key_or_url)
             configured_endpoint = urlparse(self._endpoint_url)
-            is_configured_minio_url = (
+            is_configured_s3_url = (
                 parsed.scheme in {"http", "https"}
                 and parsed.netloc == configured_endpoint.netloc
             )
-            if parsed.scheme not in {"http", "https"} or is_configured_minio_url:
+            if parsed.scheme not in {"http", "https"} or is_configured_s3_url:
                 raise
 
         urlretrieve(key_or_url, destination_path)

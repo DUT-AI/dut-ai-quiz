@@ -66,9 +66,9 @@ export function TestFileUpload({
       });
       setFileName(file.name);
       onChange(presign.public_url);
-      toast.success(`${label} đã được tải lên MinIO.`);
+      toast.success(`${label} đã được tải lên S3.`);
     } catch (error: any) {
-      toast.error(error?.message || `Không thể tải ${label} lên MinIO.`);
+      toast.error(error?.message || `Không thể tải ${label} lên S3.`);
     } finally {
       setIsUploading(false);
       onUploadingChange?.(false);
@@ -123,7 +123,7 @@ export function TestFileUpload({
         {isUploading ? (
           <div className="space-y-2">
             <Loader2 className="mx-auto size-6 animate-spin text-primary" />
-            <p className="text-xs font-bold text-primary">Đang tải lên MinIO...</p>
+            <p className="text-xs font-bold text-primary">Đang tải lên S3...</p>
           </div>
         ) : fileName && value ? (
           <div className="min-w-0 space-y-1">
