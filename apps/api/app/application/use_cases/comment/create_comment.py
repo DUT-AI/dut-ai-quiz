@@ -3,10 +3,12 @@ from uuid import UUID
 from app.domain.entities.comment import CommentEntity, TargetType
 from app.domain.interfaces import ICommentRepository
 from app.domain.exceptions.exceptions import AppException
+from app.application.services.user_service import UserService
 
 class CreateCommentUseCase:
-    def __init__(self, comment_repo: ICommentRepository):
+    def __init__(self, comment_repo: ICommentRepository, user_service: UserService):
         self._comment_repo = comment_repo
+        self._user_service = user_service
 
     async def execute(self, user_id: int, target_type: TargetType, content: str, target_id: UUID = None, parent_id: UUID = None, image_urls: list[str] = None) -> CommentEntity:
         if len(content) > 5000:
@@ -28,4 +30,6 @@ class CreateCommentUseCase:
             image_urls=image_urls or []
         )
         
-        return await self._comment_repo.create(comment)
+        created_comment = await self._comment_repo.create(comment)
+        await self._user_service.resolve_authors([created_comment])
+        return created_comment

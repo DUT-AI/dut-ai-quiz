@@ -11,7 +11,7 @@ import { Menu, Rocket } from "lucide-react";
 const RootLayout = ({ children }: { children: React.ReactNode }) => {
   const { isLoading } = useAuth();
   const pathname = usePathname();
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   // 1. Loading state during hydration/auth validation
@@ -55,8 +55,17 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
         />
       )}
 
+      {/* Invisible Hover Trigger Zone at the Left Edge (Desktop only) */}
+      {isCollapsed && (
+        <div
+          className="hidden lg:block fixed left-0 top-0 bottom-0 w-3 z-40 bg-transparent"
+          onMouseEnter={() => setIsCollapsed(false)}
+        />
+      )}
+
       {/* Sidebar Container */}
       <aside
+        onMouseLeave={() => setIsCollapsed(true)}
         className={cn(
           "h-full flex-shrink-0 bg-white dark:bg-navy-blue border-r border-gray-100 dark:border-white/5 transition-all duration-300 ease-in-out z-50 overflow-hidden w-72",
           // Mobile Drawer

@@ -3,11 +3,13 @@ from uuid import UUID
 from app.domain.entities.comment import CommentReactionEntity, ReactionType
 from app.domain.interfaces import ICommentReactionRepository, ICommentRepository
 from app.domain.exceptions.exceptions import AppException
+from app.application.services.user_service import UserService
 
 class ToggleReactionUseCase:
-    def __init__(self, comment_reaction_repo: ICommentReactionRepository, comment_repo: ICommentRepository):
+    def __init__(self, comment_reaction_repo: ICommentReactionRepository, comment_repo: ICommentRepository, user_service: UserService):
         self._comment_reaction_repo = comment_reaction_repo
         self._comment_repo = comment_repo
+        self._user_service = user_service
 
     async def execute(self, user_id: int, comment_id: UUID, reaction_type: ReactionType) -> None:
         # Check if comment exists
