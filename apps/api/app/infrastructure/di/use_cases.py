@@ -1,6 +1,7 @@
 from dishka import Provider, Scope, provide
 from redis.asyncio import Redis
 
+from app.application.services.pdf_ai_parser import PDFAIParserService
 from app.application.services.pdf_parser import PDFParserService
 from app.application.services.lesson_chunker import LessonChunker
 from app.application.services.lesson_embedding_indexer import LessonEmbeddingIndexer
@@ -122,6 +123,16 @@ from app.application.use_cases.comment import (
     ToggleReactionUseCase,
     DeleteCommentUseCase,
 )
+from app.application.use_cases.pdf_import import (
+    StartImportUseCase,
+    GetImportStatusUseCase,
+    ReviewDraftQuestionsUseCase,
+    ApproveQuestionUseCase,
+    RejectQuestionUseCase,
+    RegenerateSolutionUseCase,
+    AcquireLockUseCase,
+    HeartbeatLockUseCase,
+)
 from app.application.use_cases.uploads.presign_upload import PresignUploadUseCase
 from app.domain.events.bus import EventBus
 from app.domain.interfaces import (
@@ -129,8 +140,13 @@ from app.domain.interfaces import (
     IFocusEventRepository,
     IManageService,
     IUserRepository,
+    IS3Client,
+    IImportSessionRepository,
+    IQuestionRepository,
 )
 from app.infrastructure.cache.redis_client import ProfileCache
+from redis.asyncio import Redis
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class UseCaseProvider(Provider):
@@ -334,3 +350,60 @@ class UseCaseProvider(Provider):
     get_comments_use_case = provide(GetCommentsUseCase, scope=Scope.REQUEST)
     toggle_reaction_use_case = provide(ToggleReactionUseCase, scope=Scope.REQUEST)
     delete_comment_use_case = provide(DeleteCommentUseCase, scope=Scope.REQUEST)
+
+    # PDF Import
+    get_import_status_use_case = provide(GetImportStatusUseCase, scope=Scope.REQUEST)
+    review_draft_questions_use_case = provide(ReviewDraftQuestionsUseCase, scope=Scope.REQUEST)
+    heartbeat_lock_use_case = provide(HeartbeatLockUseCase, scope=Scope.REQUEST)
+
+    @provide(scope=Scope.REQUEST)
+    def pdf_ai_parser_service(self, s3_client: IS3Client) -> PDFAIParserService:
+        return PDFAIParserService(s3_client)
+
+    @provide(scope=Scope.REQUEST)
+    def start_import_use_case(
+        self,
+        session: AsyncSession,
+        import_session_repo: IImportSessionRepository,
+        question_repo: IQuestionRepository,
+        ai_parser: PDFAIParserService,
+    ) -> StartImportUseCase:
+        return StartImportUseCase(
+            session=session,
+            import_session_repo=import_session_repo,
+            question_repo=question_repo,
+            ai_parser=ai_parser,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def approve_question_use_case(
+        self,
+        session: AsyncSession,
+        redis: Redis,
+    ) -> ApproveQuestionUseCase:
+        return ApproveQuestionUseCase(session=session, redis=redis)
+
+    @provide(scope=Scope.REQUEST)
+    def reject_question_use_case(
+        self,
+        session: AsyncSession,
+        redis: Redis,
+        s3_client: IS3Client,
+    ) -> RejectQuestionUseCase:
+        return RejectQuestionUseCase(session=session, redis=redis, s3_client=s3_client)
+
+    @provide(scope=Scope.REQUEST)
+    def regenerate_solution_use_case(
+        self,
+        session: AsyncSession,
+        ai_parser: PDFAIParserService,
+    ) -> RegenerateSolutionUseCase:
+        return RegenerateSolutionUseCase(session=session, ai_parser=ai_parser)
+
+    @provide(scope=Scope.REQUEST)
+    def acquire_lock_use_case(
+        self,
+        session: AsyncSession,
+        redis: Redis,
+    ) -> AcquireLockUseCase:
+        return AcquireLockUseCase(session=session, redis=redis)

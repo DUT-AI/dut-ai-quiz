@@ -3,7 +3,7 @@ from typing import Any
 from uuid import UUID, uuid4
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import Boolean, ForeignKey, String
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.dialects.postgresql import UUID as pgUUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -45,6 +45,35 @@ class Question(Base):
     embedding_source_hash: Mapped[str | None] = mapped_column(
         String(64), nullable=True
     )
+    # --- PDF Import fields ---
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="PUBLIC", server_default="PUBLIC", index=True
+    )
+    import_session_id: Mapped[UUID | None] = mapped_column(
+        pgUUID(as_uuid=True),
+        ForeignKey("import_sessions.id"),
+        nullable=True,
+        index=True,
+    )
+    is_answer_ai_generated: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
+    is_solution_ai_generated: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
+    is_difficulty_ai_suggested: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
+    duplicate_status: Mapped[str] = mapped_column(
+        String(30), nullable=False, default="UNIQUE", server_default="UNIQUE"
+    )
+    duplicate_of_question_id: Mapped[UUID | None] = mapped_column(
+        pgUUID(as_uuid=True),
+        ForeignKey("questions.id"),
+        nullable=True,
+    )
+    review_locked_by: Mapped[int | None] = mapped_column(nullable=True)
+    review_locked_at: Mapped[datetime | None] = mapped_column(nullable=True)
 
     def to_entity(self) -> QuestionEntity:
         return QuestionEntity(
@@ -61,6 +90,15 @@ class Question(Base):
             embedding=self.embedding,
             embedding_model=self.embedding_model,
             embedding_source_hash=self.embedding_source_hash,
+            status=self.status,
+            import_session_id=self.import_session_id,
+            is_answer_ai_generated=self.is_answer_ai_generated,
+            is_solution_ai_generated=self.is_solution_ai_generated,
+            is_difficulty_ai_suggested=self.is_difficulty_ai_suggested,
+            duplicate_status=self.duplicate_status,
+            duplicate_of_question_id=self.duplicate_of_question_id,
+            review_locked_by=self.review_locked_by,
+            review_locked_at=self.review_locked_at,
         )
 
     @classmethod
@@ -79,4 +117,13 @@ class Question(Base):
             embedding=entity.embedding,
             embedding_model=entity.embedding_model,
             embedding_source_hash=entity.embedding_source_hash,
+            status=entity.status,
+            import_session_id=entity.import_session_id,
+            is_answer_ai_generated=entity.is_answer_ai_generated,
+            is_solution_ai_generated=entity.is_solution_ai_generated,
+            is_difficulty_ai_suggested=entity.is_difficulty_ai_suggested,
+            duplicate_status=entity.duplicate_status,
+            duplicate_of_question_id=entity.duplicate_of_question_id,
+            review_locked_by=entity.review_locked_by,
+            review_locked_at=entity.review_locked_at,
         )

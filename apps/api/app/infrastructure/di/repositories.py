@@ -14,6 +14,7 @@ from app.domain.interfaces import (
     IUserRepository,
     ICommentRepository,
     ICommentReactionRepository,
+    IImportSessionRepository,
 )
 from app.domain.interfaces.hackathon_repo import (
     IHackathonRepository,
@@ -42,6 +43,7 @@ from app.infrastructure.repositories.hackathons import (
 )
 from app.infrastructure.repositories.comments import CommentRepository
 from app.infrastructure.repositories.comment_reactions import CommentReactionRepository
+from app.infrastructure.repositories.import_sessions import ImportSessionRepository
 
 
 class RepositoryProvider(Provider):
@@ -80,3 +82,4 @@ class RepositoryProvider(Provider):
     )
     comment_repo = provide(CommentRepository, provides=ICommentRepository)
     comment_reaction_repo = provide(CommentReactionRepository, provides=ICommentReactionRepository)
+    import_session_repo = provide(ImportSessionRepository, provides=IImportSessionRepository)

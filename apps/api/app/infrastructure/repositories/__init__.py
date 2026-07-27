@@ -18,6 +18,7 @@ from .tags import TagRepository
 from .users import UserRepository
 from .comments import CommentRepository
 from .comment_reactions import CommentReactionRepository
+from .import_sessions import ImportSessionRepository
 
 __all__ = [
     "UserRepository",
@@ -39,4 +40,5 @@ __all__ = [
     "HackathonSubmissionRepository",
     "CommentRepository",
     "CommentReactionRepository",
+    "ImportSessionRepository",
 ]
