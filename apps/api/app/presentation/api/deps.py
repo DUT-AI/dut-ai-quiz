@@ -15,6 +15,7 @@ class UserContext(BaseModel):
     id: int
     role_name: str
     quiz_role: str
+    identity_source: str = "service_a"
 
 
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
@@ -30,6 +31,7 @@ async def get_current_user(
             id=settings.auth_dev_user_id,
             role_name=rn,
             quiz_role=quiz_role_from_manage(rn),
+            identity_source="service_a",
         )
 
     access_token = request.cookies.get("access_token")
@@ -52,6 +54,7 @@ async def get_current_user(
         id=int(uid),
         role_name=role,
         quiz_role=role,
+        identity_source=str(payload.get("type", "service_a")),
     )
 
 

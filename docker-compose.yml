@@ -54,11 +54,11 @@ services:
             redis:
                 condition: service_healthy
 
-    worker:
+    worker-hackathon:
         build:
             context: .
             dockerfile: apps/worker/Dockerfile
-        container_name: dut-ai-quiz-worker
+        container_name: dut-ai-quiz-worker-hackathon
         restart: unless-stopped
         init: true
         env_file:
@@ -80,6 +80,47 @@ services:
                 condition: service_healthy
             redis:
                 condition: service_healthy
+        command: ["uv", "run", "arq", "worker_hackathon.presentation.arq_tasks.WorkerSettings"]
+
+    worker-lesson-index:
+        build:
+            context: .
+            dockerfile: apps/worker/Dockerfile
+        container_name: dut-ai-quiz-worker-lesson-index
+        restart: unless-stopped
+        init: true
+        env_file:
+            - .env
+        environment:
+            - TZ=Asia/Ho_Chi_Minh
+            - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-dut_ai_quiz}
+            - REDIS_URL=redis://redis:6379/${REDIS_DB:-0}
+        depends_on:
+            postgres:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+        command: ["uv", "run", "arq", "worker_lesson_index.presentation.arq_tasks.WorkerSettings"]
+
+    worker-evaluate-homework:
+        build:
+            context: .
+            dockerfile: apps/worker/Dockerfile
+        container_name: dut-ai-quiz-worker-evaluate-homework
+        restart: unless-stopped
+        init: true
+        env_file:
+            - .env
+        environment:
+            - TZ=Asia/Ho_Chi_Minh
+            - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-dut_ai_quiz}
+            - REDIS_URL=redis://redis:6379/${REDIS_DB:-0}
+        depends_on:
+            postgres:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+        command: ["uv", "run", "arq", "worker_evaluate_homework.presentation.arq_tasks.WorkerSettings"]
 
     web:
         build:

@@ -11,6 +11,7 @@ from .hackathon import Hackathon, HackathonTask, HackathonTeam, HackathonRegistr
 from .comment import Comment
 from .comment_reaction import CommentReaction
 from .import_session import ImportSession
+from .homework import Homework, HomeworkAssignment, HomeworkSubmission
 
 __all__ = [
     "Base",
@@ -34,6 +35,9 @@ __all__ = [
     "Comment",
     "CommentReaction",
     "ImportSession",
+    "Homework",
+    "HomeworkAssignment",
+    "HomeworkSubmission",
 ]
 
 export_globals = globals()

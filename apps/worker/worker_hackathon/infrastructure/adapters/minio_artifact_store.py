@@ -7,7 +7,7 @@ from botocore.client import Config
 from botocore.exceptions import BotoCoreError, ClientError
 
 from app.config import settings
-from worker.domain.interfaces.artifact_store import IArtifactStore
+from worker_hackathon.domain.interfaces.artifact_store import IArtifactStore
 
 
 class MinioArtifactStore(IArtifactStore):

@@ -180,7 +180,7 @@ Lợi ích:
 
 ### Worker
 
-#### `apps/worker/worker/application/use_cases/evaluate_submission.py`
+#### `apps/worker/worker_hackathon/application/use_cases/evaluate_submission.py`
 
 - `execute` chỉ nhận `submission_id`.
 - Worker tự load submission và task từ DB.
@@ -201,7 +201,7 @@ Lợi ích:
 - Leaderboard/submission list có thể cập nhật realtime theo trạng thái.
 - Hạn chế trạng thái treo vô hạn.
 
-#### `apps/worker/worker/domain/interfaces/submission_repository.py`
+#### `apps/worker/worker_hackathon/domain/interfaces/submission_repository.py`
 
 - Thêm `list_stale_active_submissions`.
 
@@ -213,7 +213,7 @@ Lợi ích:
 
 - Worker use case có thể sweep stale submissions mà không phụ thuộc chi tiết DB.
 
-#### `apps/worker/worker/infrastructure/adapters/postgres_submission_repository.py`
+#### `apps/worker/worker_hackathon/infrastructure/adapters/postgres_submission_repository.py`
 
 - Implement `list_stale_active_submissions`.
 - Query các submission:
@@ -228,7 +228,7 @@ Lợi ích:
 
 - Worker có thể tự dọn submission kẹt.
 
-#### `apps/worker/worker/presentation/arq_tasks.py`
+#### `apps/worker/worker_hackathon/presentation/arq_tasks.py`
 
 - `evaluate_submission_job` chỉ nhận `submission_id`.
 - Khởi tạo `DockerSandbox` với `log_tail_lines=settings.log_max_lines`.
@@ -246,7 +246,7 @@ Lợi ích:
 - Worker tự phục hồi trạng thái kẹt.
 - Log handling nhất quán với cấu hình.
 
-#### `apps/worker/worker/infrastructure/adapters/docker_sandbox.py`
+#### `apps/worker/worker_hackathon/infrastructure/adapters/docker_sandbox.py`
 
 - Thêm `log_tail_lines`.
 - `container.logs()` chỉ đọc tail stdout/stderr.

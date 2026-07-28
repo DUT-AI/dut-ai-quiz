@@ -5,7 +5,7 @@ from uuid import UUID
 from redis.asyncio import Redis
 
 from app.domain.entities.submission import HackathonSubmissionEntity
-from worker.domain.interfaces.event_publisher import ISubmissionEventPublisher
+from worker_hackathon.domain.interfaces.event_publisher import ISubmissionEventPublisher
 
 
 class RedisSubmissionEventPublisher(ISubmissionEventPublisher):

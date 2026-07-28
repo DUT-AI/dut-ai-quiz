@@ -135,6 +135,7 @@ from app.application.use_cases.pdf_import import (
     HeartbeatLockUseCase,
 )
 from app.application.use_cases.uploads.presign_upload import PresignUploadUseCase
+from app.application.use_cases.homeworks import HomeworkUseCases
 from app.domain.events.bus import EventBus
 from app.domain.interfaces import (
     IAttemptRepository,
@@ -146,7 +147,6 @@ from app.domain.interfaces import (
     IQuestionRepository,
 )
 from app.infrastructure.cache.redis_client import ProfileCache
-from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -215,6 +215,7 @@ class UseCaseProvider(Provider):
     )
     list_submissions_use_case = provide(ListSubmissionsUseCase, scope=Scope.REQUEST)
     presign_upload_use_case = provide(PresignUploadUseCase, scope=Scope.REQUEST)
+    homework_use_cases = provide(HomeworkUseCases, scope=Scope.REQUEST)
 
     # questions
     create_question_use_case = provide(CreateQuestionUseCase, scope=Scope.REQUEST)

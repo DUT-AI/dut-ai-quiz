@@ -29,6 +29,9 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:3000,https://quiz.dutai.site"
 
     redis_url: str = "redis://127.0.0.1:6379/0"
+    hackathon_queue_name: str = "arq:hackathon"
+    lesson_index_queue_name: str = "arq:lesson-index"
+    homework_queue_name: str = "arq:homework"
 
     auth_cache_ttl: int = 600
 
@@ -76,6 +79,12 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("S3_SECURE", "MINIO_SECURE"),
     )
     presigned_url_expire_seconds: int = 3600
+
+    # Homework submission and external evaluation services.
+    homework_checker_api_url: str = ""
+    submission_checker_api_url: str = ""
+    homework_max_file_size_bytes: int = 10 * 1024 * 1024
+    homework_grading_timeout_seconds: float = 300.0
 
     # Lesson semantic search. DUT-AI's Vietnamese SBERT service is the default;
     # local hashing and OpenAI-compatible providers remain available for dev.

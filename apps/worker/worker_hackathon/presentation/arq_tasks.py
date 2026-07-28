@@ -1,28 +1,16 @@
 import os
 from urllib.parse import urlparse
-from uuid import UUID
 
-import httpx
-from arq import Retry, cron
+from arq import cron
 from arq.connections import RedisSettings
 from loguru import logger
 from redis.asyncio import from_url
-from sqlalchemy import func, select
 
-from app.application.services.lesson_chunker import LessonChunker
-from app.application.services.lesson_embedding_indexer import LessonEmbeddingIndexer
 from app.config import settings
-from app.domain.entities.lesson_chunk import lesson_source_hash
-from app.infrastructure.clients.embedding_service import (
-    DutAiEmbeddingService,
-    LocalHashingEmbeddingService,
-    OpenAICompatibleEmbeddingService,
+from worker_hackathon.application.use_cases.evaluate_submission import (
+    EvaluateSubmissionUseCase,
 )
-from app.infrastructure.database import AsyncSessionLocal
-from app.infrastructure.repositories.lesson_chunks import LessonChunkRepository
-from app.infrastructure.repositories.lessons import LessonRepository
-from worker.application.use_cases.evaluate_submission import EvaluateSubmissionUseCase
-from worker.infrastructure.adapters import (
+from worker_hackathon.infrastructure.adapters import (
     CsvEvaluator,
     DockerSandbox,
     MinioArtifactStore,
@@ -33,7 +21,7 @@ from worker.infrastructure.adapters import (
 
 
 async def startup(ctx):
-    logger.info("Starting up worker entrypoint (Presentation layer)...")
+    logger.info("Starting hackathon worker...")
     redis = from_url(_redis_url_from_settings(), decode_responses=True)
     redis_settings = _redis_settings_from_config()
     logger.info(
@@ -54,20 +42,6 @@ async def startup(ctx):
     event_publisher = RedisSubmissionEventPublisher(redis)
 
     ctx["redis"] = redis
-    http_client = httpx.AsyncClient()
-    ctx["http_client"] = http_client
-    if settings.embedding_provider.casefold() == "local":
-        ctx["embedding_service"] = LocalHashingEmbeddingService(settings)
-    elif settings.embedding_provider.casefold() == "dutai":
-        ctx["embedding_service"] = DutAiEmbeddingService(http_client, settings)
-    else:
-        ctx["embedding_service"] = OpenAICompatibleEmbeddingService(
-            http_client, settings
-        )
-    ctx["lesson_chunker"] = LessonChunker(
-        target_tokens=settings.lesson_chunk_target_tokens,
-        max_tokens=settings.lesson_chunk_max_tokens,
-    )
     evaluate_use_case = EvaluateSubmissionUseCase(
         sandbox=sandbox,
         evaluator=evaluator,
@@ -91,13 +65,10 @@ async def startup(ctx):
 
 
 async def shutdown(ctx):
-    logger.info("Shutting down worker entrypoint...")
+    logger.info("Shutting down hackathon worker...")
     redis = ctx.get("redis")
     if redis:
         await redis.aclose()
-    http_client = ctx.get("http_client")
-    if http_client:
-        await http_client.aclose()
 
 
 async def evaluate_submission_job(
@@ -121,52 +92,6 @@ async def evaluate_submission_job(
     except Exception as e:
         logger.error(f"Job failed for Submission {submission_id}: {e}")
         raise
-
-
-async def index_lesson_job(
-    ctx,
-    lesson_id: str,
-    expected_source_hash: str,
-):
-    lesson_uuid = UUID(lesson_id)
-    async with AsyncSessionLocal() as session:
-        # Serialize jobs for one lesson. Multiple rapid edits may enqueue several
-        # versions, but each job indexes the newest committed source safely.
-        await session.execute(
-            select(func.pg_advisory_xact_lock(func.hashtext(str(lesson_uuid))))
-        )
-        lesson_repo = LessonRepository(session)
-        lesson = await lesson_repo.get(lesson_uuid)
-        if lesson is None:
-            # The API enqueues just before its transaction commits. A short retry
-            # closes that race without making the HTTP request wait for indexing.
-            raise Retry(defer=2)
-
-        current_hash = lesson_source_hash(
-            lesson.name, lesson.description, lesson.content_md or ""
-        )
-        if current_hash != expected_source_hash:
-            if ctx.get("job_try", 1) < 3:
-                # Most commonly the API transaction has not committed yet.
-                raise Retry(defer=2)
-            # A newer edit has superseded this version and has its own versioned
-            # job id, so this stale job must not overwrite the newer index.
-            logger.info(
-                "Skipping stale lesson index job {} (current source is {})",
-                expected_source_hash,
-                current_hash,
-            )
-            return 0
-
-        indexer = LessonEmbeddingIndexer(
-            LessonChunkRepository(session),
-            ctx["embedding_service"],
-            ctx["lesson_chunker"],
-        )
-        count = await indexer.index(lesson)
-        await session.commit()
-        logger.info("Indexed {} chunks for lesson {}", count, lesson_uuid)
-        return count
 
 
 async def sweep_stale_submissions_job(ctx):
@@ -199,7 +124,7 @@ def _redis_settings_from_config() -> RedisSettings:
 
 
 class WorkerSettings:
-    functions = [evaluate_submission_job, index_lesson_job]
+    functions = [evaluate_submission_job]
     cron_jobs = [
         cron(
             sweep_stale_submissions_job,
@@ -207,5 +132,6 @@ class WorkerSettings:
         )
     ]
     redis_settings = _redis_settings_from_config()
+    queue_name = settings.hackathon_queue_name
     on_startup = startup
     on_shutdown = shutdown

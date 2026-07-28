@@ -69,3 +69,13 @@ class MinioClient(IS3Client):
             )
         except Exception as e:
             raise e
+
+    def generate_presigned_download_url(
+        self, bucket: str, key: str, expires_in: int = 3600
+    ) -> str:
+        return self._client.generate_presigned_url(
+            "get_object",
+            Params={"Bucket": bucket, "Key": key},
+            ExpiresIn=expires_in,
+            HttpMethod="GET",
+        )

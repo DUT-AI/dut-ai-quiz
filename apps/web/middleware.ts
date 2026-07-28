@@ -11,6 +11,7 @@ export function middleware(request: NextRequest) {
     pathname.startsWith("/exams") ||
     pathname.startsWith("/lessons") ||
     pathname.startsWith("/history") ||
+    pathname.startsWith("/homeworks") ||
     pathname.startsWith("/teacher");
 
   // Auth paths
@@ -37,6 +38,7 @@ export const config = {
     "/exams/:path*",
     "/lessons/:path*",
     "/history/:path*",
+    "/homeworks/:path*",
     "/teacher/:path*",
   ],
 };
