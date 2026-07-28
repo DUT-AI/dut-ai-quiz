@@ -1,3 +1,29 @@
-from .homework_use_cases import HomeworkUseCases
+from .archive_homework_uc import ArchiveHomeworkUseCase
+from .create_homework_uc import CreateHomeworkUseCase
+from .get_homework_attachment_url_uc import GetHomeworkAttachmentUrlUseCase
+from .get_homework_submission_download_url_uc import (
+    GetHomeworkSubmissionDownloadUrlUseCase,
+)
+from .get_my_submission_uc import GetMyHomeworkSubmissionUseCase
+from .list_homework_submissions_uc import ListHomeworkSubmissionsUseCase
+from .list_homeworks_uc import ListHomeworksUseCase
+from .list_my_homeworks_uc import ListMyHomeworksUseCase
+from .list_unsubmitted_homework_users_uc import (
+    ListUnsubmittedHomeworkUsersUseCase,
+)
+from .submit_homework_uc import SubmitHomeworkUseCase
+from .update_homework_uc import UpdateHomeworkUseCase
 
-__all__ = ["HomeworkUseCases"]
+__all__ = [
+    "ArchiveHomeworkUseCase",
+    "CreateHomeworkUseCase",
+    "GetHomeworkAttachmentUrlUseCase",
+    "GetHomeworkSubmissionDownloadUrlUseCase",
+    "GetMyHomeworkSubmissionUseCase",
+    "ListHomeworksUseCase",
+    "ListMyHomeworksUseCase",
+    "ListHomeworkSubmissionsUseCase",
+    "ListUnsubmittedHomeworkUsersUseCase",
+    "SubmitHomeworkUseCase",
+    "UpdateHomeworkUseCase",
+]

@@ -12,7 +12,9 @@ assignment, and submission records.
 - `homework_submissions`: append-only submission attempts and grading results.
 
 Manage user IDs are intentionally not foreign keys to the local `users` table.
-Only `service_a` (DUT Manager) identities can use homework endpoints.
+Every authenticated user can view homework for a lesson and submit attempts.
+Assignments are used only by admins and mentors to track the intended audience
+and report assigned users who have not submitted.
 
 ## Worker packages and queues
 

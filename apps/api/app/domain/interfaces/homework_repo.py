@@ -40,10 +40,6 @@ class IHomeworkRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def is_assigned(self, homework_id: UUID, user_id: int) -> bool:
-        raise NotImplementedError
-
-    @abstractmethod
     async def create_submission(
         self, submission: HomeworkSubmissionEntity
     ) -> HomeworkSubmissionEntity:
@@ -65,6 +61,10 @@ class IHomeworkRepository(ABC):
     async def list_submissions(
         self, homework_id: UUID
     ) -> list[HomeworkSubmissionEntity]:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def count_submitters(self, homework_id: UUID) -> int:
         raise NotImplementedError
 
     @abstractmethod

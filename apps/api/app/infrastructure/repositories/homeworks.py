@@ -127,28 +127,16 @@ class HomeworkRepository(IHomeworkRepository):
         )
         await self._session.flush()
 
-    async def is_assigned(self, homework_id: UUID, user_id: int) -> bool:
-        return (
-            await self._session.scalar(
-                select(HomeworkAssignment.user_id).where(
-                    HomeworkAssignment.homework_id == homework_id,
-                    HomeworkAssignment.user_id == user_id,
-                )
-            )
-            is not None
-        )
-
     async def create_submission(
         self, submission: HomeworkSubmissionEntity
     ) -> HomeworkSubmissionEntity:
-        # Lock the assignment so concurrent uploads cannot receive the same attempt.
+        # Serialize attempts per homework/user even when the user is not assigned.
         await self._session.execute(
-            select(HomeworkAssignment)
-            .where(
-                HomeworkAssignment.homework_id == submission.homework_id,
-                HomeworkAssignment.user_id == submission.user_id,
+            select(
+                func.pg_advisory_xact_lock(
+                    func.hashtext(f"{submission.homework_id}:{submission.user_id}")
+                )
             )
-            .with_for_update()
         )
         latest_attempt = await self._session.scalar(
             select(func.max(HomeworkSubmission.attempt_number)).where(
@@ -205,6 +193,16 @@ class HomeworkRepository(IHomeworkRepository):
             )
         ).all()
         return [model.to_entity() for model in models]
+
+    async def count_submitters(self, homework_id: UUID) -> int:
+        return int(
+            await self._session.scalar(
+                select(func.count(func.distinct(HomeworkSubmission.user_id))).where(
+                    HomeworkSubmission.homework_id == homework_id
+                )
+            )
+            or 0
+        )
 
     async def unsubmitted_user_ids(self, homework_id: UUID) -> list[int]:
         submitted = select(HomeworkSubmission.user_id).where(

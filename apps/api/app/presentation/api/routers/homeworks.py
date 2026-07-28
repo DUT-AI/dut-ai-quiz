@@ -1,86 +1,67 @@
 from datetime import datetime
-from dataclasses import asdict
 from typing import Annotated
 from uuid import UUID
 
 from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import APIRouter, File, Form, UploadFile
 
-from app.application.use_cases.homeworks import HomeworkUseCases
-from app.domain.entities.homework import HomeworkEntity, HomeworkSubmissionEntity
-from app.domain.exceptions.exceptions import AppException
-from app.domain.interfaces import IManageService
+from app.application.dtos.homework import (
+    CreateHomeworkDTO,
+    HomeworkFileDTO,
+    SubmitHomeworkDTO,
+    UpdateHomeworkDTO,
+)
+from app.application.use_cases.homeworks import (
+    ArchiveHomeworkUseCase,
+    CreateHomeworkUseCase,
+    GetHomeworkAttachmentUrlUseCase,
+    GetHomeworkSubmissionDownloadUrlUseCase,
+    GetMyHomeworkSubmissionUseCase,
+    ListHomeworksUseCase,
+    ListHomeworkSubmissionsUseCase,
+    ListMyHomeworksUseCase,
+    ListUnsubmittedHomeworkUsersUseCase,
+    SubmitHomeworkUseCase,
+    UpdateHomeworkUseCase,
+)
+from app.config import settings
 from app.presentation.api.deps import AdminOrMentorUser, CurrentUser
 from app.presentation.schemas.homeworks import (
+    DownloadUrlData,
     DownloadUrlResponse,
     HomeworkListResponse,
-    HomeworkOut,
     HomeworkResponse,
-    HomeworkSubmissionOut,
     SubmissionListResponse,
     SubmissionResponse,
+    SuccessResponse,
+    UserIdListResponse,
 )
 
 router = APIRouter(prefix="/homeworks", tags=["homeworks"])
 
 
-def _ensure_manage_user(user: CurrentUser) -> None:
-    if user.identity_source != "service_a":
-        raise AppException("Chỉ tài khoản DUT Manager được sử dụng bài tập", 403)
-
-
-def _submission_out(
-    submission: HomeworkSubmissionEntity,
-    names: dict[int, tuple[str, str | None]] | None = None,
-) -> HomeworkSubmissionOut:
-    profile = (names or {}).get(submission.user_id)
-    return HomeworkSubmissionOut(
-        **asdict(submission),
-        owner_name=profile[0] if profile else None,
-        owner_avatar_url=profile[1] if profile else None,
+async def _file_dto(file: UploadFile) -> HomeworkFileDTO:
+    return HomeworkFileDTO(
+        filename=file.filename or "file",
+        content=await file.read(settings.homework_max_file_size_bytes + 1),
     )
 
 
-async def _homework_out(
-    use_case: HomeworkUseCases,
-    homework: HomeworkEntity,
-    current_submission: HomeworkSubmissionEntity | None = None,
-) -> HomeworkOut:
-    assert homework.id is not None
-    submissions = await use_case.submissions(homework.id)
-    return HomeworkOut(
-        id=homework.id,
-        lesson_id=homework.lesson_id,
-        title=homework.title,
-        description=homework.description,
-        deadline=homework.deadline,
-        created_by=homework.created_by,
-        created_at=homework.created_at,
-        updated_at=homework.updated_at,
-        has_attachment=bool(homework.attachment_key),
-        assignee_ids=homework.assignee_ids,
-        assignment_count=len(homework.assignee_ids),
-        submitted_count=len({item.user_id for item in submissions}),
-        current_submission=(
-            _submission_out(current_submission) if current_submission else None
-        ),
-    )
+async def _optional_file_dto(
+    file: UploadFile | None,
+) -> HomeworkFileDTO | None:
+    return await _file_dto(file) if file is not None else None
 
 
 @router.get("/me", response_model=HomeworkListResponse)
 @inject
 async def list_my_homeworks(
     user: CurrentUser,
-    use_case: FromDishka[HomeworkUseCases],
+    use_case: FromDishka[ListMyHomeworksUseCase],
     lesson_id: UUID | None = None,
-):
-    _ensure_manage_user(user)
-    rows = await use_case.list_for_user(user.id, lesson_id=lesson_id)
+) -> HomeworkListResponse:
     return HomeworkListResponse(
-        data=[
-            await _homework_out(use_case, homework, submission)
-            for homework, submission in rows
-        ]
+        data=await use_case.execute(user.id, lesson_id=lesson_id)
     )
 
 
@@ -88,23 +69,17 @@ async def list_my_homeworks(
 @inject
 async def list_homeworks(
     user: AdminOrMentorUser,
-    use_case: FromDishka[HomeworkUseCases],
+    use_case: FromDishka[ListHomeworksUseCase],
     lesson_id: UUID | None = None,
-):
-    _ensure_manage_user(user)
-    return HomeworkListResponse(
-        data=[
-            await _homework_out(use_case, homework)
-            for homework in await use_case.list_all(lesson_id=lesson_id)
-        ]
-    )
+) -> HomeworkListResponse:
+    return HomeworkListResponse(data=await use_case.execute(lesson_id=lesson_id))
 
 
 @router.post("", response_model=HomeworkResponse)
 @inject
 async def create_homework(
     user: AdminOrMentorUser,
-    use_case: FromDishka[HomeworkUseCases],
+    use_case: FromDishka[CreateHomeworkUseCase],
     title: Annotated[str, Form()],
     deadline: Annotated[datetime, Form()],
     lesson_id: Annotated[UUID, Form()],
@@ -112,19 +87,21 @@ async def create_homework(
     assignee_ids: Annotated[list[int] | None, Form()] = None,
     team_ids: Annotated[list[int] | None, Form()] = None,
     file: Annotated[UploadFile | None, File()] = None,
-):
-    _ensure_manage_user(user)
-    homework = await use_case.create(
-        lesson_id=lesson_id,
-        title=title,
-        description=description,
-        deadline=deadline.replace(tzinfo=None),
-        created_by=user.id,
-        assignee_ids=assignee_ids or [],
-        team_ids=team_ids or [],
-        file=file,
+) -> HomeworkResponse:
+    return HomeworkResponse(
+        data=await use_case.execute(
+            CreateHomeworkDTO(
+                lesson_id=lesson_id,
+                title=title,
+                description=description,
+                deadline=deadline.replace(tzinfo=None),
+                created_by=user.id,
+                assignee_ids=assignee_ids or [],
+                team_ids=team_ids or [],
+                file=await _optional_file_dto(file),
+            )
+        )
     )
-    return HomeworkResponse(data=await _homework_out(use_case, homework))
 
 
 @router.patch("/{homework_id}", response_model=HomeworkResponse)
@@ -132,7 +109,7 @@ async def create_homework(
 async def update_homework(
     homework_id: UUID,
     user: AdminOrMentorUser,
-    use_case: FromDishka[HomeworkUseCases],
+    use_case: FromDishka[UpdateHomeworkUseCase],
     title: Annotated[str | None, Form()] = None,
     deadline: Annotated[datetime | None, Form()] = None,
     lesson_id: Annotated[UUID | None, Form()] = None,
@@ -140,120 +117,126 @@ async def update_homework(
     assignee_ids: Annotated[list[int] | None, Form()] = None,
     team_ids: Annotated[list[int] | None, Form()] = None,
     file: Annotated[UploadFile | None, File()] = None,
-):
-    _ensure_manage_user(user)
-    homework = await use_case.update(
-        homework_id,
-        lesson_id=lesson_id,
-        title=title,
-        description=description,
-        deadline=deadline.replace(tzinfo=None) if deadline else None,
-        assignee_ids=assignee_ids,
-        team_ids=team_ids,
-        file=file,
+) -> HomeworkResponse:
+    return HomeworkResponse(
+        data=await use_case.execute(
+            homework_id,
+            UpdateHomeworkDTO(
+                lesson_id=lesson_id,
+                title=title,
+                description=description,
+                deadline=(deadline.replace(tzinfo=None) if deadline else None),
+                assignee_ids=assignee_ids,
+                team_ids=team_ids,
+                file=await _optional_file_dto(file),
+            ),
+        )
     )
-    return HomeworkResponse(data=await _homework_out(use_case, homework))
 
 
-@router.delete("/{homework_id}")
+@router.delete("/{homework_id}", response_model=SuccessResponse)
 @inject
 async def archive_homework(
     homework_id: UUID,
     user: AdminOrMentorUser,
-    use_case: FromDishka[HomeworkUseCases],
-):
-    _ensure_manage_user(user)
-    await use_case.archive(homework_id)
-    return {"is_success": True}
+    use_case: FromDishka[ArchiveHomeworkUseCase],
+) -> SuccessResponse:
+    await use_case.execute(homework_id)
+    return SuccessResponse()
 
 
-@router.post("/{homework_id}/submissions", response_model=SubmissionResponse)
+@router.post(
+    "/{homework_id}/submissions",
+    response_model=SubmissionResponse,
+)
 @inject
 async def submit_homework(
     homework_id: UUID,
     user: CurrentUser,
-    use_case: FromDishka[HomeworkUseCases],
+    use_case: FromDishka[SubmitHomeworkUseCase],
     file: Annotated[UploadFile, File()],
-):
-    _ensure_manage_user(user)
-    return SubmissionResponse(data=_submission_out(await use_case.submit(homework_id, user.id, file)))
+) -> SubmissionResponse:
+    return SubmissionResponse(
+        data=await use_case.execute(
+            SubmitHomeworkDTO(
+                homework_id=homework_id,
+                user_id=user.id,
+                file=await _file_dto(file),
+            )
+        )
+    )
 
 
-@router.get("/{homework_id}/submission/me", response_model=SubmissionResponse)
+@router.get(
+    "/{homework_id}/submission/me",
+    response_model=SubmissionResponse,
+)
 @inject
 async def get_my_submission(
     homework_id: UUID,
     user: CurrentUser,
-    use_case: FromDishka[HomeworkUseCases],
-):
-    _ensure_manage_user(user)
-    submission = await use_case.latest_submission(homework_id, user.id)
-    return SubmissionResponse(
-        data=_submission_out(submission) if submission else None
-    )
+    use_case: FromDishka[GetMyHomeworkSubmissionUseCase],
+) -> SubmissionResponse:
+    return SubmissionResponse(data=await use_case.execute(homework_id, user.id))
 
 
-@router.get("/{homework_id}/submissions", response_model=SubmissionListResponse)
+@router.get(
+    "/{homework_id}/submissions",
+    response_model=SubmissionListResponse,
+)
 @inject
 async def list_submissions(
     homework_id: UUID,
     user: AdminOrMentorUser,
-    use_case: FromDishka[HomeworkUseCases],
-    manage_service: FromDishka[IManageService],
-):
-    _ensure_manage_user(user)
-    profiles = {
-        profile.user_id: (profile.user_name, profile.user_avatar_url)
-        for profile in await manage_service.get_users()
-    }
-    return SubmissionListResponse(
-        data=[
-            _submission_out(submission, profiles)
-            for submission in await use_case.submissions(homework_id)
-        ]
-    )
+    use_case: FromDishka[ListHomeworkSubmissionsUseCase],
+) -> SubmissionListResponse:
+    return SubmissionListResponse(data=await use_case.execute(homework_id))
 
 
-@router.get("/{homework_id}/unsubmitted")
+@router.get(
+    "/{homework_id}/unsubmitted",
+    response_model=UserIdListResponse,
+)
 @inject
 async def list_unsubmitted(
     homework_id: UUID,
     user: AdminOrMentorUser,
-    use_case: FromDishka[HomeworkUseCases],
-):
-    _ensure_manage_user(user)
-    return {"data": await use_case.unsubmitted(homework_id), "is_success": True}
+    use_case: FromDishka[ListUnsubmittedHomeworkUsersUseCase],
+) -> UserIdListResponse:
+    return UserIdListResponse(data=await use_case.execute(homework_id))
 
 
-@router.get("/{homework_id}/attachment-url", response_model=DownloadUrlResponse)
+@router.get(
+    "/{homework_id}/attachment-url",
+    response_model=DownloadUrlResponse,
+)
 @inject
 async def homework_attachment_url(
     homework_id: UUID,
     user: CurrentUser,
-    use_case: FromDishka[HomeworkUseCases],
-):
-    _ensure_manage_user(user)
-    homework = await use_case.get(homework_id)
-    if user.quiz_role not in {"admin", "MENTOR"} and user.id not in homework.assignee_ids:
-        raise AppException("Bạn không được truy cập bài tập này", 403)
-    if not homework.attachment_key:
-        raise AppException("Bài tập không có file đính kèm", 404)
+    use_case: FromDishka[GetHomeworkAttachmentUrlUseCase],
+) -> DownloadUrlResponse:
     return DownloadUrlResponse(
-        data={"url": await use_case.download_url(homework.attachment_key)}
+        data=DownloadUrlData(url=await use_case.execute(homework_id))
     )
 
 
-@router.get("/submissions/{submission_id}/download-url", response_model=DownloadUrlResponse)
+@router.get(
+    "/submissions/{submission_id}/download-url",
+    response_model=DownloadUrlResponse,
+)
 @inject
 async def submission_download_url(
     submission_id: UUID,
     user: CurrentUser,
-    use_case: FromDishka[HomeworkUseCases],
-):
-    _ensure_manage_user(user)
-    submission = await use_case.get_submission(submission_id)
-    if user.quiz_role not in {"admin", "MENTOR"} and submission.user_id != user.id:
-        raise AppException("Bạn không được truy cập bài nộp này", 403)
+    use_case: FromDishka[GetHomeworkSubmissionDownloadUrlUseCase],
+) -> DownloadUrlResponse:
     return DownloadUrlResponse(
-        data={"url": await use_case.download_url(submission.object_key)}
+        data=DownloadUrlData(
+            url=await use_case.execute(
+                submission_id,
+                user.id,
+                can_manage=user.quiz_role in {"admin", "MENTOR"},
+            )
+        )
     )
