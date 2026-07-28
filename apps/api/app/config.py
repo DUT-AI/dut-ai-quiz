@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from pydantic import field_validator
+from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 API_DIR = Path(__file__).resolve().parents[1]
@@ -16,6 +16,7 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
         case_sensitive=False,
+        populate_by_name=True,
     )
 
     database_url: str = (
@@ -47,11 +48,33 @@ class Settings(BaseSettings):
     auth_dev_user_id: int = 1
     auth_dev_role_name: str = "admin"
 
-    minio_endpoint: str = ""
-    minio_secure: bool = True
-    minio_access_key: str = ""
-    minio_secret_key: str = ""
-    minio_bucket_name: str = ""
+    # S3-compatible object storage. MINIO_* aliases remain supported so existing
+    # deployments can migrate without an all-at-once environment change.
+    s3_endpoint: str = Field(
+        default="",
+        validation_alias=AliasChoices("S3_ENDPOINT", "MINIO_ENDPOINT"),
+    )
+    s3_access_key: str = Field(
+        default="",
+        validation_alias=AliasChoices("S3_ACCESS_KEY", "MINIO_ACCESS_KEY"),
+    )
+    s3_secret_key: str = Field(
+        default="",
+        validation_alias=AliasChoices("S3_SECRET_KEY", "MINIO_SECRET_KEY"),
+    )
+    s3_region: str = Field(
+        default="us-east-1",
+        validation_alias=AliasChoices("S3_REGION", "AWS_DEFAULT_REGION"),
+    )
+    s3_bucket_name: str = Field(
+        default="",
+        validation_alias=AliasChoices("S3_BUCKET_NAME", "MINIO_BUCKET_NAME"),
+    )
+    s3_force_path_style: bool = True
+    s3_secure: bool = Field(
+        default=True,
+        validation_alias=AliasChoices("S3_SECURE", "MINIO_SECURE"),
+    )
     presigned_url_expire_seconds: int = 3600
 
     # Lesson semantic search. DUT-AI's Vietnamese SBERT service is the default;
@@ -99,6 +122,29 @@ class Settings(BaseSettings):
         if value.startswith("postgresql://"):
             return value.replace("postgresql://", "postgresql+asyncpg://", 1)
         return value
+
+    @field_validator("s3_endpoint")
+    @classmethod
+    def normalize_s3_endpoint(cls, value: str) -> str:
+        return value.strip().rstrip("/")
+
+    @property
+    def s3_endpoint_url(self) -> str:
+        if not self.s3_endpoint:
+            return ""
+        if "://" in self.s3_endpoint:
+            return self.s3_endpoint
+        scheme = "https" if self.s3_secure else "http"
+        return f"{scheme}://{self.s3_endpoint}"
+
+    @property
+    def s3_is_configured(self) -> bool:
+        return bool(
+            self.s3_endpoint_url
+            and self.s3_access_key
+            and self.s3_secret_key
+            and self.s3_bucket_name
+        )
 
     @property
     def cors_origin_list(self) -> list[str]:

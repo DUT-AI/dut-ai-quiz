@@ -34,40 +34,46 @@ def main() -> None:
         raise SystemExit("Object key must not be empty.")
 
     required_settings = {
-        "MINIO_ENDPOINT": settings.minio_endpoint,
-        "MINIO_ACCESS_KEY": settings.minio_access_key,
-        "MINIO_SECRET_KEY": settings.minio_secret_key,
-        "MINIO_BUCKET_NAME": settings.minio_bucket_name,
+        "S3_ENDPOINT": settings.s3_endpoint,
+        "S3_ACCESS_KEY": settings.s3_access_key,
+        "S3_SECRET_KEY": settings.s3_secret_key,
+        "S3_BUCKET_NAME": settings.s3_bucket_name,
     }
     missing = [name for name, value in required_settings.items() if not value]
     if missing:
-        raise SystemExit(f"Missing MinIO settings in .env: {', '.join(missing)}")
+        raise SystemExit(f"Missing S3 settings in .env: {', '.join(missing)}")
 
-    scheme = "https" if settings.minio_secure else "http"
-    endpoint = f"{scheme}://{settings.minio_endpoint}"
+    endpoint = settings.s3_endpoint_url
     client = boto3.client(
         "s3",
         endpoint_url=endpoint,
-        aws_access_key_id=settings.minio_access_key,
-        aws_secret_access_key=settings.minio_secret_key,
-        config=Config(signature_version="s3v4", s3={"addressing_style": "path"}),
-        region_name="us-east-1",
+        aws_access_key_id=settings.s3_access_key,
+        aws_secret_access_key=settings.s3_secret_key,
+        config=Config(
+            signature_version="s3v4",
+            s3={
+                "addressing_style": (
+                    "path" if settings.s3_force_path_style else "virtual"
+                )
+            },
+        ),
+        region_name=settings.s3_region,
     )
 
     content_type = mimetypes.guess_type(source.name)[0] or "application/octet-stream"
     client.upload_file(
         str(source),
-        settings.minio_bucket_name,
+        settings.s3_bucket_name,
         object_key,
         ExtraArgs={"ContentType": content_type},
     )
-    client.head_object(Bucket=settings.minio_bucket_name, Key=object_key)
+    client.head_object(Bucket=settings.s3_bucket_name, Key=object_key)
 
     public_url = (
-        f"{endpoint}/{settings.minio_bucket_name}/{quote(object_key, safe='/')}"
+        f"{endpoint}/{settings.s3_bucket_name}/{quote(object_key, safe='/')}"
     )
     print("Upload successful")
-    print(f"S3 key: s3://{settings.minio_bucket_name}/{object_key}")
+    print(f"S3 key: s3://{settings.s3_bucket_name}/{object_key}")
     print(f"URL for the task form: {public_url}")
     print("A 403 response in the browser is normal when the bucket is private.")
 
