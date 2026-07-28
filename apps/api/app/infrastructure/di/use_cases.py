@@ -111,6 +111,7 @@ from app.application.use_cases.questions import (
     UpdateQuestionUseCase,
     AnswerQuestionUseCase,
     GetRelatedLessonsUseCase,
+    FindRelatedQuestionsUseCase,
 )
 from app.application.use_cases.tags.tags_use_case import (
     ListTagsUseCase,
@@ -227,6 +228,9 @@ class UseCaseProvider(Provider):
     answer_question_use_case = provide(AnswerQuestionUseCase, scope=Scope.REQUEST)
     get_related_lessons_use_case = provide(
         GetRelatedLessonsUseCase, scope=Scope.REQUEST
+    )
+    find_related_questions_use_case = provide(
+        FindRelatedQuestionsUseCase, scope=Scope.REQUEST
     )
 
     # tags

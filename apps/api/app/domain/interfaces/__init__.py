@@ -22,7 +22,7 @@ from .module_repo import IModuleRepository
 from .manage_cache import IDUTAIManageCache
 from .manage_service import IManageService
 from .game_session_repo import IGameSessionRepository
-from .question_repo import IQuestionRepository
+from .question_repo import IQuestionRepository, QuestionSimilarityMatch
 from .tag_repo import ITagRepository
 from .s3_client import IS3Client
 from .submission_queue import ISubmissionQueue
@@ -45,6 +45,7 @@ __all__ = [
     "IModuleRepository",
     "IGameSessionRepository",
     "IQuestionRepository",
+    "QuestionSimilarityMatch",
     "ITagRepository",
     "IUserRepository",
     "IManageService",

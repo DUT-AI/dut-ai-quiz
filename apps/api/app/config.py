@@ -90,6 +90,7 @@ class Settings(BaseSettings):
     lesson_chunk_target_tokens: int = 180
     lesson_chunk_max_tokens: int = 220
     related_lesson_min_score: float = 0.25
+    related_question_min_score: float = 0.5
 
     # ================= SUBMISSION SYSTEM CONFIG =================
     submission_cooldown_seconds: int = 300  # 5 minutes

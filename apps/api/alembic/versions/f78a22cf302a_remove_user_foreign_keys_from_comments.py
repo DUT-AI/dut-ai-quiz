@@ -8,7 +8,6 @@ Create Date: 2026-07-26
 from typing import Sequence, Union
 
 from alembic import op
-import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = 'f78a22cf302a'
@@ -18,10 +17,16 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # Drop foreign key constraint from comments pointing to users
-    op.drop_constraint('comments_user_id_fkey', 'comments', type_='foreignkey')
-    # Drop foreign key constraint from comment_reactions pointing to users
-    op.drop_constraint('comment_reactions_user_id_fkey', 'comment_reactions', type_='foreignkey')
+    # Some deployed databases were created without these user foreign keys.
+    # PostgreSQL's IF EXISTS keeps the migration safe for both schema variants.
+    op.execute(
+        "ALTER TABLE comments "
+        "DROP CONSTRAINT IF EXISTS comments_user_id_fkey"
+    )
+    op.execute(
+        "ALTER TABLE comment_reactions "
+        "DROP CONSTRAINT IF EXISTS comment_reactions_user_id_fkey"
+    )
 
 
 def downgrade() -> None:

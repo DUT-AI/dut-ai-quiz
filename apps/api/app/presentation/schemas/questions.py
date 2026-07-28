@@ -101,3 +101,37 @@ class QuestionAnswerOut(BaseModel):
     is_correct: bool
     correct_option_id: str
     solution: str | None = None
+
+
+class RelatedQuestionsIn(BaseModel):
+    content: str = Field(min_length=3, max_length=20_000)
+    limit: int = Field(default=10, ge=1, le=50)
+    min_score: float | None = Field(default=None, ge=-1, le=1)
+    pool_type: PoolType | None = None
+
+    @field_validator("content")
+    @classmethod
+    def normalize_content(cls, value: str) -> str:
+        value = value.strip()
+        if len(value) < 3:
+            raise ValueError(
+                "content must contain at least 3 non-whitespace characters"
+            )
+        return value
+
+
+class RelatedQuestionOptionOut(BaseModel):
+    id: str
+    text: str
+    fixed: bool
+
+
+class RelatedQuestionOut(BaseModel):
+    id: UUID
+    content: str
+    pool_type: PoolType
+    difficulty: Difficulty
+    options: list[RelatedQuestionOptionOut]
+    lesson_id: UUID | None
+    tags: list[str]
+    score: float

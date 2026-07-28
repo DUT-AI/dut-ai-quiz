@@ -75,8 +75,26 @@ nếu đổi model thì phải migrate vector dimension, re-index lessons và sa
 
 - `GET /api/v1/questions/{question_id}/related-lessons?limit=3`: chỉ dành cho câu
   hỏi `PRACTICE`, dùng cached question embedding.
+- `POST /api/v1/questions/related`: nhận nội dung câu hỏi, tạo embedding bằng
+  provider hiện tại và query các question embedding đã cache bằng cosine similarity.
+  Response không chứa đáp án đúng hoặc lời giải. User thường chỉ được tìm trong
+  pool `PRACTICE`; admin/mentor có thể truyền `pool_type`.
 - `POST /api/v1/lessons/{lesson_id}/embeddings/reindex`: enqueue job và trả
   `{"lesson_id": "...", "status": "queued"}`.
+
+Ví dụ:
+
+```http
+POST /api/v1/questions/related
+Content-Type: application/json
+
+{
+  "content": "Batch normalization có tác dụng gì?",
+  "limit": 10,
+  "min_score": 0.5,
+  "pool_type": "PRACTICE"
+}
+```
 
 Sau khi cập nhật code:
 

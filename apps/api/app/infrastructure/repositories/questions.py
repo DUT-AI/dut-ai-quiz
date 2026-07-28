@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities.question import QuestionEntity
 from app.domain.value_objects import Difficulty, PoolType
-from app.domain.interfaces import IQuestionRepository
+from app.domain.interfaces import IQuestionRepository, QuestionSimilarityMatch
 from app.infrastructure.persistence.models import Question, Tag
 
 
@@ -185,3 +185,36 @@ class QuestionRepository(IQuestionRepository):
         model = r.scalar_one_or_none()
         if model:
             await self._s.delete(model)
+
+    async def search_similar(
+        self,
+        *,
+        embedding: list[float],
+        embedding_model: str,
+        pool_type: PoolType | None = None,
+        candidate_limit: int = 50,
+    ) -> list[QuestionSimilarityMatch]:
+        distance = Question.embedding.cosine_distance(embedding)
+        stmt = select(Question, (1 - distance).label("score")).where(
+            Question.status == "PUBLIC",
+            Question.embedding.is_not(None),
+            Question.embedding_model == embedding_model,
+        )
+        if pool_type is not None:
+            stmt = stmt.where(Question.pool_type == pool_type)
+        stmt = stmt.order_by(distance).limit(candidate_limit)
+
+        rows = (await self._s.execute(stmt)).all()
+        models = [model for model, _ in rows]
+        tag_map = await self._resolve_tag_names([model.tags for model in models])
+
+        matches: list[QuestionSimilarityMatch] = []
+        for model, score in rows:
+            question = model.to_entity()
+            question.tags = [
+                tag_map[tag_id] for tag_id in model.tags if tag_id in tag_map
+            ]
+            matches.append(
+                QuestionSimilarityMatch(question=question, score=float(score))
+            )
+        return matches

@@ -12,6 +12,7 @@ from app.application.use_cases.questions import (
     UpdateQuestionUseCase,
     AnswerQuestionUseCase,
     GetRelatedLessonsUseCase,
+    FindRelatedQuestionsUseCase,
 )
 from app.config import settings
 from app.domain.interfaces import EmbeddingServiceError
@@ -25,6 +26,8 @@ from app.presentation.schemas.questions import (
     QuestionUpdate,
     QuestionAnswerIn,
     QuestionAnswerOut,
+    RelatedQuestionOut,
+    RelatedQuestionsIn,
 )
 from app.presentation.schemas.lessons import RelatedLessonOut
 
@@ -118,6 +121,34 @@ async def create_question_route(
 ):
     body.created_by = user.id
     return await use_case.execute(body)
+
+
+@router.post("/related", response_model=list[RelatedQuestionOut])
+@inject
+async def find_related_questions_route(
+    user: CurrentUser,
+    body: RelatedQuestionsIn,
+    use_case: FromDishka[FindRelatedQuestionsUseCase],
+):
+    pool_type = body.pool_type
+    if user.quiz_role not in ("admin", "MENTOR"):
+        pool_type = PoolType.PRACTICE
+
+    try:
+        return await use_case.execute(
+            content=body.content,
+            limit=body.limit,
+            min_score=(
+                settings.related_question_min_score
+                if body.min_score is None
+                else body.min_score
+            ),
+            pool_type=pool_type,
+        )
+    except EmbeddingServiceError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @router.get("/{question_id}", response_model=QuestionOut)
