@@ -13,8 +13,8 @@ File này tóm tắt các thay đổi đã code cho hệ thống AI Hackathon th
 
 File chính:
 
-- `apps/worker/worker/application/use_cases/evaluate_submission.py`
-- `apps/worker/worker/presentation/arq_tasks.py`
+- `apps/worker/worker_hackathon/application/use_cases/evaluate_submission.py`
+- `apps/worker/worker_hackathon/presentation/arq_tasks.py`
 
 Worker hiện xử lý job `evaluate_submission_job` theo luồng:
 
@@ -41,17 +41,17 @@ Worker hiện xử lý job `evaluate_submission_job` theo luồng:
 
 Đã thêm các interface domain:
 
-- `apps/worker/worker/domain/interfaces/artifact_store.py`
-- `apps/worker/worker/domain/interfaces/cancellation.py`
-- `apps/worker/worker/domain/interfaces/event_publisher.py`
-- `apps/worker/worker/domain/interfaces/submission_repository.py`
+- `apps/worker/worker_hackathon/domain/interfaces/artifact_store.py`
+- `apps/worker/worker_hackathon/domain/interfaces/cancellation.py`
+- `apps/worker/worker_hackathon/domain/interfaces/event_publisher.py`
+- `apps/worker/worker_hackathon/domain/interfaces/submission_repository.py`
 
 Đã thêm các adapter infrastructure:
 
-- `apps/worker/worker/infrastructure/adapters/minio_artifact_store.py`
-- `apps/worker/worker/infrastructure/adapters/postgres_submission_repository.py`
-- `apps/worker/worker/infrastructure/adapters/redis_cancellation.py`
-- `apps/worker/worker/infrastructure/adapters/redis_event_publisher.py`
+- `apps/worker/worker_hackathon/infrastructure/adapters/minio_artifact_store.py`
+- `apps/worker/worker_hackathon/infrastructure/adapters/postgres_submission_repository.py`
+- `apps/worker/worker_hackathon/infrastructure/adapters/redis_cancellation.py`
+- `apps/worker/worker_hackathon/infrastructure/adapters/redis_event_publisher.py`
 
 Mục tiêu là giữ application use case không phụ thuộc trực tiếp vào boto3, SQLAlchemy, Redis concrete logic.
 
@@ -59,7 +59,7 @@ Mục tiêu là giữ application use case không phụ thuộc trực tiếp v�
 
 File chính:
 
-- `apps/worker/worker/infrastructure/adapters/docker_sandbox.py`
+- `apps/worker/worker_hackathon/infrastructure/adapters/docker_sandbox.py`
 
 Đã nâng sandbox để hỗ trợ:
 
@@ -132,7 +132,7 @@ Leaderboard rule:
 
 File:
 
-- `apps/worker/worker/infrastructure/adapters/csv_evaluator.py`
+- `apps/worker/worker_hackathon/infrastructure/adapters/csv_evaluator.py`
 
 Đã thay logic chấm điểm từ vòng lặp CPU thuần sang GPU-first:
 

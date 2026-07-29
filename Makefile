@@ -3,7 +3,7 @@
 
 .PHONY: help db-up db-down db-logs api-sync api-dev api-lint \
 	migrate migrate-down alembic-revision alembic-history alembic-current \
-	dev-web web-dev worker-dev
+	dev-web web-dev worker-hackathon worker-lesson-index worker-evaluate-homework
 
 API_DIR := apps/api
 WEB_DIR := apps/web
@@ -24,7 +24,9 @@ help:
 	@echo "  alembic-history  - lịch sử revision"
 	@echo "  alembic-current  - revision hiện tại trên DB"
 	@echo "  dev-web          - chạy Next.js dev server cho frontend (apps/web)"
-	@echo "  worker-dev       - chạy arq worker cho tác vụ chấm điểm (apps/worker)"
+	@echo "  worker-hackathon - chạy worker chấm Hackathon"
+	@echo "  worker-lesson-index - chạy worker index bài học"
+	@echo "  worker-evaluate-homework - chạy worker chấm bài tập"
 
 api-sync:
 	cd $(API_DIR) && uv sync --group dev
@@ -55,5 +57,11 @@ alembic-current:
 dev-web web-dev:
 	cd $(WEB_DIR) && npm run dev
 
-worker-dev:
-	PYTHONPATH=$(WORKER_DIR) uv run arq worker.presentation.arq_tasks.WorkerSettings
+worker-hackathon:
+	cd $(WORKER_DIR) && uv run arq worker_hackathon.presentation.arq_tasks.WorkerSettings
+
+worker-lesson-index:
+	cd $(WORKER_DIR) && uv run arq worker_lesson_index.presentation.arq_tasks.WorkerSettings
+
+worker-evaluate-homework:
+	cd $(WORKER_DIR) && uv run arq worker_evaluate_homework.presentation.arq_tasks.WorkerSettings

@@ -75,6 +75,7 @@ export default function StepParticipants({ selectedIds, onChange }: Props) {
 
           <div className="flex p-1.5 rounded-2xl bg-gray-50 dark:bg-white/5 w-fit">
             <button
+              type="button"
               onClick={() => setActiveTab("users")}
               className={cn(
                 "px-6 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2",
@@ -84,6 +85,7 @@ export default function StepParticipants({ selectedIds, onChange }: Props) {
               <User className="size-4" /> Cá nhân
             </button>
             <button
+              type="button"
               onClick={() => setActiveTab("teams")}
               className={cn(
                 "px-6 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2",
@@ -104,6 +106,7 @@ export default function StepParticipants({ selectedIds, onChange }: Props) {
             ) : activeTab === "users" ? (
               filteredUsers.map(user => (
                 <button
+                  type="button"
                   key={user.id}
                   onClick={() => toggleUser(user.id)}
                   className={cn(
@@ -137,6 +140,7 @@ export default function StepParticipants({ selectedIds, onChange }: Props) {
             ) : (
               filteredTeams.map(team => (
                 <button
+                  type="button"
                   key={team.id}
                   onClick={() => addTeam(team.id)}
                   className="w-full flex items-center justify-between p-5 rounded-2xl bg-white dark:bg-navy-blue/40 border border-gray-100 dark:border-white/5 hover:border-primary/30 transition-all hover:scale-[1.01] group"
@@ -167,6 +171,7 @@ export default function StepParticipants({ selectedIds, onChange }: Props) {
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-black uppercase tracking-[0.2em] text-[10px] opacity-80">Danh sách đã chọn</h3>
               <button 
+                type="button"
                 onClick={removeAll}
                 className="p-1.5 rounded-lg hover:bg-white/20 transition-all text-white/60 hover:text-white"
               >
@@ -197,6 +202,7 @@ export default function StepParticipants({ selectedIds, onChange }: Props) {
                     </Avatar>
                     <span className="text-xs font-bold truncate flex-1">{user.name}</span>
                     <button 
+                      type="button"
                       onClick={() => toggleUser(user.id)}
                       className="size-5 rounded-lg hover:bg-red/10 text-red opacity-30 hover:opacity-100 transition-all flex items-center justify-center shrink-0"
                     >

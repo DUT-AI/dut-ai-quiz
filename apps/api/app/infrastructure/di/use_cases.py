@@ -135,6 +135,19 @@ from app.application.use_cases.pdf_import import (
     HeartbeatLockUseCase,
 )
 from app.application.use_cases.uploads.presign_upload import PresignUploadUseCase
+from app.application.use_cases.homeworks import (
+    ArchiveHomeworkUseCase,
+    CreateHomeworkUseCase,
+    GetHomeworkAttachmentUrlUseCase,
+    GetHomeworkSubmissionDownloadUrlUseCase,
+    GetMyHomeworkSubmissionUseCase,
+    ListHomeworksUseCase,
+    ListHomeworkSubmissionsUseCase,
+    ListMyHomeworksUseCase,
+    ListUnsubmittedHomeworkUsersUseCase,
+    SubmitHomeworkUseCase,
+    UpdateHomeworkUseCase,
+)
 from app.domain.events.bus import EventBus
 from app.domain.interfaces import (
     IAttemptRepository,
@@ -146,7 +159,6 @@ from app.domain.interfaces import (
     IQuestionRepository,
 )
 from app.infrastructure.cache.redis_client import ProfileCache
-from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -215,6 +227,50 @@ class UseCaseProvider(Provider):
     )
     list_submissions_use_case = provide(ListSubmissionsUseCase, scope=Scope.REQUEST)
     presign_upload_use_case = provide(PresignUploadUseCase, scope=Scope.REQUEST)
+    list_my_homeworks_use_case = provide(
+        ListMyHomeworksUseCase,
+        scope=Scope.REQUEST,
+    )
+    list_homeworks_use_case = provide(
+        ListHomeworksUseCase,
+        scope=Scope.REQUEST,
+    )
+    create_homework_use_case = provide(
+        CreateHomeworkUseCase,
+        scope=Scope.REQUEST,
+    )
+    update_homework_use_case = provide(
+        UpdateHomeworkUseCase,
+        scope=Scope.REQUEST,
+    )
+    archive_homework_use_case = provide(
+        ArchiveHomeworkUseCase,
+        scope=Scope.REQUEST,
+    )
+    submit_homework_use_case = provide(
+        SubmitHomeworkUseCase,
+        scope=Scope.REQUEST,
+    )
+    get_my_homework_submission_use_case = provide(
+        GetMyHomeworkSubmissionUseCase,
+        scope=Scope.REQUEST,
+    )
+    list_homework_submissions_use_case = provide(
+        ListHomeworkSubmissionsUseCase,
+        scope=Scope.REQUEST,
+    )
+    list_unsubmitted_homework_users_use_case = provide(
+        ListUnsubmittedHomeworkUsersUseCase,
+        scope=Scope.REQUEST,
+    )
+    get_homework_attachment_url_use_case = provide(
+        GetHomeworkAttachmentUrlUseCase,
+        scope=Scope.REQUEST,
+    )
+    get_homework_submission_download_url_use_case = provide(
+        GetHomeworkSubmissionDownloadUrlUseCase,
+        scope=Scope.REQUEST,
+    )
 
     # questions
     create_question_use_case = provide(CreateQuestionUseCase, scope=Scope.REQUEST)

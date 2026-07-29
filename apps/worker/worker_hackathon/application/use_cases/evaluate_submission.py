@@ -12,12 +12,12 @@ from app.domain.entities.submission import (
     HackathonSubmissionEntity,
     SubmissionStatus,
 )
-from worker.domain.interfaces.artifact_store import IArtifactStore
-from worker.domain.interfaces.cancellation import ICancellationToken
-from worker.domain.interfaces.evaluator import IEvaluator
-from worker.domain.interfaces.event_publisher import ISubmissionEventPublisher
-from worker.domain.interfaces.sandbox import ISandbox
-from worker.domain.interfaces.submission_repository import ISubmissionRepository
+from worker_hackathon.domain.interfaces.artifact_store import IArtifactStore
+from worker_hackathon.domain.interfaces.cancellation import ICancellationToken
+from worker_hackathon.domain.interfaces.evaluator import IEvaluator
+from worker_hackathon.domain.interfaces.event_publisher import ISubmissionEventPublisher
+from worker_hackathon.domain.interfaces.sandbox import ISandbox
+from worker_hackathon.domain.interfaces.submission_repository import ISubmissionRepository
 
 
 class EvaluateSubmissionUseCase:

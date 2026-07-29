@@ -5,7 +5,7 @@ from typing import Any, List
 
 from loguru import logger
 
-from worker.domain.interfaces.evaluator import IEvaluator
+from worker_hackathon.domain.interfaces.evaluator import IEvaluator
 
 
 class CsvEvaluator(IEvaluator):

@@ -1,0 +1,1 @@
+"""Lesson indexing worker package."""

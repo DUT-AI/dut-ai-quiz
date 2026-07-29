@@ -30,6 +30,8 @@ from .user_repo import IUserRepository
 from .comment_repository import ICommentRepository, SortMode
 from .comment_reaction_repository import ICommentReactionRepository
 from .import_session_repo import IImportSessionRepository
+from .homework_repo import IHomeworkRepository
+from .homework_queue import IHomeworkEvaluationQueue
 
 __all__ = [
     "IAttemptAnswerRepository",
@@ -65,4 +67,6 @@ __all__ = [
     "ICommentReactionRepository",
     "SortMode",
     "IImportSessionRepository",
+    "IHomeworkRepository",
+    "IHomeworkEvaluationQueue",
 ]

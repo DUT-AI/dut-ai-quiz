@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useMemo, useEffect } from "react";
 import { useParams, useSearchParams } from "next/navigation";
-import { BookOpen, Swords, ListRestart } from "lucide-react";
+import { BookOpen, Code2, Swords, ListRestart } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { useLessons, useLessonBySlug } from "@/lib/queries";
@@ -16,6 +16,7 @@ import {
   LessonDraft,
   LessonHeader,
 } from "@/features/lessons/components";
+import { HomeworkTab } from "@/features/homeworks/components/homework-tab";
 import { LessonComments } from "@/features/comments/components/lesson-comments";
 
 export default function LessonSlugPage() {
@@ -42,7 +43,9 @@ export default function LessonSlugPage() {
 
   const lessonId = resolvedLesson?.id || lesson?.id || "";
 
-  const [activeTab, setActiveTab] = useState<"theory" | "questions" | "game">("theory");
+  const [activeTab, setActiveTab] = useState<
+    "theory" | "questions" | "game" | "homework"
+  >("theory");
 
   const isLoading = isLoadingAll || isLoadingDetail;
 
@@ -92,6 +95,7 @@ export default function LessonSlugPage() {
               { id: "theory", label: "Lý thuyết", icon: BookOpen },
               { id: "questions", label: "Luyện tập", icon: ListRestart },
               { id: "game", label: "Luyện tập thi đấu", icon: Swords },
+              { id: "homework", label: "Bài tập coding", icon: Code2 },
             ] as const
           ).map((tab) => {
             const isActive = activeTab === tab.id;
@@ -169,6 +173,17 @@ export default function LessonSlugPage() {
                 exit={{ opacity: 0, y: -10 }}
               >
                 <GameTab lessonId={lessonId} slug={currentLesson.slug || slug} />
+              </motion.div>
+            )}
+
+            {activeTab === "homework" && (
+              <motion.div
+                key="homework"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+              >
+                <HomeworkTab lessonId={lessonId} />
               </motion.div>
             )}
           </AnimatePresence>

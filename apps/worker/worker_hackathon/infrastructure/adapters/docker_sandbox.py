@@ -6,7 +6,7 @@ from typing import Any, Dict
 import docker
 from docker.errors import APIError, ContainerError, ImageNotFound
 from loguru import logger
-from worker.domain.interfaces.sandbox import CancelCheck, ISandbox
+from worker_hackathon.domain.interfaces.sandbox import CancelCheck, ISandbox
 
 
 class DockerSandbox(ISandbox):

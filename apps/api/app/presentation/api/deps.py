@@ -71,4 +71,3 @@ AdminOrMentorUser = Annotated[UserContext, Depends(require_roles("admin", "MENTO
 # Keep these aliases temporarily to prevent syntax errors during migration
 TeacherUser = AdminOrMentorUser
 StudentUser = CurrentUser
-
