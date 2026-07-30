@@ -1,18 +1,26 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { CommentList } from "@/features/comments/components/comment-list";
 import { FeedbackHeader } from "./components/feedback-header";
 import { FeedbackSuggestionsModal } from "./components/feedback-suggestions-modal";
 import { FeedbackSuccessModal } from "./components/feedback-success-modal";
 
 export default function FeedbackPage() {
-  const [isModalOpen, setIsModalOpen] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSuccessOpen, setIsSuccessOpen] = useState(false);
+
+  useEffect(() => {
+    const hasSeen = localStorage.getItem("has-seen-feedback-suggestions");
+    if (!hasSeen) {
+      setIsModalOpen(true);
+      localStorage.setItem("has-seen-feedback-suggestions", "true");
+    }
+  }, []);
 
   return (
     <div className="w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20 text-left">
-      <FeedbackHeader />
+      <FeedbackHeader onShowSuggestions={() => setIsModalOpen(true)} />
 
       <FeedbackSuggestionsModal 
         isOpen={isModalOpen} 
