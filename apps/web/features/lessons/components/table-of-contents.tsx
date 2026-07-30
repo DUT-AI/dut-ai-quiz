@@ -71,7 +71,7 @@ export function TableOfContents({
             damping: 33,
           }}
           className={cn(
-            "overflow-hidden border select-none transition-colors duration-200 backdrop-blur-md",
+            "overflow-hidden border select-none transition-colors duration-200 backdrop-blur-md font-sans",
             isHovered
               ? "bg-white dark:bg-[#191919] border-[#e9e9e7] dark:border-[#2f2f2f]"
               : "bg-slate-100/50 dark:bg-zinc-800/10 border-transparent dark:border-transparent"
@@ -116,7 +116,7 @@ export function TableOfContents({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             onClick={() => setIsOpen(true)}
-            className="fixed right-4 bottom-6 z-40 flex items-center gap-2 px-4 py-3 rounded-full bg-primary text-white border border-primary/20 shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all font-bold text-[15px] cursor-pointer"
+            className="fixed right-4 bottom-6 z-40 flex items-center gap-2 px-4 py-3 rounded-full bg-primary text-white border border-primary/20 shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all font-bold text-[15px] cursor-pointer font-sans"
           >
             <List className="size-4" />
             <span>Mục lục</span>
@@ -132,7 +132,7 @@ export function TableOfContents({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 100 }}
             transition={{ type: "spring", damping: 25, stiffness: 250 }}
-            className="fixed bottom-0 left-0 right-0 z-40 mx-4 my-6 flex flex-col rounded-xl bg-white dark:bg-[#191919] border border-[#e9e9e7] dark:border-[#2f2f2f] shadow-2xl overflow-hidden"
+            className="fixed bottom-0 left-0 right-0 z-40 mx-4 my-6 flex flex-col rounded-xl bg-white dark:bg-[#191919] border border-[#e9e9e7] dark:border-[#2f2f2f] shadow-2xl overflow-hidden font-sans"
           >
             <TocExpanded
               headings={headings}

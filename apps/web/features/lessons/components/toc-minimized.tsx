@@ -16,7 +16,7 @@ export function TocMinimized({ headings, activeId, onHeadingClick }: TocMinimize
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.15 }}
-      className="flex flex-col items-center py-4 px-2.5 gap-2 select-none w-full"
+      className="flex flex-col items-center py-4 px-2.5 gap-2 select-none w-full font-sans"
     >
       {headings.map((heading) => {
         const isActive = activeId === heading.id;
