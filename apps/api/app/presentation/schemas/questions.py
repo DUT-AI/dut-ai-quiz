@@ -44,6 +44,8 @@ class QuestionUpdate(BaseModel):
     created_by: int | None = None
 
 
+from app.domain.entities.question import QuestionStatus, DuplicateStatus
+
 class QuestionOut(BaseModel):
     id: UUID
     pool_type: PoolType
@@ -55,6 +57,13 @@ class QuestionOut(BaseModel):
     tags: list[str]
     created_by: int
     created_at: datetime
+    status: QuestionStatus = QuestionStatus.PUBLIC
+    duplicate_status: DuplicateStatus = DuplicateStatus.NONE
+    duplicate_of_question_id: UUID | None = None
+    is_difficulty_ai_suggested: bool = False
+    is_answer_ai_generated: bool = False
+    is_solution_ai_generated: bool = False
+    import_session_id: UUID | None = None
 
     model_config = {"from_attributes": True}
 
@@ -64,6 +73,7 @@ class QuestionListQuery(BaseModel):
     difficulty: Difficulty | None = None
     lesson_id: UUID | None = None
     tag: str | None = None
+    import_session_id: UUID | None = None
     offset: int = 0
     limit: int = 50
 

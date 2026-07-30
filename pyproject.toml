@@ -1,2 +1,2 @@
 [tool.uv]
-workspace = { members = ["apps/api", "apps/worker"] }
+workspace = { members = ["apps/api", "apps/worker", "apps/pdf-worker"] }

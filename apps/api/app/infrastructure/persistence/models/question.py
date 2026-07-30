@@ -3,13 +3,15 @@ from typing import Any
 from uuid import UUID, uuid4
 
 from pgvector.sqlalchemy import Vector
+import sqlalchemy
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.dialects.postgresql import UUID as pgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.datetime_utils import now_ict
-from app.domain.entities.question import QuestionEntity, QuestionOptionEntity
+from app.core.datetime_utils import now_ict
+from app.domain.entities.question import QuestionEntity, QuestionOptionEntity, QuestionStatus, DuplicateStatus
 from app.domain.value_objects import Difficulty, PoolType
 
 from .base import Base
@@ -45,6 +47,21 @@ class Question(Base):
     embedding_source_hash: Mapped[str | None] = mapped_column(
         String(64), nullable=True
     )
+    status: Mapped[QuestionStatus] = mapped_column(
+        sqlalchemy.Enum(QuestionStatus, native_enum=False, length=50), 
+        default=QuestionStatus.PUBLIC, 
+        server_default=QuestionStatus.PUBLIC.value
+    )
+    duplicate_status: Mapped[DuplicateStatus] = mapped_column(
+        sqlalchemy.Enum(DuplicateStatus, native_enum=False, length=50), 
+        default=DuplicateStatus.NONE, 
+        server_default=DuplicateStatus.NONE.value
+    )
+    duplicate_of_question_id: Mapped[UUID | None] = mapped_column(pgUUID(as_uuid=True), ForeignKey("questions.id"), nullable=True)
+    is_difficulty_ai_suggested: Mapped[bool] = mapped_column(default=False, server_default="false")
+    is_answer_ai_generated: Mapped[bool] = mapped_column(default=False, server_default="false")
+    is_solution_ai_generated: Mapped[bool] = mapped_column(default=False, server_default="false")
+    import_session_id: Mapped[UUID | None] = mapped_column(pgUUID(as_uuid=True), index=True, nullable=True)
 
     def to_entity(self) -> QuestionEntity:
         return QuestionEntity(
@@ -61,6 +78,13 @@ class Question(Base):
             embedding=self.embedding,
             embedding_model=self.embedding_model,
             embedding_source_hash=self.embedding_source_hash,
+            status=self.status,
+            duplicate_status=self.duplicate_status,
+            duplicate_of_question_id=self.duplicate_of_question_id,
+            is_difficulty_ai_suggested=self.is_difficulty_ai_suggested,
+            is_answer_ai_generated=self.is_answer_ai_generated,
+            is_solution_ai_generated=self.is_solution_ai_generated,
+            import_session_id=self.import_session_id,
         )
 
     @classmethod
@@ -79,4 +103,11 @@ class Question(Base):
             embedding=entity.embedding,
             embedding_model=entity.embedding_model,
             embedding_source_hash=entity.embedding_source_hash,
+            status=entity.status,
+            duplicate_status=entity.duplicate_status,
+            duplicate_of_question_id=entity.duplicate_of_question_id,
+            is_difficulty_ai_suggested=entity.is_difficulty_ai_suggested,
+            is_answer_ai_generated=entity.is_answer_ai_generated,
+            is_solution_ai_generated=entity.is_solution_ai_generated,
+            import_session_id=entity.import_session_id,
         )

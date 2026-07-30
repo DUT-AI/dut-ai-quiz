@@ -12,6 +12,9 @@ from app.application.use_cases.questions import (
     UpdateQuestionUseCase,
     AnswerQuestionUseCase,
     GetRelatedLessonsUseCase,
+    HeartbeatQuestionUseCase,
+    AiRegenerateSolutionUseCase,
+    PublishQuestionUseCase,
 )
 from app.config import settings
 from app.domain.interfaces import EmbeddingServiceError
@@ -26,6 +29,10 @@ from app.presentation.schemas.questions import (
     QuestionAnswerIn,
     QuestionAnswerOut,
 )
+from pydantic import BaseModel
+class AiRegenerateRequest(BaseModel):
+    custom_prompt: str | None = None
+    
 from app.presentation.schemas.lessons import RelatedLessonOut
 
 router = APIRouter(prefix="/questions", tags=["questions"])
@@ -88,6 +95,7 @@ async def list_questions_route(
     difficulty: Difficulty | None = None,
     lesson_id: UUID | None = None,
     tag: str | None = None,
+    import_session_id: UUID | None = None,
     offset: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=200),
 ):
@@ -100,6 +108,7 @@ async def list_questions_route(
         difficulty=difficulty,
         lesson_id=lesson_id,
         tag=tag,
+        import_session_id=import_session_id,
         offset=offset,
         limit=limit,
     )
@@ -213,3 +222,47 @@ async def get_related_lessons_route(
     if result is None:
         raise HTTPException(status_code=404, detail="Question not found")
     return result
+
+
+@router.post("/{question_id}/heartbeat")
+@inject
+async def heartbeat_question_route(
+    user: AdminOrMentorUser,
+    question_id: UUID,
+    use_case: FromDishka[HeartbeatQuestionUseCase],
+):
+    ok = await use_case.execute(question_id, user.id)
+    if not ok:
+        raise HTTPException(status_code=409, detail="Could not acquire lock or question not found/not draft.")
+    return {"ok": True}
+
+
+@router.post("/{question_id}/ai-regenerate", response_model=QuestionOut)
+@inject
+async def ai_regenerate_route(
+    user: AdminOrMentorUser,
+    question_id: UUID,
+    body: AiRegenerateRequest,
+    use_case: FromDishka[AiRegenerateSolutionUseCase],
+):
+    # Depending on requirements, we can also check the lock here before allowing regenerate.
+    q = await use_case.execute(question_id, body.custom_prompt)
+    if not q:
+        raise HTTPException(status_code=404, detail="Not found or not draft")
+    return q
+
+
+@router.put("/{question_id}/publish", response_model=QuestionOut)
+@inject
+async def publish_question_route(
+    user: AdminOrMentorUser,
+    question_id: UUID,
+    use_case: FromDishka[PublishQuestionUseCase],
+):
+    try:
+        q = await use_case.execute(question_id, user.id)
+        if not q:
+            raise HTTPException(status_code=404, detail="Not found or not draft")
+        return q
+    except ValueError as e:
+        raise HTTPException(status_code=409, detail=str(e))

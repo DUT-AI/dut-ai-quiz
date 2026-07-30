@@ -23,6 +23,7 @@ class ListQuestionsUseCase:
             difficulty=query.difficulty,
             lesson_id=query.lesson_id,
             tag=query.tag,
+            import_session_id=query.import_session_id,
             offset=query.offset,
             limit=query.limit,
         )

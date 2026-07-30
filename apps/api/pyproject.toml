@@ -23,6 +23,11 @@ dependencies = [
   "pyjwt>=2.13.0",
   "markdown-it-py>=3.0.0",
   "pgvector>=0.4.0",
+  "google-genai>=0.2.2",
+  "paddleocr>=2.8",
+  "paddlepaddle>=2.6",
+  "opendataloader-pdf>=0.2.0",
+  "pillow>=10.0.0",
 ]
 
 [build-system]

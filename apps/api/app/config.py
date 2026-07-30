@@ -54,6 +54,10 @@ class Settings(BaseSettings):
     minio_bucket_name: str = ""
     presigned_url_expire_seconds: int = 3600
 
+    # AI Integration (Gemini / Multimodal)
+    gemini_api_key: str | None = None
+    gemini_model_name: str = "gemini-flash-latest"
+
     # Lesson semantic search. DUT-AI's Vietnamese SBERT service is the default;
     # local hashing and OpenAI-compatible providers remain available for dev.
     embedding_enabled: bool = True
