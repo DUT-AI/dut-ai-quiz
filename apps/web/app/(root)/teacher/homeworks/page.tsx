@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { HomeworkFormModal } from "@/features/homeworks/components/homework-form-modal";
 import { SubmissionsPanel } from "@/features/homeworks/components/submissions-panel";
 import {
@@ -38,16 +39,22 @@ export default function TeacherHomeworksPage() {
   const [editing, setEditing] = useState<Homework | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [viewing, setViewing] = useState<Homework | null>(null);
+  const [archiveTarget, setArchiveTarget] = useState<Homework | null>(null);
 
   // Filters state
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLessonId, setSelectedLessonId] = useState("");
 
   const archiveHomework = async (homework: Homework) => {
-    if (!window.confirm(`Bạn có chắc chắn muốn lưu trữ bài tập "${homework.title}"?`)) return;
+    setArchiveTarget(homework);
+  };
+
+  const handleConfirmArchive = async () => {
+    if (!archiveTarget) return;
     try {
-      await archive.mutateAsync(homework.id);
+      await archive.mutateAsync(archiveTarget.id);
       toast.success("Đã lưu trữ bài tập");
+      setArchiveTarget(null);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Không thể lưu trữ");
     }
@@ -231,12 +238,12 @@ export default function TeacherHomeworksPage() {
                     </div>
 
                     {/* Action buttons */}
-                    <div className="flex flex-wrap items-center justify-end gap-2 pt-2 border-t border-gray-100 dark:border-white/5">
+                    <div className="flex flex-wrap items-center justify-end gap-2 pt-2.5 border-t border-gray-100 dark:border-white/5">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => setViewing(homework)}
-                        className="h-9 border-gray-200 text-gray-700 hover:bg-gray-100 dark:border-white/10 dark:text-light-blue dark:hover:bg-white/5"
+                        className="h-9 rounded-xl border border-indigo-100 bg-indigo-50/30 text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 dark:border-indigo-900/30 dark:bg-indigo-950/20 dark:text-indigo-400 dark:hover:bg-indigo-500/20 dark:hover:text-indigo-300 dark:hover:border-indigo-500/40 transition-all font-bold text-xs"
                       >
                         <Eye className="mr-1.5 size-3.5" /> Xem bài nộp
                       </Button>
@@ -247,15 +254,15 @@ export default function TeacherHomeworksPage() {
                           setEditing(homework);
                           setFormOpen(true);
                         }}
-                        className="h-9 border-gray-200 text-gray-700 hover:bg-gray-100 dark:border-white/10 dark:text-light-blue dark:hover:bg-white/5"
+                        className="h-9 rounded-xl border border-amber-100 bg-amber-50/30 text-amber-600 hover:bg-amber-50 hover:text-amber-700 dark:border-amber-900/30 dark:bg-amber-950/20 dark:text-amber-400 dark:hover:bg-amber-500/20 dark:hover:text-amber-300 dark:hover:border-amber-500/40 transition-all font-bold text-xs"
                       >
                         <Edit3 className="mr-1.5 size-3.5" /> Chỉnh sửa
                       </Button>
                       <Button
-                        variant="destructive"
+                        variant="outline"
                         size="sm"
                         onClick={() => archiveHomework(homework)}
-                        className="h-9 border-red/10 bg-red/10 text-red hover:bg-red hover:text-white transition-colors"
+                        className="h-9 rounded-xl border border-rose-100 bg-rose-50/30 text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:border-rose-900/30 dark:bg-rose-950/20 dark:text-rose-400 dark:hover:bg-rose-500/20 dark:hover:text-rose-300 dark:hover:border-rose-500/40 transition-all font-bold text-xs"
                       >
                         <Archive className="mr-1.5 size-3.5" /> Lưu trữ
                       </Button>
@@ -277,6 +284,18 @@ export default function TeacherHomeworksPage() {
       <SubmissionsPanel
         homework={viewing}
         onClose={() => setViewing(null)}
+      />
+
+      {/* Confirm Archive Modal */}
+      <ConfirmDialog
+        isOpen={!!archiveTarget}
+        onClose={() => setArchiveTarget(null)}
+        onConfirm={handleConfirmArchive}
+        title="Lưu trữ bài tập này?"
+        description={archiveTarget ? `Bạn có chắc chắn muốn lưu trữ bài tập "${archiveTarget.title}"? Học viên sẽ không thể xem hoặc nộp bài giải cho bài tập này nữa.` : ""}
+        confirmText="Xác nhận lưu trữ"
+        cancelText="Hủy bỏ"
+        isDestructive={true}
       />
     </div>
   );

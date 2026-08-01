@@ -73,26 +73,25 @@ export function ConfirmDialog({
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 animate-in fade-in"
         onClick={loading ? undefined : onClose}
       />
-      
+
       {/* Dialog Container */}
-      <div className="relative w-full max-w-md overflow-hidden rounded-[2rem] border border-gray-150 dark:border-white/10 bg-white dark:bg-[#1A263B] shadow-2xl transition-all duration-300 animate-in zoom-in-95 fade-in duration-200">
-        
+      <div className="relative w-full max-w-md overflow-hidden rounded-[1.5rem] border border-gray-150 dark:border-white/10 bg-white dark:bg-[#1A263B] shadow-2xl transition-all duration-300 animate-in zoom-in-95 fade-in duration-200">
+
         {/* Top Accent Gradient Line */}
         <div className={`h-1.5 w-full ${isDestructive ? 'bg-gradient-to-r from-red to-orange-500' : 'bg-gradient-to-r from-primary to-indigo-500'}`} />
 
         <div className="p-6">
           <div className="flex flex-col items-center text-center">
-            
+
             {/* Warning Icon Container */}
-            <div className={`flex size-14 items-center justify-center rounded-2xl mb-4 transition-all duration-300 shadow-md ${
-              isDestructive 
-                ? 'bg-red/10 text-red shadow-red/5' 
-                : 'bg-primary/10 text-primary shadow-primary/5'
-            }`}>
+            <div className={`flex size-14 items-center justify-center rounded-2xl mb-4 transition-all duration-300 shadow-md ${isDestructive
+              ? 'bg-red/10 text-red shadow-red/5'
+              : 'bg-primary/10 text-primary shadow-primary/5'
+              }`}>
               <AlertTriangle className="size-6 animate-pulse" />
             </div>
 
@@ -119,11 +118,10 @@ export function ConfirmDialog({
               <Button
                 onClick={handleConfirm}
                 disabled={loading}
-                className={`h-10 w-full sm:w-auto rounded-xl text-xs font-black shadow-md text-white transition-all duration-200 ${
-                  isDestructive 
-                    ? 'bg-red hover:bg-red/90 shadow-red/10' 
-                    : 'bg-primary hover:bg-primary/90 shadow-primary/10'
-                }`}
+                className={`h-10 w-full sm:w-auto rounded-xl text-xs font-black shadow-md text-white transition-all duration-200 ${isDestructive
+                  ? 'bg-red hover:bg-red/90 shadow-red/10'
+                  : 'bg-primary hover:bg-primary/90 shadow-primary/10'
+                  }`}
               >
                 {loading ? (
                   <>

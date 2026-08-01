@@ -15,13 +15,13 @@ interface Props {
 export default function StepParticipants({ selectedIds, onChange }: Props) {
   const { data: teamsData, isLoading: loadingTeams } = useExternalTeams();
   const { data: usersData, isLoading: loadingUsers } = useExternalUsers();
-  
+
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState<"users" | "teams">("users");
-  
+
   // Track expanded teams in the left selection list
   const [expandedTeams, setExpandedTeams] = useState<number[]>([]);
-  
+
   // Track expanded teams in the right selected list
   const [expandedSelectedTeams, setExpandedSelectedTeams] = useState<number[]>([]);
 
@@ -32,15 +32,15 @@ export default function StepParticipants({ selectedIds, onChange }: Props) {
 
   const filteredUsers = useMemo(() => {
     const list = usersData?.data ?? [];
-    return list.filter(u => 
-      u.name.toLowerCase().includes(search.toLowerCase()) || 
+    return list.filter(u =>
+      u.name.toLowerCase().includes(search.toLowerCase()) ||
       u.email.toLowerCase().includes(search.toLowerCase())
     );
   }, [usersData?.data, search]);
 
   const filteredTeams = useMemo(() => {
     const list = teamsData?.data ?? [];
-    return list.filter(t => 
+    return list.filter(t =>
       t.team_name.toLowerCase().includes(search.toLowerCase())
     );
   }, [teamsData?.data, search]);
@@ -118,7 +118,7 @@ export default function StepParticipants({ selectedIds, onChange }: Props) {
   // Group selected users by fully selected teams
   const fullySelectedTeams = useMemo(() => {
     const list = teamsData?.data ?? [];
-    return list.filter(team => 
+    return list.filter(team =>
       team.members.length > 0 && team.members.every(m => selectedIds.includes(m.user_id))
     );
   }, [teamsData?.data, selectedIds]);
@@ -138,7 +138,7 @@ export default function StepParticipants({ selectedIds, onChange }: Props) {
   return (
     <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
       <div className="flex flex-col md:flex-row gap-5">
-        
+
         {/* Left Side: Selection Area */}
         <div className="flex-1 space-y-3">
           {/* Search Box */}
@@ -161,8 +161,8 @@ export default function StepParticipants({ selectedIds, onChange }: Props) {
                 onClick={() => setActiveTab("users")}
                 className={cn(
                   "px-4 py-1.5 rounded-[4px] text-xs font-bold transition-all flex items-center gap-1.5",
-                  activeTab === "users" 
-                    ? "bg-white dark:bg-zinc-800 shadow-sm text-primary" 
+                  activeTab === "users"
+                    ? "bg-white dark:bg-zinc-800 shadow-sm text-primary"
                     : "text-gray-navy dark:text-light-blue/70"
                 )}
               >
@@ -173,12 +173,12 @@ export default function StepParticipants({ selectedIds, onChange }: Props) {
                 onClick={() => setActiveTab("teams")}
                 className={cn(
                   "px-4 py-1.5 rounded-[4px] text-xs font-bold transition-all flex items-center gap-1.5",
-                  activeTab === "teams" 
-                    ? "bg-white dark:bg-zinc-800 shadow-sm text-primary" 
+                  activeTab === "teams"
+                    ? "bg-white dark:bg-zinc-800 shadow-sm text-primary"
                     : "text-gray-navy dark:text-light-blue/70"
                 )}
               >
-                <Users className="size-3.5" /> Nhóm hỏa tiễn
+                <Users className="size-3.5" /> Nhóm
               </button>
             </div>
 
@@ -239,8 +239,8 @@ export default function StepParticipants({ selectedIds, onChange }: Props) {
                       onClick={() => toggleUser(user.id)}
                       className={cn(
                         "w-full flex items-center justify-between p-3 rounded-md border transition-all hover:border-primary/50",
-                        isSelected 
-                          ? "bg-primary/10 border-primary/30 text-primary" 
+                        isSelected
+                          ? "bg-primary/10 border-primary/30 text-primary"
                           : "bg-white dark:bg-zinc-950/20 border-gray-150 dark:border-white/10 text-dark-blue dark:text-white"
                       )}
                     >
@@ -273,7 +273,7 @@ export default function StepParticipants({ selectedIds, onChange }: Props) {
               ) : (
                 filteredTeams.map(team => {
                   const isExpanded = expandedTeams.includes(team.id);
-                  
+
                   // Calculate selection states for this team
                   const teamMemberIds = team.members.map(m => m.user_id);
                   const selectedTeamMembersCount = teamMemberIds.filter(id => selectedIds.includes(id)).length;
@@ -281,12 +281,12 @@ export default function StepParticipants({ selectedIds, onChange }: Props) {
                   const isPartiallySelected = selectedTeamMembersCount > 0 && !isFullySelected;
 
                   return (
-                    <div 
+                    <div
                       key={team.id}
                       className="rounded-md border border-gray-150 dark:border-white/10 bg-white dark:bg-zinc-950/20 overflow-hidden"
                     >
                       {/* Team Card Header bar */}
-                      <div 
+                      <div
                         onClick={(e) => toggleTeamExpand(team.id, e)}
                         className="w-full flex items-center justify-between p-3.5 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition-colors"
                       >
@@ -323,7 +323,7 @@ export default function StepParticipants({ selectedIds, onChange }: Props) {
                           >
                             {isFullySelected ? "Bỏ chọn cả nhóm" : "Chọn cả nhóm"}
                           </button>
-                          
+
                           <div className="text-gray-navy dark:text-light-blue/70">
                             {isExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
                           </div>
@@ -400,7 +400,7 @@ export default function StepParticipants({ selectedIds, onChange }: Props) {
                 </p>
               </div>
               {selectedIds.length > 0 && (
-                <button 
+                <button
                   type="button"
                   onClick={removeAll}
                   className="p-1.5 rounded-[4px] hover:bg-red-50 text-red dark:hover:bg-red-500/10 transition-colors"
@@ -414,12 +414,12 @@ export default function StepParticipants({ selectedIds, onChange }: Props) {
             {/* Scrollable list area */}
             <div className="flex-1 overflow-y-auto pr-0.5 space-y-1.5 custom-scrollbar">
               <AnimatePresence>
-                
+
                 {/* 1. Fully Selected Teams */}
                 {fullySelectedTeams.map(team => {
                   const isExpanded = expandedSelectedTeams.includes(team.id);
                   return (
-                    <motion.div 
+                    <motion.div
                       key={`selected-team-${team.id}`}
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
@@ -449,7 +449,7 @@ export default function StepParticipants({ selectedIds, onChange }: Props) {
                             {isExpanded ? <ChevronUp className="size-3" /> : <ChevronDown className="size-3" />}
                           </div>
                         </button>
-                        
+
                         <button
                           type="button"
                           onClick={() => removeTeam(team.id)}
@@ -473,8 +473,8 @@ export default function StepParticipants({ selectedIds, onChange }: Props) {
                                 const u = userMap.get(m.user_id);
                                 if (!u) return null;
                                 return (
-                                  <div 
-                                    key={`selected-team-member-${m.user_id}`} 
+                                  <div
+                                    key={`selected-team-member-${m.user_id}`}
                                     className="flex items-center justify-between p-1 rounded-[3px] text-xs text-dark-blue dark:text-white hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
                                   >
                                     <div className="flex items-center gap-2 truncate">
@@ -522,7 +522,7 @@ export default function StepParticipants({ selectedIds, onChange }: Props) {
                     <span className="text-xs font-bold truncate flex-1 text-dark-blue dark:text-white">
                       {user.name}
                     </span>
-                    <button 
+                    <button
                       type="button"
                       onClick={() => toggleUser(user.id)}
                       className="size-5 rounded-[4px] hover:bg-red-50 text-red dark:hover:bg-red-500/10 transition-colors flex items-center justify-center shrink-0"
