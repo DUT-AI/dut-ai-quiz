@@ -30,6 +30,12 @@ class GetLessonDetailUseCase:
             lesson_id=lid, pool_type=pool_type
         )
 
+        # Check if lesson has game questions
+        game_questions = await self._question_repo.list_all(
+            lesson_id=lid, pool_type=PoolType.GAME, limit=1
+        )
+        has_game_questions = len(game_questions) > 0
+
         return {
             "id": lesson.id,
             "name": lesson.name,
@@ -39,4 +45,5 @@ class GetLessonDetailUseCase:
             "slug": lesson.slug,
             "created_at": lesson.created_at,
             "questions": questions,
+            "has_game_questions": has_game_questions,
         }

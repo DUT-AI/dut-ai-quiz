@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Swords, Play, RotateCcw, Loader2 } from "lucide-react";
+import { Swords, Play, RotateCcw, Loader2, AlertTriangle } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useStartGameSession } from "@/features/game/queries";
@@ -11,9 +11,15 @@ interface GameTabHeroProps {
   slug: string;
   activeSession: any;
   isLoadingSession: boolean;
+  hasGameQuestions?: boolean;
 }
 
-export function GameTabHero({ slug, activeSession, isLoadingSession }: GameTabHeroProps) {
+export function GameTabHero({
+  slug,
+  activeSession,
+  isLoadingSession,
+  hasGameQuestions = true,
+}: GameTabHeroProps) {
   const router = useRouter();
   const startSessionMutation = useStartGameSession();
   const [isGameLoading, setIsGameLoading] = useState(false);
@@ -127,7 +133,14 @@ export function GameTabHero({ slug, activeSession, isLoadingSession }: GameTabHe
         variants={itemVariants}
         className="relative z-10 flex flex-col sm:flex-row items-stretch sm:items-center gap-4 min-w-[280px]"
       >
-        {isLoadingSession ? (
+        {!hasGameQuestions ? (
+          <div
+            className="w-full py-5 px-10 rounded-full bg-amber-550/10 dark:bg-amber-500/10 text-amber-750 dark:text-amber-400 border-2 border-amber-500/30 dark:border-amber-500/20 font-black text-sm flex items-center justify-center gap-2.5 cursor-not-allowed select-none"
+          >
+            <AlertTriangle className="size-4 text-amber-600 dark:text-amber-400 shrink-0 animate-bounce" />
+            <span>Đấu trường chưa có câu hỏi</span>
+          </div>
+        ) : isLoadingSession ? (
           <div className="h-14 w-full bg-gray-100 dark:bg-zinc-800 animate-pulse rounded-full border border-gray-200 dark:border-white/5" />
         ) : isGameLoading ? (
           <Button

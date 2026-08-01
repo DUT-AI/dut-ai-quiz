@@ -10,7 +10,7 @@ class GetGameHistorySummaryUseCase:
 
         summary = {}
         for s in sessions:
-            if not s.snapshot:
+            if not s.snapshot or s.question_limit == 0:
                 continue
 
             slug = s.snapshot.get("lesson_slug")

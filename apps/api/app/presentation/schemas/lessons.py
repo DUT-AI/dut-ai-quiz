@@ -47,6 +47,8 @@ class LessonDetailOut(LessonOut):
     """Schema for detailed lesson output including questions."""
 
     questions: list[QuestionOut] = []
+    has_game_questions: bool = False
+
 
 
 class LessonReorderItem(BaseModel):

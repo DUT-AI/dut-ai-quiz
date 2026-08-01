@@ -26,6 +26,7 @@ export function useActiveGameSession(lessonSlug: string, options?: any) {
     gcTime: 0, // Disable caching so it's always fetched fresh when component mounts
     retry: false, // Don't retry on 404
     enabled: !!lessonSlug,
+    refetchOnWindowFocus: false,
     ...options,
   });
 }
