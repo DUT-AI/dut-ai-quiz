@@ -1,137 +1,150 @@
 "use client";
 
-import { Download, FileArchive, Upload } from "lucide-react";
-import { useState } from "react";
+import { motion } from "framer-motion";
+import { 
+  BookOpen, 
+  CheckCircle2, 
+  FileCode, 
+  GraduationCap, 
+  LayoutList,
+  Sparkles
+} from "lucide-react";
 import { toast } from "sonner";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  openHomeworkAttachment,
-  useMyHomeworks,
-  useSubmitHomework,
-} from "../queries";
-import { SubmissionResult } from "./submission-result";
-
-const ALLOWED = [".zip", ".rar", ".7z", ".tar.gz", ".gz"];
+import { Card, CardContent } from "@/components/ui/card";
+import { useMyHomeworks, useSubmitHomework } from "../queries";
+import { HomeworkCard } from "./homework-card";
 
 export function HomeworkTab({ lessonId }: { lessonId: string }) {
   const { data, isLoading, error } = useMyHomeworks(lessonId || null);
   const submit = useSubmitHomework();
-  const [files, setFiles] = useState<Record<string, File | null>>({});
 
-  const handleSubmit = async (homeworkId: string) => {
-    const file = files[homeworkId];
-    if (!file) return toast.error("Vui lòng chọn file bài làm");
-    if (!ALLOWED.some((suffix) => file.name.toLowerCase().endsWith(suffix))) {
-      return toast.error("Chỉ chấp nhận file nén");
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      return toast.error("File không được vượt quá 10 MB");
-    }
+  const handleSubmit = async (homeworkId: string, file: File) => {
     try {
       await submit.mutateAsync({ homeworkId, file });
-      setFiles((current) => ({ ...current, [homeworkId]: null }));
       toast.success("Nộp bài thành công");
     } catch (submissionError) {
-      toast.error(
-        submissionError instanceof Error
-          ? submissionError.message
-          : "Nộp bài thất bại",
-      );
+      const msg = submissionError instanceof Error ? submissionError.message : "Nộp bài thất bại";
+      toast.error(msg);
+      throw submissionError;
     }
   };
 
   if (isLoading) {
-    return <p className="py-14 text-center opacity-50">Đang tải bài tập coding...</p>;
-  }
-  if (error) {
     return (
-      <p className="py-14 text-center text-red">
-        Không thể tải bài tập coding của bài học.
-      </p>
+      <div className="flex flex-col items-center justify-center py-20">
+        <svg className="h-10 w-10 animate-spin text-primary" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+        </svg>
+        <p className="mt-4 text-sm font-semibold text-gray-navy dark:text-light-blue animate-pulse">
+          Đang tải bài tập coding...
+        </p>
+      </div>
     );
   }
+
+  if (error) {
+    return (
+      <div className="rounded-2xl border border-red/20 bg-red/5 p-6 text-center text-red">
+        Không thể tải bài tập coding của bài học. Vui lòng thử lại sau.
+      </div>
+    );
+  }
+
   if (!data?.data.length) {
     return (
-      <Card className="border-dashed">
-        <CardContent className="py-16 text-center text-gray-navy">
-          Bài học này chưa có bài tập coding dành cho bạn.
+      <Card className="border-dashed border-gray-200 dark:border-white/10 dark:bg-navy-blue/20">
+        <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-gray-400 dark:bg-white/5 dark:text-gray-navy mb-4">
+            <FileCode className="h-6 w-6" />
+          </div>
+          <p className="font-bold text-dark-blue dark:text-white">Chưa có bài tập coding</p>
+          <p className="mt-1 text-sm text-gray-navy dark:text-light-blue/70">
+            Bài học này chưa có bài tập coding dành cho bạn.
+          </p>
         </CardContent>
       </Card>
     );
   }
 
+  // Calculate statistics for the dashboard
+  const totalHomeworks = data.data.length;
+  const submittedHomeworks = data.data.filter(h => !!h.current_submission).length;
+  const gradedHomeworks = data.data.filter(
+    h => h.current_submission?.status === "GRADED" && typeof h.current_submission.score === "number"
+  );
+  const avgScore = gradedHomeworks.length > 0
+    ? (gradedHomeworks.reduce((sum, h) => sum + (h.current_submission!.score || 0), 0) / gradedHomeworks.length).toFixed(1)
+    : "—";
+
   return (
-    <div className="grid gap-6">
-      {data.data.map((homework) => {
-        const overdue = new Date() > new Date(homework.deadline);
-        const file = files[homework.id];
-        return (
-          <Card key={homework.id} className="overflow-hidden border-none shadow-xl">
-            <CardHeader className="bg-gray-50/70 dark:bg-white/5">
-              <div className="flex flex-col justify-between gap-4 md:flex-row md:items-start">
-                <div>
-                  <CardTitle className="text-2xl">{homework.title}</CardTitle>
-                  <p className="mt-2 whitespace-pre-wrap text-sm text-gray-navy dark:text-light-blue">
-                    {homework.description}
-                  </p>
-                </div>
-                <Badge variant={overdue ? "destructive" : "outline"}>
-                  Hạn: {new Date(homework.deadline).toLocaleString("vi-VN")}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-5 pt-6">
-              {homework.has_attachment && (
-                <Button
-                  variant="outline"
-                  onClick={() => openHomeworkAttachment(homework.id)}
-                >
-                  <Download className="mr-2 size-4" /> Tải đề đính kèm
-                </Button>
-              )}
+    <div className="space-y-6">
+      {/* Student Homeworks Mini-Dashboard */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        {/* Metric 1: Total assigned */}
+        <Card className="border border-gray-150 bg-white shadow-sm dark:border-white/5 dark:bg-navy-blue/30 backdrop-blur-sm">
+          <CardContent className="flex items-center gap-4 py-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <LayoutList className="size-5" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-gray-navy dark:text-light-blue">Đã giao</p>
+              <h3 className="text-xl font-black text-dark-blue dark:text-white">
+                {totalHomeworks} <span className="text-xs font-normal text-gray-navy">bài tập</span>
+              </h3>
+            </div>
+          </CardContent>
+        </Card>
 
-              {homework.current_submission && (
-                <SubmissionResult submission={homework.current_submission} />
-              )}
+        {/* Metric 2: Completed / Submitted */}
+        <Card className="border border-gray-150 bg-white shadow-sm dark:border-white/5 dark:bg-navy-blue/30 backdrop-blur-sm">
+          <CardContent className="flex items-center gap-4 py-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green/10 text-green">
+              <CheckCircle2 className="size-5" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-gray-navy dark:text-light-blue">Đã nộp bài</p>
+              <h3 className="text-xl font-black text-dark-blue dark:text-white">
+                {submittedHomeworks}/{totalHomeworks} <span className="text-xs font-normal text-gray-navy">hoàn thành</span>
+              </h3>
+            </div>
+          </CardContent>
+        </Card>
 
-              <div className="rounded-3xl border border-dashed border-primary/30 bg-primary/5 p-5">
-                <div className="flex flex-col items-stretch gap-4 md:flex-row md:items-center">
-                  <label className="flex flex-1 cursor-pointer items-center gap-3 rounded-2xl bg-white px-4 py-3 text-sm font-bold shadow-sm dark:bg-navy-blue">
-                    <FileArchive className="size-5 text-primary" />
-                    <span className="truncate">
-                      {file?.name ?? "Chọn file .zip, .rar, .7z, .tar.gz"}
-                    </span>
-                    <input
-                      className="hidden"
-                      type="file"
-                      accept={ALLOWED.join(",")}
-                      onChange={(event) =>
-                        setFiles((current) => ({
-                          ...current,
-                          [homework.id]: event.target.files?.[0] ?? null,
-                        }))
-                      }
-                    />
-                  </label>
-                  <Button
-                    disabled={!file || submit.isPending}
-                    onClick={() => handleSubmit(homework.id)}
-                  >
-                    <Upload className="mr-2 size-4" />
-                    {homework.current_submission ? "Nộp lại" : "Nộp bài"}
-                  </Button>
-                </div>
-                <p className="mt-2 text-xs text-gray-navy">
-                  Tối đa 10 MB. Nộp sau deadline vẫn được ghi nhận và đánh dấu trễ.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        );
-      })}
+        {/* Metric 3: Avg Score */}
+        <Card className="border border-gray-150 bg-white shadow-sm dark:border-white/5 dark:bg-navy-blue/30 backdrop-blur-sm">
+          <CardContent className="flex items-center gap-4 py-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500">
+              <GraduationCap className="size-5" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-gray-navy dark:text-light-blue">Điểm trung bình</p>
+              <h3 className="text-xl font-black text-dark-blue dark:text-white">
+                {avgScore} <span className="text-xs font-normal text-gray-navy">/ 10</span>
+              </h3>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Homework Cards List */}
+      <div className="grid gap-6">
+        {data.data.map((homework, idx) => (
+          <motion.div
+            key={homework.id}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: idx * 0.05 }}
+          >
+            <HomeworkCard
+              homework={homework}
+              onSubmit={handleSubmit}
+              isSubmitting={submit.isPending}
+            />
+          </motion.div>
+        ))}
+      </div>
     </div>
   );
 }
