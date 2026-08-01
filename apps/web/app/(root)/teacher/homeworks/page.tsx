@@ -201,9 +201,6 @@ export default function TeacherHomeworksPage() {
                         <CardTitle className="text-lg font-black text-dark-blue dark:text-white">
                           {homework.title}
                         </CardTitle>
-                        <p className="line-clamp-2 text-sm text-gray-navy dark:text-light-blue/80 pr-4">
-                          {homework.description}
-                        </p>
                       </div>
 
                       <div className="flex flex-col items-start gap-1 md:items-end">

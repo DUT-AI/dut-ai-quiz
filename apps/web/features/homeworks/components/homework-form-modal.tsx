@@ -1,16 +1,21 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Calendar, FileText, Upload, Sparkles, GraduationCap } from "lucide-react";
+import { X, Calendar, FileText, Upload, Sparkles, GraduationCap, Edit3 } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import StepParticipants from "@/features/exams/components/exam-editor/StepParticipants";
+import { Markdown } from "@/components/markdown";
+import { cn } from "@/lib/utils";
 import { useLessons } from "@/lib/queries";
 import { useCreateHomework, useUpdateHomework } from "../queries";
 import { Homework } from "../types";
+import { LessonSelect } from "./lesson-select";
+import { DateTimePicker } from "./date-time-picker";
+import { DescriptionEditorModal } from "./description-editor-modal";
 
 interface HomeworkFormModalProps {
   open: boolean;
@@ -32,6 +37,7 @@ export function HomeworkFormModal({ open, homework, onClose }: HomeworkFormModal
   }, []);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [deadline, setDeadline] = useState("");
   const [assigneeIds, setAssigneeIds] = useState<number[]>([]);
   const [file, setFile] = useState<File | null>(null);
@@ -44,6 +50,7 @@ export function HomeworkFormModal({ open, homework, onClose }: HomeworkFormModal
     setDeadline(homework?.deadline.slice(0, 16) ?? "");
     setAssigneeIds(homework?.assignee_ids ?? []);
     setFile(null);
+    setIsEditorOpen(false);
   }, [homework, open]);
 
   const submit = async (event: FormEvent) => {
@@ -94,7 +101,7 @@ export function HomeworkFormModal({ open, homework, onClose }: HomeworkFormModal
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
             transition={{ type: "spring", damping: 25, stiffness: 250 }}
-            className="relative z-10 max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-[2rem] border border-gray-150 bg-white p-6 shadow-2xl dark:border-white/5 dark:bg-navy-blue md:p-8 custom-scrollbar"
+            className="relative z-10 max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl border border-gray-150 bg-white p-6 shadow-2xl dark:border-white/20 dark:bg-navy-blue md:p-8 custom-scrollbar"
           >
             {/* Header */}
             <div className="mb-6 flex items-start justify-between">
@@ -124,19 +131,11 @@ export function HomeworkFormModal({ open, homework, onClose }: HomeworkFormModal
                   <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-gray-navy dark:text-light-blue/80">
                     <GraduationCap className="size-3.5 text-primary" /> Bài học
                   </label>
-                  <select
-                    value={lessonId}
-                    onChange={(e) => setLessonId(e.target.value)}
-                    className="w-full h-11 rounded-xl border border-gray-250 bg-gray-50 px-4 py-2 text-sm text-dark-blue outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-white/10 dark:bg-zinc-950/40 dark:text-white dark:focus:border-primary"
-                    required
-                  >
-                    <option value="" className="dark:bg-zinc-950">Chọn bài học chứa bài tập coding</option>
-                    {lessons.map((lesson) => (
-                      <option key={lesson.id} value={lesson.id} className="dark:bg-zinc-950">
-                        {lesson.name}
-                      </option>
-                    ))}
-                  </select>
+                  <LessonSelect
+                    lessons={lessons}
+                    selectedId={lessonId}
+                    onChange={setLessonId}
+                  />
                 </div>
 
                 {/* Title */}
@@ -147,7 +146,7 @@ export function HomeworkFormModal({ open, homework, onClose }: HomeworkFormModal
                   <input
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="w-full h-11 rounded-xl border border-gray-250 bg-gray-50 px-4 text-sm text-dark-blue outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-white/10 dark:bg-zinc-950/40 dark:text-white dark:focus:border-primary"
+                    className="w-full h-11 rounded-lg border border-gray-250 bg-gray-50 px-4 text-sm text-dark-blue outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-white/20 dark:bg-zinc-950/40 dark:text-white dark:focus:border-primary"
                     placeholder="Ví dụ: Bài tập Python cơ bản..."
                     required
                   />
@@ -158,27 +157,54 @@ export function HomeworkFormModal({ open, homework, onClose }: HomeworkFormModal
                   <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-gray-navy dark:text-light-blue/80">
                     <Calendar className="size-3.5 text-primary" /> Hạn nộp bài
                   </label>
-                  <input
-                    type="datetime-local"
+                  <DateTimePicker
                     value={deadline}
-                    onChange={(e) => setDeadline(e.target.value)}
-                    className="w-full h-11 rounded-xl border border-gray-250 bg-gray-50 px-4 py-2 text-sm text-dark-blue outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-white/10 dark:bg-zinc-950/40 dark:text-white dark:focus:border-primary"
-                    required
+                    onChange={setDeadline}
                   />
                 </div>
 
-                {/* Description */}
+                {/* Description with Dedicated Markdown Editor Modal */}
                 <div className="space-y-2 md:col-span-2">
-                  <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-gray-navy dark:text-light-blue/80">
-                    Mô tả / Đề bài chi tiết
-                  </label>
-                  <textarea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    rows={4}
-                    placeholder="Nhập yêu cầu, đề bài hoặc gợi ý làm bài..."
-                    className="w-full rounded-xl border border-gray-250 bg-gray-50 px-4 py-3 text-sm text-dark-blue outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-white/10 dark:bg-zinc-950/40 dark:text-white dark:focus:border-primary"
-                  />
+                  <div className="flex items-center justify-between">
+                    <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-gray-navy dark:text-light-blue/80">
+                      Mô tả / Đề bài chi tiết
+                    </label>
+
+                  </div>
+
+                  {description ? (
+                    <div
+                      onClick={() => setIsEditorOpen(true)}
+                      className="relative border border-gray-250 dark:border-white/20 bg-gray-50/50 dark:bg-zinc-950/20 hover:bg-gray-100/30 dark:hover:bg-zinc-950/40 rounded-xl p-4 max-h-[160px] overflow-hidden cursor-pointer transition-all group"
+                    >
+                      <div className="prose dark:prose-invert max-w-none break-words text-base font-sans leading-relaxed tracking-wide pointer-events-none select-none pb-12">
+                        <Markdown content={description} />
+                      </div>
+                      
+                      {/* Contrasting gradient mask (gray-200 to transparent / zinc-900 to transparent) */}
+                      <div className="absolute bottom-0 inset-x-0 h-24 bg-gradient-to-t from-gray-200 via-gray-200/70 to-transparent dark:from-zinc-900 dark:via-zinc-900/70 dark:to-transparent pointer-events-none transition-colors duration-300" />
+                      
+                      {/* Centered edit action badge */}
+                      <div className="absolute bottom-4 inset-x-0 flex justify-center pointer-events-none">
+                        <span className="flex items-center gap-1.5 text-xs font-bold text-primary bg-white dark:bg-zinc-900 border border-gray-150 dark:border-white/10 px-3.5 py-2 rounded-xl shadow-md transform group-hover:scale-105 group-hover:translate-y-[-2px] transition-all duration-300">
+                          <Edit3 className="size-3.5" /> Bấm để chỉnh sửa đề bài
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => setIsEditorOpen(true)}
+                      className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-250 dark:border-white/20 rounded-xl bg-gray-50/50 dark:bg-zinc-950/20 hover:bg-gray-100/50 dark:hover:bg-zinc-950/40 cursor-pointer transition-all group"
+                    >
+                      <FileText className="size-8 text-gray-400 group-hover:text-primary transition-colors mb-2" />
+                      <span className="text-sm font-semibold text-gray-700 dark:text-light-blue/90">
+                        Chưa có đề bài chi tiết
+                      </span>
+                      <span className="text-xs text-gray-navy/60 dark:text-light-blue/50 mt-1">
+                        Click vào đây để mở trình soạn thảo đề bài
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Attachment File */}
@@ -186,7 +212,7 @@ export function HomeworkFormModal({ open, homework, onClose }: HomeworkFormModal
                   <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-gray-navy dark:text-light-blue/80">
                     File đề bài đính kèm (Tùy chọn)
                   </label>
-                  <div className="relative flex items-center rounded-xl border border-gray-250 bg-gray-50 dark:border-white/10 dark:bg-zinc-950/40">
+                  <div className="relative flex items-center rounded-xl border border-gray-250 bg-gray-50 dark:border-white/20 dark:bg-zinc-950/40">
                     <label className="flex h-11 cursor-pointer items-center justify-center rounded-l-xl bg-gray-150 px-4 text-sm font-bold text-gray-700 hover:bg-gray-200 dark:bg-white/5 dark:text-light-blue dark:hover:bg-white/10 transition-colors">
                       <Upload className="mr-2 size-4" />
                       Chọn file
@@ -204,7 +230,7 @@ export function HomeworkFormModal({ open, homework, onClose }: HomeworkFormModal
               </div>
 
               {/* Assignees Selection */}
-              <div className="rounded-2xl border border-gray-150 p-5 dark:border-white/5 dark:bg-white/[0.01]">
+              <div className="rounded-xl border border-gray-150 p-5 dark:border-white/20 dark:bg-white/[0.01]">
                 <h4 className="mb-4 text-xs font-bold uppercase tracking-wider text-gray-navy dark:text-light-blue/80">
                   Phân phối & Người nhận bài tập
                 </h4>
@@ -213,16 +239,16 @@ export function HomeworkFormModal({ open, homework, onClose }: HomeworkFormModal
 
               {/* Action Buttons */}
               <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-white/5">
-                <Button 
-                  type="button" 
-                  variant="outline" 
+                <Button
+                  type="button"
+                  variant="outline"
                   onClick={onClose}
-                  className="h-11 rounded-xl px-5 border-gray-200 text-gray-700 hover:bg-gray-100 dark:border-white/10 dark:text-light-blue dark:hover:bg-white/5"
+                  className="h-11 rounded-xl px-5 border-gray-200 text-gray-700 hover:bg-gray-100 dark:border-white/20 dark:text-light-blue dark:hover:bg-white/5"
                 >
                   Hủy bỏ
                 </Button>
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   disabled={create.isPending || update.isPending}
                   className="h-11 rounded-xl px-6"
                 >
@@ -243,6 +269,13 @@ export function HomeworkFormModal({ open, homework, onClose }: HomeworkFormModal
               </div>
             </form>
           </motion.div>
+
+          <DescriptionEditorModal
+            open={isEditorOpen}
+            initialValue={description}
+            onClose={() => setIsEditorOpen(false)}
+            onSave={setDescription}
+          />
         </div>
       )}
     </AnimatePresence>,

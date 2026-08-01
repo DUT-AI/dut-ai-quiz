@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Calendar,
   Check,
@@ -10,14 +10,18 @@ import {
   Upload,
   Clock,
   ArrowRight,
-  Sparkles
+  Sparkles,
+  X,
+  FileText
 } from "lucide-react";
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Markdown } from "@/components/markdown";
 import { formatDateTime, parseICT } from "@/lib/utils";
 import { openHomeworkAttachment } from "../queries";
 import { Homework } from "../types";
@@ -57,6 +61,7 @@ function getDeadlineInfo(deadlineStr: string) {
 
 export function HomeworkCard({ homework, onSubmit, isSubmitting }: HomeworkCardProps) {
   const [file, setFile] = useState<File | null>(null);
+  const [isDescOpen, setIsDescOpen] = useState(false);
   const deadlineInfo = getDeadlineInfo(homework.deadline);
   const isOverdue = new Date() > parseICT(homework.deadline);
   const submission = homework.current_submission;
@@ -77,7 +82,8 @@ export function HomeworkCard({ homework, onSubmit, isSubmitting }: HomeworkCardP
   };
 
   return (
-    <Card className="overflow-hidden border border-gray-150 bg-white shadow-md dark:border-white/30 dark:bg-navy-blue/60 backdrop-blur-sm transition-all duration-300 hover:shadow-xl hover:border-primary/50 dark:hover:border-primary/50">
+    <>
+      <Card className="overflow-hidden border border-gray-150 bg-white shadow-md dark:border-white/30 dark:bg-navy-blue/60 backdrop-blur-sm transition-all duration-300 hover:shadow-xl hover:border-primary/50 dark:hover:border-primary/50">
       {/* Decorative Top Accent Line based on deadline status */}
       <div className={`h-1.5 w-full ${isOverdue && !submission ? "bg-red" : "bg-primary"}`} />
 
@@ -102,29 +108,28 @@ export function HomeworkCard({ homework, onSubmit, isSubmitting }: HomeworkCardP
             </Badge>
           </div>
         </div>
-
-        <div className="mt-4 text-sm leading-relaxed text-slate dark:text-light-blue/90">
-          <p className="whitespace-pre-wrap rounded-xl bg-gray-50/50 p-4 dark:bg-white/5">
-            {homework.description}
-          </p>
-        </div>
       </CardHeader>
 
       <CardContent className="space-y-6 pt-0">
-        {/* Homework Attachment */}
-        {homework.has_attachment && (
-          <div className="flex justify-start">
+        {/* Action Buttons for Task Info */}
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
+            type="button"
+            onClick={() => setIsDescOpen(true)}
+            className="bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 hover:text-primary dark:border-primary/30 h-10 rounded-xl"
+          >
+            <FileText className="mr-2 size-4" /> Xem đề bài chi tiết
+          </Button>
+          {homework.has_attachment && (
             <Button
               variant="outline"
-              size="sm"
               onClick={() => openHomeworkAttachment(homework.id)}
-              className="group border-primary/20 text-primary hover:bg-primary/5 hover:text-primary dark:border-primary/30"
+              className="border-gray-200 text-gray-700 hover:bg-gray-50 dark:border-white/10 dark:text-light-blue dark:hover:bg-white/5 h-10 rounded-xl"
             >
-              <Download className="mr-2 size-4 transition-transform group-hover:-translate-y-0.5" />
-              Tải đề bài đính kèm
+              <Download className="mr-2 size-4" /> Tải đề bài đính kèm
             </Button>
-          </div>
-        )}
+          )}
+        </div>
 
         <hr className="border-gray-100 dark:border-white/15" />
 
@@ -259,5 +264,74 @@ export function HomeworkCard({ homework, onSubmit, isSubmitting }: HomeworkCardP
         </div>
       </CardContent>
     </Card>
+    
+    {/* Description Modal */}
+    {typeof window !== "undefined" && createPortal(
+      <AnimatePresence>
+        {isDescOpen && (
+          <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+            {/* Backdrop Overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsDescOpen(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+
+            {/* Modal Content */}
+            <motion.div
+              initial={{ scale: 0.97, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.97, opacity: 0 }}
+              transition={{ type: "spring", damping: 30, stiffness: 300 }}
+              className="relative z-10 flex max-h-[85vh] w-full max-w-4xl flex-col rounded-2xl border border-gray-150 bg-white shadow-2xl dark:border-white/20 dark:bg-navy-blue"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-gray-100 p-4 dark:border-white/5 md:px-6">
+                <div className="flex items-center gap-2">
+                  <FileText className="size-5 text-primary" />
+                  <div>
+                    <h3 className="text-lg font-black text-dark-blue dark:text-white">
+                      Chi tiết đề bài: {homework.title}
+                    </h3>
+                    <p className="text-xs text-gray-navy dark:text-light-blue/70">
+                      Hạn nộp: {formatDateTime(homework.deadline)}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsDescOpen(false)}
+                  className="rounded-xl p-2 text-gray-400 hover:bg-gray-100 hover:text-dark-blue dark:hover:bg-white/5 dark:hover:text-white transition-colors"
+                >
+                  <X className="size-5" />
+                </button>
+              </div>
+
+              {/* Content body */}
+              <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+                <div className="prose dark:prose-invert max-w-none break-words text-base font-sans leading-relaxed tracking-wide text-dark-blue dark:text-white">
+                  <Markdown content={homework.description} />
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="flex justify-end border-t border-gray-100 p-4 dark:border-white/5 md:px-6">
+                <Button
+                  type="button"
+                  onClick={() => setIsDescOpen(false)}
+                  className="h-10 rounded-xl px-6"
+                >
+                  Đóng
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>,
+      document.body
+    )}
+  </>
   );
 }
