@@ -3,13 +3,13 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useLessons, useModules } from "@/lib/queries";
 import { SearchBar } from "@/components/ui/search-bar";
-import { 
-  Search, 
-  Map, 
-  Layers, 
-  ListOrdered, 
-  BookOpen, 
-  Folder, 
+import {
+  Search,
+  Map,
+  Layers,
+  ListOrdered,
+  BookOpen,
+  Folder,
   HelpCircle,
   Menu,
   Compass
@@ -20,7 +20,7 @@ import { LessonNodeCard } from "./lesson-node-card";
 export function LearningPath() {
   const { data: lessons = [], isLoading: isLoadingLessons, error: lessonsError } = useLessons();
   const { data: modules = [], isLoading: isLoadingModules } = useModules();
-  
+
   const [searchQuery, setSearchQuery] = useState("");
   const [activeModuleId, setActiveModuleId] = useState<string>("");
 
@@ -85,15 +85,15 @@ export function LearningPath() {
   const stats = useMemo(() => {
     const totalChapters = modules.length;
     const totalLessons = lessons.length;
-    
+
     // Calculate total parallel steps across all modules
     let parallelGroupsCount = 0;
     let sequentialStepsCount = 0;
-    
+
     modules.forEach((mod) => {
       const modLessons = lessons.filter((l) => l.module_id === mod.id);
       const orders = new Set(modLessons.map((l) => l.order || 1));
-      
+
       orders.forEach((ord) => {
         const orderLessons = modLessons.filter((l) => (l.order || 1) === ord);
         if (orderLessons.length > 1) {
@@ -148,7 +148,7 @@ export function LearningPath() {
           {/* Chapters Metric */}
           <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-navy-blue border border-gray-150 dark:border-white/5 shadow-md flex items-center justify-between text-left transition-all hover:scale-[1.01]">
             <div className="space-y-1">
-              <span className="text-[10px] font-black uppercase tracking-wider text-gray-navy/70 dark:text-light-blue/60">Chương học</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-gray-navy/70 dark:text-light-blue/60">Tổng Chương học</span>
               <p className="text-xl sm:text-2xl font-black text-dark-blue dark:text-white">{stats.totalChapters} Chương</p>
             </div>
             <div className="size-10 sm:size-11 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-500 border border-indigo-500/20 flex items-center justify-center shrink-0">
@@ -213,7 +213,7 @@ export function LearningPath() {
               <p className="text-sm font-extrabold text-gray-navy dark:text-light-blue">
                 Tìm thấy {searchResults.length} bài học phù hợp với từ khoá &quot;{searchQuery}&quot;
               </p>
-              <button 
+              <button
                 onClick={() => setSearchQuery("")}
                 className="text-xs font-black text-primary hover:underline"
               >
@@ -246,7 +246,7 @@ export function LearningPath() {
         ) : (
           /* Structured Roadmap View */
           <div className="flex flex-col lg:flex-row gap-8 relative items-start">
-            
+
             {/* Quick Navigation Sidebar - Desktop Only */}
             {sortedModules.length > 1 && (
               <aside className="hidden xl:block w-64 shrink-0 sticky top-24 bg-white/60 dark:bg-navy-blue/35 border border-slate-200/60 dark:border-white/5 backdrop-blur-md rounded-2xl p-5 text-left max-h-[calc(100vh-10rem)] overflow-y-auto custom-scrollbar">
@@ -254,7 +254,7 @@ export function LearningPath() {
                   <Map className="size-4" />
                   Mục lục các module
                 </div>
-                
+
                 <nav className="flex flex-col gap-2">
                   {sortedModules.map((mod, idx) => {
                     const isActive = activeModuleId === mod.id;
@@ -262,49 +262,43 @@ export function LearningPath() {
                       <button
                         key={`nav-${mod.id}`}
                         onClick={() => scrollToModule(mod.id)}
-                        className={`group w-full text-left p-3 rounded-xl text-xs font-bold transition-all flex gap-3 min-w-0 border ${
-                          isActive
+                        className={`group w-full text-left p-3 rounded-xl text-xs font-bold transition-all flex gap-3 min-w-0 border ${isActive
                             ? "bg-primary/10 border-primary/40 text-primary scale-[1.02] shadow-sm"
                             : "border-transparent text-dark-blue dark:text-zinc-200 hover:bg-slate-100 dark:hover:bg-white/5 hover:border-slate-200/50 dark:hover:border-white/10"
-                        }`}
+                          }`}
                       >
-                        <span className={`size-6 rounded-lg text-[10px] font-black flex items-center justify-center shrink-0 transition-colors ${
-                          isActive
+                        <span className={`size-6 rounded-lg text-[10px] font-black flex items-center justify-center shrink-0 transition-colors ${isActive
                             ? "bg-primary text-white dark:text-navy-blue"
                             : "bg-slate-100 dark:bg-white/10 text-gray-navy/80 dark:text-light-blue group-hover:bg-primary group-hover:text-white dark:group-hover:text-navy-blue"
-                        }`}>
+                          }`}>
                           {idx + 1}
                         </span>
-                        <span className={`truncate pr-1 mt-0.5 transition-colors ${
-                          isActive ? "text-primary font-black" : "text-dark-blue dark:text-zinc-200 group-hover:text-primary"
-                        }`}>
+                        <span className={`truncate pr-1 mt-0.5 transition-colors ${isActive ? "text-primary font-black" : "text-dark-blue dark:text-zinc-200 group-hover:text-primary"
+                          }`}>
                           {mod.name}
                         </span>
                       </button>
                     );
                   })}
-                  
+
                   {unassignedLessons.length > 0 && (() => {
                     const isActive = activeModuleId === "unassigned-lessons-track";
                     return (
                       <button
                         onClick={() => scrollToModule("unassigned-lessons-track")}
-                        className={`group w-full text-left p-3 rounded-xl text-xs font-bold transition-all flex gap-3 border ${
-                          isActive
+                        className={`group w-full text-left p-3 rounded-xl text-xs font-bold transition-all flex gap-3 border ${isActive
                             ? "bg-primary/10 border-primary/40 text-primary scale-[1.02] shadow-sm"
                             : "border-transparent text-gray-navy dark:text-light-blue/70 hover:bg-slate-100 dark:hover:bg-white/5 hover:border-slate-200/50 dark:hover:border-white/10"
-                        }`}
+                          }`}
                       >
-                        <span className={`size-6 rounded-lg text-[10px] font-black flex items-center justify-center shrink-0 transition-colors ${
-                          isActive
+                        <span className={`size-6 rounded-lg text-[10px] font-black flex items-center justify-center shrink-0 transition-colors ${isActive
                             ? "bg-primary text-white dark:text-navy-blue"
                             : "bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white dark:group-hover:text-navy-blue"
-                        }`}>
+                          }`}>
                           *
                         </span>
-                        <span className={`truncate mt-0.5 transition-colors ${
-                          isActive ? "text-primary font-black" : "group-hover:text-primary"
-                        }`}>
+                        <span className={`truncate mt-0.5 transition-colors ${isActive ? "text-primary font-black" : "group-hover:text-primary"
+                          }`}>
                           Bài học bổ sung
                         </span>
                       </button>
@@ -340,7 +334,7 @@ export function LearningPath() {
 
               {/* Unassigned / Additional Lessons Section */}
               {unassignedLessons.length > 0 && (
-                <div 
+                <div
                   id="module-unassigned-lessons-track"
                   className="w-full bg-white dark:bg-navy-blue border border-slate-200/80 dark:border-white/5 rounded-2xl p-6 sm:p-8 shadow-lg border-l-4 border-l-slate-400 text-left"
                 >
@@ -363,7 +357,7 @@ export function LearningPath() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                     {unassignedLessons.map((lesson, idx) => (
-                      <LessonNodeCard 
+                      <LessonNodeCard
                         key={lesson.id}
                         lesson={lesson}
                         index={idx}

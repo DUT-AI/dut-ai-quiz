@@ -129,6 +129,14 @@ export function GameTabHero({ slug, activeSession, isLoadingSession }: GameTabHe
       >
         {isLoadingSession ? (
           <div className="h-14 w-full bg-gray-100 dark:bg-zinc-800 animate-pulse rounded-full border border-gray-200 dark:border-white/5" />
+        ) : isGameLoading ? (
+          <Button
+            disabled
+            className="w-full py-6 px-10 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-black shadow-xl opacity-75 cursor-wait text-sm flex items-center justify-center gap-2"
+          >
+            <Loader2 className="size-4 animate-spin text-white" />
+            <span>Đang chuẩn bị đấu trường...</span>
+          </Button>
         ) : hasActiveSession ? (
           <div className="flex flex-col sm:flex-row gap-3 w-full">
             <motion.div

@@ -115,11 +115,7 @@ export function ModuleTrack({ module, lessons, index }: Props) {
               {module.name}
             </h3>
             
-            {module.description && (
-              <p className="text-xs text-gray-navy/70 dark:text-light-blue/50 font-medium mt-1 line-clamp-1 max-w-xl">
-                {module.description}
-              </p>
-            )}
+
           </div>
         </div>
 
@@ -154,7 +150,7 @@ export function ModuleTrack({ module, lessons, index }: Props) {
             <div className="border-t border-slate-150/50 dark:border-white/5 p-6 bg-slate-50/20 dark:bg-navy-blue/10">
               {/* Description Block */}
               {module.description && (
-                <div className="mb-6 p-4 rounded-xl bg-slate-100/40 dark:bg-white/5 border border-slate-200/50 dark:border-white/5 text-left">
+                <div className="mb-6 text-left">
                   <p className="text-[10px] font-black uppercase tracking-wider text-gray-navy/60 dark:text-light-blue/50 mb-1">
                     Mô tả chương trình học
                   </p>
