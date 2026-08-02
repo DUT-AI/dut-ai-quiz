@@ -7,6 +7,7 @@ import { GameTabBackground } from "./game-tab-background";
 import GameLeaderboard from "@/features/game/components/game-leaderboard";
 import GamePersonalBest from "@/features/game/components/game-personal-best";
 import { useActiveGameSession } from "@/features/game/queries";
+import { useLessonBySlug } from "../queries";
 
 interface GameTabProps {
   lessonId: string;
@@ -15,6 +16,7 @@ interface GameTabProps {
 
 export function GameTab({ lessonId, slug }: GameTabProps) {
   const { data: activeSession, isLoading: isLoadingSession } = useActiveGameSession(slug);
+  const { data: lesson } = useLessonBySlug(slug);
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 md:px-0 py-6 font-sans relative">
@@ -36,6 +38,7 @@ export function GameTab({ lessonId, slug }: GameTabProps) {
             slug={slug} 
             activeSession={activeSession} 
             isLoadingSession={isLoadingSession} 
+            hasGameQuestions={lesson?.has_game_questions !== false}
           />
 
           {/* Content Stack */}

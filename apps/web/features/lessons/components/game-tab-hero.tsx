@@ -1,8 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Swords, Play, RotateCcw, Loader2 } from "lucide-react";
+import { Swords, Play, RotateCcw, Loader2, AlertTriangle } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useStartGameSession } from "@/features/game/queries";
@@ -11,27 +11,39 @@ interface GameTabHeroProps {
   slug: string;
   activeSession: any;
   isLoadingSession: boolean;
+  hasGameQuestions?: boolean;
 }
 
-export function GameTabHero({ slug, activeSession, isLoadingSession }: GameTabHeroProps) {
+export function GameTabHero({
+  slug,
+  activeSession,
+  isLoadingSession,
+  hasGameQuestions = true,
+}: GameTabHeroProps) {
   const router = useRouter();
   const startSessionMutation = useStartGameSession();
+  const [isGameLoading, setIsGameLoading] = useState(false);
 
   const hasActiveSession = !!activeSession?.session_id;
   const completedCount = activeSession?.snapshot?.gamification?.last_question_index ?? 0;
   const totalCount = activeSession?.snapshot?.questions?.length ?? 0;
 
   const handleStartNewSession = () => {
-    if (startSessionMutation.isPending) return;
+    if (startSessionMutation.isPending || isGameLoading) return;
+    setIsGameLoading(true);
     startSessionMutation.mutate(
       { lesson_slug: slug },
       {
         onSuccess: () => {
           router.push(`/lessons/${slug}/game`);
         },
+        onError: () => {
+          setIsGameLoading(false);
+        },
       }
     );
   };
+
 
   // Animation variants
   const containerVariants = {
@@ -121,8 +133,23 @@ export function GameTabHero({ slug, activeSession, isLoadingSession }: GameTabHe
         variants={itemVariants}
         className="relative z-10 flex flex-col sm:flex-row items-stretch sm:items-center gap-4 min-w-[280px]"
       >
-        {isLoadingSession ? (
+        {!hasGameQuestions ? (
+          <div
+            className="w-full py-5 px-10 rounded-full bg-amber-550/10 dark:bg-amber-500/10 text-amber-750 dark:text-amber-400 border-2 border-amber-500/30 dark:border-amber-500/20 font-black text-sm flex items-center justify-center gap-2.5 cursor-not-allowed select-none"
+          >
+            <AlertTriangle className="size-4 text-amber-600 dark:text-amber-400 shrink-0 animate-bounce" />
+            <span>Đấu trường chưa có câu hỏi</span>
+          </div>
+        ) : isLoadingSession ? (
           <div className="h-14 w-full bg-gray-100 dark:bg-zinc-800 animate-pulse rounded-full border border-gray-200 dark:border-white/5" />
+        ) : isGameLoading ? (
+          <Button
+            disabled
+            className="w-full py-6 px-10 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-black shadow-xl opacity-75 cursor-wait text-sm flex items-center justify-center gap-2"
+          >
+            <Loader2 className="size-4 animate-spin text-white" />
+            <span>Đang chuẩn bị đấu trường...</span>
+          </Button>
         ) : hasActiveSession ? (
           <div className="flex flex-col sm:flex-row gap-3 w-full">
             <motion.div
@@ -131,16 +158,23 @@ export function GameTabHero({ slug, activeSession, isLoadingSession }: GameTabHe
               className="flex-1"
             >
               <Button
-                onClick={() => router.push(`/lessons/${slug}/game?action=continue`)}
-                disabled={startSessionMutation.isPending}
+                onClick={() => {
+                  setIsGameLoading(true);
+                  router.push(`/lessons/${slug}/game?action=continue`);
+                }}
+                disabled={isGameLoading || startSessionMutation.isPending}
                 className="w-full py-6 px-6 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-black shadow-lg shadow-emerald-500/20 dark:shadow-emerald-950/20 border-b-4 border-emerald-700 hover:border-emerald-800 transition-all text-sm flex items-center justify-center gap-2 group/btn"
               >
-                <motion.div
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ repeat: Infinity, duration: 1.5 }}
-                >
-                  <Play className="size-4 fill-current text-white" />
-                </motion.div>
+                {isGameLoading ? (
+                  <Loader2 className="size-4 animate-spin text-white" />
+                ) : (
+                  <motion.div
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ repeat: Infinity, duration: 1.5 }}
+                  >
+                    <Play className="size-4 fill-current text-white" />
+                  </motion.div>
+                )}
                 <span>
                   Tiếp tục đấu ({completedCount}/{totalCount})
                 </span>
@@ -155,10 +189,10 @@ export function GameTabHero({ slug, activeSession, isLoadingSession }: GameTabHe
               <Button
                 variant="outline"
                 onClick={handleStartNewSession}
-                disabled={startSessionMutation.isPending}
+                disabled={isGameLoading || startSessionMutation.isPending}
                 className="w-full py-6 px-6 rounded-full border-2 border-gray-200 dark:border-white/10 text-dark-blue dark:text-white font-bold hover:bg-gray-50 dark:hover:bg-white/5 shadow-sm transition-all text-sm flex items-center justify-center gap-2"
               >
-                {startSessionMutation.isPending ? (
+                {isGameLoading || startSessionMutation.isPending ? (
                   <Loader2 className="size-4 animate-spin text-gray-500 dark:text-gray-400" />
                 ) : (
                   <RotateCcw className="size-4 text-gray-500 dark:text-gray-400 group-hover:rotate-185 transition-transform duration-300" />
@@ -175,10 +209,10 @@ export function GameTabHero({ slug, activeSession, isLoadingSession }: GameTabHe
           >
             <Button
               onClick={handleStartNewSession}
-              disabled={startSessionMutation.isPending}
+              disabled={isGameLoading || startSessionMutation.isPending}
               className="w-full py-6 px-10 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-black shadow-xl shadow-indigo-500/25 dark:shadow-indigo-950/30 hover:brightness-105 active:scale-95 transition-all text-sm flex items-center justify-center gap-2"
             >
-              {startSessionMutation.isPending ? (
+              {isGameLoading || startSessionMutation.isPending ? (
                 <Loader2 className="size-4 animate-spin text-white" />
               ) : (
                 <motion.div variants={swordVariants} className="flex items-center">

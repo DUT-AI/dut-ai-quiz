@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { 
@@ -13,7 +13,8 @@ import {
   Network, 
   ArrowRight, 
   Sparkles,
-  Layers
+  Layers,
+  Loader2
 } from "lucide-react";
 import type { Lesson } from "@/features/lessons/types";
 
@@ -53,8 +54,10 @@ function getLessonIcon(name: string) {
 export function LessonNodeCard({ lesson, index }: Props) {
   const router = useRouter();
   const Icon = getLessonIcon(lesson.name);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleClick = () => {
+    setIsLoading(true);
     router.push(`/lessons/${lesson.slug || lesson.id}`);
   };
 
@@ -63,9 +66,9 @@ export function LessonNodeCard({ lesson, index }: Props) {
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.05 }}
-      whileHover={{ y: -5, scale: 1.015 }}
-      onClick={handleClick}
-      className="group cursor-pointer w-full text-left"
+      whileHover={isLoading ? undefined : { y: -5, scale: 1.015 }}
+      onClick={isLoading ? undefined : handleClick}
+      className={`group w-full text-left ${isLoading ? "cursor-wait pointer-events-none" : "cursor-pointer"}`}
     >
       <div className="relative h-full overflow-hidden rounded-2xl transition-all duration-300
         bg-white/70 dark:bg-navy-blue/40 
@@ -76,6 +79,16 @@ export function LessonNodeCard({ lesson, index }: Props) {
         hover:shadow-2xl hover:shadow-primary/10 dark:hover:shadow-primary/5
         p-6 flex flex-col justify-between gap-4"
       >
+        {/* Loading Overlay */}
+        {isLoading && (
+          <div className="absolute inset-0 bg-white/85 dark:bg-navy-blue/85 backdrop-blur-[1px] flex flex-col items-center justify-center gap-2.5 z-20 animate-in fade-in duration-200">
+            <Loader2 className="size-7 text-primary animate-spin" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-primary animate-pulse">
+              Đang vào học...
+            </span>
+          </div>
+        )}
+
         {/* Decorative Top Accent Glow */}
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/10 via-primary/30 to-primary/10 group-hover:from-primary/40 group-hover:via-primary/80 group-hover:to-primary/40 transition-all duration-300" />
         

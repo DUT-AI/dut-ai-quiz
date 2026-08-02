@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Swords, Skull, Trophy, Lock, Heart, Shield, Zap, BookOpen } from "lucide-react";
+import { Swords, Skull, Trophy, Lock, Heart, Shield, Zap, BookOpen, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
 import BossHud from "./boss-hud";
@@ -12,6 +12,7 @@ import GameQuestionCard from "./game-question-card";
 import GameResult from "./game-result";
 import { useThemeStore } from "@/store/theme-store";
 import SwitchTheme from "@/components/atoms/switch-theme";
+import { useAntiCheat, VIOLATION_MESSAGES } from "@/hooks/use-anti-cheat";
 
 import {
   useStartGameSession,
@@ -105,7 +106,7 @@ export default function GameContainer({ lessonSlug, initialSession }: GameContai
   // Countdown effect
   useEffect(() => {
     if (countdown === null) return;
-    
+
     if (countdown === 0) {
       const timer = setTimeout(() => {
         setCountdown(null);
@@ -148,7 +149,16 @@ export default function GameContainer({ lessonSlug, initialSession }: GameContai
   const [gameResult, setGameResult] = useState<"playing" | "victory" | "defeat">("playing");
   const [stageProgress, setStageProgress] = useState<("correct" | "incorrect" | "idle")[]>([]);
 
-
+  // Anti-cheat hook
+  const antiCheat = useAntiCheat({
+    isActive: screen === "playing" && sessionId !== "",
+    isSubmitting: screen === "result" || gameResult !== "playing",
+    onAutoSubmitted: () => {
+      toast.error("Bạn đã vi phạm quy chế thi đấu quá 3 lần! Trận đấu kết thúc.");
+      setGameResult("defeat");
+      setScreen("result");
+    }
+  });
 
   // Initialize game state from session data
   const initializeGame = (sessionData: { session_id: string; snapshot: any }) => {
@@ -191,7 +201,7 @@ export default function GameContainer({ lessonSlug, initialSession }: GameContai
       const totalQCount = (snap.questions || []).length;
       const progress: ("correct" | "incorrect" | "idle")[] = Array.from({ length: totalQCount }).map(() => "idle");
       for (let i = 0; i < idx; i++) {
-        progress[i] = "correct"; 
+        progress[i] = "correct";
       }
       setStageProgress(progress);
 
@@ -242,6 +252,17 @@ export default function GameContainer({ lessonSlug, initialSession }: GameContai
     }
   }, [initialSession, lessonSlug, router]);
 
+  // Exit fullscreen on component unmount (when leaving the game page)
+  useEffect(() => {
+    return () => {
+      if (typeof window !== "undefined" && document.fullscreenElement) {
+        document.exitFullscreen().catch((err) => {
+          console.error("Failed to exit fullscreen on unmount:", err);
+        });
+      }
+    };
+  }, []);
+
   // Handle timeout
   const handleTimeOut = () => {
     toast.error("Hết thời gian suy nghĩ mất rồi!");
@@ -285,7 +306,7 @@ export default function GameContainer({ lessonSlug, initialSession }: GameContai
           if (data.is_correct) {
             toast.success("Chính xác! Bạn nhận được vàng thưởng.");
             setBossStatus("damage");
-            
+
             // If boss was active, correct answer defeats it
             if (isBossMode) {
               setBossHp(0);
@@ -305,7 +326,7 @@ export default function GameContainer({ lessonSlug, initialSession }: GameContai
           } else {
             setScreenShake(true);
             setTimeout(() => setScreenShake(false), 500);
-            
+
             setBossStatus("attack");
             setTimeout(() => setBossStatus("idle"), 1000);
 
@@ -491,9 +512,8 @@ export default function GameContainer({ lessonSlug, initialSession }: GameContai
 
   return (
     <div
-      className={`text-zinc-955 dark:text-zinc-100 flex flex-col font-sans relative select-none p-2 md:p-4 px-1.5 md:px-2 transition-all duration-300 h-screen overflow-y-auto custom-scrollbar game-layout-container ${
-        screen === "playing" ? "lg:overflow-hidden" : ""
-      } ${screenShake ? "animate-[shake_0.5s_infinite]" : ""}`}
+      className={`text-zinc-955 dark:text-zinc-100 flex flex-col font-sans relative select-none p-2 md:p-4 px-1.5 md:px-2 transition-all duration-300 h-screen overflow-y-auto custom-scrollbar game-layout-container ${screen === "playing" ? "lg:overflow-hidden" : ""
+        } ${screenShake ? "animate-[shake_0.5s_infinite]" : ""}`}
       style={gameBackgroundStyle}
     >
       <style jsx global>{`
@@ -718,6 +738,74 @@ export default function GameContainer({ lessonSlug, initialSession }: GameContai
             <div className="text-zinc-100 font-extrabold mt-4 font-mono text-sm md:text-base max-w-sm px-4">
               BOSS {getBossName(stage)} XUẤT HIỆN. HP TRỪ GẤP ĐÔI NẾU TRẢ LỜI SAI!
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ─── ANTI-CHEAT FULLSCREEN ENFORCEMENT OVERLAY ─── */}
+      {screen === "playing" && !antiCheat.isFullScreen && gameResult === "playing" && (
+        <div className="fixed inset-0 bg-white/95 dark:bg-black/95 backdrop-blur-xl flex items-center justify-center p-6 text-center z-[150] select-none">
+          <div className="max-w-md space-y-8">
+            <div className="size-20 rounded-3xl bg-primary/10 flex items-center justify-center mx-auto border border-primary/20">
+              <Shield className="size-10 text-primary" />
+            </div>
+            <div className="space-y-4">
+              <h2 className="text-2xl font-black text-zinc-900 dark:text-white uppercase tracking-tighter">Yêu cầu Toàn màn hình</h2>
+              <p className="text-zinc-650 dark:text-zinc-400 text-sm font-medium">
+                Để đảm bảo tính công bằng của đấu trường, bạn cần chơi ở chế độ toàn màn hình.
+              </p>
+              <div className="text-[11px] text-zinc-600 dark:text-zinc-500 space-y-1 text-left bg-slate-100 dark:bg-white/5 p-4 rounded-2xl border border-slate-200 dark:border-white/10">
+                <p className="font-bold text-zinc-800 dark:text-white/70">⚠️ Hệ thống giám sát 7 lớp bảo vệ:</p>
+                <p>• Phát hiện chuyển tab / ẩn cửa sổ</p>
+                <p>• Phát hiện extension gian lận (Always Active Tab)</p>
+                <p>• Phát hiện mở Developer Tools</p>
+                <p>• Chặn phím tắt, sao chép, chuột phải</p>
+              </div>
+            </div>
+            <button
+              onClick={antiCheat.enterFullScreen}
+              className="w-full py-4 bg-primary text-white rounded-2xl font-black text-base shadow-2xl shadow-primary/20 active:scale-95 transition-all"
+            >
+              VÀO CHẾ ĐỘ TOÀN MÀN HÌNH
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ─── ANTI-CHEAT VIOLATION MODAL ─── */}
+      <AnimatePresence>
+        {screen === "playing" && antiCheat.showViolationModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[160] flex items-center justify-center p-6 bg-black/75 backdrop-blur-2xl"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 max-w-md w-full text-center space-y-6 shadow-2xl border border-red-500/20"
+            >
+              <div className="size-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto">
+                <AlertTriangle className="size-8 text-red-500" />
+              </div>
+              <div className="space-y-2">
+                <h2 className="text-xl font-black text-red-500 uppercase tracking-tighter">PHÁT HIỆN VI PHẠM!</h2>
+                <p className="text-zinc-900 dark:text-white font-bold text-xs bg-red-500/5 py-3 px-4 rounded-xl border border-red-500/10">
+                  Lỗi: {antiCheat.violationType ? VIOLATION_MESSAGES[antiCheat.violationType] : "Phát hiện hành động bất thường."}
+                </p>
+                <p className="text-zinc-650 dark:text-zinc-400 text-[11px] leading-relaxed">
+                  Hành động này vi phạm luật thi đấu. <br />
+                  <span className="text-red-500 font-black underline italic">Lưu ý: Nếu vi phạm lần thứ 3 ({antiCheat.violationCount}/3), bạn sẽ thất bại trận đấu ngay lập tức!</span>
+                </p>
+              </div>
+              <button
+                onClick={antiCheat.dismissViolation}
+                className="w-full py-4 bg-red-500 hover:bg-red-650 text-white rounded-[2rem] font-black text-sm shadow-xl shadow-red-500/20 active:scale-95 transition-all"
+              >
+                XÁC NHẬN VÀ QUAY LẠI
+              </button>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

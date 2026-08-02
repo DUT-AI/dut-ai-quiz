@@ -26,7 +26,7 @@ export function TocExpanded({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.15 }}
-      className="flex flex-col h-full max-h-[400px] lg:max-h-[550px] bg-white dark:bg-[#191919] text-slate-800 dark:text-slate-200 select-none"
+      className="flex flex-col h-full max-h-[400px] lg:max-h-[550px] bg-white dark:bg-[#191919] text-slate-800 dark:text-slate-200 select-none font-sans"
     >
       {/* Header */}
       <div className="flex items-center justify-between px-3.5 py-2 border-b border-slate-100 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/30">
