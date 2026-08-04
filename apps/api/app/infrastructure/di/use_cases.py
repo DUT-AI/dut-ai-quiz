@@ -5,7 +5,6 @@ from app.application.services.pdf_ai_parser import PDFAIParserService
 from app.application.services.lesson_chunker import LessonChunker
 from app.domain.interfaces.pdf_parser_strategy import IPdfParserStrategy
 from app.application.services.ai_pdf_parser import AIPdfParserStrategy
-from app.application.services.pdf_parser import RegexPdfParserStrategy
 from app.application.services.lesson_embedding_indexer import LessonEmbeddingIndexer
 from app.application.services.lesson_index_scheduler import LessonIndexScheduler
 from app.application.services.question_embedding import QuestionEmbeddingService

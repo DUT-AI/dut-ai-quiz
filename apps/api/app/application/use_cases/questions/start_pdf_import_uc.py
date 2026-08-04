@@ -1,7 +1,7 @@
 import uuid
 import hashlib
-from datetime import datetime, timezone
-import fitz  # PyMuPDF
+from datetime import datetime
+import fitz  
 from redis.asyncio import Redis
 import os
 
@@ -10,7 +10,7 @@ from app.domain.interfaces.import_session_repo import IImportSessionRepository
 from app.domain.interfaces.pdf_import_queue import IPdfImportQueue
 from app.presentation.schemas.pdf_import import StartPdfImportResponse
 
-
+import tempfile
 class StartPdfImportUseCase:
     def __init__(
         self,
@@ -51,18 +51,9 @@ class StartPdfImportUseCase:
             raise ValueError("PDF must not be empty")
             
         doc.close()
-
-        # 2. Idempotency Check (Anti double-submit)
-        file_hash = hashlib.sha256(pdf_bytes + str(user_id).encode()).hexdigest()
-        lock_key = f"idempotency:import:{file_hash}"
-        is_locked = await self.redis.setnx(lock_key, "1")
-        if not is_locked:
-            # Optionally return existing job id if stored, but throwing error is safer for double clicks
-            raise ValueError("Duplicate upload detected. Please wait.")
-        await self.redis.expire(lock_key, 15) # 15 seconds TTL
+        await self.pdf_import_queue.check_job_existing(pdf_bytes, user_id)
 
         # 3. Save decoded file to temp_dir/pdf_uploads/{job_id}.pdf
-        import tempfile
         job_id = uuid.uuid4()
         upload_dir = os.path.join(tempfile.gettempdir(), "pdf_uploads")
         os.makedirs(upload_dir, exist_ok=True)

@@ -1,7 +1,12 @@
 import abc
 from uuid import UUID
 
+
 class IPdfImportQueue(abc.ABC):
+    @abc.abstractmethod
+    async def check_job_existing(self, pdf_bytes: bytes, user_id: int) -> None:
+        pass
+
     @abc.abstractmethod
     async def enqueue_parse_pdf(
         self,

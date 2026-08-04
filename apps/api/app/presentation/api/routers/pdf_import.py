@@ -12,6 +12,7 @@ Endpoints:
   POST /pdf-import/questions/{id}/lock       — Acquire review lock
   POST /pdf-import/questions/{id}/heartbeat  — Renew lock TTL
 """
+
 from __future__ import annotations
 
 from uuid import UUID
@@ -42,7 +43,9 @@ from app.presentation.schemas.pdf_import_v2 import (
     RegenerateSolutionResponse,
 )
 from app.presentation.schemas.pdf_import import StartPdfImportResponse
-from app.application.use_cases.questions.start_pdf_import_uc import StartPdfImportUseCase
+from app.application.use_cases.questions.start_pdf_import_uc import (
+    StartPdfImportUseCase,
+)
 
 router = APIRouter(prefix="/pdf-import", tags=["pdf-import"])
 
@@ -50,11 +53,8 @@ router = APIRouter(prefix="/pdf-import", tags=["pdf-import"])
 # STEP 1+2: Upload & Start Async Job
 # ---------------------------------------------------------------------------
 
-@router.post(
-    "/import-pdf", 
-    response_model=StartPdfImportResponse, 
-    status_code=202
-)
+
+@router.post("/import-pdf", response_model=StartPdfImportResponse, status_code=202)
 @inject
 async def import_pdf_route(
     user: AdminOrMentorUser,
@@ -76,10 +76,11 @@ async def import_pdf_route(
             file_name=file.filename,
             lesson_id=lesson_id,
             target_scope=target_scope,
-            password=password
+            password=password,
         )
     except ValueError as e:
         raise HTTPException(status_code=422, detail={"error": str(e)})
+
 
 @router.post("/upload", response_model=PDFUploadResponse, status_code=202)
 @inject
@@ -96,13 +97,13 @@ async def upload_pdf(
     AI xử lý bất đồng bộ trong background.
     """
     pdf_bytes = await file.read()
-    
+
     lid = None
     if lesson_id and str(lesson_id).strip() not in ("undefined", "null", ""):
         try:
             lid = UUID(str(lesson_id).strip())
         except ValueError:
-            pass # ignore invalid uuid
+            pass  # ignore invalid uuid
 
     result = await uc.execute(
         pdf_bytes=pdf_bytes,
@@ -129,9 +130,7 @@ async def upload_pdf(
     )
 
 
-@router.post(
-    "/upload-with-password", response_model=PDFUploadResponse, status_code=202
-)
+@router.post("/upload-with-password", response_model=PDFUploadResponse, status_code=202)
 @inject
 async def upload_pdf_with_password(
     user: AdminOrMentorUser,
@@ -170,6 +169,7 @@ async def upload_pdf_with_password(
 # Poll job status
 # ---------------------------------------------------------------------------
 
+
 @router.get("/{job_id}/status", response_model=ImportSessionStatusResponse)
 @inject
 async def get_import_status(
@@ -179,14 +179,13 @@ async def get_import_status(
 ):
     """Poll trạng thái xử lý PDF import job."""
     result = await uc.execute(job_id=job_id, user_id=user.id)
-    if not result:
-        raise HTTPException(status_code=404, detail="Import job không tồn tại")
     return ImportSessionStatusResponse(**result)
 
 
 # ---------------------------------------------------------------------------
 # STEP 7: Review DRAFT questions
 # ---------------------------------------------------------------------------
+
 
 @router.get("/{job_id}/questions", response_model=DraftQuestionsListResponse)
 @inject
@@ -198,15 +197,14 @@ async def list_draft_questions(
     limit: int = 50,
 ):
     """Lấy danh sách câu hỏi DRAFT để admin review."""
-    questions = await uc.execute(
-        import_session_id=job_id, offset=offset, limit=limit
-    )
+    questions = await uc.execute(import_session_id=job_id, offset=offset, limit=limit)
     return DraftQuestionsListResponse(questions=questions, total=len(questions))
 
 
 # ---------------------------------------------------------------------------
 # STEP 8: Approve → PUBLIC
 # ---------------------------------------------------------------------------
+
 
 @router.patch(
     "/questions/{question_id}/approve", response_model=ApproveQuestionResponse
@@ -236,9 +234,8 @@ async def approve_question(
 # Delete DRAFT question (cleanup MinIO)
 # ---------------------------------------------------------------------------
 
-@router.delete(
-    "/questions/{question_id}", response_model=RejectQuestionResponse
-)
+
+@router.delete("/questions/{question_id}", response_model=RejectQuestionResponse)
 @inject
 async def reject_question(
     question_id: UUID,
@@ -256,6 +253,7 @@ async def reject_question(
 # AI Regenerate Solution
 # ---------------------------------------------------------------------------
 
+
 @router.post(
     "/questions/{question_id}/regenerate-solution",
     response_model=RegenerateSolutionResponse,
@@ -268,9 +266,7 @@ async def regenerate_solution(
     uc: FromDishka[RegenerateSolutionUseCase],
 ):
     """🪄 Gọi Gemini AI sinh lại lời giải cho câu hỏi."""
-    result = await uc.execute(
-        question_id=question_id, admin_hint=body.admin_hint
-    )
+    result = await uc.execute(question_id=question_id, admin_hint=body.admin_hint)
     if not result["ok"]:
         raise HTTPException(status_code=500, detail=result["error"])
     return RegenerateSolutionResponse(**result)
@@ -279,6 +275,7 @@ async def regenerate_solution(
 # ---------------------------------------------------------------------------
 # Redis Lock (Multi-admin concurrency control)
 # ---------------------------------------------------------------------------
+
 
 @router.post("/questions/{question_id}/lock", response_model=LockResponse)
 @inject
