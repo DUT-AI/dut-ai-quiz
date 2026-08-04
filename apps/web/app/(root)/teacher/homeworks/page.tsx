@@ -11,7 +11,8 @@ import {
   Filter,
   GraduationCap,
   Calendar,
-  AlertCircle
+  AlertCircle,
+  Users
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
@@ -65,24 +66,8 @@ export default function TeacherHomeworksPage() {
     const homeworksList = data?.data || [];
     const totalHomeworks = homeworksList.length;
 
-    let totalAssigned = 0;
-    let totalSubmitted = 0;
-    let pendingGrading = 0; // Simple simulation or count
-
-    homeworksList.forEach((h) => {
-      totalAssigned += h.assignment_count;
-      totalSubmitted += h.submitted_count;
-    });
-
-    const completionRate = totalAssigned > 0
-      ? Math.round((totalSubmitted / totalAssigned) * 100)
-      : 0;
-
     return {
       totalHomeworks,
-      totalAssigned,
-      totalSubmitted,
-      completionRate,
     };
   }, [data]);
 
@@ -181,10 +166,6 @@ export default function TeacherHomeworksPage() {
         <div className="grid gap-5">
           {filteredHomeworks.map((homework, idx) => {
             const isOverdue = new Date() > parseICT(homework.deadline);
-            const submissionRate = homework.assignment_count > 0
-              ? Math.round((homework.submitted_count / homework.assignment_count) * 100)
-              : 0;
-
             const lessonName = lessons.find((l) => l.id === homework.lesson_id)?.name || "Bài học không xác định";
 
             return (
@@ -220,21 +201,13 @@ export default function TeacherHomeworksPage() {
                   </CardHeader>
 
                   <CardContent className="space-y-4">
-                    {/* Progress Bar showing Submissions Ratio */}
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="flex items-center gap-4 text-gray-navy dark:text-light-blue/85">
-                          <span>Đã giao: <strong>{homework.assignment_count}</strong></span>
-                          <span>Đã nộp: <strong>{homework.submitted_count}</strong></span>
-                        </span>
-                        <span className="font-black text-primary">{submissionRate}% hoàn thành</span>
-                      </div>
-                      <div className="h-2 w-full rounded-full bg-gray-100 dark:bg-zinc-950">
-                        <div
-                          className="h-full rounded-full bg-primary transition-all duration-500"
-                          style={{ width: `${submissionRate}%` }}
-                        />
-                      </div>
+                    {/* Submissions count statistics */}
+                    <div className="flex items-center justify-between text-xs py-1 border border-gray-150 dark:border-white/10 rounded-xl px-3 bg-gray-50/50 dark:bg-zinc-950/20">
+                      <span className="flex items-center gap-1.5 text-gray-navy dark:text-light-blue/85 font-semibold">
+                        <Users className="size-3.5 text-primary" />
+                        <span>Số lượng bài đã nộp:</span>
+                      </span>
+                      <span className="font-black text-primary text-sm">{homework.submitted_count} bài</span>
                     </div>
 
                     {/* Action buttons */}

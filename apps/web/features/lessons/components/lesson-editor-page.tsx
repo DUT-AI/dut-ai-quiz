@@ -13,14 +13,17 @@ import {
   ImageIcon,
   Loader2,
   Sparkles,
+  Upload,
+  FileArchive,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
 import { z } from "zod";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Markdown } from "@/components/markdown";
-import { useCreateLesson, useUpdateLesson, useModules, usePresignUpload } from "@/lib/queries";
+import { useCreateLesson, useUpdateLesson, useModules, usePresignUpload, useImportNotionLesson } from "@/lib/queries";
 import { uploadImage, handlePasteImage } from "@/lib/upload-utils";
 import { LessonSchema, type Lesson, type Module } from "../types";
 import { EditorToolbar } from "@/features/questions/components/editor/editor-toolbar";
@@ -49,7 +52,11 @@ export function LessonEditorPage({ initialData }: LessonEditorPageProps) {
   const createMut = useCreateLesson();
   const updateMut = useUpdateLesson(initialData?.id || "");
 
-  const [currentStep, setCurrentStep] = useState<1 | 2>(1);
+  const importNotionMut = useImportNotionLesson();
+
+  const stepParam = searchParams.get("step");
+  const defaultStep = stepParam === "2" ? 2 : 1;
+  const [currentStep, setCurrentStep] = useState<1 | 2>(defaultStep as 1 | 2);
   const [viewMode, setViewMode] = useState<"split" | "editor" | "preview">("split");
   const [editorWidth, setEditorWidth] = useState<number>(55); // percent
   const [isDragging, setIsDragging] = useState(false);
@@ -112,17 +119,7 @@ export function LessonEditorPage({ initialData }: LessonEditorPageProps) {
     [modules, watchModuleId]
   );
 
-  // Auto adjust textarea height while preserving scroll
-  useEffect(() => {
-    const textarea = document.getElementById("lesson-editor-content") as HTMLTextAreaElement | null;
-    if (textarea) {
-      const parent = textarea.closest(".overflow-y-auto");
-      const scrollTop = parent ? parent.scrollTop : 0;
-      textarea.style.height = "auto";
-      textarea.style.height = `${Math.max(350, textarea.scrollHeight)}px`;
-      if (parent) parent.scrollTop = scrollTop;
-    }
-  }, [watchContent]);
+
 
   // Insert format / LaTeX into text position
   const insertFormat = (before: string, after: string = "") => {
@@ -217,6 +214,55 @@ export function LessonEditorPage({ initialData }: LessonEditorPageProps) {
       document.removeEventListener("touchend", stopResize);
     };
   }, [isDragging]);
+
+  const handleImportNotionZip = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Reset value so selection triggers even for same file
+    e.target.value = "";
+
+    const formData = new FormData();
+    formData.append("file", file);
+    
+    // Pass module_id if selected in the dropdown
+    const currentModuleId = getValues("module_id");
+    if (currentModuleId) {
+      formData.append("module_id", currentModuleId);
+    }
+    
+    // Autofill Swagger placeholders
+    formData.append("name", "string");
+    formData.append("description", "string");
+
+    const loadingToast = toast.loading("Đang import bài giảng lý thuyết từ Notion...");
+    try {
+      const importedLesson = await importNotionMut.mutateAsync(formData);
+      toast.dismiss(loadingToast);
+      toast.success("Import bài học từ Notion thành công!");
+
+      // If creating new, redirect to the edit url with step=2
+      if (!isEdit) {
+        router.push(`/teacher/lessons/${importedLesson.id}/edit?step=2`);
+      } else {
+        // If already in edit mode, update in place
+        setValue("name", importedLesson.name, { shouldDirty: true, shouldValidate: true });
+        setValue("description", importedLesson.description, { shouldDirty: true, shouldValidate: true });
+        setValue("content_md", importedLesson.content_md || "", { shouldDirty: true, shouldValidate: true });
+        if (importedLesson.slug) {
+          setValue("slug", importedLesson.slug, { shouldDirty: true, shouldValidate: true });
+        }
+        if (importedLesson.module_id) {
+          setValue("module_id", importedLesson.module_id, { shouldDirty: true, shouldValidate: true });
+        }
+        setCurrentStep(2);
+      }
+    } catch (err: any) {
+      toast.dismiss(loadingToast);
+      console.error("Failed to import Notion zip", err);
+      toast.error("Lỗi khi import file Notion: " + (err.response?.data?.detail || err.message || "Không rõ lỗi"));
+    }
+  };
 
   const handleBack = () => {
     router.push("/teacher/lessons");
@@ -329,16 +375,18 @@ export function LessonEditorPage({ initialData }: LessonEditorPageProps) {
         <form
           id="lesson-editor-form"
           onSubmit={handleSubmit(onSubmit)}
-          className={`flex-1 flex flex-col overflow-y-auto custom-scrollbar ${
-            viewMode === "preview" ? "hidden" : ""
-          }`}
+          className={`flex-1 flex flex-col custom-scrollbar ${
+            currentStep === 2 ? "overflow-hidden" : "overflow-y-auto"
+          } ${viewMode === "preview" ? "hidden" : ""}`}
           style={
             viewMode === "split" && isDesktop
               ? { width: `${editorWidth}%`, flex: "none" }
               : undefined
           }
         >
-          <div className="flex-1 px-6 md:px-10 py-6 w-full flex flex-col space-y-6">
+          <div className={`flex-1 px-6 md:px-10 py-6 w-full flex flex-col ${
+            currentStep === 2 ? "overflow-hidden space-y-4" : "space-y-6"
+          }`}>
             {/* Stepper Header Tabs */}
             <div className="flex items-center justify-between border-b border-gray-100 dark:border-white/5 pb-4 shrink-0">
               <div className="flex items-center gap-3">
@@ -397,103 +445,142 @@ export function LessonEditorPage({ initialData }: LessonEditorPageProps) {
 
             {/* Step 1: General Info */}
             {currentStep === 1 && (
-              <div className="bg-gray-50/50 dark:bg-white/5 p-6 md:p-8 rounded-3xl border border-gray-100 dark:border-white/5 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                  {/* Lesson Name */}
-                  <div className="md:col-span-2 space-y-1.5">
-                    <label className="text-[11px] font-black text-gray-navy dark:text-light-blue/80 uppercase tracking-wider px-1">
-                      Tên bài học <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      autoFocus
-                      placeholder="Ví dụ: Đạo hàm và ứng dụng..."
-                      {...register("name")}
-                      className="w-full px-4 py-3.5 rounded-2xl bg-white dark:bg-navy-blue border border-gray-200 dark:border-white/10 focus:border-primary outline-none font-bold text-base text-dark-blue dark:text-white"
-                    />
-                    {errors.name && (
-                      <p className="text-red-500 text-xs px-1 font-medium">{errors.name.message}</p>
-                    )}
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                {/* Notion Import Box */}
+                <div className="bg-gradient-to-r from-blue-50/50 to-indigo-50/50 dark:from-white/5 dark:to-white/5 p-6 rounded-3xl border border-blue-100/50 dark:border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="size-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-bold">
+                      <Sparkles className="size-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-black text-dark-blue dark:text-white leading-none">
+                        Nhập bài học nhanh từ Notion
+                      </h3>
+                      <p className="text-xs text-gray-navy dark:text-light-blue/70 font-bold tracking-wide mt-1">
+                        Tải lên tệp zip xuất từ Notion để tự động tạo bài học và đính kèm hình ảnh.
+                      </p>
+                    </div>
                   </div>
 
-                  {/* Module */}
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-black text-gray-navy dark:text-light-blue/80 uppercase tracking-wider px-1">
-                      Chương (Module)
+                  <div>
+                    <label className={`cursor-pointer py-2.5 px-5 rounded-2xl bg-primary text-white font-bold text-xs flex items-center gap-2 hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 ${
+                      importNotionMut.isPending ? "opacity-60 pointer-events-none" : ""
+                    }`}>
+                      {importNotionMut.isPending ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <FileArchive className="size-4" />
+                      )}
+                      {importNotionMut.isPending ? "Đang xử lý..." : "Chọn tệp ZIP Notion"}
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept=".zip"
+                        disabled={importNotionMut.isPending}
+                        onChange={handleImportNotionZip}
+                      />
                     </label>
-                    <select
-                      {...register("module_id")}
-                      className="w-full px-4 py-3.5 rounded-2xl bg-white dark:bg-navy-blue border border-gray-200 dark:border-white/10 focus:border-primary outline-none font-bold text-sm text-dark-blue dark:text-white"
-                    >
-                      <option value="">-- Chưa phân loại --</option>
-                      {modules.map((m) => (
-                        <option key={m.id} value={m.id}>
-                          Chương {m.order}: {m.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                  {/* Order */}
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-black text-gray-navy dark:text-light-blue/80 uppercase tracking-wider px-1">
-                      Thứ tự bài học
-                    </label>
-                    <input
-                      type="number"
-                      {...register("order", { valueAsNumber: true })}
-                      className="w-full px-4 py-3.5 rounded-2xl bg-white dark:bg-navy-blue border border-gray-200 dark:border-white/10 focus:border-primary outline-none font-bold text-base text-dark-blue dark:text-white"
-                    />
-                  </div>
-
-                  {/* Blog Slug */}
-                  <div className="md:col-span-2 space-y-1.5">
-                    <label className="text-[11px] font-black text-gray-navy dark:text-light-blue/80 uppercase tracking-wider px-1">
-                      Blog Slug (URL tùy chọn)
-                    </label>
-                    <input
-                      placeholder="dao-ham-va-ung-dung"
-                      {...register("slug")}
-                      className="w-full px-4 py-3.5 rounded-2xl bg-white dark:bg-navy-blue border border-gray-200 dark:border-white/10 focus:border-primary outline-none font-medium text-sm text-dark-blue dark:text-white"
-                    />
                   </div>
                 </div>
 
-                {/* Description */}
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-black text-gray-navy dark:text-light-blue/80 uppercase tracking-wider px-1">
-                    Mô tả ngắn trọng tâm bài học
-                  </label>
-                  <textarea
-                    placeholder="Mô tả tóm tắt nội dung trọng tâm của bài học..."
-                    rows={4}
-                    {...register("description")}
-                    className="w-full px-4 py-3.5 rounded-2xl bg-white dark:bg-navy-blue border border-gray-200 dark:border-white/10 focus:border-primary outline-none font-medium text-sm resize-none text-dark-blue dark:text-white leading-relaxed"
-                  />
+                <div className="bg-gray-50/50 dark:bg-white/5 p-6 md:p-8 rounded-3xl border border-gray-100 dark:border-white/5 space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    {/* Lesson Name */}
+                    <div className="md:col-span-2 space-y-1.5">
+                      <label className="text-[11px] font-black text-gray-navy dark:text-light-blue/80 uppercase tracking-wider px-1">
+                        Tên bài học <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        autoFocus
+                        placeholder="Ví dụ: Đạo hàm và ứng dụng..."
+                        {...register("name")}
+                        className="w-full px-4 py-3.5 rounded-2xl bg-white dark:bg-navy-blue border border-gray-200 dark:border-white/10 focus:border-primary outline-none font-bold text-base text-dark-blue dark:text-white"
+                      />
+                      {errors.name && (
+                        <p className="text-red-500 text-xs px-1 font-medium">{errors.name.message}</p>
+                      )}
+                    </div>
+
+                    {/* Module */}
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-black text-gray-navy dark:text-light-blue/80 uppercase tracking-wider px-1">
+                        Chương (Module)
+                      </label>
+                      <select
+                        {...register("module_id")}
+                        className="w-full px-4 py-3.5 rounded-2xl bg-white dark:bg-navy-blue border border-gray-200 dark:border-white/10 focus:border-primary outline-none font-bold text-sm text-dark-blue dark:text-white"
+                      >
+                        <option value="">-- Chưa phân loại --</option>
+                        {modules.map((m) => (
+                          <option key={m.id} value={m.id}>
+                            Chương {m.order}: {m.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    {/* Order */}
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-black text-gray-navy dark:text-light-blue/80 uppercase tracking-wider px-1">
+                        Thứ tự bài học
+                      </label>
+                      <input
+                        type="number"
+                        {...register("order", { valueAsNumber: true })}
+                        className="w-full px-4 py-3.5 rounded-2xl bg-white dark:bg-navy-blue border border-gray-200 dark:border-white/10 focus:border-primary outline-none font-bold text-base text-dark-blue dark:text-white"
+                      />
+                    </div>
+
+                    {/* Blog Slug */}
+                    <div className="md:col-span-2 space-y-1.5">
+                      <label className="text-[11px] font-black text-gray-navy dark:text-light-blue/80 uppercase tracking-wider px-1">
+                        Blog Slug (URL tùy chọn)
+                      </label>
+                      <input
+                        placeholder="dao-ham-va-ung-dung"
+                        {...register("slug")}
+                        className="w-full px-4 py-3.5 rounded-2xl bg-white dark:bg-navy-blue border border-gray-200 dark:border-white/10 focus:border-primary outline-none font-medium text-sm text-dark-blue dark:text-white"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-black text-gray-navy dark:text-light-blue/80 uppercase tracking-wider px-1">
+                      Mô tả ngắn trọng tâm bài học
+                    </label>
+                    <textarea
+                      placeholder="Mô tả tóm tắt nội dung trọng tâm của bài học..."
+                      rows={4}
+                      {...register("description")}
+                      className="w-full px-4 py-3.5 rounded-2xl bg-white dark:bg-navy-blue border border-gray-200 dark:border-white/10 focus:border-primary outline-none font-medium text-sm resize-none text-dark-blue dark:text-white leading-relaxed"
+                    />
+                  </div>
                 </div>
               </div>
             )}
 
             {/* Step 2: Markdown Content Editor */}
             {currentStep === 2 && (
-              <div className="flex-1 flex flex-col space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <label className="text-xs font-black text-gray-navy opacity-60 uppercase tracking-widest px-1 flex items-center justify-between">
+              <div className="flex-1 flex flex-col min-h-0 space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300 overflow-hidden">
+                <label className="text-xs font-black text-gray-navy opacity-60 uppercase tracking-widest px-1 flex items-center justify-between shrink-0">
                   <span>Nội dung bài học (Markdown & LaTeX)</span>
                   <span className="text-[10px] font-normal lowercase opacity-70">
                     Hỗ trợ dán ảnh (Ctrl+V) & công thức toán
                   </span>
                 </label>
 
-                <div className="flex-1 flex flex-col rounded-3xl overflow-hidden border border-gray-200 dark:border-white/10 focus-within:border-primary/50 transition-all bg-gray-50 dark:bg-white/5">
+                <div className="flex-1 flex flex-col min-h-0 rounded-3xl overflow-hidden border border-gray-200 dark:border-white/10 focus-within:border-primary/50 transition-all bg-gray-50 dark:bg-white/5">
                   <EditorToolbar onInsert={insertFormat} />
-                  <div className="relative flex-1 group">
+                  <div className="relative flex-1 min-h-0 group">
                     <textarea
                       id="lesson-editor-content"
                       {...register("content_md")}
                       onPaste={(e) => handlePasteImage(e, handleUploadFile)}
                       placeholder="Nhập nội dung lý thuyết chi tiết của bài học bằng Markdown..."
-                      className="w-full min-h-[380px] p-6 bg-transparent border-0 outline-none transition-all font-mono text-base leading-relaxed resize-none overflow-hidden text-dark-blue dark:text-white focus:bg-white dark:focus:bg-navy-blue"
+                      className="w-full h-full p-6 bg-transparent border-0 outline-none transition-all font-mono text-base leading-relaxed resize-none overflow-y-auto custom-scrollbar text-dark-blue dark:text-white focus:bg-white dark:focus:bg-navy-blue"
                     />
                     <div className="absolute right-6 bottom-6 flex items-center gap-3">
                       {uploading && <Loader2 className="size-5 animate-spin text-primary" />}

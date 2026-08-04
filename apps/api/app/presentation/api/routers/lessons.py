@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from dishka.integrations.fastapi import FromDishka, inject
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, UploadFile, File, Form
 
 from app.application.use_cases.lessons.create_lesson_uc import CreateLessonUseCase
 from app.application.use_cases.lessons.delete_lesson_uc import DeleteLessonUseCase
@@ -17,6 +17,9 @@ from app.application.use_cases.lessons.reorder_lessons_uc import (
 )
 from app.application.use_cases.lessons.update_lesson_uc import UpdateLessonUseCase
 from app.application.use_cases.lessons.index_lesson_uc import IndexLessonUseCase
+from app.application.use_cases.lessons.import_notion_lesson_uc import (
+    ImportNotionLessonUseCase,
+)
 from app.domain.interfaces import EmbeddingServiceError
 from app.application.use_cases.questions import ListQuestionsUseCase
 from app.domain.value_objects import Difficulty, PoolType
@@ -114,6 +117,51 @@ async def create_lesson(
     use_case: FromDishka[CreateLessonUseCase],
 ):
     return await use_case.execute(body)
+
+
+@router.post("/import-notion", response_model=LessonOut)
+@inject
+async def import_notion_lesson(
+    user: AdminOrMentorUser,
+    use_case: FromDishka[ImportNotionLessonUseCase],
+    file: UploadFile = File(..., description="ZIP file exported from Notion containing markdown and images"),
+    module_id: str | None = Form(None),
+    name: str | None = Form(None),
+    description: str | None = Form(None),
+):
+    """
+    Import a lesson from a ZIP file containing Markdown and images exported from Notion.
+    Admin or Mentor only.
+    """
+    if not file.filename.endswith(".zip"):
+        raise HTTPException(status_code=400, detail="Only ZIP files (.zip) are supported")
+
+    mid = None
+    if module_id and module_id.strip() and module_id.strip().lower() not in ("null", "undefined", "none", "string"):
+        try:
+            mid = UUID(module_id.strip())
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid module_id UUID format: {module_id}",
+            )
+
+    try:
+        zip_bytes = await file.read()
+        res = await use_case.execute(
+            zip_bytes=zip_bytes,
+            module_id=mid,
+            custom_name=name,
+            custom_description=description,
+        )
+        return res
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to import lesson: {str(e)}"
+        )
+
 
 
 @router.post("/reorder")

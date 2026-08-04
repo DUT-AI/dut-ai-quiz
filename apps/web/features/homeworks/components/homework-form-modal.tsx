@@ -7,7 +7,6 @@ import { createPortal } from "react-dom";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import StepParticipants from "@/features/exams/components/exam-editor/StepParticipants";
 import { Markdown } from "@/components/markdown";
 import { cn } from "@/lib/utils";
 import { useLessons } from "@/lib/queries";
@@ -55,8 +54,8 @@ export function HomeworkFormModal({ open, homework, onClose }: HomeworkFormModal
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
-    if (!lessonId || !title.trim() || !deadline || assigneeIds.length === 0) {
-      return toast.error("Vui lòng điền đầy đủ: bài học, tiêu đề, hạn nộp và người nhận");
+    if (!lessonId || !title.trim() || !deadline) {
+      return toast.error("Vui lòng điền đầy đủ: bài học, tiêu đề và hạn nộp");
     }
     const values = {
       lessonId,
@@ -111,7 +110,7 @@ export function HomeworkFormModal({ open, homework, onClose }: HomeworkFormModal
                   {homework ? "Chỉnh sửa bài tập" : "Tạo bài tập mới"}
                 </h2>
                 <p className="text-sm text-gray-navy dark:text-light-blue/80">
-                  Giao bài tập coding cho từng học viên hoặc cả lớp học.
+                  Tạo bài tập coding cho bài học này.
                 </p>
               </div>
               <button
@@ -229,13 +228,6 @@ export function HomeworkFormModal({ open, homework, onClose }: HomeworkFormModal
                 </div>
               </div>
 
-              {/* Assignees Selection */}
-              <div className="rounded-xl border border-gray-150 p-5 dark:border-white/20 dark:bg-white/[0.01]">
-                <h4 className="mb-4 text-xs font-bold uppercase tracking-wider text-gray-navy dark:text-light-blue/80">
-                  Phân phối & Người nhận bài tập
-                </h4>
-                <StepParticipants selectedIds={assigneeIds} onChange={setAssigneeIds} />
-              </div>
 
               {/* Action Buttons */}
               <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-white/5">

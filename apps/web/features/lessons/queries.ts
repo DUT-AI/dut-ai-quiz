@@ -106,3 +106,17 @@ export function useReorderLessons() {
   });
 }
 
+export function useImportNotionLesson() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: FormData) =>
+      apiClient
+        .post<Lesson>("/api/v1/lessons/import-notion", body)
+        .then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["lessons"] });
+      qc.invalidateQueries({ queryKey: ["modules"] });
+    },
+  });
+}
+
