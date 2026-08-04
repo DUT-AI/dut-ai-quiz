@@ -1,70 +1,65 @@
-import uuid
 from datetime import datetime
-from sqlalchemy import text
+from uuid import UUID, uuid4
 import sqlalchemy
-from sqlmodel import Field, SQLModel
+
+from sqlalchemy.dialects.postgresql import UUID as pgUUID
+from sqlalchemy.orm import Mapped, mapped_column
+
+from app.core.datetime_utils import now_ict
 from app.domain.entities.import_session import ImportSessionEntity, ImportSessionStatus
 
+from .base import Base
 
-class ImportSessionModel(SQLModel, table=True):
+
+class ImportSession(Base):
     __tablename__ = "import_sessions"
 
-    id: uuid.UUID = Field(
-        default_factory=uuid.uuid4,
-        primary_key=True,
-        index=True,
-        sa_column_kwargs={"server_default": text("gen_random_uuid()")}
+    id: Mapped[UUID] = mapped_column(
+        pgUUID(as_uuid=True), primary_key=True, default=uuid4
     )
-    user_id: int = Field(index=True)
-    target_scope: str | None = Field(default=None)
-    status: ImportSessionStatus = Field(
-        default=ImportSessionStatus.PROCESSING,
-        sa_type=sqlalchemy.String(50)
+    user_id: Mapped[int] = mapped_column(index=True)
+    file_name: Mapped[str | None] = mapped_column(default=None, nullable=True)
+    total_questions: Mapped[int] = mapped_column(default=0)
+    processed_questions: Mapped[int] = mapped_column(default=0)
+    status: Mapped[ImportSessionStatus] = mapped_column(
+        sqlalchemy.Enum(ImportSessionStatus, native_enum=False, length=50), 
+        default=ImportSessionStatus.PROCESSING
     )
-    error_message: str | None = Field(default=None)
-    file_name: str | None = Field(default=None)
-    total_questions: int | None = Field(default=0)
-    processed_questions: int | None = Field(default=0)
-    lesson_id: uuid.UUID | None = Field(default=None, sa_column_kwargs={"index": True})
-    created_at: datetime = Field(
-        default_factory=datetime.utcnow,
-        sa_column_kwargs={"server_default": text("TIMEZONE('utc', CURRENT_TIMESTAMP)")}
+    error_message: Mapped[str | None] = mapped_column(nullable=True)
+    lesson_id: Mapped[UUID | None] = mapped_column(
+        pgUUID(as_uuid=True), nullable=True
     )
-    updated_at: datetime | None = Field(
-        default_factory=datetime.utcnow,
-        sa_column_kwargs={
-            "server_default": text("TIMEZONE('utc', CURRENT_TIMESTAMP)"),
-            "onupdate": text("TIMEZONE('utc', CURRENT_TIMESTAMP)")
-        }
-    )
+    target_scope: Mapped[str] = mapped_column(default="LESSON")
+    created_at: Mapped[datetime] = mapped_column(default=now_ict)
+    updated_at: Mapped[datetime | None] = mapped_column(nullable=True, onupdate=now_ict)
 
     def to_entity(self) -> ImportSessionEntity:
         return ImportSessionEntity(
             id=self.id,
             user_id=self.user_id,
-            target_scope=self.target_scope,
+            file_name=self.file_name,
             status=self.status,
+            total_questions=self.total_questions,
+            processed_questions=self.processed_questions,
             error_message=self.error_message,
             created_at=self.created_at,
             updated_at=self.updated_at,
-            file_name=self.file_name,
-            total_questions=self.total_questions,
-            processed_questions=self.processed_questions,
             lesson_id=self.lesson_id,
+            target_scope=self.target_scope,
         )
 
     @classmethod
-    def from_entity(cls, entity: ImportSessionEntity) -> "ImportSessionModel":
+    def from_entity(cls, entity: ImportSessionEntity) -> "ImportSession":
         return cls(
             id=entity.id,
             user_id=entity.user_id,
-            target_scope=entity.target_scope,
+            file_name=entity.file_name,
             status=entity.status,
+            total_questions=entity.total_questions,
+            processed_questions=entity.processed_questions,
             error_message=entity.error_message,
             created_at=entity.created_at,
             updated_at=entity.updated_at,
-            file_name=entity.file_name,
-            total_questions=entity.total_questions,
-            processed_questions=entity.processed_questions,
             lesson_id=entity.lesson_id,
+            target_scope=entity.target_scope,
         )

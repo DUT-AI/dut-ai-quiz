@@ -65,6 +65,7 @@ class GameSessionRepository(IGameSessionRepository):
             .where(GameSession.user_id == user_id)
             .where(GameSession.status == GameSessionStatus.COMPLETED)
             .where(GameSession.tags_filter.contains([lesson_slug]))
+            .where(GameSession.question_limit > 0)
         )
         return r.scalar() or 0
 
@@ -76,6 +77,7 @@ class GameSessionRepository(IGameSessionRepository):
             select(GameSession.id)
             .where(GameSession.status == GameSessionStatus.COMPLETED)
             .where(GameSession.tags_filter.contains([lesson_slug]))
+            .where(GameSession.question_limit > 0)
             .distinct(GameSession.user_id)
             .order_by(
                 GameSession.user_id,
@@ -94,6 +96,7 @@ class GameSessionRepository(IGameSessionRepository):
             )
             .where(GameSession.status == GameSessionStatus.COMPLETED)
             .where(GameSession.tags_filter.contains([lesson_slug]))
+            .where(GameSession.question_limit > 0)
             .group_by(GameSession.user_id)
         ).subquery()
         

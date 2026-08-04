@@ -63,7 +63,7 @@ export default function LessonsPage() {
             Quản lý <span className="text-primary">Bài học</span>
           </h1>
           <p className="text-slate-500 dark:text-zinc-400 text-sm max-w-xl">
-            Tạo mới, chỉnh sửa nội dung bài học và sắp xếp cấu trúc chương trình học qua các Module. Kéo thả để sắp xếp lại.
+            Tạo mới, chỉnh sửa nội dung bài học và sắp xếp cấu trúc chương trình học qua các Module.
           </p>
         </div>
 

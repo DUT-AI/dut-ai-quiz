@@ -1,41 +1,43 @@
 from typing import Optional
 from uuid import UUID
 
-from sqlalchemy import case, delete, func, select, update
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.domain.entities.comment import CommentEntity, TargetType
 from app.domain.interfaces import ICommentRepository, SortMode
-from app.infrastructure.persistence.models import Comment, User
+from app.infrastructure.persistence.models import Comment
 
 class CommentRepository(ICommentRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
     async def create(self, comment: CommentEntity) -> CommentEntity:
+        import uuid
+        from app.core.datetime_utils import now_ict
         m = Comment(
-            id=comment.id,
+            id=comment.id or uuid.uuid4(),
             target_type=comment.target_type.value,
             target_id=comment.target_id,
             user_id=comment.user_id,
             parent_id=comment.parent_id,
             content=comment.content,
             image_urls=comment.image_urls,
-            created_at=comment.created_at,
-            updated_at=comment.updated_at,
+            created_at=comment.created_at or now_ict(),
+            updated_at=comment.updated_at or now_ict(),
         )
         self._session.add(m)
         await self._session.flush()
         
-        # Load user for the response
-        stmt = select(Comment).options(selectinload(Comment.user)).where(Comment.id == m.id)
+        
+        # Load comment for the response
+        stmt = select(Comment).where(Comment.id == m.id)
         result = await self._session.execute(stmt)
         m = result.scalar_one()
         return m.to_entity()
 
     async def get_by_id(self, comment_id: UUID) -> Optional[CommentEntity]:
-        stmt = select(Comment).options(selectinload(Comment.user)).where(Comment.id == comment_id)
+        stmt = select(Comment).where(Comment.id == comment_id)
         result = await self._session.execute(stmt)
         m = result.scalar_one_or_none()
         return m.to_entity() if m else None
@@ -43,41 +45,15 @@ class CommentRepository(ICommentRepository):
     def _apply_sorting(self, stmt, sort_by: str):
         if sort_by == SortMode.BEST:
             score = Comment.like_count - Comment.dislike_count
-            # Tie-breaker: Role (admin/mentor > guest), then Time
-            role_weight = case(
-                (User.role == "admin", 2),
-                (User.role == "mentor", 1),
-                else_=0
-            )
-            stmt = stmt.order_by(score.desc(), role_weight.desc(), Comment.created_at.desc())
+            stmt = stmt.order_by(score.desc(), Comment.created_at.desc())
         elif sort_by == SortMode.TOP_LIKES:
-            role_weight = case(
-                (User.role == "admin", 2),
-                (User.role == "mentor", 1),
-                else_=0
-            )
-            stmt = stmt.order_by(Comment.like_count.desc(), role_weight.desc(), Comment.created_at.desc())
+            stmt = stmt.order_by(Comment.like_count.desc(), Comment.created_at.desc())
         elif sort_by == SortMode.TOP_DISLIKES:
-            role_weight = case(
-                (User.role == "admin", 2),
-                (User.role == "mentor", 1),
-                else_=0
-            )
-            stmt = stmt.order_by(Comment.dislike_count.desc(), role_weight.desc(), Comment.created_at.desc())
+            stmt = stmt.order_by(Comment.dislike_count.desc(), Comment.created_at.desc())
         elif sort_by == SortMode.OLD:
-            role_weight = case(
-                (User.role == "admin", 2),
-                (User.role == "mentor", 1),
-                else_=0
-            )
-            stmt = stmt.order_by(Comment.created_at.asc(), role_weight.desc())
+            stmt = stmt.order_by(Comment.created_at.asc())
         else: # NEW or default
-            role_weight = case(
-                (User.role == "admin", 2),
-                (User.role == "mentor", 1),
-                else_=0
-            )
-            stmt = stmt.order_by(Comment.created_at.desc(), role_weight.desc())
+            stmt = stmt.order_by(Comment.created_at.desc())
         return stmt
 
     async def get_root_comments(
@@ -95,7 +71,7 @@ class CommentRepository(ICommentRepository):
         total_count = (await self._session.execute(count_stmt)).scalar_one()
 
         # Get items
-        stmt = select(Comment).join(User).options(selectinload(Comment.user)).where(
+        stmt = select(Comment).where(
             Comment.target_type == target_type.value,
             Comment.parent_id.is_(None)
         )
@@ -114,7 +90,7 @@ class CommentRepository(ICommentRepository):
         count_stmt = select(func.count(Comment.id)).where(Comment.parent_id == parent_id)
         total_count = (await self._session.execute(count_stmt)).scalar_one()
 
-        stmt = select(Comment).join(User).options(selectinload(Comment.user)).where(Comment.parent_id == parent_id)
+        stmt = select(Comment).where(Comment.parent_id == parent_id)
         stmt = self._apply_sorting(stmt, sort_by)
         stmt = stmt.limit(limit).offset(offset)
         
@@ -132,7 +108,7 @@ class CommentRepository(ICommentRepository):
         root_ids = [c.id for c in root_entities]
         
         # Fetch Level 2
-        l2_stmt = select(Comment).join(User).options(selectinload(Comment.user)).where(Comment.parent_id.in_(root_ids))
+        l2_stmt = select(Comment).where(Comment.parent_id.in_(root_ids))
         l2_stmt = self._apply_sorting(l2_stmt, sort_by)
         l2_result = await self._session.execute(l2_stmt)
         l2_comments = l2_result.scalars().all()
@@ -143,9 +119,7 @@ class CommentRepository(ICommentRepository):
         l3_entities = []
         if l2_ids:
             # Fetch Level 3 (and any deeper flattened to Level 3)
-            # BRD says API max 3 levels, deeper blocked or flattened to 3.
-            # Flat to 3 means we can just get replies of L2
-            l3_stmt = select(Comment).join(User).options(selectinload(Comment.user)).where(Comment.parent_id.in_(l2_ids))
+            l3_stmt = select(Comment).where(Comment.parent_id.in_(l2_ids))
             l3_stmt = self._apply_sorting(l3_stmt, sort_by)
             l3_result = await self._session.execute(l3_stmt)
             l3_comments = l3_result.scalars().all()

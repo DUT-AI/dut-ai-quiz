@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useImportPDF, useLessons } from "@/lib/queries";
+import { useImportPDF, useUploadPDF, useLessons } from "@/lib/queries";
 import { Card } from "@/components/ui/card";
-import { Upload, AlertCircle, Loader2, X, FileText } from "lucide-react";
+import { Upload, AlertCircle, Loader2, X, FileText, Cpu, Eye } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface PdfImportProps {
@@ -16,9 +16,13 @@ interface PdfImportProps {
 export function PdfImport({ lessonId: propLessonId, onSuccess, onClose }: PdfImportProps) {
   const [file, setFile] = useState<File | null>(null);
   const [lessonId, setLessonId] = useState(propLessonId || "");
+  const [method, setMethod] = useState<"ocr" | "gemini">("gemini");
 
   const { data: lessons = [] } = useLessons();
   const importMutation = useImportPDF();
+  const uploadMutation = useUploadPDF();
+
+  const isPending = importMutation.isPending || uploadMutation.isPending;
 
   const handleImport = async () => {
     if (!file) {
@@ -29,11 +33,16 @@ export function PdfImport({ lessonId: propLessonId, onSuccess, onClose }: PdfImp
     const formData = new FormData();
     formData.append("file", file);
     if (lessonId) {
-      formData.append("target_scope", lessonId);
+      formData.append("lesson_id", lessonId);
+      formData.append("target_scope", "LESSON");
     }
 
     try {
-      await importMutation.mutateAsync(formData);
+      if (method === "ocr") {
+        await importMutation.mutateAsync(formData);
+      } else {
+        await uploadMutation.mutateAsync(formData);
+      }
       alert("Đã gửi file PDF cho AI xử lý ngầm (Background Job). Vui lòng kiểm tra lại danh sách câu hỏi sau ít phút.");
       onSuccess();
       if (onClose) onClose();
@@ -64,7 +73,7 @@ export function PdfImport({ lessonId: propLessonId, onSuccess, onClose }: PdfImp
             1. Tải file PDF
           </h3>
           <div
-            className={`border-2 border-dashed rounded-3xl p-12 text-center transition-all cursor-pointer h-64 flex flex-col items-center justify-center ${file ? "border-blue-500 bg-blue-50/10" : "border-slate-300 hover:border-blue-400 hover:bg-slate-50"
+            className={`border-2 border-dashed rounded-3xl p-12 text-center transition-all cursor-pointer h-full min-h-[16rem] flex flex-col items-center justify-center ${file ? "border-blue-500 bg-blue-50/10" : "border-slate-300 hover:border-blue-400 hover:bg-slate-50"
               }`}
             onClick={() => document.getElementById("pdf-upload")?.click()}
           >
@@ -98,7 +107,7 @@ export function PdfImport({ lessonId: propLessonId, onSuccess, onClose }: PdfImp
             2. Cấu hình bài học (Tùy chọn)
           </h3>
 
-          <div className="space-y-4 bg-slate-50/50 dark:bg-white/5 p-6 rounded-3xl border border-slate/10 shadow-inner h-64">
+          <div className="space-y-4 bg-slate-50/50 dark:bg-white/5 p-6 rounded-3xl border border-slate/10 shadow-inner h-full flex flex-col">
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Gắn vào bài học (Target Scope)</label>
               <select
@@ -117,6 +126,38 @@ export function PdfImport({ lessonId: propLessonId, onSuccess, onClose }: PdfImp
                 Lựa chọn bài học mà bạn muốn lưu trữ các câu hỏi này. Bạn cũng có thể để trống và thiết lập sau khi AI trích xuất xong.
               </p>
             </div>
+            <div className="mt-6 border-t border-slate/10 dark:border-white/10 pt-5">
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-3">Cơ chế bóc tách</label>
+              <div className="grid grid-cols-1 gap-3">
+                <div 
+                  onClick={() => setMethod("gemini")}
+                  className={`cursor-pointer rounded-xl border p-3 flex flex-col gap-1 transition-all ${method === 'gemini' ? 'border-primary bg-primary/5 shadow-sm ring-1 ring-primary' : 'border-slate-200 dark:border-white/10 hover:border-primary/40 hover:bg-slate-50 dark:hover:bg-white/5'}`}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className={`shrink-0 size-4 rounded-full border flex items-center justify-center transition-colors ${method === 'gemini' ? 'border-primary' : 'border-slate-300 dark:border-slate-600'}`}>
+                      {method === 'gemini' && <div className="size-2 rounded-full bg-primary" />}
+                    </div>
+                    <span className="text-sm font-bold text-slate-700 dark:text-white">1. Vision LLM OCR</span>
+                  </div>
+                  <span className="text-[13px] text-slate-500 ml-6">(Chuyển PDF -&gt; Ảnh -&gt; LLM)</span>
+                </div>
+
+                <div 
+                  onClick={() => setMethod("ocr")}
+                  className={`cursor-pointer rounded-xl border p-3 flex flex-col gap-1 transition-all ${method === 'ocr' ? 'border-primary bg-primary/5 shadow-sm ring-1 ring-primary' : 'border-slate-200 dark:border-white/10 hover:border-primary/40 hover:bg-slate-50 dark:hover:bg-white/5'}`}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className={`shrink-0 size-4 rounded-full border flex items-center justify-center transition-colors ${method === 'ocr' ? 'border-primary' : 'border-slate-300 dark:border-slate-600'}`}>
+                      {method === 'ocr' && <div className="size-2 rounded-full bg-primary" />}
+                    </div>
+                    <span className="text-sm font-bold text-slate-700 dark:text-white flex items-center flex-wrap gap-1">
+                      2. Parser Chuyên sâu: 
+                      <code className="text-[12px] font-mono text-rose-600 bg-rose-50 dark:text-rose-400 dark:bg-rose-500/10 px-1.5 py-0.5 rounded">opendataloader-pdf</code>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -124,10 +165,10 @@ export function PdfImport({ lessonId: propLessonId, onSuccess, onClose }: PdfImp
       <div className="flex justify-center">
         <Button
           onClick={handleImport}
-          disabled={!file || importMutation.isPending}
+          disabled={!file || isPending}
           className="w-full md:w-80 h-14 text-lg rounded-2xl bg-gradient-to-r from-primary to-indigo-600 hover:opacity-90 shadow-xl shadow-primary/20 transition-all active:scale-[0.98]"
         >
-          {importMutation.isPending ? (
+          {isPending ? (
             <>
               <Loader2 className="w-5 h-5 mr-3 animate-spin" />
               Đang đẩy vào hàng đợi...

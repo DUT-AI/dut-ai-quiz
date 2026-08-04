@@ -89,12 +89,23 @@
     overscroll-behavior: none;
   }
 
-  .overflow-y-auto,
-  .overflow-x-auto,
-  .overflow-auto,
+  .overflow-y-auto {
+    overscroll-behavior-y: contain;
+  }
+
+  .overflow-x-auto {
+    overscroll-behavior-x: contain;
+    overscroll-behavior-y: auto;
+  }
+
+  .overflow-auto {
+    overscroll-behavior: contain;
+  }
+
   .custom-scrollbar,
   .theory-scrollbar {
-    overscroll-behavior: contain;
+    overscroll-behavior-x: contain;
+    overscroll-behavior-y: auto;
   }
 }
 .whitespace-pre-wrap {

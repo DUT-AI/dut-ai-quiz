@@ -1,7 +1,7 @@
 "use client";
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useParams, useSearchParams } from "next/navigation";
-import { BookOpen, Swords, ListRestart } from "lucide-react";
+import { BookOpen, Code2, Swords, ListRestart, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { useLessons, useLessonBySlug } from "@/lib/queries";
@@ -16,6 +16,8 @@ import {
   LessonDraft,
   LessonHeader,
 } from "@/features/lessons/components";
+import { HomeworkTab } from "@/features/homeworks/components/homework-tab";
+import { LessonComments } from "@/features/comments/components/lesson-comments";
 
 export default function LessonSlugPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -33,19 +35,83 @@ export default function LessonSlugPage() {
     );
   }, [lessons, slug]);
 
-  const lessonId = resolvedLesson?.id || "";
-
   // Fetch the full lesson detail by slug
   const { data: lesson, isLoading: isLoadingDetail } = useLessonBySlug(
     resolvedLesson?.slug || slug,
     { enabled: !!resolvedLesson?.slug }
   );
 
-  const [activeTab, setActiveTab] = useState<"theory" | "questions" | "game">("theory");
+  const lessonId = resolvedLesson?.id || lesson?.id || "";
 
-  const isLoading = isLoadingAll || isLoadingDetail;
+  const [activeTab, setActiveTab] = useState<
+    "theory" | "questions" | "game" | "homework"
+  >("theory");
+
+  const [isHovered, setIsHovered] = useState(false);
+  const [isMobileExpanded, setIsMobileExpanded] = useState(false);
+  const [isFullyOpen, setIsFullyOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const tabItems = [
+    { id: "theory", label: "Lý thuyết", icon: BookOpen },
+    { id: "questions", label: "Luyện tập", icon: ListRestart },
+    { id: "game", label: "Luyện tập thi đấu", icon: Swords },
+    { id: "homework", label: "Bài tập coding", icon: Code2 },
+  ] as const;
+
+  const activeTabItem = tabItems.find((t) => t.id === activeTab);
 
   const { user } = useAuth();
+  const isLoading = isLoadingAll || isLoadingDetail;
+
+  const handleTabChange = (tabId: "theory" | "questions" | "game" | "homework") => {
+    setActiveTab(tabId);
+    setIsMobileExpanded(false);
+    const mainEl = document.querySelector("main");
+    if (mainEl) {
+      mainEl.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  useEffect(() => {
+    const mainEl = document.querySelector("main");
+    if (!mainEl) return;
+
+    const handleScroll = () => {
+      setIsScrolled(mainEl.scrollTop > 100);
+    };
+
+    mainEl.addEventListener("scroll", handleScroll);
+    handleScroll();
+    return () => mainEl.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    if (!isMobileExpanded) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsMobileExpanded(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isMobileExpanded]);
+
+  const isOpen = isHovered || isMobileExpanded;
+
+  useEffect(() => {
+    if (isOpen) {
+      const timer = setTimeout(() => {
+        setIsFullyOpen(true);
+      }, 300);
+      return () => clearTimeout(timer);
+    } else {
+      setIsFullyOpen(false);
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     let isUnloading = false;
@@ -85,40 +151,112 @@ export default function LessonSlugPage() {
 
       {/* Lesson specific tabs */}
       {!isPreview && (
-        <div className="flex border-b border-gray-150 dark:border-white/10 gap-2 md:gap-4 overflow-x-auto no-scrollbar scroll-smooth">
-          {(
-            [
-              { id: "theory", label: "Lý thuyết", icon: BookOpen },
-              { id: "questions", label: "Luyện tập", icon: ListRestart },
-              { id: "game", label: "Luyện tập thi đấu", icon: Swords },
-            ] as const
-          ).map((tab) => {
-            const isActive = activeTab === tab.id;
-            const Icon = tab.icon;
+        <div
+          ref={containerRef}
+          onMouseEnter={() => {
+            if (typeof window !== "undefined" && window.matchMedia("(hover: hover)").matches) {
+              setIsHovered(true);
+            }
+          }}
+          onMouseLeave={() => {
+            if (typeof window !== "undefined" && window.matchMedia("(hover: hover)").matches) {
+              setIsHovered(false);
+            }
+          }}
+          className={cn(
+            "sticky top-0 z-30 transition-transform duration-300 ease-in-out",
+            isScrolled
+              ? "!mt-0 -mx-4 sm:-mx-5 md:-mx-6 xl:-mx-8"
+              : ""
+          )}
+          style={{
+            transform: isScrolled
+              ? isOpen
+                ? "translateY(0)"
+                : "translateY(calc(-100% + 6px))"
+              : "translateY(0)"
+          }}
+        >
+          {/* Scrollable tabs bar container */}
+          <div
+            className={cn(
+              "w-full flex border-b border-gray-150 dark:border-white/10 gap-2 md:gap-4 overflow-x-auto no-scrollbar scroll-smooth transition-all duration-300",
+              isScrolled
+                ? "bg-slate-50/80 dark:bg-zinc-950/20 pt-3 px-4 sm:px-5 md:px-6 xl:px-8"
+                : "pt-0 px-0"
+            )}
+            style={{
+              backgroundColor: isScrolled ? undefined : "transparent",
+              backdropFilter: isScrolled ? "blur(16px)" : "none",
+              WebkitBackdropFilter: isScrolled ? "blur(16px)" : "none",
+            }}
+          >
+            {(
+              [
+                { id: "theory", label: "Lý thuyết", icon: BookOpen },
+                { id: "questions", label: "Luyện tập", icon: ListRestart },
+                { id: "game", label: "Luyện tập thi đấu", icon: Swords },
+                { id: "homework", label: "Bài tập coding", icon: Code2 },
+              ] as const
+            ).map((tab) => {
+              const isActive = activeTab === tab.id;
+              const Icon = tab.icon;
 
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={cn(
-                  "relative flex items-center gap-2 px-6 py-4 text-sm font-black transition-all duration-200 text-nowrap rounded-t-2xl pb-4 border-b-2 border-transparent",
-                  isActive
-                    ? "text-primary"
-                    : "text-gray-navy dark:text-light-blue hover:text-primary opacity-70 hover:opacity-100"
-                )}
-              >
-                <Icon className="size-4" />
-                <span>{tab.label}</span>
-                {isActive && (
-                  <motion.div
-                    layoutId="lesson-active-tab-underline"
-                    className="absolute bottom-0 left-0 right-0 h-[3px] bg-primary"
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                  />
-                )}
-              </button>
-            );
-          })}
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => handleTabChange(tab.id)}
+                  className={cn(
+                    "relative flex items-center gap-2 transition-all duration-200 text-nowrap border-b-2 border-transparent font-black",
+                    isScrolled
+                      ? "px-5 py-2.5 text-xs sm:text-sm rounded-t-xl pb-2.5"
+                      : "px-6 py-4 text-sm rounded-t-2xl pb-4",
+                    isActive
+                      ? "text-primary"
+                      : "text-gray-navy dark:text-light-blue hover:text-primary opacity-70 hover:opacity-100"
+                  )}
+                >
+                  <Icon className="size-4" />
+                  <span>{tab.label}</span>
+                  {isActive && (
+                    <motion.div
+                      layoutId="lesson-active-tab-underline"
+                      className="absolute bottom-0 left-0 right-0 h-[3px] bg-primary"
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Floating Pill Handle when collapsed */}
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window !== "undefined" && !window.matchMedia("(hover: hover)").matches) {
+                setIsMobileExpanded(!isMobileExpanded);
+              }
+            }}
+            className={cn(
+              "absolute left-1/2 -translate-x-1/2 bottom-0 translate-y-full flex items-center gap-1.5 px-4 py-1.5 rounded-b-2xl border-x border-b border-gray-150 dark:border-white/15 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md shadow-md text-xs font-black text-primary cursor-pointer transition-[opacity,transform] duration-300 ease-in-out whitespace-nowrap outline-none focus:outline-none",
+              isScrolled
+                ? isOpen
+                  ? isFullyOpen
+                    ? "opacity-0 scale-0 pointer-events-none"
+                    : "opacity-0 scale-100 pointer-events-auto"
+                  : "opacity-100 scale-100 pointer-events-auto"
+                : "opacity-0 scale-0 pointer-events-none"
+            )}
+          >
+            {activeTabItem && (
+              <>
+                <activeTabItem.icon className="size-3.5 pointer-events-none" />
+                <span className="pointer-events-none">{activeTabItem.label}</span>
+              </>
+            )}
+            <ChevronDown className="size-3 pointer-events-none" />
+          </button>
         </div>
       )}
 
@@ -129,7 +267,7 @@ export default function LessonSlugPage() {
             {!currentLesson.slug ? (
               <LessonDraft />
             ) : (
-              <TheoryTab contentMd={currentLesson.content_md} />
+              <TheoryTab contentMd={currentLesson.content_md} lessonId={lessonId} />
             )}
           </div>
         ) : (
@@ -144,7 +282,7 @@ export default function LessonSlugPage() {
                 {!currentLesson.slug ? (
                   <LessonDraft />
                 ) : (
-                  <TheoryTab contentMd={currentLesson.content_md} />
+                  <TheoryTab contentMd={currentLesson.content_md} lessonId={lessonId} />
                 )}
               </motion.div>
             )}
@@ -170,9 +308,27 @@ export default function LessonSlugPage() {
                 <GameTab lessonId={lessonId} slug={currentLesson.slug || slug} />
               </motion.div>
             )}
+
+            {activeTab === "homework" && (
+              <motion.div
+                key="homework"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+              >
+                <HomeworkTab lessonId={lessonId} />
+              </motion.div>
+            )}
           </AnimatePresence>
         )}
       </div>
+
+      {/* Persistent Comment Section at the bottom */}
+      {lessonId && (
+        <div className="mt-12 pt-8 border-t border-gray-150 dark:border-white/10">
+          <LessonComments lessonId={lessonId} />
+        </div>
+      )}
     </div>
   );
 }

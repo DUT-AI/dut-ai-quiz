@@ -4,7 +4,7 @@ from uuid import UUID, uuid4
 
 from pgvector.sqlalchemy import Vector
 import sqlalchemy
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import Boolean, ForeignKey, Index, String
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.dialects.postgresql import UUID as pgUUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -19,6 +19,14 @@ from .base import Base
 
 class Question(Base):
     __tablename__ = "questions"
+    __table_args__ = (
+        Index(
+            "ix_questions_embedding_hnsw",
+            "embedding",
+            postgresql_using="hnsw",
+            postgresql_ops={"embedding": "vector_cosine_ops"},
+        ),
+    )
 
     id: Mapped[UUID] = mapped_column(
         pgUUID(as_uuid=True), primary_key=True, default=uuid4
@@ -50,7 +58,8 @@ class Question(Base):
     status: Mapped[QuestionStatus] = mapped_column(
         sqlalchemy.Enum(QuestionStatus, native_enum=False, length=50), 
         default=QuestionStatus.PUBLIC, 
-        server_default=QuestionStatus.PUBLIC.value
+        server_default=QuestionStatus.PUBLIC.value,
+        index=True
     )
     duplicate_status: Mapped[DuplicateStatus] = mapped_column(
         sqlalchemy.Enum(DuplicateStatus, native_enum=False, length=50), 
@@ -61,7 +70,14 @@ class Question(Base):
     is_difficulty_ai_suggested: Mapped[bool] = mapped_column(default=False, server_default="false")
     is_answer_ai_generated: Mapped[bool] = mapped_column(default=False, server_default="false")
     is_solution_ai_generated: Mapped[bool] = mapped_column(default=False, server_default="false")
-    import_session_id: Mapped[UUID | None] = mapped_column(pgUUID(as_uuid=True), index=True, nullable=True)
+    import_session_id: Mapped[UUID | None] = mapped_column(
+        pgUUID(as_uuid=True),
+        ForeignKey("import_sessions.id"),
+        nullable=True,
+        index=True,
+    )
+    review_locked_by: Mapped[int | None] = mapped_column(nullable=True)
+    review_locked_at: Mapped[datetime | None] = mapped_column(nullable=True)
 
     def to_entity(self) -> QuestionEntity:
         return QuestionEntity(
@@ -85,6 +101,8 @@ class Question(Base):
             is_answer_ai_generated=self.is_answer_ai_generated,
             is_solution_ai_generated=self.is_solution_ai_generated,
             import_session_id=self.import_session_id,
+            review_locked_by=self.review_locked_by,
+            review_locked_at=self.review_locked_at,
         )
 
     @classmethod
@@ -110,4 +128,6 @@ class Question(Base):
             is_answer_ai_generated=entity.is_answer_ai_generated,
             is_solution_ai_generated=entity.is_solution_ai_generated,
             import_session_id=entity.import_session_id,
+            review_locked_by=entity.review_locked_by,
+            review_locked_at=entity.review_locked_at,
         )

@@ -115,13 +115,13 @@ class PresignSubmitUseCase:
 
         # 8. Tạo Presigned PUT URL cho Script
         script_upload_url = self._s3_client.generate_presigned_upload_url(
-            bucket=settings.minio_bucket_name,
+            bucket=settings.s3_bucket_name,
             key=script_s3_key,
             content_type="application/octet-stream",
             expires_in=settings.presigned_url_expire_seconds,
         )
         script_download_url = self._s3_client.get_object_url(
-            settings.minio_bucket_name, script_s3_key
+            settings.s3_bucket_name, script_s3_key
         )
 
         script_info = PresignURLInfo(
@@ -139,13 +139,13 @@ class PresignSubmitUseCase:
             )
             model_s3_key = f"hackathons/{hackathon_slug}/{sender_slug}/{submission_id}/model.{model_ext}"
             model_upload_url = self._s3_client.generate_presigned_upload_url(
-                bucket=settings.minio_bucket_name,
+                bucket=settings.s3_bucket_name,
                 key=model_s3_key,
                 content_type="application/octet-stream",
                 expires_in=settings.presigned_url_expire_seconds,
             )
             model_download_url = self._s3_client.get_object_url(
-                settings.minio_bucket_name, model_s3_key
+                settings.s3_bucket_name, model_s3_key
             )
             model_info = PresignURLInfo(
                 upload_url=model_upload_url,

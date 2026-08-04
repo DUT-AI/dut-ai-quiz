@@ -8,6 +8,7 @@ export const LessonSchema = z.object({
   slug: z.string().nullable().optional(),
   content_md: z.string().nullable().optional(),
   module_id: z.string().nullable().optional(),
+  has_game_questions: z.boolean().optional(),
 });
 
 export type Lesson = z.infer<typeof LessonSchema>;

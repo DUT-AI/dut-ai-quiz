@@ -1,5 +1,7 @@
 from dishka import Provider, Scope, provide
+from redis.asyncio import Redis
 
+from app.application.services.pdf_ai_parser import PDFAIParserService
 from app.application.services.lesson_chunker import LessonChunker
 from app.domain.interfaces.pdf_parser_strategy import IPdfParserStrategy
 from app.application.services.ai_pdf_parser import AIPdfParserStrategy
@@ -115,6 +117,7 @@ from app.application.use_cases.questions import (
     HeartbeatQuestionUseCase,
     AiRegenerateSolutionUseCase,
     PublishQuestionUseCase,
+    FindRelatedQuestionsUseCase,
 )
 from app.application.use_cases.tags.tags_use_case import (
     ListTagsUseCase,
@@ -127,15 +130,42 @@ from app.application.use_cases.comment import (
     ToggleReactionUseCase,
     DeleteCommentUseCase,
 )
+from app.application.use_cases.pdf_import import (
+    StartImportUseCase,
+    GetImportStatusUseCase,
+    ReviewDraftQuestionsUseCase,
+    ApproveQuestionUseCase,
+    RejectQuestionUseCase,
+    RegenerateSolutionUseCase,
+    AcquireLockUseCase,
+    HeartbeatLockUseCase,
+)
 from app.application.use_cases.uploads.presign_upload import PresignUploadUseCase
+from app.application.use_cases.homeworks import (
+    ArchiveHomeworkUseCase,
+    CreateHomeworkUseCase,
+    GetHomeworkAttachmentUrlUseCase,
+    GetHomeworkSubmissionDownloadUrlUseCase,
+    GetMyHomeworkSubmissionUseCase,
+    ListHomeworksUseCase,
+    ListHomeworkSubmissionsUseCase,
+    ListMyHomeworksUseCase,
+    ListUnsubmittedHomeworkUsersUseCase,
+    SubmitHomeworkUseCase,
+    UpdateHomeworkUseCase,
+)
 from app.domain.events.bus import EventBus
 from app.domain.interfaces import (
     IAttemptRepository,
     IFocusEventRepository,
     IManageService,
     IUserRepository,
+    IS3Client,
+    IImportSessionRepository,
+    IQuestionRepository,
 )
 from app.infrastructure.cache.redis_client import ProfileCache
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class UseCaseProvider(Provider):
@@ -203,6 +233,50 @@ class UseCaseProvider(Provider):
     )
     list_submissions_use_case = provide(ListSubmissionsUseCase, scope=Scope.REQUEST)
     presign_upload_use_case = provide(PresignUploadUseCase, scope=Scope.REQUEST)
+    list_my_homeworks_use_case = provide(
+        ListMyHomeworksUseCase,
+        scope=Scope.REQUEST,
+    )
+    list_homeworks_use_case = provide(
+        ListHomeworksUseCase,
+        scope=Scope.REQUEST,
+    )
+    create_homework_use_case = provide(
+        CreateHomeworkUseCase,
+        scope=Scope.REQUEST,
+    )
+    update_homework_use_case = provide(
+        UpdateHomeworkUseCase,
+        scope=Scope.REQUEST,
+    )
+    archive_homework_use_case = provide(
+        ArchiveHomeworkUseCase,
+        scope=Scope.REQUEST,
+    )
+    submit_homework_use_case = provide(
+        SubmitHomeworkUseCase,
+        scope=Scope.REQUEST,
+    )
+    get_my_homework_submission_use_case = provide(
+        GetMyHomeworkSubmissionUseCase,
+        scope=Scope.REQUEST,
+    )
+    list_homework_submissions_use_case = provide(
+        ListHomeworkSubmissionsUseCase,
+        scope=Scope.REQUEST,
+    )
+    list_unsubmitted_homework_users_use_case = provide(
+        ListUnsubmittedHomeworkUsersUseCase,
+        scope=Scope.REQUEST,
+    )
+    get_homework_attachment_url_use_case = provide(
+        GetHomeworkAttachmentUrlUseCase,
+        scope=Scope.REQUEST,
+    )
+    get_homework_submission_download_url_use_case = provide(
+        GetHomeworkSubmissionDownloadUrlUseCase,
+        scope=Scope.REQUEST,
+    )
 
     # questions
     create_question_use_case = provide(CreateQuestionUseCase, scope=Scope.REQUEST)
@@ -228,6 +302,9 @@ class UseCaseProvider(Provider):
     )
     publish_question_use_case = provide(
         PublishQuestionUseCase, scope=Scope.REQUEST
+    )
+    find_related_questions_use_case = provide(
+        FindRelatedQuestionsUseCase, scope=Scope.REQUEST
     )
 
     # tags
@@ -344,11 +421,69 @@ class UseCaseProvider(Provider):
         self,
         user_repo: IUserRepository,
         manage_client: IManageService,
+        redis: Redis,
     ) -> UserService:
-        return UserService(user_repo, manage_client)
+        return UserService(user_repo, manage_client, redis)
 
     # comments
     create_comment_use_case = provide(CreateCommentUseCase, scope=Scope.REQUEST)
     get_comments_use_case = provide(GetCommentsUseCase, scope=Scope.REQUEST)
     toggle_reaction_use_case = provide(ToggleReactionUseCase, scope=Scope.REQUEST)
     delete_comment_use_case = provide(DeleteCommentUseCase, scope=Scope.REQUEST)
+
+    # PDF Import
+    get_import_status_use_case = provide(GetImportStatusUseCase, scope=Scope.REQUEST)
+    review_draft_questions_use_case = provide(ReviewDraftQuestionsUseCase, scope=Scope.REQUEST)
+    heartbeat_lock_use_case = provide(HeartbeatLockUseCase, scope=Scope.REQUEST)
+
+    @provide(scope=Scope.REQUEST)
+    def pdf_ai_parser_service(self, s3_client: IS3Client) -> PDFAIParserService:
+        return PDFAIParserService(s3_client)
+
+    @provide(scope=Scope.REQUEST)
+    def start_import_use_case(
+        self,
+        session: AsyncSession,
+        import_session_repo: IImportSessionRepository,
+        question_repo: IQuestionRepository,
+        ai_parser: PDFAIParserService,
+    ) -> StartImportUseCase:
+        return StartImportUseCase(
+            session=session,
+            import_session_repo=import_session_repo,
+            question_repo=question_repo,
+            ai_parser=ai_parser,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def approve_question_use_case(
+        self,
+        session: AsyncSession,
+        redis: Redis,
+    ) -> ApproveQuestionUseCase:
+        return ApproveQuestionUseCase(session=session, redis=redis)
+
+    @provide(scope=Scope.REQUEST)
+    def reject_question_use_case(
+        self,
+        session: AsyncSession,
+        redis: Redis,
+        s3_client: IS3Client,
+    ) -> RejectQuestionUseCase:
+        return RejectQuestionUseCase(session=session, redis=redis, s3_client=s3_client)
+
+    @provide(scope=Scope.REQUEST)
+    def regenerate_solution_use_case(
+        self,
+        session: AsyncSession,
+        ai_parser: PDFAIParserService,
+    ) -> RegenerateSolutionUseCase:
+        return RegenerateSolutionUseCase(session=session, ai_parser=ai_parser)
+
+    @provide(scope=Scope.REQUEST)
+    def acquire_lock_use_case(
+        self,
+        session: AsyncSession,
+        redis: Redis,
+    ) -> AcquireLockUseCase:
+        return AcquireLockUseCase(session=session, redis=redis)

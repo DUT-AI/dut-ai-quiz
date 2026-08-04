@@ -17,3 +17,9 @@ class IS3Client(Protocol):
     ) -> str:
         """Generate a presigned PUT upload URL."""
         ...
+
+    def generate_presigned_download_url(
+        self, bucket: str, key: str, expires_in: int = 3600
+    ) -> str:
+        """Generate a short-lived URL for downloading a private object."""
+        ...

@@ -76,6 +76,8 @@ class GetProfileUseCase:
                 except Exception:
                     pass
 
+
+
                 profile_data = {
                     "id": profile.id,
                     "email": profile.email,

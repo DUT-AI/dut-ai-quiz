@@ -13,7 +13,9 @@ import {
   PlusCircle,
   BarChart2,
   LogOut,
-  Award
+  Award,
+  MessageSquare,
+  BookOpenCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -26,10 +28,12 @@ const STUDENT_NAV_ITEMS = [
   { icon: GraduationCap, label: "Đề thi", href: "/exams" },
   { icon: Award, label: "Hackathons", href: "/hackathons" },
   { icon: History, label: "Lịch sử làm bài", href: "/history" },
+  { icon: MessageSquare, label: "Phản hồi", href: "/feedback" },
 ];
 
 const TEACHER_NAV_ITEMS = [
   { icon: ShieldCheck, label: "Quản lý Đề thi", href: "/teacher/exams" },
+  { icon: BookOpenCheck, label: "Quản lý Bài tập", href: "/teacher/homeworks" },
   { icon: PlusCircle, label: "Quản lý Bài học", href: "/teacher/lessons" },
   { icon: Award, label: "Quản lý Hackathon", href: "/teacher/hackathons" },
   { icon: BarChart2, label: "Thống kê kết quả", href: "/teacher/stats" },

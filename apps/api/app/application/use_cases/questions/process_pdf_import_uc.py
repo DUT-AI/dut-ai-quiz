@@ -23,7 +23,7 @@ class ProcessPdfImportUseCase:
         self.question_repo = question_repo
         self.pdf_parser = pdf_parser
 
-    async def execute(self, job_id: UUID, file_path: str, user_id: int, target_scope: str | None, password: str | None) -> None:
+    async def execute(self, job_id: UUID, file_path: str, user_id: int, lesson_id: str | None, target_scope: str | None, password: str | None) -> None:
         session = await self.import_session_repo.get_by_id(job_id)
         if not session or session.status != ImportSessionStatus.PROCESSING:
             logger.warning(f"Session {job_id} not found or not in PROCESSING state.")
@@ -48,6 +48,7 @@ class ProcessPdfImportUseCase:
 
             # 3. Create Draft Questions in DB (STEP 6)
             entities_to_add = []
+            lid = uuid.UUID(lesson_id) if lesson_id else None
             for pq in parsed_questions:
                 # TODO: Implement Duplicate Check via Cosine Similarity here
                 
@@ -66,7 +67,7 @@ class ProcessPdfImportUseCase:
                         ) for opt in pq.options
                     ],
                     solution=pq.solution,
-                    lesson_id=None, # from AI suggested lesson_id
+                    lesson_id=lid,
                     tags=[], # from AI
                     created_by=user_id,
                     created_at=now_ict(),

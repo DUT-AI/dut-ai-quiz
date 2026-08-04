@@ -12,6 +12,7 @@ class QuestionStatus(str, Enum):
     PUBLIC = "PUBLIC"
 
 class DuplicateStatus(str, Enum):
+    UNIQUE = "UNIQUE"
     NONE = "NONE"
     POSSIBLE_DUPLICATE = "POSSIBLE_DUPLICATE"
     EXACT_DUPLICATE = "EXACT_DUPLICATE"
@@ -65,3 +66,5 @@ class QuestionEntity:
     is_answer_ai_generated: bool = False
     is_solution_ai_generated: bool = False
     import_session_id: UUID | None = None
+    review_locked_by: int | None = None
+    review_locked_at: datetime | None = None

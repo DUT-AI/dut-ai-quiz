@@ -15,6 +15,7 @@ from app.application.use_cases.questions import (
     HeartbeatQuestionUseCase,
     AiRegenerateSolutionUseCase,
     PublishQuestionUseCase,
+    FindRelatedQuestionsUseCase,
 )
 from app.config import settings
 from app.domain.interfaces import EmbeddingServiceError
@@ -28,6 +29,8 @@ from app.presentation.schemas.questions import (
     QuestionUpdate,
     QuestionAnswerIn,
     QuestionAnswerOut,
+    RelatedQuestionOut,
+    RelatedQuestionsIn,
 )
 from pydantic import BaseModel
 class AiRegenerateRequest(BaseModel):
@@ -97,7 +100,7 @@ async def list_questions_route(
     tag: str | None = None,
     import_session_id: UUID | None = None,
     offset: int = Query(0, ge=0),
-    limit: int = Query(50, ge=1, le=200),
+    limit: int = Query(50, ge=1, le=2000),
 ):
     # For guests, we only allow viewing PRACTICE questions.
     if user.quiz_role not in ("admin", "MENTOR"):
@@ -127,6 +130,34 @@ async def create_question_route(
 ):
     body.created_by = user.id
     return await use_case.execute(body)
+
+
+@router.post("/related", response_model=list[RelatedQuestionOut])
+@inject
+async def find_related_questions_route(
+    user: CurrentUser,
+    body: RelatedQuestionsIn,
+    use_case: FromDishka[FindRelatedQuestionsUseCase],
+):
+    pool_type = body.pool_type
+    if user.quiz_role not in ("admin", "MENTOR"):
+        pool_type = PoolType.PRACTICE
+
+    try:
+        return await use_case.execute(
+            content=body.content,
+            limit=body.limit,
+            min_score=(
+                settings.related_question_min_score
+                if body.min_score is None
+                else body.min_score
+            ),
+            pool_type=pool_type,
+        )
+    except EmbeddingServiceError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @router.get("/{question_id}", response_model=QuestionOut)

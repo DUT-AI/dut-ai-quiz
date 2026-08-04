@@ -30,5 +30,6 @@ COPY apps/worker ./apps/worker
 # Set working directory to worker app to run arq
 WORKDIR /app/apps/worker
 
-# Run arq worker using worker.presentation.arq_tasks module path
-CMD ["uv", "run", "arq", "worker.presentation.arq_tasks.WorkerSettings"]
+# Default to the hackathon worker. Compose overrides this command for the
+# lesson-index and homework-evaluation worker processes.
+CMD ["uv", "run", "arq", "worker_hackathon.presentation.arq_tasks.WorkerSettings"]

@@ -22,13 +22,16 @@ from .module_repo import IModuleRepository
 from .manage_cache import IDUTAIManageCache
 from .manage_service import IManageService
 from .game_session_repo import IGameSessionRepository
-from .question_repo import IQuestionRepository
+from .question_repo import IQuestionRepository, QuestionSimilarityMatch
 from .tag_repo import ITagRepository
 from .s3_client import IS3Client
 from .submission_queue import ISubmissionQueue
 from .user_repo import IUserRepository
 from .comment_repository import ICommentRepository, SortMode
 from .comment_reaction_repository import ICommentReactionRepository
+from .import_session_repo import IImportSessionRepository
+from .homework_repo import IHomeworkRepository
+from .homework_queue import IHomeworkEvaluationQueue
 
 __all__ = [
     "IAttemptAnswerRepository",
@@ -44,6 +47,7 @@ __all__ = [
     "IModuleRepository",
     "IGameSessionRepository",
     "IQuestionRepository",
+    "QuestionSimilarityMatch",
     "ITagRepository",
     "IUserRepository",
     "IManageService",
@@ -62,4 +66,7 @@ __all__ = [
     "ICommentRepository",
     "ICommentReactionRepository",
     "SortMode",
+    "IImportSessionRepository",
+    "IHomeworkRepository",
+    "IHomeworkEvaluationQueue",
 ]

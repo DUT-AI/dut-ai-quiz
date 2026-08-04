@@ -5,10 +5,10 @@ import { useRecordFocusEvent } from "@/lib/queries";
 import { v4 as uuidv4 } from "uuid";
 
 interface UseAntiCheatOptions {
-  attemptId: string;
+  attemptId?: string;
   isActive: boolean;
   isSubmitting: boolean;
-  onAutoSubmitted: () => void;
+  onAutoSubmitted?: () => void;
 }
 
 export interface UseAntiCheatReturn {
@@ -18,6 +18,7 @@ export interface UseAntiCheatReturn {
   violationType: string | null;
   dismissViolation: () => void;
   hasEnteredFirstTime: boolean;
+  violationCount: number;
 }
 
 export const VIOLATION_MESSAGES: Record<string, string> = {
@@ -55,6 +56,7 @@ export function useAntiCheat({
   const [showViolationModal, setShowViolationModal] = useState(false);
   const [hasEnteredFirstTime, setHasEnteredFirstTime] = useState(false);
   const [stabilizedAt, setStabilizedAt] = useState<number | null>(null);
+  const [violationCount, setViolationCount] = useState(0);
 
   const isViolatingRef = useRef(false);
   const isSubmittingRef = useRef(isSubmitting);
@@ -95,16 +97,26 @@ export function useAntiCheat({
       setViolationType(eventType);
       setShowViolationModal(true);
 
-      recordFocusEvent.mutate(
-        { attemptId, event: eventType, clientEventId: uuidv4() },
-        {
-          onSuccess: (res) => {
-            if (res.action === "AUTO_SUBMITTED") {
-              onAutoSubmitted();
-            }
-          },
-        }
-      );
+      if (attemptId) {
+        recordFocusEvent.mutate(
+          { attemptId, event: eventType, clientEventId: uuidv4() },
+          {
+            onSuccess: (res) => {
+              if (res.action === "AUTO_SUBMITTED" && onAutoSubmitted) {
+                onAutoSubmitted();
+              }
+            },
+          }
+        );
+      } else {
+        setViolationCount((prev) => {
+          const next = prev + 1;
+          if (next >= 3 && onAutoSubmitted) {
+            onAutoSubmitted();
+          }
+          return next;
+        });
+      }
     },
     [attemptId, recordFocusEvent, onAutoSubmitted]
   );
@@ -289,5 +301,6 @@ export function useAntiCheat({
     violationType,
     dismissViolation,
     hasEnteredFirstTime,
+    violationCount,
   };
 }

@@ -27,7 +27,8 @@ class StartPdfImportUseCase:
         user_id: int,
         pdf_bytes: bytes,
         file_name: str | None,
-        target_scope: str | None,
+        lesson_id: str | None,
+        target_scope: str,
         password: str | None,
     ) -> StartPdfImportResponse:
         # 1. Validation & Password checking
@@ -58,7 +59,7 @@ class StartPdfImportUseCase:
         if not is_locked:
             # Optionally return existing job id if stored, but throwing error is safer for double clicks
             raise ValueError("Duplicate upload detected. Please wait.")
-        await self.redis.expire(lock_key, 300) # 5 minutes TTL
+        await self.redis.expire(lock_key, 15) # 15 seconds TTL
 
         # 3. Save decoded file to temp_dir/pdf_uploads/{job_id}.pdf
         import tempfile
@@ -71,10 +72,12 @@ class StartPdfImportUseCase:
             f.write(pdf_bytes)
 
         # 4. Create Session in DB
+        lid = uuid.UUID(lesson_id) if lesson_id else None
         session = ImportSessionEntity(
             id=job_id,
             user_id=user_id,
             target_scope=target_scope,
+            lesson_id=lid,
             status=ImportSessionStatus.PROCESSING,
             file_name=file_name,
             created_at=datetime.utcnow()
@@ -86,6 +89,7 @@ class StartPdfImportUseCase:
             job_id=job_id,
             file_path=file_path,
             user_id=user_id,
+            lesson_id=lesson_id,
             target_scope=target_scope,
             password=password
         )

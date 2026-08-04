@@ -68,7 +68,7 @@ export function HackathonTasksTab({ hackathon }: HackathonTasksTabProps) {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (testUploads.public || testUploads.private) {
-      toast.error("Vui lòng chờ tải file test lên MinIO hoàn tất.");
+      toast.error("Vui lòng chờ tải file test lên S3 hoàn tất.");
       return;
     }
     if (!name.trim()) {

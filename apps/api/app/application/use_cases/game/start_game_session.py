@@ -1,6 +1,5 @@
 import random
-from typing import Optional
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 from fastapi import HTTPException
 
@@ -74,6 +73,12 @@ class StartGameSessionUseCase:
             offset=0,
             limit=1000,
         )
+
+        if not questions:
+            raise HTTPException(
+                status_code=400,
+                detail="Bài học này chưa có câu hỏi luyện tập thi đấu nào dưới database."
+            )
 
         # Check user's history to prioritize unseen questions
         history = await self._ps_repo.list_history(user_id)

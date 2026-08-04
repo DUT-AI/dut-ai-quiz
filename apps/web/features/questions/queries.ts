@@ -70,8 +70,8 @@ export function useDeleteQuestion() {
 export function useBulkCreateQuestions() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: { 
-      questions: { question: string; options: any[]; solution?: string; pool_type?: string }[]; 
+    mutationFn: (body: {
+      questions: { question: string; options: any[]; solution?: string; pool_type?: string }[];
       lesson_id?: string;
       pool_type?: string;
       tags?: string[];
@@ -100,9 +100,24 @@ export function useImportPDF() {
   return useMutation({
     mutationFn: async (formData: FormData) => {
       const backendUrl = process.env.NODE_ENV === "development" ? "http://localhost:8000" : "";
-      const path = backendUrl ? `${backendUrl}/api/v1/questions/import-pdf` : "/api/v1/questions/import-pdf";
-      
+      const path = backendUrl ? `${backendUrl}/api/v1/pdf-import/import-pdf` : "/api/v1/pdf-import/import-pdf";
+
       const res = await apiClient.post<{ job_id: string; status: string; message: string }>(
+        path,
+        formData
+      );
+      return res.data;
+    },
+  });
+}
+
+export function useUploadPDF() {
+  return useMutation({
+    mutationFn: async (formData: FormData) => {
+      const backendUrl = process.env.NODE_ENV === "development" ? "http://localhost:8000" : "";
+      const path = backendUrl ? `${backendUrl}/api/v1/pdf-import/upload` : "/api/v1/pdf-import/upload";
+
+      const res = await apiClient.post<{ ok: boolean; job_id: string; status: string }>(
         path,
         formData
       );

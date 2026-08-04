@@ -8,6 +8,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Module, Lesson } from "@/features/lessons/types";
 import { LessonOrderGroup } from "./lesson-order-group";
+import Link from "next/link";
 
 function InsertDropZone({ id, order, moduleId }: { id: string; order: number; moduleId: string }) {
   const { setNodeRef, isOver } = useDroppable({
@@ -69,6 +70,7 @@ export function SortableModule({ module, lessons, onEditModule, onDeleteModule, 
 
   // Sort orders
   const orders = Object.keys(lessonsByOrder).map(Number).sort((a, b) => a - b);
+  const nextOrder = orders.length > 0 ? Math.max(...orders) + 1 : 1;
 
   return (
     <div
@@ -145,21 +147,32 @@ export function SortableModule({ module, lessons, onEditModule, onDeleteModule, 
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 ml-auto opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300">
-          <button
-            onClick={() => onEditModule(module)}
-            className="p-2 text-xs text-indigo-600 dark:text-indigo-455 hover:text-white hover:bg-indigo-500 dark:hover:text-navy-blue dark:hover:bg-indigo-400 rounded-lg border border-indigo-500/10 dark:border-indigo-400/20 transition-all duration-200 shadow-sm cursor-pointer"
-            title="Sửa chương"
+        <div className="flex items-center gap-2 ml-auto shrink-0">
+          <Link
+            href={`/teacher/lessons/new?moduleId=${module.id}&order=${nextOrder}`}
+            className="px-3 py-2 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-600 hover:text-white dark:text-emerald-400 dark:hover:text-navy-blue dark:hover:bg-emerald-400 font-bold rounded-xl text-xs transition-all duration-300 flex items-center gap-1.5 border border-emerald-500/20 shadow-sm hover:scale-[1.02] active:scale-95 cursor-pointer"
+            title="Thêm bài học vào chương này"
           >
-            <Edit2 className="size-4" />
-          </button>
-          <button
-            onClick={() => onDeleteModule(module)}
-            className="p-2 text-xs text-rose-650 dark:text-rose-400 hover:text-white hover:bg-rose-550 dark:hover:text-white dark:hover:bg-rose-600 rounded-lg border border-rose-500/10 dark:border-rose-500/20 transition-all duration-200 shadow-sm cursor-pointer"
-            title="Xóa chương"
-          >
-            <Trash2 className="size-4" />
-          </button>
+            <Plus className="size-4" />
+            <span className="hidden md:inline">Thêm bài học</span>
+          </Link>
+
+          <div className="flex items-center gap-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300">
+            <button
+              onClick={() => onEditModule(module)}
+              className="p-2 text-xs text-indigo-600 dark:text-indigo-455 hover:text-white hover:bg-indigo-500 dark:hover:text-navy-blue dark:hover:bg-indigo-400 rounded-lg border border-indigo-500/10 dark:border-indigo-400/20 transition-all duration-200 shadow-sm cursor-pointer"
+              title="Sửa chương"
+            >
+              <Edit2 className="size-4" />
+            </button>
+            <button
+              onClick={() => onDeleteModule(module)}
+              className="p-2 text-xs text-rose-650 dark:text-rose-400 hover:text-white hover:bg-rose-550 dark:hover:text-white dark:hover:bg-rose-600 rounded-lg border border-rose-500/10 dark:border-rose-500/20 transition-all duration-200 shadow-sm cursor-pointer"
+              title="Xóa chương"
+            >
+              <Trash2 className="size-4" />
+            </button>
+          </div>
         </div>
       </div>
 

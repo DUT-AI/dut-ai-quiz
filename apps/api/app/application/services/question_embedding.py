@@ -15,6 +15,11 @@ def question_embedding_hash(question: QuestionEntity) -> str:
     return hashlib.sha256(question_embedding_text(question).encode("utf-8")).hexdigest()
 
 
+def question_query_embedding_text(content: str) -> str:
+    """Use the same retrieval prefix as persisted question embeddings."""
+    return f"Question: {content.strip()}"
+
+
 class QuestionEmbeddingService:
     """Populate a question's cached retrieval vector before it is persisted."""
 

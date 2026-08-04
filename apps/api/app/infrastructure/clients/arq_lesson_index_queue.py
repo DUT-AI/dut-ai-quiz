@@ -4,6 +4,7 @@ from arq.connections import ArqRedis
 from redis.asyncio import Redis
 
 from app.domain.interfaces import ILessonIndexQueue
+from app.config import settings
 
 
 class ArqLessonIndexQueue(ILessonIndexQueue):
@@ -17,4 +18,5 @@ class ArqLessonIndexQueue(ILessonIndexQueue):
             expected_source_hash=source_hash,
             _job_id=f"lesson-index:{lesson_id}:{source_hash}",
             _defer_by=1,
+            _queue_name=settings.lesson_index_queue_name,
         )

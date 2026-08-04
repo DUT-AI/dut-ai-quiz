@@ -9,8 +9,7 @@ from .process_pdf_import_uc import ProcessPdfImportUseCase
 from .heartbeat_question_uc import HeartbeatQuestionUseCase
 from .ai_regenerate_solution_uc import AiRegenerateSolutionUseCase
 from .publish_question_uc import PublishQuestionUseCase
-
-
+from .related_questions_uc import FindRelatedQuestionsUseCase
 
 __all__ = [
     "BulkCreateQuestionsUseCase",
@@ -26,5 +25,5 @@ __all__ = [
     "HeartbeatQuestionUseCase",
     "AiRegenerateSolutionUseCase",
     "PublishQuestionUseCase",
+    "FindRelatedQuestionsUseCase",
 ]
-

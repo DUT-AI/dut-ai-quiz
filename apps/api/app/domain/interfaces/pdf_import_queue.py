@@ -8,6 +8,7 @@ class IPdfImportQueue(abc.ABC):
         job_id: UUID,
         file_path: str,
         user_id: int,
+        lesson_id: str | None,
         target_scope: str | None,
         password: str | None,
     ) -> None:

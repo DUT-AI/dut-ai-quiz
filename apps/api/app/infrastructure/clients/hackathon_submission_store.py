@@ -13,7 +13,7 @@ class MinIOHackathonSubmissionStore(IHackathonSubmissionStore):
 
     def __init__(self, s3_client: IS3Client) -> None:
         self._s3_client = s3_client
-        self._bucket_name = settings.minio_bucket_name
+        self._bucket_name = settings.s3_bucket_name
 
     def upload_submission_files(
         self,

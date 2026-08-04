@@ -16,6 +16,7 @@ class ArqPdfImportQueue(IPdfImportQueue):
         job_id: UUID,
         file_path: str,
         user_id: int,
+        lesson_id: str | None,
         target_scope: str | None,
         password: str | None,
     ) -> None:
@@ -25,6 +26,7 @@ class ArqPdfImportQueue(IPdfImportQueue):
             job_id=str(job_id),
             file_path=file_path,
             user_id=user_id,
+            lesson_id=lesson_id,
             target_scope=target_scope,
             password=password,
             _job_id=f"pdf_import:{job_id}",
