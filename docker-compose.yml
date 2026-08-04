@@ -122,6 +122,29 @@ services:
                 condition: service_healthy
         command: ["uv", "run", "arq", "worker_evaluate_homework.presentation.arq_tasks.WorkerSettings"]
 
+    pdf-worker:
+        build:
+            context: .
+            dockerfile: apps/pdf-worker/Dockerfile
+        container_name: dut-ai-quiz-pdf-worker
+        restart: unless-stopped
+        init: true
+        env_file:
+            - .env
+        environment:
+            - TZ=Asia/Ho_Chi_Minh
+            - POSTGRES_HOST=postgres
+            - POSTGRES_PORT=5432
+            - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-dut_ai_quiz}
+            - REDIS_URL=redis://redis:6379/${REDIS_DB:-0}
+            - REDIS_HOST=redis
+            - REDIS_PORT=6379
+        depends_on:
+            postgres:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+
     web:
         build:
             context: ./apps/web

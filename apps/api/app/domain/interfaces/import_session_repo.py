@@ -11,6 +11,14 @@ class IImportSessionRepository(Protocol):
         """Create a new import session record."""
         ...
 
+    async def get_by_id(self, session_id: UUID) -> ImportSessionEntity | None:
+        """Retrieves an import session by ID."""
+        ...
+
+    async def update(self, session: ImportSessionEntity) -> ImportSessionEntity:
+        """Updates an existing import session."""
+        ...
+
     async def get(self, session_id: UUID) -> ImportSessionEntity | None:
         """Get an import session by its UUID."""
         ...

@@ -41,13 +41,45 @@ from app.presentation.schemas.pdf_import_v2 import (
     RegenerateSolutionRequest,
     RegenerateSolutionResponse,
 )
+from app.presentation.schemas.pdf_import import StartPdfImportResponse
+from app.application.use_cases.questions.start_pdf_import_uc import StartPdfImportUseCase
 
 router = APIRouter(prefix="/pdf-import", tags=["pdf-import"])
-
 
 # ---------------------------------------------------------------------------
 # STEP 1+2: Upload & Start Async Job
 # ---------------------------------------------------------------------------
+
+@router.post(
+    "/import-pdf", 
+    response_model=StartPdfImportResponse, 
+    status_code=202
+)
+@inject
+async def import_pdf_route(
+    user: AdminOrMentorUser,
+    use_case: FromDishka[StartPdfImportUseCase],
+    file: UploadFile = File(...),
+    lesson_id: str | None = Form(None),
+    target_scope: str = Form("LESSON"),
+    password: str | None = Form(None),
+):
+    """
+    Upload PDF sử dụng cơ chế OCR nội bộ (PaddleOCR + OpenDataLoader).
+    Gửi việc qua ARQ Queue thay vì chạy background task nội bộ của API.
+    """
+    pdf_bytes = await file.read()
+    try:
+        return await use_case.execute(
+            user_id=user.id,
+            pdf_bytes=pdf_bytes,
+            file_name=file.filename,
+            lesson_id=lesson_id,
+            target_scope=target_scope,
+            password=password
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail={"error": str(e)})
 
 @router.post("/upload", response_model=PDFUploadResponse, status_code=202)
 @inject
@@ -64,7 +96,13 @@ async def upload_pdf(
     AI xử lý bất đồng bộ trong background.
     """
     pdf_bytes = await file.read()
-    lid = UUID(lesson_id) if lesson_id else None
+    
+    lid = None
+    if lesson_id and str(lesson_id).strip() not in ("undefined", "null", ""):
+        try:
+            lid = UUID(str(lesson_id).strip())
+        except ValueError:
+            pass # ignore invalid uuid
 
     result = await uc.execute(
         pdf_bytes=pdf_bytes,

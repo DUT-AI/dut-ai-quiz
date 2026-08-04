@@ -426,10 +426,13 @@ class PDFAIParserService:
 
 
 
-        results = await asyncio.gather(
-            *[process_batch(batch, idx) for idx, batch in enumerate(batches)],
-            return_exceptions=False,
-        )
+        results = []
+        for idx, batch in enumerate(batches):
+            batch_result = await process_batch(batch, idx)
+            results.append(batch_result)
+            # Thêm độ trễ 5 giây giữa các batch để tránh dính Rate Limit 429 của tài khoản Free
+            if idx < len(batches) - 1:
+                await asyncio.sleep(5)
 
         all_questions: list[ParsedQuestion] = []
         for batch_result in results:

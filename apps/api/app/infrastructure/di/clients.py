@@ -14,6 +14,7 @@ from app.domain.interfaces import (
     ILessonIndexQueue,
     IHomeworkEvaluationQueue,
 )
+from app.domain.interfaces.pdf_import_queue import IPdfImportQueue
 from app.config import settings
 from app.infrastructure.clients import (
     DUTAIManageService,
@@ -25,6 +26,7 @@ from app.infrastructure.clients.hackathon_submission_store import (
 )
 from app.infrastructure.clients.arq_submission_queue import ArqSubmissionQueue
 from app.infrastructure.clients.arq_lesson_index_queue import ArqLessonIndexQueue
+from app.infrastructure.clients.arq_pdf_import_queue import ArqPdfImportQueue
 from app.infrastructure.clients.arq_homework_queue import ArqHomeworkEvaluationQueue
 from app.infrastructure.clients.embedding_service import (
     DutAiEmbeddingService,
@@ -74,6 +76,10 @@ class ClientProvider(Provider):
     @provide(scope=Scope.APP)
     def get_arq_lesson_index_queue(self, redis: Redis) -> ILessonIndexQueue:
         return ArqLessonIndexQueue(redis)
+
+    @provide(scope=Scope.APP)
+    def get_pdf_import_queue(self, redis: Redis) -> IPdfImportQueue:
+        return ArqPdfImportQueue(redis)
 
     @provide(scope=Scope.APP)
     def get_arq_homework_queue(

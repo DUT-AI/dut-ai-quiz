@@ -80,12 +80,15 @@ class Settings(BaseSettings):
     )
     presigned_url_expire_seconds: int = 3600
 
+    # AI Integration (Gemini / Multimodal)
+    gemini_api_key: str | None = None
+    gemini_model_name: str = "gemini-flash-latest"
+
     # Homework submission and external evaluation services.
     homework_checker_api_url: str = ""
     submission_checker_api_url: str = ""
     homework_max_file_size_bytes: int = 10 * 1024 * 1024
     homework_grading_timeout_seconds: float = 300.0
-
     # Lesson semantic search. DUT-AI's Vietnamese SBERT service is the default;
     # local hashing and OpenAI-compatible providers remain available for dev.
     embedding_enabled: bool = True
@@ -114,7 +117,7 @@ class Settings(BaseSettings):
 
     # ================= GEMINI AI (PDF IMPORT) ===================
     gemini_api_key: str = ""
-    gemini_model: str = "gemini-2.0-flash"
+    gemini_model: str = "gemini-3.5-flash"
 
     # ================= PDF IMPORT CONFIG ========================
     pdf_max_size_mb: int = 20

@@ -17,6 +17,7 @@ from app.domain.interfaces import (
     IImportSessionRepository,
     IHomeworkRepository,
 )
+from app.domain.interfaces.import_session_repo import IImportSessionRepository
 from app.domain.interfaces.hackathon_repo import (
     IHackathonRepository,
     IHackathonTaskRepository,

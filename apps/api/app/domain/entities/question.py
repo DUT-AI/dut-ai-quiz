@@ -3,7 +3,20 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
+from enum import Enum
+
 from app.domain.value_objects import Difficulty, PoolType
+
+class QuestionStatus(str, Enum):
+    DRAFT = "DRAFT"
+    PUBLIC = "PUBLIC"
+
+class DuplicateStatus(str, Enum):
+    UNIQUE = "UNIQUE"
+    NONE = "NONE"
+    POSSIBLE_DUPLICATE = "POSSIBLE_DUPLICATE"
+    EXACT_DUPLICATE = "EXACT_DUPLICATE"
+
 
 
 @dataclasses.dataclass
@@ -46,13 +59,12 @@ class QuestionEntity:
     embedding: list[float] | None = None
     embedding_model: str | None = None
     embedding_source_hash: str | None = None
-    # --- PDF Import fields ---
-    status: str = "PUBLIC"  # 'DRAFT', 'PUBLIC', 'ARCHIVED'
-    import_session_id: UUID | None = None
+    status: QuestionStatus = QuestionStatus.PUBLIC
+    duplicate_status: DuplicateStatus = DuplicateStatus.NONE
+    duplicate_of_question_id: UUID | None = None
+    is_difficulty_ai_suggested: bool = False
     is_answer_ai_generated: bool = False
     is_solution_ai_generated: bool = False
-    is_difficulty_ai_suggested: bool = False
-    duplicate_status: str = "UNIQUE"  # 'UNIQUE', 'POSSIBLE_DUPLICATE'
-    duplicate_of_question_id: UUID | None = None
+    import_session_id: UUID | None = None
     review_locked_by: int | None = None
     review_locked_at: datetime | None = None

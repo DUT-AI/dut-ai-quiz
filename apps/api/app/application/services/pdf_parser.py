@@ -6,12 +6,18 @@ from app.presentation.schemas.pdf_import import (
     PDFImportRequest,
 )
 
+from app.domain.interfaces.pdf_parser_strategy import IPdfParserStrategy
 
-class PDFParserService:
-    def parse_pdf(
-        self, pdf_bytes: bytes, request: PDFImportRequest
-    ) -> PDFParseResponse:
+
+class RegexPdfParserStrategy(IPdfParserStrategy):
+    async def parse(
+        self, pdf_bytes: bytes, password: str | None = None, **kwargs
+    ) -> list[ParsedQuestionPreview]:
+        request = kwargs.get("request", PDFImportRequest())
+        
         doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+        if doc.is_encrypted and password:
+            doc.authenticate(password)
 
         all_lines = []
         total_pages = len(doc)
@@ -113,6 +119,4 @@ class PDFParserService:
                     )
                 )
 
-        return PDFParseResponse(
-            questions=parsed_questions, total_pages=total_pages, warnings=[]
-        )
+        return parsed_questions

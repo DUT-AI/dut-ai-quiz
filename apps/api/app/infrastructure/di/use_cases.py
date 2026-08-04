@@ -2,8 +2,10 @@ from dishka import Provider, Scope, provide
 from redis.asyncio import Redis
 
 from app.application.services.pdf_ai_parser import PDFAIParserService
-from app.application.services.pdf_parser import PDFParserService
 from app.application.services.lesson_chunker import LessonChunker
+from app.domain.interfaces.pdf_parser_strategy import IPdfParserStrategy
+from app.application.services.ai_pdf_parser import AIPdfParserStrategy
+from app.application.services.pdf_parser import RegexPdfParserStrategy
 from app.application.services.lesson_embedding_indexer import LessonEmbeddingIndexer
 from app.application.services.lesson_index_scheduler import LessonIndexScheduler
 from app.application.services.question_embedding import QuestionEmbeddingService
@@ -111,6 +113,10 @@ from app.application.use_cases.questions import (
     UpdateQuestionUseCase,
     AnswerQuestionUseCase,
     GetRelatedLessonsUseCase,
+    StartPdfImportUseCase,
+    HeartbeatQuestionUseCase,
+    AiRegenerateSolutionUseCase,
+    PublishQuestionUseCase,
     FindRelatedQuestionsUseCase,
 )
 from app.application.use_cases.tags.tags_use_case import (
@@ -285,6 +291,18 @@ class UseCaseProvider(Provider):
     get_related_lessons_use_case = provide(
         GetRelatedLessonsUseCase, scope=Scope.REQUEST
     )
+    start_pdf_import_use_case = provide(
+        StartPdfImportUseCase, scope=Scope.REQUEST
+    )
+    heartbeat_question_use_case = provide(
+        HeartbeatQuestionUseCase, scope=Scope.REQUEST
+    )
+    ai_regenerate_solution_use_case = provide(
+        AiRegenerateSolutionUseCase, scope=Scope.REQUEST
+    )
+    publish_question_use_case = provide(
+        PublishQuestionUseCase, scope=Scope.REQUEST
+    )
     find_related_questions_use_case = provide(
         FindRelatedQuestionsUseCase, scope=Scope.REQUEST
     )
@@ -392,9 +410,11 @@ class UseCaseProvider(Provider):
     ) -> GetProfileUseCase:
         return GetProfileUseCase(cache, user_repo, manage_client)
 
+
     @provide(scope=Scope.REQUEST)
-    def pdf_parser_service(self) -> PDFParserService:
-        return PDFParserService()
+    def pdf_parser_service(self) -> IPdfParserStrategy:
+        # Defaulting to the new AI Strategy. Can be configured via settings or factory later.
+        return AIPdfParserStrategy()
 
     @provide(scope=Scope.REQUEST)
     def user_service(

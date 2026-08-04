@@ -1,7 +1,0 @@
-INFO:     127.0.0.1:58029 - "GET /docs HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58029 - "GET /openapi.json HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58029 - "GET /api/v1/lessons HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58029 - "GET /api/v1/me HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63151 - "GET /api/v1/me HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58029 - "GET /api/v1/lessons HTTP/1.1" 200 OK
-                

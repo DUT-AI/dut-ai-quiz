@@ -43,6 +43,7 @@ class QuestionRepository(IQuestionRepository):
         difficulty: Difficulty | None = None,
         lesson_id: UUID | None = None,
         tag: str | None = None,
+        import_session_id: UUID | None = None,
         offset: int = 0,
         limit: int = 50,
     ) -> list[QuestionEntity]:
@@ -53,6 +54,8 @@ class QuestionRepository(IQuestionRepository):
             stmt = stmt.where(Question.difficulty == difficulty)
         if lesson_id:
             stmt = stmt.where(Question.lesson_id == lesson_id)
+        if import_session_id:
+            stmt = stmt.where(Question.import_session_id == import_session_id)
         if tag:
             # tag can be name (string) or UUID string
             tag_uuid = None
@@ -151,9 +154,12 @@ class QuestionRepository(IQuestionRepository):
         if model:
             model.pool_type = entity.pool_type
             model.difficulty = entity.difficulty
+            model.status = entity.status
             model.content = entity.content
             model.options = [opt.to_dict() for opt in entity.options]
             model.solution = entity.solution
+            model.is_solution_ai_generated = entity.is_solution_ai_generated
+            model.import_session_id = entity.import_session_id
             model.lesson_id = entity.lesson_id
             model.embedding = entity.embedding
             model.embedding_model = entity.embedding_model
