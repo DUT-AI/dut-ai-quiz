@@ -112,17 +112,7 @@ export function LessonEditorPage({ initialData }: LessonEditorPageProps) {
     [modules, watchModuleId]
   );
 
-  // Auto adjust textarea height while preserving scroll
-  useEffect(() => {
-    const textarea = document.getElementById("lesson-editor-content") as HTMLTextAreaElement | null;
-    if (textarea) {
-      const parent = textarea.closest(".overflow-y-auto");
-      const scrollTop = parent ? parent.scrollTop : 0;
-      textarea.style.height = "auto";
-      textarea.style.height = `${Math.max(350, textarea.scrollHeight)}px`;
-      if (parent) parent.scrollTop = scrollTop;
-    }
-  }, [watchContent]);
+
 
   // Insert format / LaTeX into text position
   const insertFormat = (before: string, after: string = "") => {
@@ -329,16 +319,18 @@ export function LessonEditorPage({ initialData }: LessonEditorPageProps) {
         <form
           id="lesson-editor-form"
           onSubmit={handleSubmit(onSubmit)}
-          className={`flex-1 flex flex-col overflow-y-auto custom-scrollbar ${
-            viewMode === "preview" ? "hidden" : ""
-          }`}
+          className={`flex-1 flex flex-col custom-scrollbar ${
+            currentStep === 2 ? "overflow-hidden" : "overflow-y-auto"
+          } ${viewMode === "preview" ? "hidden" : ""}`}
           style={
             viewMode === "split" && isDesktop
               ? { width: `${editorWidth}%`, flex: "none" }
               : undefined
           }
         >
-          <div className="flex-1 px-6 md:px-10 py-6 w-full flex flex-col space-y-6">
+          <div className={`flex-1 px-6 md:px-10 py-6 w-full flex flex-col ${
+            currentStep === 2 ? "overflow-hidden space-y-4" : "space-y-6"
+          }`}>
             {/* Stepper Header Tabs */}
             <div className="flex items-center justify-between border-b border-gray-100 dark:border-white/5 pb-4 shrink-0">
               <div className="flex items-center gap-3">
@@ -477,23 +469,23 @@ export function LessonEditorPage({ initialData }: LessonEditorPageProps) {
 
             {/* Step 2: Markdown Content Editor */}
             {currentStep === 2 && (
-              <div className="flex-1 flex flex-col space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <label className="text-xs font-black text-gray-navy opacity-60 uppercase tracking-widest px-1 flex items-center justify-between">
+              <div className="flex-1 flex flex-col min-h-0 space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300 overflow-hidden">
+                <label className="text-xs font-black text-gray-navy opacity-60 uppercase tracking-widest px-1 flex items-center justify-between shrink-0">
                   <span>Nội dung bài học (Markdown & LaTeX)</span>
                   <span className="text-[10px] font-normal lowercase opacity-70">
                     Hỗ trợ dán ảnh (Ctrl+V) & công thức toán
                   </span>
                 </label>
 
-                <div className="flex-1 flex flex-col rounded-3xl overflow-hidden border border-gray-200 dark:border-white/10 focus-within:border-primary/50 transition-all bg-gray-50 dark:bg-white/5">
+                <div className="flex-1 flex flex-col min-h-0 rounded-3xl overflow-hidden border border-gray-200 dark:border-white/10 focus-within:border-primary/50 transition-all bg-gray-50 dark:bg-white/5">
                   <EditorToolbar onInsert={insertFormat} />
-                  <div className="relative flex-1 group">
+                  <div className="relative flex-1 min-h-0 group">
                     <textarea
                       id="lesson-editor-content"
                       {...register("content_md")}
                       onPaste={(e) => handlePasteImage(e, handleUploadFile)}
                       placeholder="Nhập nội dung lý thuyết chi tiết của bài học bằng Markdown..."
-                      className="w-full min-h-[380px] p-6 bg-transparent border-0 outline-none transition-all font-mono text-base leading-relaxed resize-none overflow-hidden text-dark-blue dark:text-white focus:bg-white dark:focus:bg-navy-blue"
+                      className="w-full h-full p-6 bg-transparent border-0 outline-none transition-all font-mono text-base leading-relaxed resize-none overflow-y-auto custom-scrollbar text-dark-blue dark:text-white focus:bg-white dark:focus:bg-navy-blue"
                     />
                     <div className="absolute right-6 bottom-6 flex items-center gap-3">
                       {uploading && <Loader2 className="size-5 animate-spin text-primary" />}

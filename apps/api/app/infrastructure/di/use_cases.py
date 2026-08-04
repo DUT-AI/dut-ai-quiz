@@ -83,6 +83,9 @@ from app.application.use_cases.lessons.reorder_lessons_uc import (
 )
 from app.application.use_cases.lessons.update_lesson_uc import UpdateLessonUseCase
 from app.application.use_cases.lessons.index_lesson_uc import IndexLessonUseCase
+from app.application.use_cases.lessons.import_notion_lesson_uc import (
+    ImportNotionLessonUseCase,
+)
 from app.application.use_cases.modules import (
     CreateModuleUseCase,
     DeleteModuleUseCase,
@@ -348,6 +351,9 @@ class UseCaseProvider(Provider):
 
     list_lessons_use_case = provide(ListLessonsUseCase, scope=Scope.REQUEST)
     create_lesson_use_case = provide(CreateLessonUseCase, scope=Scope.REQUEST)
+    import_notion_lesson_use_case = provide(
+        ImportNotionLessonUseCase, scope=Scope.REQUEST
+    )
     update_lesson_use_case = provide(UpdateLessonUseCase, scope=Scope.REQUEST)
     delete_lesson_use_case = provide(DeleteLessonUseCase, scope=Scope.REQUEST)
     get_lesson_detail_use_case = provide(GetLessonDetailUseCase, scope=Scope.REQUEST)
