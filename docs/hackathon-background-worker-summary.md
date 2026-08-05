@@ -125,8 +125,9 @@ Cách hoạt động:
 Leaderboard rule:
 
 - Mỗi user/team lấy best submission.
-- `rmse`: điểm thấp hơn tốt hơn.
-- `accuracy`, `f1_score`: điểm cao hơn tốt hơn.
+- Điểm thấp hơn tốt hơn: `log_loss`, `mae`, `mse`, `rmse`, `mape`.
+- Điểm cao hơn tốt hơn: `accuracy`, `balanced_accuracy`, `precision`,
+  `recall`, `f1_score`, `f1_macro`, `f1_weighted`, `roc_auc`, `r2`.
 
 ## CSV Evaluator GPU-First
 
@@ -139,8 +140,10 @@ File:
 - Ưu tiên dùng CuPy nếu runtime có CUDA/GPU.
 - Hỗ trợ GPU cho:
   - `accuracy`
-  - `rmse`
   - `f1` / `f1_score`
+  - `mae`, `mse`, `rmse`, `r2`, `mape`
+- CPU fallback hỗ trợ toàn bộ metric, gồm cả classification nhiều lớp và
+  probability metric (`roc_auc`, `log_loss`).
 - Nếu không có CuPy/CUDA thì fallback CPU để dev/local không bị crash.
 - Có thể ép bắt buộc GPU bằng env:
 

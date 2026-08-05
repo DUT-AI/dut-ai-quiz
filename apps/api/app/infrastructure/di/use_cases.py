@@ -3,8 +3,8 @@ from redis.asyncio import Redis
 
 from app.application.services.pdf_ai_parser import PDFAIParserService
 from app.application.services.lesson_chunker import LessonChunker
+from app.application.services.pdf_parser import RegexPdfParserStrategy
 from app.domain.interfaces.pdf_parser_strategy import IPdfParserStrategy
-from app.application.services.ai_pdf_parser import AIPdfParserStrategy
 from app.application.services.lesson_embedding_indexer import LessonEmbeddingIndexer
 from app.application.services.lesson_index_scheduler import LessonIndexScheduler
 from app.application.services.question_embedding import QuestionEmbeddingService
@@ -152,7 +152,6 @@ from app.application.use_cases.homeworks import (
     ListHomeworksUseCase,
     ListHomeworkSubmissionsUseCase,
     ListMyHomeworksUseCase,
-    ListUnsubmittedHomeworkUsersUseCase,
     SubmitHomeworkUseCase,
     UpdateHomeworkUseCase,
 )
@@ -265,10 +264,6 @@ class UseCaseProvider(Provider):
     )
     list_homework_submissions_use_case = provide(
         ListHomeworkSubmissionsUseCase,
-        scope=Scope.REQUEST,
-    )
-    list_unsubmitted_homework_users_use_case = provide(
-        ListUnsubmittedHomeworkUsersUseCase,
         scope=Scope.REQUEST,
     )
     get_homework_attachment_url_use_case = provide(
@@ -418,8 +413,7 @@ class UseCaseProvider(Provider):
 
     @provide(scope=Scope.REQUEST)
     def pdf_parser_service(self) -> IPdfParserStrategy:
-        # Defaulting to the new AI Strategy. Can be configured via settings or factory later.
-        return AIPdfParserStrategy()
+        return RegexPdfParserStrategy()
 
     @provide(scope=Scope.REQUEST)
     def user_service(

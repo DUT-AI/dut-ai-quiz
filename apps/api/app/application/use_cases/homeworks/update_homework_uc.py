@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from app.application.dtos.homework import HomeworkOutDTO, UpdateHomeworkDTO
-from app.domain.interfaces import IManageService, IS3Client
+from app.domain.interfaces import IS3Client
 from app.domain.interfaces.homework_queue import IHomeworkEvaluationQueue
 from app.domain.interfaces.homework_repo import IHomeworkRepository
 
@@ -9,7 +9,6 @@ from ._shared import (
     build_homework_out,
     ensure_lesson_exists,
     get_homework_or_raise,
-    resolve_assignees,
     upload_homework_file,
 )
 
@@ -18,12 +17,10 @@ class UpdateHomeworkUseCase:
     def __init__(
         self,
         repository: IHomeworkRepository,
-        manage_service: IManageService,
         storage: IS3Client,
         queue: IHomeworkEvaluationQueue,
     ) -> None:
         self._repository = repository
-        self._manage_service = manage_service
         self._storage = storage
         self._queue = queue
 
@@ -33,6 +30,14 @@ class UpdateHomeworkUseCase:
         payload: UpdateHomeworkDTO,
     ) -> HomeworkOutDTO:
         homework = await get_homework_or_raise(self._repository, homework_id)
+        grading_content_changed = (
+            (payload.title is not None and payload.title.strip() != homework.title)
+            or (
+                payload.description is not None
+                and payload.description.strip() != homework.description
+            )
+            or payload.file is not None
+        )
         if payload.lesson_id is not None:
             await ensure_lesson_exists(self._repository, payload.lesson_id)
             homework.lesson_id = payload.lesson_id
@@ -50,18 +55,7 @@ class UpdateHomeworkUseCase:
                 required_archive=False,
             )
 
-        if payload.assignee_ids is not None or payload.team_ids is not None:
-            assigned = await resolve_assignees(
-                self._manage_service,
-                payload.assignee_ids or [],
-                payload.team_ids or [],
-            )
-            await self._repository.replace_assignments(
-                homework_id,
-                assigned,
-            )
-            homework.assignee_ids = sorted(assigned)
-
         updated = await self._repository.update_homework(homework)
-        await self._queue.enqueue_registration(homework_id)
+        if grading_content_changed:
+            await self._queue.enqueue_registration(homework_id)
         return await build_homework_out(self._repository, updated)

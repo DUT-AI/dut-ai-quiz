@@ -26,6 +26,7 @@ import { cn, formatDateTime, getParticipationModeLabel } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { getMetricLabel } from "@/features/hackathons/types";
 
 export default function StudentHackathonDetailPage() {
   const params = useParams();
@@ -89,18 +90,6 @@ export default function StudentHackathonDetailPage() {
       </div>
     );
   }
-
-  const getMetricLabel = (m: string) => {
-    switch (m) {
-      case "rmse":
-        return "RMSE";
-      case "f1_score":
-        return "F1-Score";
-      case "accuracy":
-      default:
-        return "Accuracy (Độ chính xác)";
-    }
-  };
 
   return (
     <div className="space-y-8 text-left max-w-7xl mx-auto px-4 py-6">

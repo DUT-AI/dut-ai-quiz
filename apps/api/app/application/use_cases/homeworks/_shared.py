@@ -8,11 +8,12 @@ from app.config import settings
 from app.core.datetime_utils import now_ict
 from app.domain.entities.homework import HomeworkEntity, HomeworkSubmissionEntity
 from app.domain.exceptions.exceptions import AppException
-from app.domain.interfaces import IManageService, IS3Client
+from app.domain.interfaces import IS3Client
 from app.domain.interfaces.homework_repo import IHomeworkRepository
 
 
-ALLOWED_ARCHIVE_SUFFIXES = (".zip", ".rar", ".7z", ".tar.gz", ".gz")
+HOMEWORK_ATTACHMENT_SUFFIXES = (".pdf", ".zip")
+SUBMISSION_SUFFIXES = (".zip", ".rar", ".7z", ".tar.gz", ".gz")
 
 
 async def get_homework_or_raise(
@@ -33,38 +34,6 @@ async def ensure_lesson_exists(
         raise AppException("Bài học không tồn tại", 404)
 
 
-async def resolve_assignees(
-    manage_service: IManageService,
-    assignee_ids: list[int],
-    team_ids: list[int],
-) -> set[int]:
-    if not assignee_ids and not team_ids:
-        return set()
-    users, teams = await asyncio.gather(
-        manage_service.get_users(),
-        manage_service.get_teams(),
-    )
-    valid_user_ids = {user.user_id for user in users}
-    requested = set(assignee_ids)
-    unknown_users = requested - valid_user_ids
-    if unknown_users:
-        raise AppException(
-            f"Người dùng không tồn tại: {sorted(unknown_users)}",
-            400,
-        )
-
-    team_map = {team.id: team for team in teams}
-    unknown_teams = set(team_ids) - set(team_map)
-    if unknown_teams:
-        raise AppException(
-            f"Team không tồn tại: {sorted(unknown_teams)}",
-            400,
-        )
-    for team_id in team_ids:
-        requested.update(member.user_id for member in team_map[team_id].members)
-    return requested
-
-
 async def upload_homework_file(
     storage: IS3Client,
     file: HomeworkFileDTO | None,
@@ -78,9 +47,16 @@ async def upload_homework_file(
         raise AppException("Kho lưu trữ chưa được cấu hình", 503)
 
     filename = Path(file.filename or "file").name
-    if required_archive and not filename.casefold().endswith(ALLOWED_ARCHIVE_SUFFIXES):
+    allowed_suffixes = (
+        SUBMISSION_SUFFIXES if required_archive else HOMEWORK_ATTACHMENT_SUFFIXES
+    )
+    if not filename.casefold().endswith(allowed_suffixes):
         raise AppException(
-            "Chỉ chấp nhận file .zip, .rar, .7z, .tar.gz hoặc .gz",
+            (
+                "Chỉ chấp nhận file .zip, .rar, .7z, .tar.gz hoặc .gz"
+                if required_archive
+                else "File đề chỉ chấp nhận PDF hoặc ZIP chứa một PDF"
+            ),
             400,
         )
     if len(file.content) > settings.homework_max_file_size_bytes:

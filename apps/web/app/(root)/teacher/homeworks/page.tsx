@@ -91,7 +91,7 @@ export default function TeacherHomeworksPage() {
             <BookOpenCheck className="size-9 text-primary animate-pulse" /> Quản lý bài tập
           </h1>
           <p className="text-gray-navy dark:text-light-blue/80">
-            Tạo, phân phối bài tập và theo dõi tiến trình nộp bài của học viên.
+            Tạo bài tập cho mọi người và theo dõi tiến trình nộp bài của học viên.
           </p>
         </div>
 

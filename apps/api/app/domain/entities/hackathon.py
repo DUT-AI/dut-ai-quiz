@@ -11,9 +11,30 @@ class ParticipationMode(str, Enum):
 
 
 class MetricType(str, Enum):
-    RMSE = "rmse"
-    F1_SCORE = "f1_score"
     ACCURACY = "accuracy"
+    BALANCED_ACCURACY = "balanced_accuracy"
+    PRECISION = "precision"
+    RECALL = "recall"
+    F1_SCORE = "f1_score"
+    F1_MACRO = "f1_macro"
+    F1_WEIGHTED = "f1_weighted"
+    ROC_AUC = "roc_auc"
+    LOG_LOSS = "log_loss"
+    MAE = "mae"
+    MSE = "mse"
+    RMSE = "rmse"
+    R2 = "r2"
+    MAPE = "mape"
+
+    @property
+    def lower_is_better(self) -> bool:
+        return self in {
+            MetricType.LOG_LOSS,
+            MetricType.MAE,
+            MetricType.MSE,
+            MetricType.RMSE,
+            MetricType.MAPE,
+        }
 
 
 @dataclasses.dataclass(slots=True)

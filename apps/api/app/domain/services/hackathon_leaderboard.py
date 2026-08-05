@@ -19,8 +19,12 @@ class HackathonLeaderboardDomainService:
         # Precompute metrics per task
         task_metrics: dict[str, bool] = {}
         for task in tasks:
-            metric_value = getattr(task.metric_type, "value", str(task.metric_type))
-            lower_is_better = metric_value.lower() == MetricType.RMSE.value
+            metric = (
+                task.metric_type
+                if isinstance(task.metric_type, MetricType)
+                else MetricType(str(task.metric_type).lower())
+            )
+            lower_is_better = metric.lower_is_better
             task_metrics[str(task.id)] = lower_is_better
 
         # Find best submission per participant per task

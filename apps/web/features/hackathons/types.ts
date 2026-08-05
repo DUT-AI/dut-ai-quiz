@@ -54,8 +54,48 @@ export const HackathonRegistrationSchema = z.object({
 });
 export type HackathonRegistration = z.infer<typeof HackathonRegistrationSchema>;
 
-export const MetricTypeSchema = z.enum(["rmse", "f1_score", "accuracy"]);
+export const MetricTypeSchema = z.enum([
+  "accuracy",
+  "balanced_accuracy",
+  "precision",
+  "recall",
+  "f1_score",
+  "f1_macro",
+  "f1_weighted",
+  "roc_auc",
+  "log_loss",
+  "mae",
+  "mse",
+  "rmse",
+  "r2",
+  "mape",
+]);
 export type MetricType = z.infer<typeof MetricTypeSchema>;
+
+export const METRIC_OPTIONS: ReadonlyArray<{
+  value: MetricType;
+  label: string;
+  group: "Classification" | "Regression";
+}> = [
+  { value: "accuracy", label: "Accuracy", group: "Classification" },
+  { value: "balanced_accuracy", label: "Balanced Accuracy", group: "Classification" },
+  { value: "precision", label: "Precision (binary)", group: "Classification" },
+  { value: "recall", label: "Recall (binary)", group: "Classification" },
+  { value: "f1_score", label: "F1-Score (binary)", group: "Classification" },
+  { value: "f1_macro", label: "Macro F1", group: "Classification" },
+  { value: "f1_weighted", label: "Weighted F1", group: "Classification" },
+  { value: "roc_auc", label: "ROC-AUC (binary)", group: "Classification" },
+  { value: "log_loss", label: "Log Loss (binary)", group: "Classification" },
+  { value: "mae", label: "MAE", group: "Regression" },
+  { value: "mse", label: "MSE", group: "Regression" },
+  { value: "rmse", label: "RMSE", group: "Regression" },
+  { value: "r2", label: "R²", group: "Regression" },
+  { value: "mape", label: "MAPE", group: "Regression" },
+];
+
+export function getMetricLabel(metric: string): string {
+  return METRIC_OPTIONS.find((option) => option.value === metric)?.label ?? metric;
+}
 
 export const HackathonTaskSchema = z.object({
   id: z.string(),

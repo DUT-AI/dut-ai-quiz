@@ -20,7 +20,13 @@ import {
   useUpdateHackathonTask,
   useDeleteHackathonTask,
 } from "../queries";
-import { type Hackathon, type HackathonTask, type MetricType } from "../types";
+import {
+  getMetricLabel,
+  METRIC_OPTIONS,
+  type Hackathon,
+  type HackathonTask,
+  type MetricType,
+} from "../types";
 import { TestFileUpload } from "./test-file-upload";
 
 interface HackathonTasksModalProps {
@@ -119,18 +125,6 @@ export function HackathonTasksModal({
     }
   };
 
-  const getMetricLabel = (m: string) => {
-    switch (m) {
-      case "rmse":
-        return "RMSE (Độ lệch chuẩn)";
-      case "f1_score":
-        return "F1-Score";
-      case "accuracy":
-      default:
-        return "Accuracy (Độ chính xác)";
-    }
-  };
-
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 overflow-y-auto">
       <motion.div
@@ -219,9 +213,17 @@ export function HackathonTasksModal({
                     onChange={(e) => setMetricType(e.target.value as MetricType)}
                     className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-transparent text-sm focus:outline-none focus:border-primary text-navy-blue dark:bg-navy-blue dark:text-white"
                   >
-                    <option value="accuracy">Accuracy (Độ chính xác)</option>
-                    <option value="f1_score">F1-Score</option>
-                    <option value="rmse">RMSE (Độ lệch chuẩn)</option>
+                    {(["Classification", "Regression"] as const).map((group) => (
+                      <optgroup key={group} label={group}>
+                        {METRIC_OPTIONS.filter((option) => option.group === group).map(
+                          (option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ),
+                        )}
+                      </optgroup>
+                    ))}
                   </select>
                 </div>
 

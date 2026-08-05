@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 from typing import Any
@@ -24,7 +24,6 @@ class HomeworkEntity:
     created_at: datetime | None = None
     updated_at: datetime | None = None
     archived_at: datetime | None = None
-    assignee_ids: list[int] = field(default_factory=list)
 
 
 @dataclass(slots=True)

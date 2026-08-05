@@ -35,10 +35,5 @@ class DownloadUrlResponse(BaseModel):
     is_success: bool = True
 
 
-class UserIdListResponse(BaseModel):
-    data: list[int]
-    is_success: bool = True
-
-
 class SuccessResponse(BaseModel):
     is_success: bool = True

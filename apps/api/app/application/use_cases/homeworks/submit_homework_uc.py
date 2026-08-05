@@ -55,7 +55,7 @@ class SubmitHomeworkUseCase:
                 attempt_number=0,
                 status=(
                     HomeworkSubmissionStatus.GRADING
-                    if settings.submission_checker_api_url
+                    if settings.homework_grading_enabled
                     else HomeworkSubmissionStatus.UPLOADED
                 ),
             )

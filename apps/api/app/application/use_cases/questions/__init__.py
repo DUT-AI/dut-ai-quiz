@@ -5,7 +5,6 @@ from .update_question_uc import UpdateQuestionUseCase
 from .answer_question_uc import AnswerQuestionUseCase
 from .related_lessons_uc import GetRelatedLessonsUseCase
 from .start_pdf_import_uc import StartPdfImportUseCase
-from .process_pdf_import_uc import ProcessPdfImportUseCase
 from .heartbeat_question_uc import HeartbeatQuestionUseCase
 from .ai_regenerate_solution_uc import AiRegenerateSolutionUseCase
 from .publish_question_uc import PublishQuestionUseCase
@@ -21,7 +20,6 @@ __all__ = [
     "AnswerQuestionUseCase",
     "GetRelatedLessonsUseCase",
     "StartPdfImportUseCase",
-    "ProcessPdfImportUseCase",
     "HeartbeatQuestionUseCase",
     "AiRegenerateSolutionUseCase",
     "PublishQuestionUseCase",

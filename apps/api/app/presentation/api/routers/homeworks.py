@@ -20,7 +20,6 @@ from app.application.use_cases.homeworks import (
     ListHomeworksUseCase,
     ListHomeworkSubmissionsUseCase,
     ListMyHomeworksUseCase,
-    ListUnsubmittedHomeworkUsersUseCase,
     SubmitHomeworkUseCase,
     UpdateHomeworkUseCase,
 )
@@ -34,7 +33,6 @@ from app.presentation.schemas.homeworks import (
     SubmissionListResponse,
     SubmissionResponse,
     SuccessResponse,
-    UserIdListResponse,
 )
 
 router = APIRouter(prefix="/homeworks", tags=["homeworks"])
@@ -84,8 +82,6 @@ async def create_homework(
     deadline: Annotated[datetime, Form()],
     lesson_id: Annotated[UUID, Form()],
     description: Annotated[str, Form()] = "",
-    assignee_ids: Annotated[list[int] | None, Form()] = None,
-    team_ids: Annotated[list[int] | None, Form()] = None,
     file: Annotated[UploadFile | None, File()] = None,
 ) -> HomeworkResponse:
     return HomeworkResponse(
@@ -96,8 +92,6 @@ async def create_homework(
                 description=description,
                 deadline=deadline.replace(tzinfo=None),
                 created_by=user.id,
-                assignee_ids=assignee_ids or [],
-                team_ids=team_ids or [],
                 file=await _optional_file_dto(file),
             )
         )
@@ -114,8 +108,6 @@ async def update_homework(
     deadline: Annotated[datetime | None, Form()] = None,
     lesson_id: Annotated[UUID | None, Form()] = None,
     description: Annotated[str | None, Form()] = None,
-    assignee_ids: Annotated[list[int] | None, Form()] = None,
-    team_ids: Annotated[list[int] | None, Form()] = None,
     file: Annotated[UploadFile | None, File()] = None,
 ) -> HomeworkResponse:
     return HomeworkResponse(
@@ -126,8 +118,6 @@ async def update_homework(
                 title=title,
                 description=description,
                 deadline=(deadline.replace(tzinfo=None) if deadline else None),
-                assignee_ids=assignee_ids,
-                team_ids=team_ids,
                 file=await _optional_file_dto(file),
             ),
         )
@@ -191,19 +181,6 @@ async def list_submissions(
     use_case: FromDishka[ListHomeworkSubmissionsUseCase],
 ) -> SubmissionListResponse:
     return SubmissionListResponse(data=await use_case.execute(homework_id))
-
-
-@router.get(
-    "/{homework_id}/unsubmitted",
-    response_model=UserIdListResponse,
-)
-@inject
-async def list_unsubmitted(
-    homework_id: UUID,
-    user: AdminOrMentorUser,
-    use_case: FromDishka[ListUnsubmittedHomeworkUsersUseCase],
-) -> UserIdListResponse:
-    return UserIdListResponse(data=await use_case.execute(homework_id))
 
 
 @router.get(

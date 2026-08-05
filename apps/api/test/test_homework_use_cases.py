@@ -5,12 +5,18 @@ from uuid import uuid4
 
 import pytest
 
-from app.application.dtos.homework import HomeworkFileDTO, SubmitHomeworkDTO
+from app.application.dtos.homework import (
+    HomeworkFileDTO,
+    SubmitHomeworkDTO,
+    UpdateHomeworkDTO,
+)
 from app.application.use_cases.homeworks import (
     ListMyHomeworksUseCase,
     SubmitHomeworkUseCase,
+    UpdateHomeworkUseCase,
 )
 from app.application.use_cases.homeworks import submit_homework_uc
+from app.application.use_cases.homeworks._shared import SUBMISSION_SUFFIXES
 from app.core.datetime_utils import now_ict
 from app.domain.entities.homework import HomeworkEntity
 
@@ -40,6 +46,24 @@ class HomeworkRepositoryStub:
     async def count_submitters(self, homework_id):
         return 0
 
+    async def update_homework(self, homework):
+        self.homework = homework
+        return homework
+
+
+@pytest.mark.parametrize(
+    "filename",
+    [
+        "submission.zip",
+        "submission.rar",
+        "submission.7z",
+        "submission.tar.gz",
+        "submission.gz",
+    ],
+)
+def test_submission_archive_suffixes_are_supported(filename: str) -> None:
+    assert filename.casefold().endswith(SUBMISSION_SUFFIXES)
+
 
 @pytest.fixture
 def homework() -> HomeworkEntity:
@@ -53,7 +77,6 @@ def homework() -> HomeworkEntity:
         created_by=1,
         created_at=current_time,
         updated_at=current_time,
-        assignee_ids=[10],
     )
 
 
@@ -95,3 +118,66 @@ async def test_my_homeworks_lists_all_lesson_homework(
 
     assert [item.id for item in result] == [homework.id]
     assert repository.list_user_id is None
+
+
+@pytest.mark.asyncio
+async def test_grading_rubric_is_requeued_when_prompt_changes(
+    homework: HomeworkEntity,
+) -> None:
+    repository = HomeworkRepositoryStub(homework)
+    queue = AsyncMock()
+    use_case = UpdateHomeworkUseCase(
+        repository,
+        AsyncMock(),
+        queue,
+    )
+
+    await use_case.execute(
+        homework.id,
+        UpdateHomeworkDTO(title="Updated homework"),
+    )
+
+    queue.enqueue_registration.assert_awaited_once_with(homework.id)
+
+
+@pytest.mark.asyncio
+async def test_grading_rubric_is_not_requeued_for_deadline_only_update(
+    homework: HomeworkEntity,
+) -> None:
+    repository = HomeworkRepositoryStub(homework)
+    queue = AsyncMock()
+    use_case = UpdateHomeworkUseCase(
+        repository,
+        AsyncMock(),
+        queue,
+    )
+
+    await use_case.execute(
+        homework.id,
+        UpdateHomeworkDTO(deadline=homework.deadline + timedelta(days=1)),
+    )
+
+    queue.enqueue_registration.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_grading_rubric_is_not_requeued_for_unchanged_prompt(
+    homework: HomeworkEntity,
+) -> None:
+    repository = HomeworkRepositoryStub(homework)
+    queue = AsyncMock()
+    use_case = UpdateHomeworkUseCase(
+        repository,
+        AsyncMock(),
+        queue,
+    )
+
+    await use_case.execute(
+        homework.id,
+        UpdateHomeworkDTO(
+            title=homework.title,
+            description=homework.description,
+        ),
+    )
+
+    queue.enqueue_registration.assert_not_awaited()

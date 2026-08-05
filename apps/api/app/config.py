@@ -81,12 +81,22 @@ class Settings(BaseSettings):
     presigned_url_expire_seconds: int = 3600
 
     # AI Integration (Gemini / Multimodal)
-    gemini_api_key: str | None = None
     gemini_model_name: str = "gemini-flash-latest"
 
     # Homework submission and external evaluation services.
     homework_checker_api_url: str = ""
     submission_checker_api_url: str = ""
+
+    # Homework submission and internal evaluation worker.
+    homework_grading_enabled: bool = True
+    homework_grading_model: str = "gemini-3.5-flash"
+    homework_grading_pass_score: float = 7.0
+    homework_grading_max_attachment_bytes: int = 20 * 1024 * 1024
+    homework_grading_max_source_bytes: int = 5 * 1024 * 1024
+    homework_grading_max_source_chars: int = 200_000
+    homework_grading_max_files: int = 50
+    homework_grading_max_archive_entries: int = 500
+    homework_plagiarism_threshold: float = 0.8
     homework_max_file_size_bytes: int = 10 * 1024 * 1024
     homework_grading_timeout_seconds: float = 300.0
     # Lesson semantic search. DUT-AI's Vietnamese SBERT service is the default;

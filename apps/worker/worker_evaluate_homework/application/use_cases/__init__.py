@@ -1,3 +1,7 @@
-from .evaluate_homework import EvaluateHomeworkUseCase
+from .evaluate_submission import EvaluateHomeworkSubmissionUseCase
+from .register_homework import RegisterHomeworkUseCase
 
-__all__ = ["EvaluateHomeworkUseCase"]
+__all__ = [
+    "EvaluateHomeworkSubmissionUseCase",
+    "RegisterHomeworkUseCase",
+]
