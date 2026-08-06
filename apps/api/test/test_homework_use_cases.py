@@ -4,13 +4,13 @@ from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
-
 from app.application.dtos.homework import HomeworkFileDTO, SubmitHomeworkDTO
 from app.application.use_cases.homeworks import (
     ListMyHomeworksUseCase,
     SubmitHomeworkUseCase,
+    submit_homework_uc,
 )
-from app.application.use_cases.homeworks import submit_homework_uc
+from app.application.use_cases.homeworks._shared import generate_download_url
 from app.core.datetime_utils import now_ict
 from app.domain.entities.homework import HomeworkEntity
 
@@ -18,7 +18,6 @@ from app.domain.entities.homework import HomeworkEntity
 class HomeworkRepositoryStub:
     def __init__(self, homework: HomeworkEntity) -> None:
         self.homework = homework
-        self.list_user_id: int | None = -1
 
     async def get_homework(self, homework_id):
         if homework_id == self.homework.id:
@@ -28,8 +27,7 @@ class HomeworkRepositoryStub:
     async def create_submission(self, submission):
         return replace(submission, id=uuid4(), attempt_number=1)
 
-    async def list_homeworks(self, user_id=None, lesson_id=None):
-        self.list_user_id = user_id
+    async def list_homeworks(self, lesson_id=None):
         if lesson_id is not None and lesson_id != self.homework.lesson_id:
             return []
         return [self.homework]
@@ -53,7 +51,6 @@ def homework() -> HomeworkEntity:
         created_by=1,
         created_at=current_time,
         updated_at=current_time,
-        assignee_ids=[10],
     )
 
 
@@ -94,4 +91,12 @@ async def test_my_homeworks_lists_all_lesson_homework(
     result = await use_case.execute(99, lesson_id=homework.lesson_id)
 
     assert [item.id for item in result] == [homework.id]
-    assert repository.list_user_id is None
+
+
+@pytest.mark.asyncio
+async def test_external_legacy_download_url_does_not_use_current_s3_bucket() -> None:
+    storage = AsyncMock()
+    url = "https://legacy.example/homework/submission.zip"
+
+    assert await generate_download_url(storage, url) == url
+    storage.generate_presigned_download_url.assert_not_called()

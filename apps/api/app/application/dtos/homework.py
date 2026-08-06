@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from app.domain.entities.homework import (
     HomeworkEntity,
@@ -22,8 +22,6 @@ class CreateHomeworkDTO(BaseModel):
     description: str = ""
     deadline: datetime
     created_by: int
-    assignee_ids: list[int] = Field(default_factory=list)
-    team_ids: list[int] = Field(default_factory=list)
     file: HomeworkFileDTO | None = None
 
 
@@ -32,8 +30,6 @@ class UpdateHomeworkDTO(BaseModel):
     title: str | None = None
     description: str | None = None
     deadline: datetime | None = None
-    assignee_ids: list[int] | None = None
-    team_ids: list[int] | None = None
     file: HomeworkFileDTO | None = None
 
 
@@ -97,7 +93,7 @@ class HomeworkSubmissionOutDTO(BaseModel):
 
 class HomeworkOutDTO(BaseModel):
     id: UUID
-    lesson_id: UUID
+    lesson_id: UUID | None
     title: str
     description: str
     deadline: datetime
@@ -105,8 +101,6 @@ class HomeworkOutDTO(BaseModel):
     created_at: datetime
     updated_at: datetime
     has_attachment: bool
-    assignee_ids: list[int] = Field(default_factory=list)
-    assignment_count: int = 0
     submitted_count: int = 0
     current_submission: HomeworkSubmissionOutDTO | None = None
 
@@ -130,8 +124,6 @@ class HomeworkOutDTO(BaseModel):
             created_at=entity.created_at,
             updated_at=entity.updated_at,
             has_attachment=entity.attachment_key is not None,
-            assignee_ids=entity.assignee_ids,
-            assignment_count=len(entity.assignee_ids),
             submitted_count=submitted_count,
             current_submission=(
                 HomeworkSubmissionOutDTO.from_entity(current_submission)

@@ -30,7 +30,7 @@ export const HomeworkSubmissionSchema = z.object({
 
 export const HomeworkSchema = z.object({
   id: z.string().uuid(),
-  lesson_id: z.string().uuid(),
+  lesson_id: z.string().uuid().nullable(),
   title: z.string(),
   description: z.string(),
   deadline: z.string(),
@@ -38,8 +38,6 @@ export const HomeworkSchema = z.object({
   created_at: z.string(),
   updated_at: z.string(),
   has_attachment: z.boolean(),
-  assignee_ids: z.array(z.number()),
-  assignment_count: z.number(),
   submitted_count: z.number(),
   current_submission: HomeworkSubmissionSchema.nullable().optional(),
 });
@@ -52,6 +50,5 @@ export interface HomeworkFormValues {
   title: string;
   description: string;
   deadline: string;
-  assigneeIds: number[];
   file?: File | null;
 }

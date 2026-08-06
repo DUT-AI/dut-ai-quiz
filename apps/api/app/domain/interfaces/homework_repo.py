@@ -8,7 +8,6 @@ class IHomeworkRepository(ABC):
     @abstractmethod
     async def list_homeworks(
         self,
-        user_id: int | None = None,
         lesson_id: UUID | None = None,
     ) -> list[HomeworkEntity]:
         raise NotImplementedError
@@ -31,12 +30,6 @@ class IHomeworkRepository(ABC):
 
     @abstractmethod
     async def archive_homework(self, homework_id: UUID) -> bool:
-        raise NotImplementedError
-
-    @abstractmethod
-    async def replace_assignments(
-        self, homework_id: UUID, user_ids: set[int]
-    ) -> None:
         raise NotImplementedError
 
     @abstractmethod
@@ -65,8 +58,4 @@ class IHomeworkRepository(ABC):
 
     @abstractmethod
     async def count_submitters(self, homework_id: UUID) -> int:
-        raise NotImplementedError
-
-    @abstractmethod
-    async def unsubmitted_user_ids(self, homework_id: UUID) -> list[int]:
         raise NotImplementedError

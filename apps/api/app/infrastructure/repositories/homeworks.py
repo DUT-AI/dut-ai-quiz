@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.datetime_utils import now_ict
@@ -8,7 +8,6 @@ from app.domain.entities.homework import HomeworkEntity, HomeworkSubmissionEntit
 from app.domain.interfaces.homework_repo import IHomeworkRepository
 from app.infrastructure.persistence.models.homework import (
     Homework,
-    HomeworkAssignment,
     HomeworkSubmission,
 )
 from app.infrastructure.persistence.models.lesson import Lesson
@@ -20,33 +19,14 @@ class HomeworkRepository(IHomeworkRepository):
 
     async def list_homeworks(
         self,
-        user_id: int | None = None,
         lesson_id: UUID | None = None,
     ) -> list[HomeworkEntity]:
         stmt = select(Homework).where(Homework.archived_at.is_(None))
         if lesson_id is not None:
             stmt = stmt.where(Homework.lesson_id == lesson_id)
-        if user_id is not None:
-            stmt = stmt.join(
-                HomeworkAssignment,
-                HomeworkAssignment.homework_id == Homework.id,
-            ).where(HomeworkAssignment.user_id == user_id)
         stmt = stmt.order_by(Homework.deadline.asc())
         models = list((await self._session.scalars(stmt)).all())
-        if not models:
-            return []
-        ids = [model.id for model in models]
-        assignment_rows = (
-            await self._session.execute(
-                select(HomeworkAssignment.homework_id, HomeworkAssignment.user_id)
-                .where(HomeworkAssignment.homework_id.in_(ids))
-                .order_by(HomeworkAssignment.user_id)
-            )
-        ).all()
-        assignments: dict[UUID, list[int]] = {}
-        for homework_id, assigned_user_id in assignment_rows:
-            assignments.setdefault(homework_id, []).append(assigned_user_id)
-        return [model.to_entity(assignments.get(model.id, [])) for model in models]
+        return [model.to_entity() for model in models]
 
     async def lesson_exists(self, lesson_id: UUID) -> bool:
         return (
@@ -65,16 +45,7 @@ class HomeworkRepository(IHomeworkRepository):
         )
         if model is None:
             return None
-        assignees = list(
-            (
-                await self._session.scalars(
-                    select(HomeworkAssignment.user_id).where(
-                        HomeworkAssignment.homework_id == homework_id
-                    )
-                )
-            ).all()
-        )
-        return model.to_entity(assignees)
+        return model.to_entity()
 
     async def create_homework(self, homework: HomeworkEntity) -> HomeworkEntity:
         model = Homework(
@@ -94,14 +65,23 @@ class HomeworkRepository(IHomeworkRepository):
         model = await self._session.get(Homework, homework.id)
         if model is None:
             raise ValueError("Homework not found")
+        grading_content_changed = (
+            model.title != homework.title
+            or model.description != homework.description
+            or model.attachment_key != homework.attachment_key
+        )
         model.title = homework.title
         model.lesson_id = homework.lesson_id
         model.description = homework.description
         model.deadline = homework.deadline
         model.attachment_key = homework.attachment_key
+        if grading_content_changed:
+            model.grading_rubric = None
+            model.grading_status = "PENDING"
+            model.grading_error = None
         model.updated_at = now_ict()
         await self._session.flush()
-        return model.to_entity(homework.assignee_ids)
+        return model.to_entity()
 
     async def archive_homework(self, homework_id: UUID) -> bool:
         model = await self._session.get(Homework, homework_id)
@@ -110,22 +90,6 @@ class HomeworkRepository(IHomeworkRepository):
         model.archived_at = now_ict()
         await self._session.flush()
         return True
-
-    async def replace_assignments(
-        self, homework_id: UUID, user_ids: set[int]
-    ) -> None:
-        await self._session.execute(
-            delete(HomeworkAssignment).where(
-                HomeworkAssignment.homework_id == homework_id
-            )
-        )
-        self._session.add_all(
-            [
-                HomeworkAssignment(homework_id=homework_id, user_id=user_id)
-                for user_id in sorted(user_ids)
-            ]
-        )
-        await self._session.flush()
 
     async def create_submission(
         self, submission: HomeworkSubmissionEntity
@@ -202,19 +166,4 @@ class HomeworkRepository(IHomeworkRepository):
                 )
             )
             or 0
-        )
-
-    async def unsubmitted_user_ids(self, homework_id: UUID) -> list[int]:
-        submitted = select(HomeworkSubmission.user_id).where(
-            HomeworkSubmission.homework_id == homework_id
-        )
-        return list(
-            (
-                await self._session.scalars(
-                    select(HomeworkAssignment.user_id).where(
-                        HomeworkAssignment.homework_id == homework_id,
-                        HomeworkAssignment.user_id.not_in(submitted),
-                    )
-                )
-            ).all()
         )

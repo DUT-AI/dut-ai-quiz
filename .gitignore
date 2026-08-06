@@ -23,3 +23,6 @@ web-restart.err.log
 web-restart.out.log
 api-restart.err.log
 api-restart.out.log
+.vscode/
+submission/
+submission.zip

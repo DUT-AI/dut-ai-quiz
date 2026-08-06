@@ -1,43 +1,49 @@
-from .question import Question
-from .tag import Tag
-from .exam import Exam, ExamQuestion
 from .attempt import Attempt, AttemptAnswer, FocusEvent
+from .comment import Comment
+from .comment_reaction import CommentReaction
+from .exam import Exam, ExamQuestion
 from .game import GameSession
+from .hackathon import (
+    Hackathon,
+    HackathonRegistration,
+    HackathonSubmission,
+    HackathonTask,
+    HackathonTeam,
+)
+from .homework import Homework, HomeworkSubmission, HomeworkSubmissionFingerprint
+from .import_session import ImportSession
 from .lesson import Lesson
 from .lesson_chunk import LessonChunk
 from .module import Module
+from .question import Question
+from .tag import Tag
 from .user import User
-from .hackathon import Hackathon, HackathonTask, HackathonTeam, HackathonRegistration, HackathonSubmission
-from .comment import Comment
-from .comment_reaction import CommentReaction
-from .import_session import ImportSession
-from .homework import Homework, HomeworkAssignment, HomeworkSubmission
 
 __all__ = [
-    "Base",
-    "Question",
-    "Tag",
-    "Exam",
-    "ExamQuestion",
     "Attempt",
     "AttemptAnswer",
+    "Base",
+    "Comment",
+    "CommentReaction",
+    "Exam",
+    "ExamQuestion",
     "FocusEvent",
     "GameSession",
+    "Hackathon",
+    "HackathonRegistration",
+    "HackathonSubmission",
+    "HackathonTask",
+    "HackathonTeam",
+    "Homework",
+    "HomeworkSubmission",
+    "HomeworkSubmissionFingerprint",
+    "ImportSession",
     "Lesson",
     "LessonChunk",
     "Module",
+    "Question",
+    "Tag",
     "User",
-    "Hackathon",
-    "HackathonTask",
-    "HackathonTeam",
-    "HackathonRegistration",
-    "HackathonSubmission",
-    "Comment",
-    "CommentReaction",
-    "ImportSession",
-    "Homework",
-    "HomeworkAssignment",
-    "HomeworkSubmission",
 ]
 
 export_globals = globals()
