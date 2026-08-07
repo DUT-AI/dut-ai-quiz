@@ -38,7 +38,6 @@ export function HomeworkFormModal({ open, homework, onClose }: HomeworkFormModal
   const [description, setDescription] = useState("");
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [deadline, setDeadline] = useState("");
-  const [assigneeIds, setAssigneeIds] = useState<number[]>([]);
   const [file, setFile] = useState<File | null>(null);
 
   useEffect(() => {
@@ -47,7 +46,6 @@ export function HomeworkFormModal({ open, homework, onClose }: HomeworkFormModal
     setTitle(homework?.title ?? "");
     setDescription(homework?.description ?? "");
     setDeadline(homework?.deadline.slice(0, 16) ?? "");
-    setAssigneeIds(homework?.assignee_ids ?? []);
     setFile(null);
     setIsEditorOpen(false);
   }, [homework, open]);
@@ -62,7 +60,6 @@ export function HomeworkFormModal({ open, homework, onClose }: HomeworkFormModal
       title,
       description,
       deadline,
-      assigneeIds,
       file,
     };
     try {
@@ -217,6 +214,7 @@ export function HomeworkFormModal({ open, homework, onClose }: HomeworkFormModal
                       Chọn file
                       <input
                         type="file"
+                        accept=".pdf,.zip"
                         onChange={(e) => setFile(e.target.files?.[0] ?? null)}
                         className="hidden"
                       />
@@ -255,7 +253,7 @@ export function HomeworkFormModal({ open, homework, onClose }: HomeworkFormModal
                   ) : homework ? (
                     "Lưu thay đổi"
                   ) : (
-                    "Tạo và giao bài"
+                    "Tạo bài tập"
                   )}
                 </Button>
               </div>

@@ -1,9 +1,8 @@
-from pydantic import BaseModel
-
 from app.application.dtos.homework import (
     HomeworkOutDTO,
     HomeworkSubmissionOutDTO,
 )
+from pydantic import BaseModel
 
 
 class HomeworkListResponse(BaseModel):
@@ -32,11 +31,6 @@ class DownloadUrlData(BaseModel):
 
 class DownloadUrlResponse(BaseModel):
     data: DownloadUrlData
-    is_success: bool = True
-
-
-class UserIdListResponse(BaseModel):
-    data: list[int]
     is_success: bool = True
 
 

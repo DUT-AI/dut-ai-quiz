@@ -1,14 +1,15 @@
 from dishka import Provider, Scope, provide
 from redis.asyncio import Redis
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.application.services.pdf_ai_parser import PDFAIParserService
+from app.application.services.hackathon_leaderboard import (
+    HackathonLeaderboardAppService,
+)
 from app.application.services.lesson_chunker import LessonChunker
-from app.domain.interfaces.pdf_parser_strategy import IPdfParserStrategy
-from app.application.services.ai_pdf_parser import AIPdfParserStrategy
 from app.application.services.lesson_embedding_indexer import LessonEmbeddingIndexer
 from app.application.services.lesson_index_scheduler import LessonIndexScheduler
+from app.application.services.pdf_ai_parser import PDFAIParserService
 from app.application.services.question_embedding import QuestionEmbeddingService
-from app.config import settings
 from app.application.services.user_service import UserService
 from app.application.use_cases.attempts import (
     GetAttemptDetailUseCase,
@@ -27,6 +28,12 @@ from app.application.use_cases.auth import (
     LoginByManageAccountUseCase,
     LogoutUseCase,
 )
+from app.application.use_cases.comment import (
+    CreateCommentUseCase,
+    DeleteCommentUseCase,
+    GetCommentsUseCase,
+    ToggleReactionUseCase,
+)
 from app.application.use_cases.exams.exam_use_case import (
     CreateExamUseCase,
     DeleteExamUseCase,
@@ -37,6 +44,17 @@ from app.application.use_cases.exams.exam_use_case import (
     UpdateExamUseCase,
 )
 from app.application.use_cases.exams.stats_use_case import GetExamStatsUseCase
+from app.application.use_cases.game import (
+    FinishGameSessionUseCase,
+    GetActiveGameSessionUseCase,
+    GetGameHistorySummaryUseCase,
+    GetGameLeaderboardUseCase,
+    GetGameSessionUseCase,
+    ListGameHistoryUseCase,
+    PatchGameAnswerUseCase,
+    StartGameSessionUseCase,
+    UseItemGameUseCase,
+)
 from app.application.use_cases.hackathon import (
     CancelRegistrationUseCase,
     CreateHackathonTaskUseCase,
@@ -61,113 +79,94 @@ from app.application.use_cases.hackathon.submissions import (
     CancelSubmissionUseCase,
     GetSubmissionLogsUseCase,
     ListSubmissionsUseCase,
-    SubmitTaskUseCase,
     PresignSubmitUseCase,
+    SubmitTaskUseCase,
     ViewHackathonLeaderboardUseCase,
 )
-from app.application.services.hackathon_leaderboard import HackathonLeaderboardAppService
-from app.domain.services.hackathon_leaderboard import HackathonLeaderboardDomainService
-from app.application.use_cases.leaderboard.leaderboard_use_case import (
-    GetLeaderboardUseCase,
-)
-from app.application.use_cases.lessons.create_lesson_uc import CreateLessonUseCase
-from app.application.use_cases.lessons.delete_lesson_uc import DeleteLessonUseCase
-from app.application.use_cases.lessons.get_lesson_detail_uc import (
-    GetLessonDetailUseCase,
-)
-from app.application.use_cases.lessons.get_lesson_by_slug_uc import (
-    GetLessonBySlugUseCase,
-)
-from app.application.use_cases.lessons.list_lessons_uc import ListLessonsUseCase
-from app.application.use_cases.lessons.reorder_lessons_uc import (
-    ReorderLessonsUseCase,
-)
-from app.application.use_cases.lessons.update_lesson_uc import UpdateLessonUseCase
-from app.application.use_cases.lessons.index_lesson_uc import IndexLessonUseCase
-from app.application.use_cases.lessons.import_notion_lesson_uc import (
-    ImportNotionLessonUseCase,
-)
-from app.application.use_cases.modules import (
-    CreateModuleUseCase,
-    DeleteModuleUseCase,
-    ListModulesUseCase,
-    UpdateModuleUseCase,
-    ReorderModulesUseCase,
-)
-from app.application.use_cases.me.me_use_case import GetProfileUseCase
-from app.application.use_cases.game import (
-    FinishGameSessionUseCase,
-    GetActiveGameSessionUseCase,
-    GetGameHistorySummaryUseCase,
-    GetGameLeaderboardUseCase,
-    GetGameSessionUseCase,
-    ListGameHistoryUseCase,
-    PatchGameAnswerUseCase,
-    StartGameSessionUseCase,
-    UseItemGameUseCase,
-)
-from app.application.use_cases.questions import (
-    BulkCreateQuestionsUseCase,
-    CreateQuestionUseCase,
-    DeleteQuestionUseCase,
-    GetQuestionUseCase,
-    ListQuestionsUseCase,
-    UpdateQuestionUseCase,
-    AnswerQuestionUseCase,
-    GetRelatedLessonsUseCase,
-    StartPdfImportUseCase,
-    HeartbeatQuestionUseCase,
-    AiRegenerateSolutionUseCase,
-    PublishQuestionUseCase,
-    FindRelatedQuestionsUseCase,
-)
-from app.application.use_cases.tags.tags_use_case import (
-    ListTagsUseCase,
-    CreateTagUseCase,
-    DeleteTagUseCase,
-)
-from app.application.use_cases.comment import (
-    CreateCommentUseCase,
-    GetCommentsUseCase,
-    ToggleReactionUseCase,
-    DeleteCommentUseCase,
-)
-from app.application.use_cases.pdf_import import (
-    StartImportUseCase,
-    GetImportStatusUseCase,
-    ReviewDraftQuestionsUseCase,
-    ApproveQuestionUseCase,
-    RejectQuestionUseCase,
-    RegenerateSolutionUseCase,
-    AcquireLockUseCase,
-    HeartbeatLockUseCase,
-)
-from app.application.use_cases.uploads.presign_upload import PresignUploadUseCase
 from app.application.use_cases.homeworks import (
     ArchiveHomeworkUseCase,
     CreateHomeworkUseCase,
     GetHomeworkAttachmentUrlUseCase,
     GetHomeworkSubmissionDownloadUrlUseCase,
     GetMyHomeworkSubmissionUseCase,
-    ListHomeworksUseCase,
     ListHomeworkSubmissionsUseCase,
+    ListHomeworksUseCase,
     ListMyHomeworksUseCase,
-    ListUnsubmittedHomeworkUsersUseCase,
     SubmitHomeworkUseCase,
     UpdateHomeworkUseCase,
 )
+from app.application.use_cases.leaderboard.leaderboard_use_case import (
+    GetLeaderboardUseCase,
+)
+from app.application.use_cases.lessons.create_lesson_uc import CreateLessonUseCase
+from app.application.use_cases.lessons.delete_lesson_uc import DeleteLessonUseCase
+from app.application.use_cases.lessons.get_lesson_by_slug_uc import (
+    GetLessonBySlugUseCase,
+)
+from app.application.use_cases.lessons.get_lesson_detail_uc import (
+    GetLessonDetailUseCase,
+)
+from app.application.use_cases.lessons.import_notion_lesson_uc import (
+    ImportNotionLessonUseCase,
+)
+from app.application.use_cases.lessons.index_lesson_uc import IndexLessonUseCase
+from app.application.use_cases.lessons.list_lessons_uc import ListLessonsUseCase
+from app.application.use_cases.lessons.reorder_lessons_uc import (
+    ReorderLessonsUseCase,
+)
+from app.application.use_cases.lessons.update_lesson_uc import UpdateLessonUseCase
+from app.application.use_cases.me.me_use_case import GetProfileUseCase
+from app.application.use_cases.modules import (
+    CreateModuleUseCase,
+    DeleteModuleUseCase,
+    ListModulesUseCase,
+    ReorderModulesUseCase,
+    UpdateModuleUseCase,
+)
+from app.application.use_cases.pdf_import import (
+    AcquireLockUseCase,
+    ApproveQuestionUseCase,
+    GetImportStatusUseCase,
+    HeartbeatLockUseCase,
+    RegenerateSolutionUseCase,
+    RejectQuestionUseCase,
+    ReviewDraftQuestionsUseCase,
+    StartImportUseCase,
+)
+from app.application.use_cases.questions import (
+    AiRegenerateSolutionUseCase,
+    AnswerQuestionUseCase,
+    BulkCreateQuestionsUseCase,
+    CreateQuestionUseCase,
+    DeleteQuestionUseCase,
+    FindRelatedQuestionsUseCase,
+    GetQuestionUseCase,
+    GetRelatedLessonsUseCase,
+    HeartbeatQuestionUseCase,
+    ListQuestionsUseCase,
+    PublishQuestionUseCase,
+    StartPdfImportUseCase,
+    UpdateQuestionUseCase,
+)
+from app.application.use_cases.tags.tags_use_case import (
+    CreateTagUseCase,
+    DeleteTagUseCase,
+    ListTagsUseCase,
+)
+from app.application.use_cases.uploads.presign_upload import PresignUploadUseCase
+from app.config import settings
 from app.domain.events.bus import EventBus
 from app.domain.interfaces import (
     IAttemptRepository,
     IFocusEventRepository,
-    IManageService,
-    IUserRepository,
-    IS3Client,
     IImportSessionRepository,
+    IManageService,
     IQuestionRepository,
+    IS3Client,
+    IUserRepository,
 )
+from app.domain.services.hackathon_leaderboard import HackathonLeaderboardDomainService
 from app.infrastructure.cache.redis_client import ProfileCache
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class UseCaseProvider(Provider):
@@ -265,10 +264,6 @@ class UseCaseProvider(Provider):
     )
     list_homework_submissions_use_case = provide(
         ListHomeworkSubmissionsUseCase,
-        scope=Scope.REQUEST,
-    )
-    list_unsubmitted_homework_users_use_case = provide(
-        ListUnsubmittedHomeworkUsersUseCase,
         scope=Scope.REQUEST,
     )
     get_homework_attachment_url_use_case = provide(
@@ -414,12 +409,6 @@ class UseCaseProvider(Provider):
         manage_client: IManageService,
     ) -> GetProfileUseCase:
         return GetProfileUseCase(cache, user_repo, manage_client)
-
-
-    @provide(scope=Scope.REQUEST)
-    def pdf_parser_service(self) -> IPdfParserStrategy:
-        # Defaulting to the new AI Strategy. Can be configured via settings or factory later.
-        return AIPdfParserStrategy()
 
     @provide(scope=Scope.REQUEST)
     def user_service(

@@ -8,9 +8,6 @@ from .get_my_submission_uc import GetMyHomeworkSubmissionUseCase
 from .list_homework_submissions_uc import ListHomeworkSubmissionsUseCase
 from .list_homeworks_uc import ListHomeworksUseCase
 from .list_my_homeworks_uc import ListMyHomeworksUseCase
-from .list_unsubmitted_homework_users_uc import (
-    ListUnsubmittedHomeworkUsersUseCase,
-)
 from .submit_homework_uc import SubmitHomeworkUseCase
 from .update_homework_uc import UpdateHomeworkUseCase
 
@@ -20,10 +17,9 @@ __all__ = [
     "GetHomeworkAttachmentUrlUseCase",
     "GetHomeworkSubmissionDownloadUrlUseCase",
     "GetMyHomeworkSubmissionUseCase",
+    "ListHomeworkSubmissionsUseCase",
     "ListHomeworksUseCase",
     "ListMyHomeworksUseCase",
-    "ListHomeworkSubmissionsUseCase",
-    "ListUnsubmittedHomeworkUsersUseCase",
     "SubmitHomeworkUseCase",
     "UpdateHomeworkUseCase",
 ]

@@ -41,7 +41,6 @@ function homeworkForm(values: HomeworkFormValues): FormData {
   form.append("title", values.title);
   form.append("description", values.description);
   form.append("deadline", values.deadline);
-  values.assigneeIds.forEach((id) => form.append("assignee_ids", String(id)));
   if (values.file) form.append("file", values.file);
   return form;
 }

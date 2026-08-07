@@ -37,8 +37,13 @@ class Homework(Base):
     created_at: Mapped[datetime] = mapped_column(default=now_ict)
     updated_at: Mapped[datetime] = mapped_column(default=now_ict, onupdate=now_ict)
     archived_at: Mapped[datetime | None] = mapped_column(nullable=True, index=True)
+    grading_rubric: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    grading_status: Mapped[str] = mapped_column(
+        String(30), default="PENDING", server_default="PENDING", index=True
+    )
+    grading_error: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    def to_entity(self, assignee_ids: list[int] | None = None) -> HomeworkEntity:
+    def to_entity(self) -> HomeworkEntity:
         return HomeworkEntity(
             id=self.id,
             lesson_id=self.lesson_id,
@@ -50,20 +55,7 @@ class Homework(Base):
             created_at=self.created_at,
             updated_at=self.updated_at,
             archived_at=self.archived_at,
-            assignee_ids=assignee_ids or [],
         )
-
-
-class HomeworkAssignment(Base):
-    __tablename__ = "homework_assignments"
-
-    homework_id: Mapped[UUID] = mapped_column(
-        pgUUID(as_uuid=True),
-        ForeignKey("homeworks.id", ondelete="CASCADE"),
-        primary_key=True,
-    )
-    user_id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    assigned_at: Mapped[datetime] = mapped_column(default=now_ict)
 
 
 class HomeworkSubmission(Base):
@@ -138,3 +130,39 @@ class HomeworkSubmission(Base):
             plagiarized_from_user_id=self.plagiarized_from_user_id,
             grading_error=self.grading_error,
         )
+
+
+class HomeworkSubmissionFingerprint(Base):
+    __tablename__ = "homework_submission_fingerprints"
+    __table_args__ = (
+        UniqueConstraint(
+            "submission_id",
+            "file_name",
+            name="uq_homework_submission_fingerprint_file",
+        ),
+        Index(
+            "ix_homework_fingerprints_lookup",
+            "homework_id",
+            "file_name",
+            "user_id",
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(
+        pgUUID(as_uuid=True), primary_key=True, default=uuid4
+    )
+    submission_id: Mapped[UUID] = mapped_column(
+        pgUUID(as_uuid=True),
+        ForeignKey("homework_submissions.id", ondelete="CASCADE"),
+        index=True,
+    )
+    homework_id: Mapped[UUID] = mapped_column(
+        pgUUID(as_uuid=True),
+        ForeignKey("homeworks.id", ondelete="CASCADE"),
+        index=True,
+    )
+    user_id: Mapped[int] = mapped_column(index=True)
+    file_name: Mapped[str] = mapped_column(String(255))
+    code_hash: Mapped[str] = mapped_column(String(64))
+    fingerprints: Mapped[list[str]] = mapped_column(JSONB)
+    created_at: Mapped[datetime] = mapped_column(default=now_ict)
