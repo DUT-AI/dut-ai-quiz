@@ -213,7 +213,7 @@ async def submission_download_url(
             url=await use_case.execute(
                 submission_id,
                 user.id,
-                can_manage=user.quiz_role in {"admin", "MENTOR"},
+                can_manage=user.has_any_role("admin", "MENTOR"),
             )
         )
     )

@@ -7,8 +7,7 @@ async def test():
     # Bypass auth by overriding get_current_user dependency
     app.dependency_overrides[get_current_user] = lambda: UserContext(
         id=17,
-        role_name="student",
-        quiz_role="student"
+        roles=["student"]
     )
     
     import httpx

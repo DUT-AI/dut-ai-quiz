@@ -73,7 +73,7 @@ async def list_lesson_questions(
     limit: int = Query(50, ge=1, le=200),
 ):
     # Guests only see practice questions. Admin/Mentors can filter both PRACTICE and EXAM.
-    if user.quiz_role not in ("admin", "MENTOR"):
+    if not user.has_any_role("admin", "MENTOR"):
         pool_type = PoolType.PRACTICE
 
     query = QuestionListQuery(
@@ -85,7 +85,7 @@ async def list_lesson_questions(
         limit=limit,
     )
     rows = await use_case.execute(query)
-    if user.quiz_role not in ("admin", "MENTOR"):
+    if not user.has_any_role("admin", "MENTOR"):
         from app.presentation.api.routers.questions import sanitize_questions_for_student
         rows = sanitize_questions_for_student(rows)
     return rows
@@ -98,10 +98,10 @@ async def get_lesson(
     user: CurrentUser,
     use_case: FromDishka[GetLessonDetailUseCase],
 ):
-    res = await use_case.execute(lesson_id, is_teacher=user.quiz_role in ("admin", "MENTOR"))
+    res = await use_case.execute(lesson_id, is_teacher=user.has_any_role("admin", "MENTOR"))
     if not res:
         raise HTTPException(status_code=404, detail="Lesson not found")
-    if user.quiz_role not in ("admin", "MENTOR"):
+    if not user.has_any_role("admin", "MENTOR"):
         from app.presentation.api.routers.questions import sanitize_questions_for_student
         import copy
         res = copy.deepcopy(res)

@@ -33,17 +33,18 @@ from app.presentation.schemas.questions import (
     RelatedQuestionsIn,
 )
 from pydantic import BaseModel
+from app.presentation.schemas.lessons import RelatedLessonOut
+import copy
+from app.domain.entities.question import QuestionEntity, QuestionOptionEntity
+    
 class AiRegenerateRequest(BaseModel):
     custom_prompt: str | None = None
-    
-from app.presentation.schemas.lessons import RelatedLessonOut
 
 router = APIRouter(prefix="/questions", tags=["questions"])
 
 
 def sanitize_questions_for_student(questions: list) -> list:
-    import copy
-    from app.domain.entities.question import QuestionEntity, QuestionOptionEntity
+    
     sanitized = []
     for q in questions:
         if isinstance(q, dict):
@@ -103,7 +104,7 @@ async def list_questions_route(
     limit: int = Query(50, ge=1, le=2000),
 ):
     # For guests, we only allow viewing PRACTICE questions.
-    if user.quiz_role not in ("admin", "MENTOR"):
+    if not user.has_any_role("admin", "MENTOR"):
         pool_type = PoolType.PRACTICE
 
     q = QuestionListQuery(
@@ -116,7 +117,7 @@ async def list_questions_route(
         limit=limit,
     )
     rows = await use_case.execute(q)
-    if user.quiz_role not in ("admin", "MENTOR"):
+    if not user.has_any_role("admin", "MENTOR"):
         rows = sanitize_questions_for_student(rows)
     return rows
 
@@ -140,7 +141,7 @@ async def find_related_questions_route(
     use_case: FromDishka[FindRelatedQuestionsUseCase],
 ):
     pool_type = body.pool_type
-    if user.quiz_role not in ("admin", "MENTOR"):
+    if not user.has_any_role("admin", "MENTOR"):
         pool_type = PoolType.PRACTICE
 
     try:

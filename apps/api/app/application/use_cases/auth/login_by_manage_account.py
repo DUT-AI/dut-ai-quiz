@@ -26,11 +26,9 @@ class LoginByManageAccountUseCase:
             manage_user_id = profile.id
             role_names = profile.role_names
 
-            quiz_role = quiz_role_from_manage(role_names)
-
             # 3. Create unified JWT token
             local_jwt = create_access_token(
-                {"user_id": manage_user_id, "role": quiz_role, "type": "service_a"}
+                {"user_id": manage_user_id, "roles": role_names or ["guest"], "type": "service_a"}
             )
 
             return AuthTokens(

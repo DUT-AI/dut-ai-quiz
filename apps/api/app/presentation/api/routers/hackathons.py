@@ -3,6 +3,7 @@ from uuid import UUID
 from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import APIRouter, HTTPException
 
+from app.application.services.auth_roles import quiz_role_from_manage
 from app.application.use_cases.hackathon import (
     CreateHackathonUseCase,
     DeleteHackathonUseCase,
@@ -25,7 +26,7 @@ router = APIRouter(prefix="/hackathons", tags=["hackathons"])
 async def list_hackathons_route(
     user: CurrentUser, use_case: FromDishka[ListHackathonsUseCase]
 ):
-    return await use_case.execute(user.id, user.quiz_role)
+    return await use_case.execute(user.id, quiz_role_from_manage(user.roles))
 
 
 @router.post("", response_model=HackathonOut)
@@ -45,7 +46,7 @@ async def get_hackathon_route(
     hackathon_id: UUID,
     use_case: FromDishka[GetHackathonUseCase],
 ):
-    res = await use_case.execute(hackathon_id, user.id, user.quiz_role)
+    res = await use_case.execute(hackathon_id, user.id, quiz_role_from_manage(user.roles))
     if not res:
         raise HTTPException(status_code=404, detail="Not found")
     return res

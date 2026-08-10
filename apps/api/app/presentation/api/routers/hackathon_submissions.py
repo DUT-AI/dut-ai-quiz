@@ -3,6 +3,7 @@ from uuid import UUID
 from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import APIRouter
 
+from app.application.services.auth_roles import quiz_role_from_manage
 from app.application.use_cases.hackathon.submissions import (
     CancelSubmissionUseCase,
     GetSubmissionLogsUseCase,
@@ -71,7 +72,7 @@ async def get_submission_logs_route(
     use_case: FromDishka[GetSubmissionLogsUseCase],
 ):
     logs = await use_case(
-        submission_id=submission_id, user_id=user.id, quiz_role=user.quiz_role
+        submission_id=submission_id, user_id=user.id, quiz_role=quiz_role_from_manage(user.roles)
     )
     return {"logs": logs}
 
@@ -83,7 +84,7 @@ async def list_submissions_route(
     user: CurrentUser,
     use_case: FromDishka[ListSubmissionsUseCase],
 ):
-    return await use_case(task_id=task_id, user_id=user.id, quiz_role=user.quiz_role)
+    return await use_case(task_id=task_id, user_id=user.id, quiz_role=quiz_role_from_manage(user.roles))
 
 
 @router.get("/{hackathon_id}/leaderboard")

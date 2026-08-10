@@ -3,6 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, HTTPException
 from dishka.integrations.fastapi import FromDishka, inject
 
+from app.application.services.auth_roles import quiz_role_from_manage
 from app.application.use_cases.exams.exam_use_case import (
     CreateExamUseCase,
     DeleteExamUseCase,
@@ -32,7 +33,7 @@ router = APIRouter(prefix="/exams", tags=["exams"])
 async def list_exams_route(
     user: CurrentUser, use_case: FromDishka[ListExamsUseCase]
 ):
-    if user.quiz_role in ("admin", "MENTOR"):
+    if user.has_any_role("admin", "MENTOR"):
         return await use_case.execute_for_teacher(user.id)
     return await use_case.execute_for_student(user.id, now_ict())
 
@@ -50,10 +51,10 @@ async def create_exam_route(
 async def get_exam_route(
     user: CurrentUser, exam_id: UUID, use_case: FromDishka[GetExamUseCase]
 ):
-    ex = await use_case.execute(exam_id, user_id=user.id, role=user.quiz_role)
+    ex = await use_case.execute(exam_id, user_id=user.id, role=quiz_role_from_manage(user.roles))
     if not ex:
         raise HTTPException(status_code=404, detail="Not found")
-    if user.quiz_role not in ("admin", "MENTOR"):
+    if not user.has_any_role("admin", "MENTOR"):
         if not ex.is_published:
             raise HTTPException(status_code=404, detail="Not found")
     return ex
