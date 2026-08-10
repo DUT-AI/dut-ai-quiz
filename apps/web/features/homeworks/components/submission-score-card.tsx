@@ -85,11 +85,6 @@ export function SubmissionScoreCard({ submission }: SubmissionScoreCardProps) {
                   {submission.is_pass ? "Đạt yêu cầu" : "Chưa đạt"}
                 </Badge>
               )}
-              {submission.is_late && (
-                <Badge variant="destructive" className="h-6 bg-red/10 text-red border-red/10 dark:bg-red/20 font-bold">
-                  Nộp trễ
-                </Badge>
-              )}
             </div>
 
             <div className="space-y-1">

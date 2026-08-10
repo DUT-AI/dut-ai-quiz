@@ -42,7 +42,6 @@ const getInitials = (name: string) => {
 export function SubmissionsList({ homework, submissions, isLoading }: SubmissionsListProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
-  const [lateFilter, setLateFilter] = useState<string>("ALL");
   const [plagiarismFilter, setPlagiarismFilter] = useState<string>("ALL");
 
   // Filters logic
@@ -53,21 +52,17 @@ export function SubmissionsList({ homework, submissions, isLoading }: Submission
 
       const matchesStatus = statusFilter === "ALL" || sub.status === statusFilter;
 
-      const matchesLate = lateFilter === "ALL" ||
-        (lateFilter === "LATE" && sub.is_late) ||
-        (lateFilter === "ON_TIME" && !sub.is_late);
-
       const matchesPlagiarized = plagiarismFilter === "ALL" ||
         (plagiarismFilter === "PLAGIARIZED" && sub.is_plagiarized) ||
         (plagiarismFilter === "CLEAN" && !sub.is_plagiarized);
 
-      return matchesSearch && matchesStatus && matchesLate && matchesPlagiarized;
+      return matchesSearch && matchesStatus && matchesPlagiarized;
     });
-  }, [submissions, searchQuery, statusFilter, lateFilter, plagiarismFilter]);
+  }, [submissions, searchQuery, statusFilter, plagiarismFilter]);
 
   const isFilterActive = useMemo(() => {
-    return searchQuery !== "" || statusFilter !== "ALL" || lateFilter !== "ALL" || plagiarismFilter !== "ALL";
-  }, [searchQuery, statusFilter, lateFilter, plagiarismFilter]);
+    return searchQuery !== "" || statusFilter !== "ALL" || plagiarismFilter !== "ALL";
+  }, [searchQuery, statusFilter, plagiarismFilter]);
 
   const groupedSubmissions = useMemo(() => {
     if (isFilterActive) return [];
@@ -131,7 +126,7 @@ export function SubmissionsList({ homework, submissions, isLoading }: Submission
           </div>
 
           {/* Filters Selects Grid */}
-          <div className="grid grid-cols-3 gap-2 sm:flex sm:items-center">
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
             {/* Status Filter */}
             <FilterDropdown
               value={statusFilter}
@@ -142,17 +137,6 @@ export function SubmissionsList({ homework, submissions, isLoading }: Submission
                 { value: "GRADING", label: "Đang chấm" },
                 { value: "UPLOADED", label: "Đã tải lên" },
                 { value: "FAILED", label: "Chấm lỗi" },
-              ]}
-            />
-
-            {/* Lateness Filter */}
-            <FilterDropdown
-              value={lateFilter}
-              onChange={setLateFilter}
-              options={[
-                { value: "ALL", label: "Tất cả hạn nộp" },
-                { value: "ON_TIME", label: "Đúng hạn" },
-                { value: "LATE", label: "Nộp trễ" },
               ]}
             />
 
@@ -306,14 +290,7 @@ function DesktopSubmissionRow({ homework, sub, group, getInitials }: DesktopSubm
           Lần nộp #{sub.attempt_number}
         </td>
         <td className="p-4 text-gray-navy dark:text-light-blue/80">
-          <div className="space-y-1">
-            <span className="block font-medium">{formatDateTime(sub.submitted_at)}</span>
-            {sub.is_late && (
-              <Badge variant="destructive" className="h-5 px-1.5 text-[10px] bg-red/10 text-red border-red/10 dark:bg-red/20 font-bold">
-                Nộp trễ
-              </Badge>
-            )}
-          </div>
+          <span className="block font-medium">{formatDateTime(sub.submitted_at)}</span>
         </td>
         <td className="p-4">
           {sub.is_plagiarized ? (
@@ -402,14 +379,7 @@ function DesktopSubmissionRow({ homework, sub, group, getInitials }: DesktopSubm
             </span>
           </td>
           <td className="p-4 text-gray-navy dark:text-light-blue/80 text-left">
-            <div className="space-y-1">
-              <span className="block font-medium">{formatDateTime(latest.submitted_at)}</span>
-              {latest.is_late && (
-                <Badge variant="destructive" className="h-5 px-1.5 text-[10px] bg-red/10 text-red border-red/10 dark:bg-red/20 font-bold">
-                  Nộp trễ
-                </Badge>
-              )}
-            </div>
+            <span className="block font-medium">{formatDateTime(latest.submitted_at)}</span>
           </td>
           <td className="p-4 text-left">
             {hasPlagiarism ? (
@@ -486,9 +456,6 @@ function DesktopSubmissionRow({ homework, sub, group, getInitials }: DesktopSubm
                           <div className="text-left">
                             <div className="flex items-center gap-1.5 font-bold text-dark-blue dark:text-white text-xs">
                               <span>Lần nộp #{item.attempt_number}</span>
-                              {item.is_late && (
-                                <span className="text-[9px] px-1 bg-red/10 text-red dark:bg-red/20 rounded font-bold">Trễ</span>
-                              )}
                               {item.is_plagiarized && (
                                 <span className="text-[9px] px-1 bg-red/10 text-red dark:bg-red/20 rounded font-bold flex items-center gap-0.5 animate-pulse">
                                   <AlertTriangle className="size-2.5 text-red shrink-0 ml-0.5" /> Trùng lặp
@@ -603,19 +570,6 @@ function MobileSubmissionCard({ homework, sub, group, getInitials }: MobileSubmi
             <span className="text-dark-blue dark:text-white font-bold block truncate text-left">
               {formatDateTime(sub.submitted_at)}
             </span>
-          </div>
-
-          <div>
-            <span className="text-[10px] text-gray-navy/60 dark:text-light-blue/40 block uppercase tracking-wider text-left">
-              Hạn nộp
-            </span>
-            {sub.is_late ? (
-              <span className="text-red font-bold flex items-center gap-0.5 animate-pulse text-left">
-                <AlertTriangle className="size-3 shrink-0" /> Nộp trễ
-              </span>
-            ) : (
-              <span className="text-green font-bold text-left block">Đúng hạn</span>
-            )}
           </div>
 
           <div>
@@ -749,9 +703,6 @@ function MobileSubmissionCard({ homework, sub, group, getInitials }: MobileSubmi
                         <div className="text-left">
                           <div className="flex items-center gap-1.5 font-bold text-dark-blue dark:text-white text-xs">
                             <span>Lần nộp #{item.attempt_number}</span>
-                            {item.is_late && (
-                              <span className="text-[9px] px-1 bg-red/10 text-red dark:bg-red/20 rounded font-bold">Trễ</span>
-                            )}
                             {item.is_plagiarized && (
                               <span className="text-[9px] px-1 bg-red/10 text-red dark:bg-red/20 rounded font-bold flex items-center gap-0.5 animate-pulse">
                                 <AlertTriangle className="size-2.5 text-red shrink-0" /> Trùng lặp

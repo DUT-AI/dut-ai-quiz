@@ -34,7 +34,6 @@ export function SubmissionsStats({ homework, submissions }: SubmissionsStatsProp
       ? Math.round((passCount / gradedCount) * 100)
       : 0;
 
-    const lateCount = submissions.filter((s) => s.is_late).length;
     const plagiarismCount = submissions.filter((s) => s.is_plagiarized).length;
 
     return {
@@ -42,7 +41,6 @@ export function SubmissionsStats({ homework, submissions }: SubmissionsStatsProp
       totalSubmissions,
       averageScore,
       passRate,
-      lateCount,
       plagiarismCount,
     };
   }, [submissions]);
@@ -71,8 +69,8 @@ export function SubmissionsStats({ homework, submissions }: SubmissionsStatsProp
     },
     {
       title: "Cần lưu ý",
-      value: `${stats.lateCount + stats.plagiarismCount}`,
-      description: `${stats.lateCount} nộp trễ, ${stats.plagiarismCount} đạo văn`,
+      value: `${stats.plagiarismCount}`,
+      description: `${stats.plagiarismCount} nghi vấn đạo văn`,
       icon: AlertTriangle,
       color: "from-amber-500/10 to-red-500/10 text-amber-500 dark:text-amber-400 border-amber-200/50 dark:border-amber-900/30",
     },
@@ -102,7 +100,7 @@ export function SubmissionsStats({ homework, submissions }: SubmissionsStatsProp
                 </div>
               </div>
               <div className="mt-3 flex items-center text-xs text-gray-navy/80 dark:text-light-blue/70 font-semibold">
-                {card.title === "Cần lưu ý" && (stats.lateCount > 0 || stats.plagiarismCount > 0) ? (
+                {card.title === "Cần lưu ý" && stats.plagiarismCount > 0 ? (
                   <span className="flex items-center gap-1 text-red dark:text-red/90 animate-pulse">
                     <Clock className="size-3" />
                     {card.description}

@@ -35,7 +35,6 @@ class CreateHomeworkUseCase:
                 lesson_id=payload.lesson_id,
                 title=payload.title.strip(),
                 description=payload.description.strip(),
-                deadline=payload.deadline,
                 attachment_key=attachment_key,
                 created_by=payload.created_by,
             )

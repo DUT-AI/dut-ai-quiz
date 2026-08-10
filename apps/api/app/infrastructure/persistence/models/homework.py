@@ -31,7 +31,6 @@ class Homework(Base):
     )
     title: Mapped[str] = mapped_column(String(255), index=True)
     description: Mapped[str] = mapped_column(Text, default="", server_default="")
-    deadline: Mapped[datetime] = mapped_column(index=True)
     attachment_key: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_by: Mapped[int] = mapped_column(index=True)
     created_at: Mapped[datetime] = mapped_column(default=now_ict)
@@ -49,7 +48,6 @@ class Homework(Base):
             lesson_id=self.lesson_id,
             title=self.title,
             description=self.description,
-            deadline=self.deadline,
             attachment_key=self.attachment_key,
             created_by=self.created_by,
             created_at=self.created_at,
@@ -104,9 +102,7 @@ class HomeworkSubmission(Base):
     plagiarism_info: Mapped[list[dict[str, Any]] | None] = mapped_column(
         JSONB, nullable=True
     )
-    is_plagiarized: Mapped[bool] = mapped_column(
-        default=False, server_default="false"
-    )
+    is_plagiarized: Mapped[bool] = mapped_column(default=False, server_default="false")
     plagiarized_from_user_id: Mapped[int | None] = mapped_column(nullable=True)
     grading_error: Mapped[str | None] = mapped_column(Text, nullable=True)
 
