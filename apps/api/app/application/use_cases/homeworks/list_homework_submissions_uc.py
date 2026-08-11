@@ -33,6 +33,7 @@ class ListHomeworkSubmissionsUseCase:
                     submission,
                     owner_name=profile.user_name if profile else None,
                     owner_avatar_url=(profile.user_avatar_url if profile else None),
+                    include_plagiarism_identity=True,
                 )
             )
         return result

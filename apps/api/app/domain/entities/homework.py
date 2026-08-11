@@ -17,7 +17,6 @@ class HomeworkEntity:
     lesson_id: UUID | None
     title: str
     description: str
-    deadline: datetime
     created_by: int
     id: UUID | None = None
     attachment_key: str | None = None

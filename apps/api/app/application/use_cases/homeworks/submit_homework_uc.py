@@ -30,7 +30,7 @@ class SubmitHomeworkUseCase:
         self,
         payload: SubmitHomeworkDTO,
     ) -> HomeworkSubmissionOutDTO:
-        homework = await get_homework_or_raise(
+        await get_homework_or_raise(
             self._repository,
             payload.homework_id,
         )
@@ -51,7 +51,7 @@ class SubmitHomeworkUseCase:
                 object_key=key,
                 original_filename=payload.file.filename,
                 submitted_at=submitted_at,
-                is_late=submitted_at > homework.deadline,
+                is_late=False,
                 attempt_number=0,
                 status=(
                     HomeworkSubmissionStatus.GRADING

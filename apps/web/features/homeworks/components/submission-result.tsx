@@ -70,11 +70,6 @@ export function SubmissionResult({ submission, compact = false }: SubmissionResu
           </div>
 
           <div className="flex items-center gap-2">
-            {submission.is_late && (
-              <Badge variant="destructive" className="animate-bounce">
-                Nộp trễ
-              </Badge>
-            )}
             <Badge variant="outline" className={`h-6 ${statusConfig.className}`}>
               <StatusIcon className="mr-1.5 size-3.5" />
               {statusConfig.label}

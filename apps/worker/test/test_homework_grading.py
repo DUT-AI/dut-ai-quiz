@@ -7,7 +7,6 @@ from uuid import uuid4
 
 import py7zr
 import pytest
-
 from worker_evaluate_homework.application.use_cases import (
     EvaluateHomeworkSubmissionUseCase,
     RegisterHomeworkUseCase,
@@ -251,6 +250,38 @@ def test_identical_python_sources_are_detected() -> None:
     assert user_id == 7
 
 
+def test_plagiarism_score_covers_the_whole_multifile_submission() -> None:
+    copied = build_fingerprint(
+        SourceFile(name="main.py", content="print('shared bootstrap')")
+    )
+    original = build_fingerprint(
+        SourceFile(
+            name="model.py",
+            content=(
+                "class Model:\n"
+                "    def train(self, values):\n"
+                "        return [value * 3 for value in values]\n"
+            ),
+        )
+    )
+    previous = [
+        type(
+            "Stored",
+            (),
+            {
+                "user_id": 7,
+                "file_name": "main.py",
+                "fingerprints": frozenset(copied["fingerprints"]),
+            },
+        )()
+    ]
+
+    _, score, user_id = find_plagiarism([copied, original], previous)
+
+    assert 0 < score < 0.8
+    assert user_id == 7
+
+
 def test_static_analysis_enforces_allowed_library_policy() -> None:
     result = _analyze_sources(
         HomeworkRubric(
@@ -279,6 +310,28 @@ def test_static_analysis_maps_forbidden_library_names() -> None:
     )
 
     assert result["forbidden_imports"] == ["torchvision"]
+
+
+def test_static_analysis_allows_modules_from_the_submitted_project() -> None:
+    result = _analyze_sources(
+        HomeworkRubric(
+            topic="Project",
+            allowed_libraries=["requests"],
+        ),
+        [
+            SourceFile(
+                name="main.py",
+                content="from project import helpers\nimport requests\n",
+            ),
+            SourceFile(
+                name="project/helpers.py",
+                content="def answer():\n    return 42\n",
+            ),
+        ],
+    )
+
+    assert result["unauthorized_imports"] == []
+    assert result["local_modules"] == ["helpers", "main", "project"]
 
 
 def test_zip_source_reader_extracts_python_only() -> None:
@@ -366,4 +419,3 @@ def test_rar_extension_is_dispatched(
     )
 
     assert sources == expected
-

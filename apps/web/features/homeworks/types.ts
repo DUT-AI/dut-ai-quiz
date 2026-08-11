@@ -33,7 +33,6 @@ export const HomeworkSchema = z.object({
   lesson_id: z.string().uuid().nullable(),
   title: z.string(),
   description: z.string(),
-  deadline: z.string(),
   created_by: z.number(),
   created_at: z.string(),
   updated_at: z.string(),
@@ -49,6 +48,5 @@ export interface HomeworkFormValues {
   lessonId: string;
   title: string;
   description: string;
-  deadline: string;
   file?: File | null;
 }

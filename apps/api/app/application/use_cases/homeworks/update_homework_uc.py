@@ -45,8 +45,6 @@ class UpdateHomeworkUseCase:
             homework.title = payload.title.strip()
         if payload.description is not None:
             homework.description = payload.description.strip()
-        if payload.deadline is not None:
-            homework.deadline = payload.deadline
         if payload.file is not None:
             homework.attachment_key = await upload_homework_file(
                 self._storage,

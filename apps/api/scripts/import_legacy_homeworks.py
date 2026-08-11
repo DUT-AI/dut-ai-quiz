@@ -68,9 +68,7 @@ def require_fields(
     for index, row in enumerate(rows):
         missing = fields - row.keys()
         if missing:
-            raise ValueError(
-                f"{source}[{index}] is missing fields: {sorted(missing)}"
-            )
+            raise ValueError(f"{source}[{index}] is missing fields: {sorted(missing)}")
 
 
 def parse_legacy_datetime(value: Any, *, field: str, row_id: int) -> datetime:
@@ -79,15 +77,15 @@ def parse_legacy_datetime(value: Any, *, field: str, row_id: int) -> datetime:
     try:
         parsed = datetime.fromisoformat(value)
     except ValueError as exc:
-        raise ValueError(
-            f"Legacy row {row_id} has invalid {field}: {value!r}"
-        ) from exc
+        raise ValueError(f"Legacy row {row_id} has invalid {field}: {value!r}") from exc
     if parsed.tzinfo is not None:
         parsed = parsed.astimezone(VIETNAM_TZ).replace(tzinfo=None)
     return parsed
 
 
-def parse_json_list(value: Any, *, field: str, row_id: int) -> list[dict[str, Any]] | None:
+def parse_json_list(
+    value: Any, *, field: str, row_id: int
+) -> list[dict[str, Any]] | None:
     if value is None or value == "":
         return None
     try:
@@ -149,7 +147,6 @@ def build_import_plan(
             "id",
             "title",
             "description",
-            "deadline",
             "file_url",
             "created_by",
             "created_at",
@@ -185,9 +182,9 @@ def build_import_plan(
         raise ValueError("Duplicate legacy homework IDs found")
     if len(set(submission_ids)) != len(submission_ids):
         raise ValueError("Duplicate legacy submission IDs found")
-    unknown_homeworks = {
-        int(row["homework_id"]) for row in legacy_submissions
-    } - set(homework_ids)
+    unknown_homeworks = {int(row["homework_id"]) for row in legacy_submissions} - set(
+        homework_ids
+    )
     if unknown_homeworks:
         raise ValueError(
             f"Submissions reference unknown homework IDs: {sorted(unknown_homeworks)}"
@@ -209,9 +206,6 @@ def build_import_plan(
                 "lesson_id": None,
                 "title": str(row["title"]).strip(),
                 "description": str(row["description"] or ""),
-                "deadline": parse_legacy_datetime(
-                    row["deadline"], field="deadline", row_id=legacy_id
-                ),
                 # Keep legacy HTTP(S) resources as URLs. The homework download
                 # use cases support both external URLs and native S3 keys.
                 "attachment_key": str(row["file_url"]).strip() or None,
@@ -320,9 +314,7 @@ async def apply_import(plan: ImportPlan, database_url: str) -> None:
             )
 
             if plan.submissions:
-                submission_insert = insert(HomeworkSubmission).values(
-                    plan.submissions
-                )
+                submission_insert = insert(HomeworkSubmission).values(plan.submissions)
                 await connection.execute(
                     submission_insert.on_conflict_do_update(
                         index_elements=[HomeworkSubmission.id],

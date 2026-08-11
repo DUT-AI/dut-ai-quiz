@@ -2,27 +2,22 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Calendar,
   Check,
   Circle,
   Download,
-  FileArchive,
   Upload,
   Clock,
-  ArrowRight,
   Sparkles,
   X,
   FileText
 } from "lucide-react";
 import React, { useState } from "react";
 import { createPortal } from "react-dom";
-import { toast } from "sonner";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Markdown } from "@/components/markdown";
-import { formatDateTime, parseICT } from "@/lib/utils";
+import { formatDateTime } from "@/lib/utils";
 import { openHomeworkAttachment } from "../queries";
 import { Homework } from "../types";
 import { FileDropzone } from "./file-dropzone";
@@ -34,40 +29,12 @@ interface HomeworkCardProps {
   isSubmitting: boolean;
 }
 
-function getDeadlineInfo(deadlineStr: string) {
-  const deadline = parseICT(deadlineStr);
-  const now = new Date();
-  const diffMs = deadline.getTime() - now.getTime();
-  const isOverdue = diffMs < 0;
-  const absDiff = Math.abs(diffMs);
-
-  const diffMins = Math.floor(absDiff / (1000 * 60));
-  const diffHours = Math.floor(absDiff / (1000 * 60 * 60));
-  const diffDays = Math.floor(absDiff / (1000 * 60 * 60 * 24));
-
-  if (isOverdue) {
-    if (diffDays > 0) return { text: `Quá hạn ${diffDays} ngày`, variant: "destructive" as const, color: "text-red dark:text-red/90" };
-    if (diffHours > 0) return { text: `Quá hạn ${diffHours} giờ`, variant: "destructive" as const, color: "text-red dark:text-red/90" };
-    return { text: `Quá hạn ${diffMins} phút`, variant: "destructive" as const, color: "text-red dark:text-red/90" };
-  } else {
-    if (diffDays > 0) {
-      if (diffDays === 1) return { text: "Còn 1 ngày", variant: "default" as const, color: "text-primary" };
-      return { text: `Còn ${diffDays} ngày`, variant: "outline" as const, color: "text-gray-navy dark:text-light-blue" };
-    }
-    if (diffHours > 0) return { text: `Còn ${diffHours} giờ`, variant: "outline" as const, color: "text-amber-500 border-amber-500/20 bg-amber-500/5 font-semibold" };
-    return { text: `Còn ${diffMins} phút`, variant: "outline" as const, color: "text-amber-500 border-amber-500/20 bg-amber-500/5 font-semibold animate-pulse" };
-  }
-}
-
 export function HomeworkCard({ homework, onSubmit, isSubmitting }: HomeworkCardProps) {
   const [file, setFile] = useState<File | null>(null);
   const [isDescOpen, setIsDescOpen] = useState(false);
-  const deadlineInfo = getDeadlineInfo(homework.deadline);
-  const isOverdue = new Date() > parseICT(homework.deadline);
   const submission = homework.current_submission;
 
   // Determine active steps for timeline
-  const step1 = true; // Assigned is always done
   const step2 = !!submission; // Submitted
   const step3 = submission?.status === "GRADED"; // Graded
 
@@ -76,7 +43,7 @@ export function HomeworkCard({ homework, onSubmit, isSubmitting }: HomeworkCardP
     try {
       await onSubmit(homework.id, file);
       setFile(null);
-    } catch (e) {
+    } catch {
       // toast is handled in parent
     }
   };
@@ -84,8 +51,7 @@ export function HomeworkCard({ homework, onSubmit, isSubmitting }: HomeworkCardP
   return (
     <>
       <Card className="overflow-hidden border border-gray-150 bg-white shadow-md dark:border-white/30 dark:bg-navy-blue/60 backdrop-blur-sm transition-all duration-300 hover:shadow-xl hover:border-primary/50 dark:hover:border-primary/50">
-      {/* Decorative Top Accent Line based on deadline status */}
-      <div className={`h-1.5 w-full ${isOverdue && !submission ? "bg-red" : "bg-primary"}`} />
+      <div className="h-1.5 w-full bg-primary" />
 
       <CardHeader className="pb-4">
         <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
@@ -98,15 +64,6 @@ export function HomeworkCard({ homework, onSubmit, isSubmitting }: HomeworkCardP
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant={deadlineInfo.variant} className={deadlineInfo.color}>
-              <Clock className="mr-1 size-3" />
-              {deadlineInfo.text}
-            </Badge>
-            <Badge variant="outline" className="border-gray-200 dark:border-white/30 dark:text-light-blue">
-              Hạn: {formatDateTime(homework.deadline)}
-            </Badge>
-          </div>
         </div>
       </CardHeader>
 
@@ -257,8 +214,7 @@ export function HomeworkCard({ homework, onSubmit, isSubmitting }: HomeworkCardP
             </div>
 
             <p className="text-[11px] leading-normal text-gray-navy dark:text-light-blue/70">
-              * Hệ thống chỉ chấp nhận file nén (.zip, .rar, .7z, .tar.gz).
-              Học viên nộp sau deadline vẫn được hệ thống ghi nhận nhưng sẽ bị đánh dấu là trễ hạn.
+              * Hệ thống chỉ chấp nhận file nén (.zip, .rar, .7z, .tar.gz, .gz).
             </p>
           </div>
         </div>
@@ -295,9 +251,6 @@ export function HomeworkCard({ homework, onSubmit, isSubmitting }: HomeworkCardP
                     <h3 className="text-lg font-black text-dark-blue dark:text-white">
                       Chi tiết đề bài: {homework.title}
                     </h3>
-                    <p className="text-xs text-gray-navy dark:text-light-blue/70">
-                      Hạn nộp: {formatDateTime(homework.deadline)}
-                    </p>
                   </div>
                 </div>
                 <button

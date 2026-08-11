@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Annotated
 from uuid import UUID
 
@@ -79,7 +78,6 @@ async def create_homework(
     user: AdminOrMentorUser,
     use_case: FromDishka[CreateHomeworkUseCase],
     title: Annotated[str, Form()],
-    deadline: Annotated[datetime, Form()],
     lesson_id: Annotated[UUID, Form()],
     description: Annotated[str, Form()] = "",
     file: Annotated[UploadFile | None, File()] = None,
@@ -90,7 +88,6 @@ async def create_homework(
                 lesson_id=lesson_id,
                 title=title,
                 description=description,
-                deadline=deadline.replace(tzinfo=None),
                 created_by=user.id,
                 file=await _optional_file_dto(file),
             )
@@ -105,7 +102,6 @@ async def update_homework(
     user: AdminOrMentorUser,
     use_case: FromDishka[UpdateHomeworkUseCase],
     title: Annotated[str | None, Form()] = None,
-    deadline: Annotated[datetime | None, Form()] = None,
     lesson_id: Annotated[UUID | None, Form()] = None,
     description: Annotated[str | None, Form()] = None,
     file: Annotated[UploadFile | None, File()] = None,
@@ -117,7 +113,6 @@ async def update_homework(
                 lesson_id=lesson_id,
                 title=title,
                 description=description,
-                deadline=(deadline.replace(tzinfo=None) if deadline else None),
                 file=await _optional_file_dto(file),
             ),
         )

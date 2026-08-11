@@ -24,15 +24,13 @@ class HomeworkRepository(IHomeworkRepository):
         stmt = select(Homework).where(Homework.archived_at.is_(None))
         if lesson_id is not None:
             stmt = stmt.where(Homework.lesson_id == lesson_id)
-        stmt = stmt.order_by(Homework.deadline.asc())
+        stmt = stmt.order_by(Homework.created_at.desc())
         models = list((await self._session.scalars(stmt)).all())
         return [model.to_entity() for model in models]
 
     async def lesson_exists(self, lesson_id: UUID) -> bool:
         return (
-            await self._session.scalar(
-                select(Lesson.id).where(Lesson.id == lesson_id)
-            )
+            await self._session.scalar(select(Lesson.id).where(Lesson.id == lesson_id))
             is not None
         )
 
@@ -52,7 +50,6 @@ class HomeworkRepository(IHomeworkRepository):
             lesson_id=homework.lesson_id,
             title=homework.title,
             description=homework.description,
-            deadline=homework.deadline,
             attachment_key=homework.attachment_key,
             created_by=homework.created_by,
         )
@@ -73,7 +70,6 @@ class HomeworkRepository(IHomeworkRepository):
         model.title = homework.title
         model.lesson_id = homework.lesson_id
         model.description = homework.description
-        model.deadline = homework.deadline
         model.attachment_key = homework.attachment_key
         if grading_content_changed:
             model.grading_rubric = None

@@ -62,11 +62,6 @@ export function SubmissionDetailHeader({ homeworkId, homeworkTitle, submission }
               <span>Mã học viên: #{submission.user_id}</span>
               <span className="h-3 w-px bg-gray-200 dark:bg-white/10 hidden sm:inline" />
               <span>Nộp ngày: {formatDateTime(submission.submitted_at)}</span>
-              {submission.is_late && (
-                <span className="px-1.5 py-0.5 bg-red/10 text-red dark:bg-red/20 font-bold rounded text-[10px] uppercase tracking-wide">
-                  Nộp trễ
-                </span>
-              )}
             </div>
           </div>
         </div>

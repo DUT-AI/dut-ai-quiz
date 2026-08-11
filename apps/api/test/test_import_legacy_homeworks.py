@@ -11,7 +11,6 @@ def test_build_import_plan_preserves_legacy_data_and_is_deterministic() -> None:
             "id": 7,
             "title": "Legacy homework",
             "description": "Description",
-            "deadline": "2026-08-01 12:00:00",
             "file_url": "https://legacy.example/bucket/homework.pdf",
             "created_by": 12,
             "created_at": "2026-07-01 10:00:00",
@@ -74,6 +73,7 @@ def test_build_import_plan_preserves_legacy_data_and_is_deterministic() -> None:
 
     assert plan.homeworks[0]["id"] == legacy_uuid("homework", 7)
     assert plan.homeworks[0]["lesson_id"] is None
+    assert "deadline" not in plan.homeworks[0]
     assert plan.homeworks[0]["attachment_key"].startswith("https://")
     assert len(plan.submissions) == 1
     assert plan.submissions[0]["status"] == "GRADED"
@@ -84,6 +84,7 @@ def test_build_import_plan_preserves_legacy_data_and_is_deterministic() -> None:
 
 
 def test_external_folder_link_gets_safe_display_filename() -> None:
-    assert original_filename(
-        "https://drive.google.com/drive/folders/abc123", 42
-    ) == "legacy-submission-42-drive.google.com.url"
+    assert (
+        original_filename("https://drive.google.com/drive/folders/abc123", 42)
+        == "legacy-submission-42-drive.google.com.url"
+    )

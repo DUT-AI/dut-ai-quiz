@@ -1,19 +1,17 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Calendar, FileText, Upload, Sparkles, GraduationCap, Edit3 } from "lucide-react";
+import { X, FileText, Upload, Sparkles, GraduationCap, Edit3 } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Markdown } from "@/components/markdown";
-import { cn } from "@/lib/utils";
 import { useLessons } from "@/lib/queries";
 import { useCreateHomework, useUpdateHomework } from "../queries";
 import { Homework } from "../types";
 import { LessonSelect } from "./lesson-select";
-import { DateTimePicker } from "./date-time-picker";
 import { DescriptionEditorModal } from "./description-editor-modal";
 
 interface HomeworkFormModalProps {
@@ -37,7 +35,6 @@ export function HomeworkFormModal({ open, homework, onClose }: HomeworkFormModal
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [isEditorOpen, setIsEditorOpen] = useState(false);
-  const [deadline, setDeadline] = useState("");
   const [file, setFile] = useState<File | null>(null);
 
   useEffect(() => {
@@ -45,21 +42,19 @@ export function HomeworkFormModal({ open, homework, onClose }: HomeworkFormModal
     setLessonId(homework?.lesson_id ?? "");
     setTitle(homework?.title ?? "");
     setDescription(homework?.description ?? "");
-    setDeadline(homework?.deadline.slice(0, 16) ?? "");
     setFile(null);
     setIsEditorOpen(false);
   }, [homework, open]);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
-    if (!lessonId || !title.trim() || !deadline) {
-      return toast.error("Vui lòng điền đầy đủ: bài học, tiêu đề và hạn nộp");
+    if (!lessonId || !title.trim()) {
+      return toast.error("Vui lòng điền đầy đủ bài học và tiêu đề");
     }
     const values = {
       lessonId,
       title,
       description,
-      deadline,
       file,
     };
     try {
@@ -145,17 +140,6 @@ export function HomeworkFormModal({ open, homework, onClose }: HomeworkFormModal
                     className="w-full h-11 rounded-lg border border-gray-250 bg-gray-50 px-4 text-sm text-dark-blue outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-white/20 dark:bg-zinc-950/40 dark:text-white dark:focus:border-primary"
                     placeholder="Ví dụ: Bài tập Python cơ bản..."
                     required
-                  />
-                </div>
-
-                {/* Deadline */}
-                <div className="space-y-2">
-                  <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-gray-navy dark:text-light-blue/80">
-                    <Calendar className="size-3.5 text-primary" /> Hạn nộp bài
-                  </label>
-                  <DateTimePicker
-                    value={deadline}
-                    onChange={setDeadline}
                   />
                 </div>
 

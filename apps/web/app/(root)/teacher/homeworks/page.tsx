@@ -10,14 +10,12 @@ import {
   Search,
   Filter,
   GraduationCap,
-  Calendar,
   AlertCircle,
   Users
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -29,7 +27,6 @@ import {
 } from "@/features/homeworks/queries";
 import { Homework } from "@/features/homeworks/types";
 import { useLessons } from "@/lib/queries";
-import { formatDateTime, parseICT } from "@/lib/utils";
 import { LessonFilter } from "@/features/homeworks/components/lesson-filter";
 
 export default function TeacherHomeworksPage() {
@@ -165,7 +162,6 @@ export default function TeacherHomeworksPage() {
       {!isLoading && filteredHomeworks.length > 0 && (
         <div className="grid gap-5">
           {filteredHomeworks.map((homework, idx) => {
-            const isOverdue = new Date() > parseICT(homework.deadline);
             const lessonName = lessons.find((l) => l.id === homework.lesson_id)?.name || "Bài học không xác định";
 
             return (
@@ -176,8 +172,7 @@ export default function TeacherHomeworksPage() {
                 transition={{ duration: 0.3, delay: idx * 0.05 }}
               >
                 <Card className="overflow-hidden border border-gray-150 bg-white shadow-sm dark:border-white/20 dark:bg-navy-blue/60 backdrop-blur-sm transition-all duration-355 hover:shadow-md hover:border-primary/50 dark:hover:border-primary/50">
-                  {/* Indicator Line color based on deadline */}
-                  <div className={`h-1 w-full ${isOverdue ? "bg-red" : "bg-primary"}`} />
+                  <div className="h-1 w-full bg-primary" />
 
                   <CardHeader className="pb-3">
                     <div className="flex flex-col justify-between gap-3 md:flex-row">
@@ -191,12 +186,6 @@ export default function TeacherHomeworksPage() {
                         </CardTitle>
                       </div>
 
-                      <div className="flex flex-col items-start gap-1 md:items-end">
-                        <Badge variant="outline" className="border-gray-200 dark:border-white/10 dark:text-light-blue">
-                          <Calendar className="mr-1 size-3" />
-                          Hạn: {formatDateTime(homework.deadline)}
-                        </Badge>
-                      </div>
                     </div>
                   </CardHeader>
 

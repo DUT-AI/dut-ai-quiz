@@ -3,13 +3,12 @@
 import { useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, BookOpenCheck, Calendar, GraduationCap, ChevronDown } from "lucide-react";
+import { ArrowLeft, BookOpenCheck, GraduationCap, ChevronDown } from "lucide-react";
 import { useHomeworks, useHomeworkSubmissions } from "@/features/homeworks/queries";
 import { SubmissionsStats } from "@/features/homeworks/components/submissions-stats";
 import { SubmissionsList } from "@/features/homeworks/components/submissions-list";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { formatDateTime, cn } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { Markdown } from "@/components/markdown";
 
 export default function TeacherHomeworkSubmissionsPage() {
@@ -135,12 +134,6 @@ export default function TeacherHomeworkSubmissionsPage() {
             )}
           </div>
 
-          <div onClick={(e) => e.stopPropagation()} className="flex flex-wrap items-center gap-3 shrink-0 cursor-default">
-            <Badge variant="outline" className="border-gray-200 dark:border-white/10 dark:text-light-blue bg-white/50 dark:bg-zinc-950/20 py-1 px-3">
-              <Calendar className="mr-1.5 size-3.5 text-primary" />
-              <span className="text-xs font-bold">Hạn nộp: {formatDateTime(homework.deadline)}</span>
-            </Badge>
-          </div>
         </motion.div>
       )}
 

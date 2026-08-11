@@ -1,7 +1,7 @@
 import ast
 import json
 import sys
-from pathlib import PurePath
+from pathlib import PurePath, PurePosixPath
 from typing import Any
 
 from app.config import settings
@@ -182,6 +182,7 @@ def _analyze_sources(
     sources: list[SourceFile],
 ) -> dict[str, Any]:
     source_names = {PurePath(source.name).name.casefold() for source in sources}
+    local_modules = _local_module_names(sources)
     missing = [
         name
         for name in rubric.required_files
@@ -215,7 +216,9 @@ def _analyze_sources(
     allowed = _expand_library_names(rubric.allowed_libraries)
     forbidden_imports = sorted(imported_modules & forbidden)
     unauthorized_imports = (
-        sorted(imported_modules - allowed - set(sys.stdlib_module_names))
+        sorted(
+            imported_modules - allowed - local_modules - set(sys.stdlib_module_names)
+        )
         if allowed
         else []
     )
@@ -229,6 +232,7 @@ def _analyze_sources(
         "missing_required_files": missing,
         "syntax_errors": syntax_errors,
         "imports": sorted(imported_modules),
+        "local_modules": sorted(local_modules),
         "forbidden_imports": forbidden_imports,
         "unauthorized_imports": unauthorized_imports,
         "function_count": function_count,
@@ -236,6 +240,19 @@ def _analyze_sources(
         "line_count": line_count,
         "blocking_errors": blocking_errors,
     }
+
+
+def _local_module_names(sources: list[SourceFile]) -> set[str]:
+    """Return import roots provided by the submitted project itself."""
+    modules: set[str] = set()
+    for source in sources:
+        path = PurePosixPath(source.name.replace("\\", "/"))
+        if not path.parts:
+            continue
+        modules.update(part.casefold() for part in path.parts[:-1])
+        if path.stem.casefold() != "__init__":
+            modules.add(path.stem.casefold())
+    return modules
 
 
 def _pack_sources(sources: list[SourceFile]) -> str:

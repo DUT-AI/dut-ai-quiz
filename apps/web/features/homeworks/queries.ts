@@ -40,7 +40,6 @@ function homeworkForm(values: HomeworkFormValues): FormData {
   form.append("lesson_id", values.lessonId);
   form.append("title", values.title);
   form.append("description", values.description);
-  form.append("deadline", values.deadline);
   if (values.file) form.append("file", values.file);
   return form;
 }

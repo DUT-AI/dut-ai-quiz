@@ -20,7 +20,6 @@ class CreateHomeworkDTO(BaseModel):
     lesson_id: UUID
     title: str
     description: str = ""
-    deadline: datetime
     created_by: int
     file: HomeworkFileDTO | None = None
 
@@ -29,7 +28,6 @@ class UpdateHomeworkDTO(BaseModel):
     lesson_id: UUID | None = None
     title: str | None = None
     description: str | None = None
-    deadline: datetime | None = None
     file: HomeworkFileDTO | None = None
 
 
@@ -66,6 +64,7 @@ class HomeworkSubmissionOutDTO(BaseModel):
         *,
         owner_name: str | None = None,
         owner_avatar_url: str | None = None,
+        include_plagiarism_identity: bool = False,
     ) -> "HomeworkSubmissionOutDTO":
         if entity.id is None:
             raise ValueError("Homework submission must be persisted")
@@ -82,9 +81,13 @@ class HomeworkSubmissionOutDTO(BaseModel):
             score=entity.score,
             feedback=entity.feedback,
             score_details=entity.score_details,
-            plagiarism_info=entity.plagiarism_info,
+            plagiarism_info=(
+                entity.plagiarism_info if include_plagiarism_identity else None
+            ),
             is_plagiarized=entity.is_plagiarized,
-            plagiarized_from_user_id=entity.plagiarized_from_user_id,
+            plagiarized_from_user_id=(
+                entity.plagiarized_from_user_id if include_plagiarism_identity else None
+            ),
             grading_error=entity.grading_error,
             owner_name=owner_name,
             owner_avatar_url=owner_avatar_url,
@@ -96,7 +99,6 @@ class HomeworkOutDTO(BaseModel):
     lesson_id: UUID | None
     title: str
     description: str
-    deadline: datetime
     created_by: int
     created_at: datetime
     updated_at: datetime
@@ -119,7 +121,6 @@ class HomeworkOutDTO(BaseModel):
             lesson_id=entity.lesson_id,
             title=entity.title,
             description=entity.description,
-            deadline=entity.deadline,
             created_by=entity.created_by,
             created_at=entity.created_at,
             updated_at=entity.updated_at,

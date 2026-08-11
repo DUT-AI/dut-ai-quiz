@@ -290,9 +290,6 @@ export function SubmissionsPanel({ homework, onClose }: SubmissionsPanelProps) {
                                     <div className="space-y-0.5 text-left">
                                       <div className="flex items-center gap-1.5 font-bold text-dark-blue dark:text-white">
                                         <span>Lần nộp #{sub.attempt_number}</span>
-                                        {sub.is_late && (
-                                          <span className="text-[9px] px-1 bg-red/10 text-red dark:bg-red/20 rounded font-bold">Trễ</span>
-                                        )}
                                         {sub.is_plagiarized && (
                                           <span className="text-[9px] px-1 bg-red/10 text-red dark:bg-red/20 rounded font-bold flex items-center gap-0.5 animate-pulse">
                                             <AlertTriangle className="size-2.5" /> Trùng lặp

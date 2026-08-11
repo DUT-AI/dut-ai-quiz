@@ -8,7 +8,7 @@ from app.infrastructure.persistence.models.homework import (
     HomeworkSubmission,
     HomeworkSubmissionFingerprint,
 )
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 
 from worker_evaluate_homework.domain import (
     GradeResult,
@@ -146,13 +146,16 @@ class PostgresHomeworkGradingRepository:
     ) -> list[StoredFingerprint]:
         if not file_names:
             return []
+        normalized_file_names = {name.casefold() for name in file_names}
         async with AsyncSessionLocal() as session:
             rows = (
                 await session.scalars(
                     select(HomeworkSubmissionFingerprint).where(
                         HomeworkSubmissionFingerprint.homework_id == homework_id,
                         HomeworkSubmissionFingerprint.user_id != user_id,
-                        HomeworkSubmissionFingerprint.file_name.in_(file_names),
+                        func.lower(HomeworkSubmissionFingerprint.file_name).in_(
+                            normalized_file_names
+                        ),
                     )
                 )
             ).all()
@@ -190,4 +193,3 @@ class PostgresHomeworkGradingRepository:
                 ]
             )
             await session.commit()
-
