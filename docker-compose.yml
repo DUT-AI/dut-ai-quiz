@@ -113,7 +113,9 @@ services:
             - .env
         environment:
             - TZ=Asia/Ho_Chi_Minh
-            - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@${POSTGRES_HOST:-host.docker.internal}:${POSTGRES_PORT:-6070}/${POSTGRES_DB:-dut_ai_quiz}
+            - POSTGRES_HOST=postgres
+            - POSTGRES_PORT=5432
+            - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
             - REDIS_URL=redis://redis:6379/${REDIS_DB:-0}
         depends_on:
             postgres:
