@@ -154,7 +154,7 @@ services:
             dockerfile: Dockerfile
             args:
                 - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://quiz.dutai.site}
-                - NEXT_PUBLIC_MANAGE_LOGIN_URL=${NEXT_PUBLIC_MANAGE_LOGIN_URL:-https://manage.dutai.site}
+                - NEXT_PUBLIC_MANAGE_LOGIN_URL=${NEXT_PUBLIC_MANAGE_LOGIN_URL:-https://manage.dutai.io.vn/dashboard}
         container_name: dut-ai-quiz-web
         env_file:
             - .env
