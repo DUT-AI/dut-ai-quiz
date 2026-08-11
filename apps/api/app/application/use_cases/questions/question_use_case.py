@@ -24,6 +24,7 @@ class ListQuestionsUseCase:
             lesson_id=query.lesson_id,
             tag=query.tag,
             import_session_id=query.import_session_id,
+            status=query.status,
             offset=query.offset,
             limit=query.limit,
         )

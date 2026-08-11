@@ -7,6 +7,7 @@ import { TagSelector } from "../tag-selector";
 import { EditorToolbar } from "./editor-toolbar";
 import { handlePasteImage } from "@/lib/upload-utils";
 import type { QuestionFormValues } from "../../types";
+import { LiveDuplicateChecker } from "@/components/pdf-import/live-duplicate-checker";
 
 interface EditorStep1Props {
   insertFormat: (field: "content" | "solution" | string, before: string, after?: string) => void;
@@ -15,7 +16,10 @@ interface EditorStep1Props {
 }
 
 export function EditorStep1({ insertFormat, uploading, onUploadFile }: EditorStep1Props) {
-  const { register, control, formState: { errors } } = useFormContext<QuestionFormValues>();
+  const { register, control, watch, formState: { errors } } = useFormContext<QuestionFormValues>();
+
+  const contentVal = watch("content");
+  const poolTypeVal = watch("pool_type");
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -85,6 +89,9 @@ export function EditorStep1({ insertFormat, uploading, onUploadFile }: EditorSte
             </div>
           </div>
         </div>
+        
+        <LiveDuplicateChecker content={contentVal || ""} poolType={poolTypeVal} />
+
         {errors.content && (
           <p className="text-red text-xs px-2">{errors.content.message}</p>
         )}

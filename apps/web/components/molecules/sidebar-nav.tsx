@@ -16,6 +16,7 @@ import {
   Award,
   MessageSquare,
   BookOpenCheck,
+  FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -35,6 +36,7 @@ const TEACHER_NAV_ITEMS = [
   { icon: ShieldCheck, label: "Quản lý Đề thi", href: "/teacher/exams" },
   { icon: BookOpenCheck, label: "Quản lý Bài tập", href: "/teacher/homeworks" },
   { icon: PlusCircle, label: "Quản lý Bài học", href: "/teacher/lessons" },
+  { icon: FileText, label: "Duyệt câu hỏi", href: "/teacher/questions/review" },
   { icon: Award, label: "Quản lý Hackathon", href: "/teacher/hackathons" },
   { icon: BarChart2, label: "Thống kê kết quả", href: "/teacher/stats" },
 ];

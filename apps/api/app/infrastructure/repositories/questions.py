@@ -3,7 +3,7 @@ from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domain.entities.question import QuestionEntity
+from app.domain.entities.question import QuestionEntity, QuestionStatus
 from app.domain.value_objects import Difficulty, PoolType
 from app.domain.interfaces import IQuestionRepository, QuestionSimilarityMatch
 from app.infrastructure.persistence.models import Question, Tag
@@ -42,8 +42,9 @@ class QuestionRepository(IQuestionRepository):
         pool_type: PoolType | None = None,
         difficulty: Difficulty | None = None,
         lesson_id: UUID | None = None,
-        tag: str | None = None,
         import_session_id: UUID | None = None,
+        tag: str | None = None,
+        status: QuestionStatus | None = None,
         offset: int = 0,
         limit: int = 50,
     ) -> list[QuestionEntity]:
@@ -56,6 +57,8 @@ class QuestionRepository(IQuestionRepository):
             stmt = stmt.where(Question.lesson_id == lesson_id)
         if import_session_id:
             stmt = stmt.where(Question.import_session_id == import_session_id)
+        if status is not None:
+            stmt = stmt.where(Question.status == status)
         if tag:
             # tag can be name (string) or UUID string
             tag_uuid = None

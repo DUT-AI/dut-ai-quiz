@@ -136,6 +136,7 @@ class StartImportUseCase:
                 total_questions=len(parsed_questions),
                 processed_questions=0,
             )
+            await self._db_session.commit()
 
             # Save each question as DRAFT
             for idx, pq in enumerate(parsed_questions):
@@ -182,6 +183,7 @@ class StartImportUseCase:
                     total_questions=len(parsed_questions),
                     processed_questions=idx + 1,
                 )
+                await self._db_session.commit()
 
             await self._import_repo.update_status(job_id, "COMPLETED")
             await self._db_session.commit()

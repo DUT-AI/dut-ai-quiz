@@ -35,7 +35,7 @@ from app.presentation.schemas.questions import (
 from pydantic import BaseModel
 from app.presentation.schemas.lessons import RelatedLessonOut
 import copy
-from app.domain.entities.question import QuestionEntity, QuestionOptionEntity
+from app.domain.entities.question import QuestionEntity, QuestionOptionEntity, QuestionStatus
     
 class AiRegenerateRequest(BaseModel):
     custom_prompt: str | None = None
@@ -100,12 +100,16 @@ async def list_questions_route(
     lesson_id: UUID | None = None,
     tag: str | None = None,
     import_session_id: UUID | None = None,
+    status: QuestionStatus | None = None,
     offset: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=2000),
 ):
-    # For guests, we only allow viewing PRACTICE questions.
+    # For guests/students, we only allow viewing PUBLIC questions.
     if not user.has_any_role("admin", "MENTOR"):
         pool_type = PoolType.PRACTICE
+        status = QuestionStatus.PUBLIC
+    elif status is None:
+        status = QuestionStatus.PUBLIC
 
     q = QuestionListQuery(
         pool_type=pool_type,
@@ -113,6 +117,7 @@ async def list_questions_route(
         lesson_id=lesson_id,
         tag=tag,
         import_session_id=import_session_id,
+        status=status,
         offset=offset,
         limit=limit,
     )
