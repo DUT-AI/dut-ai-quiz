@@ -125,7 +125,7 @@ services:
     pdf-worker:
         build:
             context: .
-            dockerfile: apps/pdf-worker/Dockerfile
+            dockerfile: apps/worker/Dockerfile
         container_name: dut-ai-quiz-pdf-worker
         restart: unless-stopped
         init: true
@@ -144,6 +144,7 @@ services:
                 condition: service_healthy
             redis:
                 condition: service_healthy
+        command: ["uv", "run", "arq", "worker_pdf_import.presentation.arq_tasks.WorkerSettings"]
 
     web:
         build:
