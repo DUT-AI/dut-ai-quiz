@@ -11,6 +11,8 @@ interface ReviewFilterBarProps {
   setDifficulty: (val: string) => void;
   poolType: string;
   setPoolType: (val: string) => void;
+  relatedQuestionsOnly: boolean;
+  setRelatedQuestionsOnly: (val: boolean) => void;
   lessons: any[];
   onReset: () => void;
 }
@@ -22,12 +24,14 @@ export function ReviewFilterBar({
   setDifficulty,
   poolType,
   setPoolType,
+  relatedQuestionsOnly,
+  setRelatedQuestionsOnly,
   lessons,
   onReset,
 }: ReviewFilterBarProps) {
   return (
     <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border border-slate-200/50 dark:border-white/5 p-6 rounded-3xl shadow-md transition-colors duration-300">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 items-end">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6 items-end">
         {/* Lesson */}
         <div className="space-y-2">
           <label className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -81,6 +85,22 @@ export function ReviewFilterBar({
             <option value="PRACTICE">Luyện tập</option>
             <option value="EXAM">Thi cử/Kiểm tra</option>
             <option value="GAME">Giải đấu</option>
+          </select>
+        </div>
+
+        {/* Duplicate Risk */}
+        <div className="space-y-2">
+          <label className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+            <Filter className="size-3.5 text-slate-400" />
+            Trùng lặp
+          </label>
+          <select
+            value={relatedQuestionsOnly ? "true" : "false"}
+            onChange={(e) => setRelatedQuestionsOnly(e.target.value === "true")}
+            className="w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-zinc-800/50 px-4 py-3 text-sm outline-none text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors duration-200 cursor-pointer"
+          >
+            <option value="false">— Tất cả —</option>
+            <option value="true">Có nguy cơ trùng lặp</option>
           </select>
         </div>
 

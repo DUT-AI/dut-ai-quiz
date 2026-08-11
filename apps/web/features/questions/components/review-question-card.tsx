@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Loader2, Check, Trash2, Save, Sparkles, HelpCircle, BookOpen, ShieldAlert, Layers } from "lucide-react";
+import { Loader2, Check, Trash2, Save, Sparkles, HelpCircle, BookOpen, ShieldAlert, Layers, AlertTriangle } from "lucide-react";
 import {
   useApproveQuestion,
   useRejectQuestion,
@@ -11,6 +11,7 @@ import {
 import { LiveDuplicateChecker } from "@/components/pdf-import/live-duplicate-checker";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { Markdown } from "@/components/markdown";
 
 interface ReviewQuestionCardProps {
   question: any;
@@ -29,6 +30,8 @@ export function ReviewQuestionCard({
   const [submitting, setSubmitting] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
   const [aiHint, setAiHint] = useState("");
+  const [isEditingContent, setIsEditingContent] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const approveMutation = useApproveQuestion();
   const rejectMutation = useRejectQuestion();
@@ -192,6 +195,11 @@ export function ReviewQuestionCard({
             <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-zinc-800 px-2.5 py-1 rounded-xl border border-slate-200/50 dark:border-white/5">
               Bài học: {lessons.find((l) => l.id === editedQuestion.lesson_id)?.name || "Chưa gắn bài học"}
             </span>
+            {editedQuestion.duplicate_status === "POSSIBLE_DUPLICATE" && (
+              <span className="text-[11px] font-bold text-rose-600 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2.5 py-1 rounded-xl uppercase tracking-wider flex items-center gap-1 animate-pulse">
+                <AlertTriangle className="size-3" /> Nguy cơ trùng lặp
+              </span>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
@@ -211,12 +219,46 @@ export function ReviewQuestionCard({
               <label className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
                 Nội dung câu hỏi
               </label>
-              <textarea
-                value={editedQuestion.content}
-                onChange={(e) => handleUpdateField("content", e.target.value)}
-                rows={5}
-                className="w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-zinc-800/30 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 dark:text-white transition-colors duration-200 resize-y"
-              />
+              {isEditingContent ? (
+                <textarea
+                  value={editedQuestion.content}
+                  onChange={(e) => handleUpdateField("content", e.target.value)}
+                  onBlur={() => setIsEditingContent(false)}
+                  autoFocus
+                  rows={5}
+                  className="w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-zinc-800/30 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 dark:text-white transition-colors duration-200 resize-y"
+                />
+              ) : (
+                <div 
+                  onClick={() => setIsEditingContent(true)}
+                  className="group/question relative cursor-text border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-zinc-800/30 hover:bg-slate-100/50 dark:hover:bg-zinc-800/50 rounded-2xl p-4 transition-colors duration-200"
+                >
+                  <div className={`relative ${!isExpanded ? "max-h-24 overflow-hidden" : ""}`}>
+                    <Markdown content={editedQuestion.content} className="text-sm prose prose-slate dark:prose-invert max-w-none" />
+                    
+                    {!isExpanded && (
+                      <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-slate-50/90 dark:from-zinc-950/40 to-transparent pointer-events-none" />
+                    )}
+                  </div>
+                  
+                  {/* Expand/Collapse and Edit actions */}
+                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-200/40 dark:border-white/5 select-none">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsExpanded(!isExpanded);
+                      }}
+                      className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
+                    >
+                      {isExpanded ? "Thu gọn" : "Xem thêm"}
+                    </button>
+                    <span className="text-[10px] text-slate-400 opacity-0 group-hover/question:opacity-100 transition-opacity">
+                      Click để chỉnh sửa
+                    </span>
+                  </div>
+                </div>
+              )}
               <LiveDuplicateChecker content={editedQuestion.content} poolType={editedQuestion.pool_type} />
             </div>
 

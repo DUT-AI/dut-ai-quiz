@@ -25,6 +25,7 @@ class ListQuestionsUseCase:
             tag=query.tag,
             import_session_id=query.import_session_id,
             status=query.status,
+            related_questions=query.related_questions,
             offset=query.offset,
             limit=query.limit,
         )

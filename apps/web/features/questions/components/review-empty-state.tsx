@@ -8,7 +8,7 @@ export function ReviewEmptyState() {
         <CheckCircle2 className="size-16" />
       </div>
       <div className="space-y-2">
-        <h3 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tight">Sạch bóng câu hỏi nháp!</h3>
+        <h3 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tight">Không có câu hỏi nháp!</h3>
         <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm mx-auto leading-relaxed font-semibold">
           Tuyệt vời! Hiện tại không có câu hỏi nháp nào cần duyệt phù hợp với bộ lọc được chọn.
         </p>

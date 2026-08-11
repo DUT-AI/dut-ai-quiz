@@ -8,6 +8,7 @@ import { Upload, AlertCircle, Loader2, X, FileText, AlertTriangle } from "lucide
 import { motion } from "framer-motion";
 import { PdfImportProcessing } from "./pdf-import/pdf-import-processing";
 import { PdfImportReview } from "./pdf-import/pdf-import-review";
+import { PdfImportPassword } from "./pdf-import/pdf-import-password";
 
 interface PdfImportProps {
   lessonId?: string;
@@ -16,7 +17,7 @@ interface PdfImportProps {
 }
 
 export function PdfImport({ lessonId: propLessonId, onSuccess, onClose }: PdfImportProps) {
-  const [step, setStep] = useState<"upload" | "processing" | "review">("upload");
+  const [step, setStep] = useState<"upload" | "password" | "processing" | "review">("upload");
   const [jobId, setJobId] = useState<string>("");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -45,21 +46,70 @@ export function PdfImport({ lessonId: propLessonId, onSuccess, onClose }: PdfImp
     }
 
     try {
-      let res;
       if (method === "ocr") {
-        res = await importMutation.mutateAsync(formData);
+        const res = await importMutation.mutateAsync(formData);
+        if (res && res.job_id) {
+          setJobId(res.job_id);
+          setStep("processing");
+        } else {
+          throw new Error("Không nhận được Job ID từ server");
+        }
       } else {
-        res = await uploadMutation.mutateAsync(formData);
-      }
-
-      if (res && res.job_id) {
-        setJobId(res.job_id);
-        setStep("processing");
-      } else {
-        throw new Error("Không nhận được Job ID từ server");
+        const res = await uploadMutation.mutateAsync(formData);
+        if (res && res.ok && res.job_id) {
+          setJobId(res.job_id);
+          setStep("processing");
+        } else if (res && !res.ok && res.is_encrypted) {
+          setErrorMsg(null);
+          setStep("password");
+        } else {
+          throw new Error(res?.error || "Không nhận được Job ID từ server");
+        }
       }
     } catch (err: any) {
-      setErrorMsg(err.message || "Lỗi khi tải lên file PDF");
+      const errMsgStr = err.detail || err.message || "";
+      if (errMsgStr.includes("PDF_LOCKED")) {
+        setErrorMsg(null);
+        setStep("password");
+      } else {
+        setErrorMsg(errMsgStr || "Lỗi khi tải lên file PDF");
+      }
+    }
+  };
+
+  const handlePasswordSubmit = async (password: string) => {
+    if (!file) return;
+
+    setErrorMsg(null);
+    const formData = new FormData();
+    formData.append("file", file);
+    if (lessonId) {
+      formData.append("lesson_id", lessonId);
+      formData.append("target_scope", "LESSON");
+    }
+    formData.append("password", password);
+
+    try {
+      if (method === "ocr") {
+        const res = await importMutation.mutateAsync(formData);
+        if (res && res.job_id) {
+          setJobId(res.job_id);
+          setStep("processing");
+        } else {
+          throw new Error("Không nhận được Job ID từ server");
+        }
+      } else {
+        const res = await uploadMutation.mutateAsync({ formData, hasPassword: true });
+        if (res && res.ok && res.job_id) {
+          setJobId(res.job_id);
+          setStep("processing");
+        } else {
+          throw new Error(res?.error || "Mật khẩu PDF không đúng");
+        }
+      }
+    } catch (err: any) {
+      const errMsgStr = err.detail || err.message || "";
+      setErrorMsg(errMsgStr || "Lỗi giải mã PDF");
     }
   };
 
@@ -208,7 +258,20 @@ export function PdfImport({ lessonId: propLessonId, onSuccess, onClose }: PdfImp
   );
 
   let modalContent = uploadFormContent;
-  if (step === "processing") {
+  if (step === "password") {
+    modalContent = (
+      <PdfImportPassword
+        fileName={file?.name || ""}
+        onSubmit={handlePasswordSubmit}
+        onCancel={() => {
+          setErrorMsg(null);
+          setStep("upload");
+        }}
+        isPending={isPending}
+        errorMsg={errorMsg}
+      />
+    );
+  } else if (step === "processing") {
     modalContent = (
       <PdfImportProcessing
         jobId={jobId}

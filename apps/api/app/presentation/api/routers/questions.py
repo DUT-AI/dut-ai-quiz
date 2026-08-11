@@ -101,6 +101,7 @@ async def list_questions_route(
     tag: str | None = None,
     import_session_id: UUID | None = None,
     status: QuestionStatus | None = None,
+    related_questions: bool | None = Query(None),
     offset: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=2000),
 ):
@@ -118,6 +119,7 @@ async def list_questions_route(
         tag=tag,
         import_session_id=import_session_id,
         status=status,
+        related_questions=related_questions,
         offset=offset,
         limit=limit,
     )

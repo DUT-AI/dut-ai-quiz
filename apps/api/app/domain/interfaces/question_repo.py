@@ -28,6 +28,7 @@ class IQuestionRepository(Protocol):
         import_session_id: UUID | None = None,
         tag: str | None = None,
         status: QuestionStatus | None = None,
+        related_questions: bool | None = None,
         offset: int = 0,
         limit: int = 50,
     ) -> list[QuestionEntity]:

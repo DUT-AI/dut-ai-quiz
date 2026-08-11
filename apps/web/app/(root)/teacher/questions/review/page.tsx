@@ -22,6 +22,8 @@ export default function QuestionsReviewPage() {
     setDifficulty,
     poolType,
     setPoolType,
+    relatedQuestionsOnly,
+    setRelatedQuestionsOnly,
     lessons,
     questions,
     totalCount,
@@ -44,6 +46,8 @@ export default function QuestionsReviewPage() {
         setDifficulty={setDifficulty}
         poolType={poolType}
         setPoolType={setPoolType}
+        relatedQuestionsOnly={relatedQuestionsOnly}
+        setRelatedQuestionsOnly={setRelatedQuestionsOnly}
         lessons={lessons}
         onReset={handleResetFilters}
       />

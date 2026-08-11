@@ -18,6 +18,7 @@ export function useQuestions(params?: {
   import_session_id?: string;
   status?: string;
   difficulty?: string;
+  related_questions?: boolean;
   offset?: number;
   limit?: number;
 }) {
@@ -28,6 +29,7 @@ export function useQuestions(params?: {
   if (params?.import_session_id) search.set("import_session_id", params.import_session_id);
   if (params?.status) search.set("status", params.status);
   if (params?.difficulty) search.set("difficulty", params.difficulty);
+  if (params?.related_questions !== undefined) search.set("related_questions", String(params.related_questions));
   if (params?.offset !== undefined) search.set("offset", String(params.offset));
   if (params?.limit) search.set("limit", String(params.limit));
 
@@ -119,11 +121,15 @@ export function useImportPDF() {
 
 export function useUploadPDF() {
   return useMutation({
-    mutationFn: async (formData: FormData) => {
-      const backendUrl = process.env.NODE_ENV === "development" ? "http://localhost:8000" : "";
-      const path = backendUrl ? `${backendUrl}/api/v1/pdf-import/upload` : "/api/v1/pdf-import/upload";
+    mutationFn: async (args: FormData | { formData: FormData; hasPassword?: boolean }) => {
+      const formData = args instanceof FormData ? args : args.formData;
+      const hasPassword = args instanceof FormData ? false : !!args.hasPassword;
 
-      const res = await apiClient.post<{ ok: boolean; job_id: string; status: string }>(
+      const backendUrl = process.env.NODE_ENV === "development" ? "http://localhost:8000" : "";
+      const endpoint = hasPassword ? "/api/v1/pdf-import/upload-with-password" : "/api/v1/pdf-import/upload";
+      const path = backendUrl ? `${backendUrl}${endpoint}` : endpoint;
+
+      const res = await apiClient.post<{ ok: boolean; job_id?: string; status?: string; error?: string; is_encrypted?: boolean }>(
         path,
         formData
       );

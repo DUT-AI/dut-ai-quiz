@@ -10,6 +10,7 @@ export function useQuestionsReview() {
   const [lessonId, setLessonId] = useState("");
   const [difficulty, setDifficulty] = useState("");
   const [poolType, setPoolType] = useState("");
+  const [relatedQuestionsOnly, setRelatedQuestionsOnly] = useState(false);
 
   const { data: lessons = [] } = useLessons();
 
@@ -23,6 +24,7 @@ export function useQuestionsReview() {
     lesson_id: lessonId || undefined,
     difficulty: difficulty || undefined,
     pool_type: poolType || undefined,
+    related_questions: relatedQuestionsOnly || undefined,
     limit: limit,
     offset: offset,
   });
@@ -36,6 +38,7 @@ export function useQuestionsReview() {
     lesson_id: lessonId || undefined,
     difficulty: difficulty || undefined,
     pool_type: poolType || undefined,
+    related_questions: relatedQuestionsOnly || undefined,
   });
 
   const refetch = async () => {
@@ -56,6 +59,7 @@ export function useQuestionsReview() {
     setLessonId("");
     setDifficulty("");
     setPoolType("");
+    setRelatedQuestionsOnly(false);
     setPage(1);
   };
 
@@ -69,6 +73,8 @@ export function useQuestionsReview() {
     setDifficulty,
     poolType,
     setPoolType,
+    relatedQuestionsOnly,
+    setRelatedQuestionsOnly,
     lessons,
     questions,
     totalCount: allDraftQuestions.length,
