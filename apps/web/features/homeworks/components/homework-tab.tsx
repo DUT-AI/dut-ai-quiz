@@ -142,9 +142,6 @@ export function HomeworkTab({ lessonId }: { lessonId: string }) {
             <HomeworkCard
               homework={homework}
               onSubmit={handleSubmit}
-              isSubmitting={
-                submit.isPending && submit.variables?.homeworkId === homework.id
-              }
             />
           </motion.div>
         ))}
