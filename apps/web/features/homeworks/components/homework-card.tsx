@@ -26,12 +26,12 @@ import { SubmissionResult } from "./submission-result";
 interface HomeworkCardProps {
   homework: Homework;
   onSubmit: (homeworkId: string, file: File) => Promise<void>;
-  isSubmitting: boolean;
 }
 
-export function HomeworkCard({ homework, onSubmit, isSubmitting }: HomeworkCardProps) {
+export function HomeworkCard({ homework, onSubmit }: HomeworkCardProps) {
   const [file, setFile] = useState<File | null>(null);
   const [isDescOpen, setIsDescOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const submission = homework.current_submission;
 
   // Determine active steps for timeline
@@ -40,12 +40,15 @@ export function HomeworkCard({ homework, onSubmit, isSubmitting }: HomeworkCardP
   const step3 = submission?.status === "GRADED"; // Graded
 
   const handleFormSubmit = async () => {
-    if (!file) return;
+    if (!file || isSubmitting) return;
+    setIsSubmitting(true);
     try {
       await onSubmit(homework.id, file);
       setFile(null);
     } catch {
       // toast is handled in parent
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

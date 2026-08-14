@@ -21,6 +21,7 @@ from worker_evaluate_homework.domain import InvalidArtifactError, SourceFile
 
 SUPPORTED_SUBMISSION_SUFFIXES = (".zip", ".rar", ".7z", ".tar.gz", ".gz")
 SUPPORTED_SOURCE_SUFFIXES = (".py", ".ipynb")
+_PYTHON_BODY_CELL_MAGICS = {"%%capture", "%%debug", "%%prun", "%%time", "%%timeit"}
 _READ_CHUNK_SIZE = 64 * 1024
 _MAX_MEMBER_NAME_LENGTH = 512
 
@@ -454,8 +455,36 @@ def _extract_notebook_code(name: str, content: str) -> str:
                 f"Notebook {name} có code cell #{index} không hợp lệ"
             )
         if code.strip():
-            code_cells.append(f"# --- notebook cell {index} ---\n{code.rstrip()}")
+            normalized = _normalize_notebook_code(code)
+            code_cells.append(
+                f"# --- notebook cell {index} ---\n{normalized.rstrip()}"
+            )
 
     if not code_cells:
         raise InvalidArtifactError(f"Notebook {name} không chứa code cell")
     return "\n\n".join(code_cells) + "\n"
+
+
+def _normalize_notebook_code(code: str) -> str:
+    """Turn IPython-only commands into valid Python without executing them."""
+    lines = code.splitlines()
+    first_content = next((line.lstrip() for line in lines if line.strip()), "")
+    if first_content.startswith("%%"):
+        magic = first_content.split(maxsplit=1)[0].casefold()
+        if magic not in _PYTHON_BODY_CELL_MAGICS:
+            return "\n".join(
+                f"# Jupyter cell magic ignored: {line}" if line else "#"
+                for line in lines
+            )
+
+    normalized: list[str] = []
+    for line in lines:
+        stripped = line.lstrip()
+        if stripped.startswith(("!", "%", "?")):
+            indentation = line[: len(line) - len(stripped)]
+            normalized.append(
+                f"{indentation}pass  # Jupyter command ignored: {stripped}"
+            )
+        else:
+            normalized.append(line)
+    return "\n".join(normalized)

@@ -432,6 +432,45 @@ def test_notebook_without_code_cells_is_rejected() -> None:
         )
 
 
+def test_notebook_shell_escape_is_not_a_python_syntax_error() -> None:
+    notebook = {
+        "cells": [
+            {
+                "cell_type": "code",
+                "source": [
+                    "!pip install pandas\n",
+                    "%matplotlib inline\n",
+                    "import pandas as pd\n",
+                    "values = pd.Series([1, 2, 3])\n",
+                ],
+            }
+        ],
+        "nbformat": 4,
+    }
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as archive:
+        archive.writestr("analysis.ipynb", json.dumps(notebook))
+
+    sources = S3HomeworkArtifactReader._read_python_sources(
+        buffer.getvalue(),
+        "submission.zip",
+    )
+    analysis = _analyze_sources(HomeworkRubric(topic="Notebook"), sources)
+
+    assert analysis["syntax_errors"] == []
+    assert "Jupyter command ignored: !pip install pandas" in sources[0].content
+    assert "Jupyter command ignored: %matplotlib inline" in sources[0].content
+
+
+def test_shell_escape_in_python_file_remains_a_syntax_error() -> None:
+    analysis = _analyze_sources(
+        HomeworkRubric(topic="Python"),
+        [SourceFile(name="main.py", content="!pip install pandas\nimport pandas")],
+    )
+
+    assert analysis["syntax_errors"]
+
+
 def test_tar_gz_source_reader_extracts_python() -> None:
     buffer = io.BytesIO()
     content = b"def answer():\n    return 42\n"
