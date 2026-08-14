@@ -2,6 +2,7 @@ services:
     postgres:
         image: pgvector/pgvector:pg16
         container_name: dut-ai-quiz-postgres
+        restart: unless-stopped
         environment:
             - TZ=Asia/Ho_Chi_Minh
             - POSTGRES_USER=${POSTGRES_USER:-postgres}
@@ -21,6 +22,7 @@ services:
     redis:
         image: redis:7-alpine
         container_name: dut-ai-quiz-redis
+        restart: unless-stopped
         environment:
             - TZ=Asia/Ho_Chi_Minh
         ports:
@@ -36,6 +38,7 @@ services:
             context: .
             dockerfile: apps/api/Dockerfile
         container_name: dut-ai-quiz-api
+        restart: unless-stopped
         env_file:
             - .env
         environment:
@@ -156,6 +159,7 @@ services:
                 - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://quiz.dutai.site}
                 - NEXT_PUBLIC_MANAGE_LOGIN_URL=${NEXT_PUBLIC_MANAGE_LOGIN_URL:-https://manage.dutai.io.vn/dashboard}
         container_name: dut-ai-quiz-web
+        restart: unless-stopped
         env_file:
             - .env
         environment:
