@@ -79,7 +79,7 @@ async def evaluate_homework_job(ctx, submission_id: str):
         )
     except InvalidArtifactError as exc:
         logger.warning("Homework evaluation {} rejected: {}", submission_id, exc)
-        return None
+        raise
     except Exception as exc:
         logger.exception("Homework evaluation {} failed", submission_id)
         if job_try < 3:

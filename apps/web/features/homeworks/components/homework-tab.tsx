@@ -22,7 +22,7 @@ export function HomeworkTab({ lessonId }: { lessonId: string }) {
   const handleSubmit = async (homeworkId: string, file: File) => {
     try {
       await submit.mutateAsync({ homeworkId, file });
-      toast.success("Nộp bài thành công");
+      toast.info("Đã nhận file. Hệ thống đang kiểm tra và chấm điểm.");
     } catch (submissionError) {
       const msg = submissionError instanceof Error ? submissionError.message : "Nộp bài thất bại";
       toast.error(msg);
@@ -70,7 +70,9 @@ export function HomeworkTab({ lessonId }: { lessonId: string }) {
 
   // Calculate statistics for the dashboard
   const totalHomeworks = data.data.length;
-  const submittedHomeworks = data.data.filter(h => !!h.current_submission).length;
+  const submittedHomeworks = data.data.filter(
+    h => h.current_submission && h.current_submission.status !== "FAILED"
+  ).length;
   const gradedHomeworks = data.data.filter(
     h => h.current_submission?.status === "GRADED" && typeof h.current_submission.score === "number"
   );
@@ -140,7 +142,9 @@ export function HomeworkTab({ lessonId }: { lessonId: string }) {
             <HomeworkCard
               homework={homework}
               onSubmit={handleSubmit}
-              isSubmitting={submit.isPending}
+              isSubmitting={
+                submit.isPending && submit.variables?.homeworkId === homework.id
+              }
             />
           </motion.div>
         ))}

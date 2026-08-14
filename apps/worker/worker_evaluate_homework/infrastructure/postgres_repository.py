@@ -1,7 +1,6 @@
 from typing import Any
 from uuid import UUID
 
-from app.domain.entities.homework import HomeworkSubmissionStatus
 from app.infrastructure.database import AsyncSessionLocal
 from app.infrastructure.persistence.models.homework import (
     Homework,
@@ -15,6 +14,7 @@ from worker_evaluate_homework.domain import (
     HomeworkGradingRecord,
     StoredFingerprint,
     SubmissionGradingRecord,
+    SubmissionGradingStatus,
 )
 
 
@@ -93,7 +93,7 @@ class PostgresHomeworkGradingRepository:
             model = await session.get(HomeworkSubmission, submission_id)
             if model is None:
                 raise ValueError(f"Submission {submission_id} not found")
-            model.status = HomeworkSubmissionStatus.GRADING.value
+            model.status = SubmissionGradingStatus.GRADING.value
             model.grading_error = None
             await session.commit()
 
@@ -108,7 +108,7 @@ class PostgresHomeworkGradingRepository:
             model = await session.get(HomeworkSubmission, submission_id)
             if model is None:
                 raise ValueError(f"Submission {submission_id} not found")
-            model.status = HomeworkSubmissionStatus.GRADED.value
+            model.status = SubmissionGradingStatus.GRADED.value
             model.is_pass = result.is_pass
             model.score = result.score
             model.feedback = result.feedback
@@ -131,10 +131,13 @@ class PostgresHomeworkGradingRepository:
             if model is None:
                 return
             model.status = (
-                HomeworkSubmissionStatus.FAILED.value
+                SubmissionGradingStatus.FAILED.value
                 if final
-                else HomeworkSubmissionStatus.GRADING.value
+                else SubmissionGradingStatus.GRADING.value
             )
+            if final:
+                model.is_pass = False
+                model.score = 0.0
             model.grading_error = error[:2000]
             await session.commit()
 

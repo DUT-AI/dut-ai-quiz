@@ -1,5 +1,6 @@
 import gzip
 import io
+import json
 import tarfile
 import zipfile
 from dataclasses import replace
@@ -30,6 +31,7 @@ from worker_evaluate_homework.infrastructure.archive_reader import (
 from worker_evaluate_homework.infrastructure.gemini_grading_engine import (
     _analyze_sources,
 )
+from worker_evaluate_homework.presentation.arq_tasks import evaluate_homework_job
 
 
 class RepositoryStub:
@@ -146,6 +148,11 @@ class InvalidArtifactReaderStub(ArtifactReaderStub):
         raise InvalidArtifactError("Archive bị hỏng")
 
 
+class InvalidEvaluationUseCaseStub:
+    async def execute(self, submission_id, *, final_attempt):
+        raise InvalidArtifactError("Bài nộp không hợp lệ")
+
+
 @pytest.mark.asyncio
 async def test_submission_is_graded_without_external_checker() -> None:
     homework_id = uuid4()
@@ -226,6 +233,20 @@ async def test_invalid_archive_is_marked_as_final_failure() -> None:
         "Archive bị hỏng",
         True,
     )
+
+
+@pytest.mark.asyncio
+async def test_invalid_submission_marks_arq_job_as_failed() -> None:
+    submission_id = uuid4()
+
+    with pytest.raises(InvalidArtifactError, match="Bài nộp không hợp lệ"):
+        await evaluate_homework_job(
+            {
+                "evaluate_use_case": InvalidEvaluationUseCaseStub(),
+                "job_try": 1,
+            },
+            str(submission_id),
+        )
 
 
 def test_identical_python_sources_are_detected() -> None:
@@ -346,6 +367,69 @@ def test_zip_source_reader_extracts_python_only() -> None:
     )
 
     assert sources == [SourceFile(name="src/main.py", content="print('ok')")]
+
+
+def test_zip_source_reader_extracts_jupyter_notebook_code_cells() -> None:
+    notebook = {
+        "cells": [
+            {
+                "cell_type": "markdown",
+                "source": ["# This text must not be graded"],
+            },
+            {
+                "cell_type": "code",
+                "source": ["def answer():\n", "    return 42\n"],
+            },
+            {
+                "cell_type": "code",
+                "source": "print(answer())",
+            },
+        ],
+        "metadata": {},
+        "nbformat": 4,
+        "nbformat_minor": 5,
+    }
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as archive:
+        archive.writestr("submission.ipynb", json.dumps(notebook))
+
+    sources = S3HomeworkArtifactReader._read_python_sources(
+        buffer.getvalue(),
+        "submission.zip",
+    )
+
+    assert sources == [
+        SourceFile(
+            name="submission.ipynb",
+            content=(
+                "# --- notebook cell 2 ---\n"
+                "def answer():\n"
+                "    return 42\n\n"
+                "# --- notebook cell 3 ---\n"
+                "print(answer())\n"
+            ),
+        )
+    ]
+
+
+def test_notebook_without_code_cells_is_rejected() -> None:
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as archive:
+        archive.writestr(
+            "submission.ipynb",
+            json.dumps(
+                {
+                    "cells": [{"cell_type": "markdown", "source": "# Empty"}],
+                    "nbformat": 4,
+                }
+            ),
+        )
+
+    with pytest.raises(InvalidArtifactError, match="không chứa code cell"):
+        S3HomeworkArtifactReader._read_python_sources(
+            buffer.getvalue(),
+            "submission.zip",
+        )
 
 
 def test_tar_gz_source_reader_extracts_python() -> None:
