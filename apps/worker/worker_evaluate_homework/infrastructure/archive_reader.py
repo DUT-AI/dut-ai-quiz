@@ -1,6 +1,7 @@
 import asyncio
 import gzip
 import io
+import json
 import stat
 import tarfile
 import zipfile
@@ -19,6 +20,7 @@ from py7zr.io import BytesIOFactory
 from worker_evaluate_homework.domain import InvalidArtifactError, SourceFile
 
 SUPPORTED_SUBMISSION_SUFFIXES = (".zip", ".rar", ".7z", ".tar.gz", ".gz")
+SUPPORTED_SOURCE_SUFFIXES = (".py", ".ipynb")
 _READ_CHUNK_SIZE = 64 * 1024
 _MAX_MEMBER_NAME_LENGTH = 512
 
@@ -170,7 +172,7 @@ def _read_zip_sources(content: bytes) -> list[SourceFile]:
         with zipfile.ZipFile(io.BytesIO(content)) as archive:
             entries = archive.infolist()
             _ensure_entry_count(len(entries))
-            selected = _select_python_entries(
+            selected = _select_source_entries(
                 
                     (info.filename, info.file_size, info)
                     for info in entries
@@ -190,7 +192,7 @@ def _read_zip_sources(content: bytes) -> list[SourceFile]:
                 result.append(
                     SourceFile(
                         name=name,
-                        content=_decode_source(
+                        content=_decode_source_file(
                             name,
                             _ensure_size(archive.read(info)),
                         ),
@@ -215,7 +217,7 @@ def _read_tar_sources(content: bytes) -> list[SourceFile]:
                     raise InvalidArtifactError(
                         "Bài nộp TAR.GZ không được chứa symbolic link"
                     )
-            selected = _select_python_entries(
+            selected = _select_source_entries(
                 (info.name, info.size, info) for info in entries if info.isfile()
             )
             result: list[SourceFile] = []
@@ -225,7 +227,9 @@ def _read_tar_sources(content: bytes) -> list[SourceFile]:
                     raise InvalidArtifactError(f"Không thể đọc file {name}")
                 with stream:
                     raw = _read_limited(stream)
-                result.append(SourceFile(name=name, content=_decode_source(name, raw)))
+                result.append(
+                    SourceFile(name=name, content=_decode_source_file(name, raw))
+                )
             return result
     except InvalidArtifactError:
         raise
@@ -236,7 +240,7 @@ def _read_tar_sources(content: bytes) -> list[SourceFile]:
 def _read_gzip_source(content: bytes, filename: str) -> list[SourceFile]:
     archive_name = PurePosixPath(filename.replace("\\", "/")).name
     inner_name = archive_name[:-3]
-    if not inner_name.casefold().endswith(".py"):
+    if not inner_name.casefold().endswith(SUPPORTED_SOURCE_SUFFIXES):
         inner_name = f"{inner_name}.py"
     name = _safe_member_name(inner_name)
     try:
@@ -244,7 +248,7 @@ def _read_gzip_source(content: bytes, filename: str) -> list[SourceFile]:
             raw = _read_limited(stream)
     except (EOFError, gzip.BadGzipFile, OSError) as exc:
         raise InvalidArtifactError("Bài nộp không phải GZ hợp lệ") from exc
-    return [SourceFile(name=name, content=_decode_source(name, raw))]
+    return [SourceFile(name=name, content=_decode_source_file(name, raw))]
 
 
 def _read_7z_sources(content: bytes) -> list[SourceFile]:
@@ -258,7 +262,7 @@ def _read_7z_sources(content: bytes) -> list[SourceFile]:
             _ensure_entry_count(len(infos))
             if any(info.is_symlink for info in infos):
                 raise InvalidArtifactError("Bài nộp 7Z không được chứa symbolic link")
-            selected = _select_python_entries(
+            selected = _select_source_entries(
                 
                     (info.filename, info.uncompressed, info.filename)
                     for info in infos
@@ -277,7 +281,9 @@ def _read_7z_sources(content: bytes) -> list[SourceFile]:
                 product = factory.get(raw_name)
                 product.seek(0)
                 raw = _ensure_size(product.read())
-                result.append(SourceFile(name=name, content=_decode_source(name, raw)))
+                result.append(
+                    SourceFile(name=name, content=_decode_source_file(name, raw))
+                )
             return result
     except InvalidArtifactError:
         raise
@@ -290,7 +296,7 @@ def _read_rar_sources(content: bytes) -> list[SourceFile]:
         with rarfile.RarFile(io.BytesIO(content)) as archive:
             infos = archive.infolist()
             _ensure_entry_count(len(infos))
-            selected = _select_python_entries(
+            selected = _select_source_entries(
                 
                     (info.filename, info.file_size, info)
                     for info in infos
@@ -309,7 +315,9 @@ def _read_rar_sources(content: bytes) -> list[SourceFile]:
                     )
                 with archive.open(info) as stream:
                     raw = _read_limited(stream)
-                result.append(SourceFile(name=name, content=_decode_source(name, raw)))
+                result.append(
+                    SourceFile(name=name, content=_decode_source_file(name, raw))
+                )
             return result
     except InvalidArtifactError:
         raise
@@ -319,7 +327,7 @@ def _read_rar_sources(content: bytes) -> list[SourceFile]:
         raise InvalidArtifactError("Bài nộp không phải RAR hợp lệ") from exc
 
 
-def _select_python_entries(
+def _select_source_entries(
     entries,
 ) -> list[tuple[str, int, Any]]:
     selected: list[tuple[str, int, Any]] = []
@@ -327,7 +335,9 @@ def _select_python_entries(
     total_size = 0
     for raw_name, raw_size, payload in entries:
         name = _safe_member_name(raw_name)
-        if _is_metadata_file(name) or not name.casefold().endswith(".py"):
+        if _is_metadata_file(name) or not name.casefold().endswith(
+            SUPPORTED_SOURCE_SUFFIXES
+        ):
             continue
         size = int(raw_size)
         if size < 0:
@@ -342,11 +352,13 @@ def _select_python_entries(
         selected.append((name, size, payload))
         if len(selected) > settings.homework_grading_max_files:
             raise InvalidArtifactError(
-                "Bài nộp có quá nhiều file Python "
+                "Bài nộp có quá nhiều file code "
                 f"(tối đa {settings.homework_grading_max_files})"
             )
     if not selected:
-        raise InvalidArtifactError("Bài nộp không chứa file Python")
+        raise InvalidArtifactError(
+            "Bài nộp không chứa file Python (.py) hoặc notebook Jupyter (.ipynb)"
+        )
     return sorted(selected, key=lambda item: item[0].casefold())
 
 
@@ -409,3 +421,41 @@ def _decode_source(name: str, content: bytes) -> str:
             raise InvalidArtifactError(
                 f"File {name} phải sử dụng bảng mã UTF-8"
             ) from exc
+
+
+def _decode_source_file(name: str, content: bytes) -> str:
+    decoded = _decode_source(name, content)
+    if not name.casefold().endswith(".ipynb"):
+        return decoded
+    return _extract_notebook_code(name, decoded)
+
+
+def _extract_notebook_code(name: str, content: str) -> str:
+    try:
+        notebook = json.loads(content)
+    except json.JSONDecodeError as exc:
+        raise InvalidArtifactError(f"Notebook {name} không phải JSON hợp lệ") from exc
+
+    cells = notebook.get("cells") if isinstance(notebook, dict) else None
+    if not isinstance(cells, list):
+        raise InvalidArtifactError(f"Notebook {name} không có danh sách cells hợp lệ")
+
+    code_cells: list[str] = []
+    for index, cell in enumerate(cells, start=1):
+        if not isinstance(cell, dict) or cell.get("cell_type") != "code":
+            continue
+        source = cell.get("source", "")
+        if isinstance(source, list) and all(isinstance(line, str) for line in source):
+            code = "".join(source)
+        elif isinstance(source, str):
+            code = source
+        else:
+            raise InvalidArtifactError(
+                f"Notebook {name} có code cell #{index} không hợp lệ"
+            )
+        if code.strip():
+            code_cells.append(f"# --- notebook cell {index} ---\n{code.rstrip()}")
+
+    if not code_cells:
+        raise InvalidArtifactError(f"Notebook {name} không chứa code cell")
+    return "\n\n".join(code_cells) + "\n"

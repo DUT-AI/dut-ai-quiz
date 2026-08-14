@@ -66,7 +66,7 @@ NỘI DUNG TRÍCH TỪ FILE ĐỀ:
 {attachment_text}
 
 Quy tắc:
-- required_files chỉ chứa tên file Python bắt buộc, ví dụ "1.py".
+- required_files chỉ chứa tên file code bắt buộc, ví dụ "1.py" hoặc "bai1.ipynb".
 - Không tự bịa tên file nếu đề không yêu cầu rõ.
 - requirements phải là các yêu cầu kỹ thuật có thể đối chiếu với source.
 - allowed_libraries và forbidden_libraries để rỗng nếu đề không quy định.

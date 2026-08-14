@@ -44,7 +44,7 @@ export function SubmissionResult({ submission, compact = false }: SubmissionResu
       className: "bg-green/10 text-green border-green/20 dark:bg-green/20 dark:text-green" 
     },
     FAILED: { 
-      label: "Chấm lỗi", 
+      label: "Không đạt",
       icon: XCircle, 
       className: "bg-red/10 text-red border-red/20 dark:bg-red/20 dark:text-red" 
     },
@@ -157,7 +157,7 @@ export function SubmissionResult({ submission, compact = false }: SubmissionResu
           <div className="flex items-start gap-2.5 rounded-xl border border-red/20 bg-red/5 p-3 text-xs text-red dark:bg-red/10">
             <AlertCircle className="size-4 flex-shrink-0 mt-0.5" />
             <div>
-              <span className="font-bold">Lỗi chấm điểm:</span> {submission.grading_error}
+              <span className="font-bold">Bài nộp không đạt:</span> {submission.grading_error}
             </div>
           </div>
         )}

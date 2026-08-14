@@ -35,7 +35,8 @@ export function HomeworkCard({ homework, onSubmit, isSubmitting }: HomeworkCardP
   const submission = homework.current_submission;
 
   // Determine active steps for timeline
-  const step2 = !!submission; // Submitted
+  const submissionFailed = submission?.status === "FAILED";
+  const step2 = !!submission && !submissionFailed; // Successfully accepted
   const step3 = submission?.status === "GRADED"; // Graded
 
   const handleFormSubmit = async () => {
@@ -117,15 +118,25 @@ export function HomeworkCard({ homework, onSubmit, isSubmitting }: HomeworkCardP
             <div className="relative z-10 flex items-center gap-3 sm:flex-col sm:gap-2">
               <div className={`flex h-9 w-9 items-center justify-center rounded-full transition-all duration-300 ${step2
                 ? "bg-primary text-white shadow-sm shadow-primary/30"
-                : "border-2 border-gray-300 bg-white text-gray-400 dark:border-white/30 dark:bg-zinc-950"
+                : submissionFailed
+                  ? "border-2 border-red bg-red/5 text-red"
+                  : "border-2 border-gray-300 bg-white text-gray-400 dark:border-white/30 dark:bg-zinc-950"
                 }`}>
-                {step2 ? <Check className="size-4" /> : <Circle className="size-4 opacity-30" />}
+                {step2 ? (
+                  <Check className="size-4" />
+                ) : submissionFailed ? (
+                  <X className="size-4" />
+                ) : (
+                  <Circle className="size-4 opacity-30" />
+                )}
               </div>
               <div className="text-left sm:text-center">
-                <p className={`text-sm font-bold ${step2 ? "text-dark-blue dark:text-white" : "text-gray-400"}`}>
-                  Đã nộp bài
+                <p className={`text-sm font-bold ${step2 ? "text-dark-blue dark:text-white" : submissionFailed ? "text-red" : "text-gray-400"}`}>
+                  {submissionFailed ? "Nộp bài không đạt" : "Đã nộp bài"}
                 </p>
-                <p className="text-xs text-gray-navy dark:text-light-blue/70">Tải lên file code</p>
+                <p className="text-xs text-gray-navy dark:text-light-blue/70">
+                  {submissionFailed ? "Vui lòng sửa file và nộp lại" : "Tải lên file code"}
+                </p>
               </div>
             </div>
 
@@ -178,6 +189,7 @@ export function HomeworkCard({ homework, onSubmit, isSubmitting }: HomeworkCardP
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
               <div className="flex-1">
                 <FileDropzone
+                  inputId={`homework-file-upload-${homework.id}`}
                   file={file}
                   onFileChange={setFile}
                   allowedSuffixes={[".zip", ".rar", ".7z", ".tar.gz", ".gz"]}
