@@ -135,8 +135,7 @@ class AIPdfParserStrategy(IPdfParserStrategy):
             # Combine prompt and images for Gemini Multimodal API
             gemini_contents = [prompt] + gemini_images
 
-            # Allow overriding the model name via .env, default to gemini-2.5-flash
-            model_name = settings.gemini_model_name
+            model_name = "gemma-4-31b-it"
 
             logger.info(
                 f"[{job_id}] ⏳ STEP 3: Calling AI Model ({model_name}) via API..."

@@ -261,7 +261,7 @@ class PDFAIParserService:
             try:
                 async with self._gemini_semaphore:
                     response = await self._client.aio.models.generate_content(
-                        model=settings.gemini_model,
+                        model="gemma-4-31b-it",
                         contents=parts,
                         config=genai_types.GenerateContentConfig(
                             temperature=0.1,
@@ -476,7 +476,7 @@ class PDFAIParserService:
 
         try:
             response = await self._client.aio.models.generate_content(
-                model=settings.gemini_model,
+                model="gemma-4-31b-it",
                 contents=prompt,
                 config=genai_types.GenerateContentConfig(
                     temperature=0.3,

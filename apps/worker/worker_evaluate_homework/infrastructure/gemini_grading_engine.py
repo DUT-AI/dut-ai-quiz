@@ -45,7 +45,7 @@ class GeminiHomeworkGradingEngine:
         if not settings.gemini_api_key:
             raise RuntimeError("Thiếu GEMINI_API_KEY; worker chưa thể chấm bài tự động")
         self._client = genai.Client(api_key=settings.gemini_api_key)
-        self._model = settings.homework_grading_model or settings.gemini_model
+        self._model = "gemma-4-31b-it"
 
     async def create_rubric(
         self,
