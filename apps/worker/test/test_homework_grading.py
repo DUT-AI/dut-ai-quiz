@@ -369,12 +369,12 @@ def test_zip_source_reader_extracts_python_only() -> None:
     assert sources == [SourceFile(name="src/main.py", content="print('ok')")]
 
 
-def test_zip_source_reader_extracts_jupyter_notebook_code_cells() -> None:
+def test_zip_source_reader_extracts_all_gradable_notebook_content() -> None:
     notebook = {
         "cells": [
             {
                 "cell_type": "markdown",
-                "source": ["# This text must not be graded"],
+                "source": ["## Câu trả lời lý thuyết\n", "Độ phức tạp là O(n)."],
             },
             {
                 "cell_type": "code",
@@ -383,6 +383,14 @@ def test_zip_source_reader_extracts_jupyter_notebook_code_cells() -> None:
             {
                 "cell_type": "code",
                 "source": "print(answer())",
+                "outputs": [
+                    {"output_type": "stream", "name": "stdout", "text": "42\n"},
+                    {
+                        "output_type": "execute_result",
+                        "data": {"text/plain": ["Result: 42"]},
+                        "execution_count": 2,
+                    },
+                ],
             },
         ],
         "metadata": {},
@@ -402,17 +410,24 @@ def test_zip_source_reader_extracts_jupyter_notebook_code_cells() -> None:
         SourceFile(
             name="submission.ipynb",
             content=(
-                "# --- notebook cell 2 ---\n"
+                "# --- markdown cell 1 ---\n"
+                "# ## Câu trả lời lý thuyết\n"
+                "# Độ phức tạp là O(n).\n\n"
+                "# --- code cell 2 ---\n"
                 "def answer():\n"
                 "    return 42\n\n"
-                "# --- notebook cell 3 ---\n"
-                "print(answer())\n"
+                "# --- code cell 3 ---\n"
+                "print(answer())\n\n"
+                "# --- output 3.1 ---\n"
+                "# 42\n\n"
+                "# --- output 3.2 ---\n"
+                "# Result: 42\n"
             ),
         )
     ]
 
 
-def test_notebook_without_code_cells_is_rejected() -> None:
+def test_markdown_only_notebook_is_accepted_for_theory_answers() -> None:
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, "w") as archive:
         archive.writestr(
@@ -425,11 +440,41 @@ def test_notebook_without_code_cells_is_rejected() -> None:
             ),
         )
 
-    with pytest.raises(InvalidArtifactError, match="không chứa code cell"):
-        S3HomeworkArtifactReader._read_python_sources(
-            buffer.getvalue(),
-            "submission.zip",
+    sources = S3HomeworkArtifactReader._read_python_sources(
+        buffer.getvalue(),
+        "submission.zip",
+    )
+
+    assert sources == [
+        SourceFile(
+            name="submission.ipynb",
+            content="# --- markdown cell 1 ---\n# # Empty\n",
         )
+    ]
+
+
+def test_homework_zip_allows_any_files_and_collects_every_pdf() -> None:
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as archive:
+        archive.writestr("README.md", "instructions")
+        archive.writestr("assets/data.csv", "a,b")
+        archive.writestr("part-2.pdf", b"second pdf")
+        archive.writestr("part-1.PDF", b"first pdf")
+
+    pdfs = S3HomeworkArtifactReader._read_pdfs_from_zip(buffer.getvalue())
+
+    assert pdfs == [
+        ("part-1.PDF", b"first pdf"),
+        ("part-2.pdf", b"second pdf"),
+    ]
+
+
+def test_homework_zip_without_pdf_is_valid() -> None:
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as archive:
+        archive.writestr("requirements.md", "Use Python")
+
+    assert S3HomeworkArtifactReader._read_pdfs_from_zip(buffer.getvalue()) == []
 
 
 def test_notebook_shell_escape_is_not_a_python_syntax_error() -> None:

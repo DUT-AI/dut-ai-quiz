@@ -89,9 +89,11 @@ from app.application.use_cases.homeworks import (
     GetHomeworkAttachmentUrlUseCase,
     GetHomeworkSubmissionDownloadUrlUseCase,
     GetMyHomeworkSubmissionUseCase,
+    ListCompletedHomeworkMembersUseCase,
     ListHomeworkSubmissionsUseCase,
     ListHomeworksUseCase,
     ListMyHomeworksUseCase,
+    RetryHomeworkSubmissionUseCase,
     SubmitHomeworkUseCase,
     UpdateHomeworkUseCase,
 )
@@ -258,12 +260,20 @@ class UseCaseProvider(Provider):
         SubmitHomeworkUseCase,
         scope=Scope.REQUEST,
     )
+    retry_homework_submission_use_case = provide(
+        RetryHomeworkSubmissionUseCase,
+        scope=Scope.REQUEST,
+    )
     get_my_homework_submission_use_case = provide(
         GetMyHomeworkSubmissionUseCase,
         scope=Scope.REQUEST,
     )
     list_homework_submissions_use_case = provide(
         ListHomeworkSubmissionsUseCase,
+        scope=Scope.REQUEST,
+    )
+    list_completed_homework_members_use_case = provide(
+        ListCompletedHomeworkMembersUseCase,
         scope=Scope.REQUEST,
     )
     get_homework_attachment_url_use_case = provide(

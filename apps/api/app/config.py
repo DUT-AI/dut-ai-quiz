@@ -91,7 +91,7 @@ class Settings(BaseSettings):
     homework_grading_max_files: int = 50
     homework_grading_max_archive_entries: int = 500
     homework_plagiarism_threshold: float = 0.8
-    homework_max_file_size_bytes: int = 10 * 1024 * 1024
+    homework_max_file_size_bytes: int = 20 * 1024 * 1024
     homework_grading_timeout_seconds: float = 300.0
     # Lesson semantic search. DUT-AI's Vietnamese SBERT service is the default;
     # local hashing and OpenAI-compatible providers remain available for dev.

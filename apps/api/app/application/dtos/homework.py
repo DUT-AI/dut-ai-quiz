@@ -37,6 +37,10 @@ class SubmitHomeworkDTO(BaseModel):
     file: HomeworkFileDTO
 
 
+class CompletedHomeworkMemberOutDTO(BaseModel):
+    user_id: int
+
+
 class HomeworkSubmissionOutDTO(BaseModel):
     id: UUID
     homework_id: UUID

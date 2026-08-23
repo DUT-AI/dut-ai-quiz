@@ -16,15 +16,18 @@ from app.application.use_cases.homeworks import (
     GetHomeworkAttachmentUrlUseCase,
     GetHomeworkSubmissionDownloadUrlUseCase,
     GetMyHomeworkSubmissionUseCase,
+    ListCompletedHomeworkMembersUseCase,
     ListHomeworkSubmissionsUseCase,
     ListHomeworksUseCase,
     ListMyHomeworksUseCase,
+    RetryHomeworkSubmissionUseCase,
     SubmitHomeworkUseCase,
     UpdateHomeworkUseCase,
 )
 from app.config import settings
-from app.presentation.api.deps import AdminOrMentorUser, CurrentUser
+from app.presentation.api.deps import AdminOrMentorUser, CurrentUser, ManageService
 from app.presentation.schemas.homeworks import (
+    CompletedHomeworkMembersResponse,
     DownloadUrlData,
     DownloadUrlResponse,
     HomeworkListResponse,
@@ -152,6 +155,21 @@ async def submit_homework(
     )
 
 
+@router.post(
+    "/submissions/{submission_id}/retry",
+    response_model=SubmissionResponse,
+)
+@inject
+async def retry_homework_submission(
+    submission_id: UUID,
+    user: CurrentUser,
+    use_case: FromDishka[RetryHomeworkSubmissionUseCase],
+) -> SubmissionResponse:
+    return SubmissionResponse(
+        data=await use_case.execute(submission_id, user.id)
+    )
+
+
 @router.get(
     "/{homework_id}/submission/me",
     response_model=SubmissionResponse,
@@ -176,6 +194,21 @@ async def list_submissions(
     use_case: FromDishka[ListHomeworkSubmissionsUseCase],
 ) -> SubmissionListResponse:
     return SubmissionListResponse(data=await use_case.execute(homework_id))
+
+
+@router.get(
+    "/{homework_id}/completed-members",
+    response_model=CompletedHomeworkMembersResponse,
+)
+@inject
+async def list_completed_members_for_manage(
+    homework_id: UUID,
+    _service: ManageService,
+    use_case: FromDishka[ListCompletedHomeworkMembersUseCase],
+) -> CompletedHomeworkMembersResponse:
+    return CompletedHomeworkMembersResponse(
+        data=await use_case.execute(homework_id)
+    )
 
 
 @router.get(

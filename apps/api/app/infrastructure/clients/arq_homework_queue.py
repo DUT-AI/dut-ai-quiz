@@ -45,7 +45,6 @@ class ArqHomeworkEvaluationQueue(IHomeworkEvaluationQueue):
             await self._arq_redis.enqueue_job(
                 "evaluate_homework_job",
                 submission_id=str(submission_id),
-                _job_id=f"homework-evaluate:{submission_id}",
                 _queue_name=settings.homework_queue_name,
                 _defer_by=1,
             )

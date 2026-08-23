@@ -5,6 +5,7 @@ from app.domain.interfaces.homework_queue import IHomeworkEvaluationQueue
 from app.domain.interfaces.homework_repo import IHomeworkRepository
 
 from ._shared import (
+    HOMEWORK_ATTACHMENT_SUFFIXES,
     build_homework_out,
     ensure_lesson_exists,
     upload_homework_file,
@@ -28,7 +29,7 @@ class CreateHomeworkUseCase:
             self._storage,
             payload.file,
             prefix="homeworks/attachments",
-            required_archive=False,
+            allowed_suffixes=HOMEWORK_ATTACHMENT_SUFFIXES,
         )
         homework = await self._repository.create_homework(
             HomeworkEntity(

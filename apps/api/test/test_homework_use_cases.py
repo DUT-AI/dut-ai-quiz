@@ -9,22 +9,33 @@ from app.application.dtos.homework import (
     SubmitHomeworkDTO,
 )
 from app.application.use_cases.homeworks import (
+    ListCompletedHomeworkMembersUseCase,
     ListMyHomeworksUseCase,
+    RetryHomeworkSubmissionUseCase,
     SubmitHomeworkUseCase,
     submit_homework_uc,
 )
-from app.application.use_cases.homeworks._shared import generate_download_url
+from app.application.use_cases.homeworks._shared import (
+    HOMEWORK_ATTACHMENT_SUFFIXES,
+    HOMEWORK_SUBMISSION_SUFFIXES,
+    generate_download_url,
+    upload_homework_file,
+)
+from app.config import settings
 from app.core.datetime_utils import now_ict
 from app.domain.entities.homework import (
     HomeworkEntity,
     HomeworkSubmissionEntity,
     HomeworkSubmissionStatus,
 )
+from app.domain.exceptions.exceptions import AppException
 
 
 class HomeworkRepositoryStub:
     def __init__(self, homework: HomeworkEntity) -> None:
         self.homework = homework
+        self.completed_user_ids: list[int] = []
+        self.submission: HomeworkSubmissionEntity | None = None
 
     async def get_homework(self, homework_id):
         if homework_id == self.homework.id:
@@ -40,10 +51,34 @@ class HomeworkRepositoryStub:
         return [self.homework]
 
     async def get_latest_submission(self, homework_id, user_id):
+        return self.submission
+
+    async def get_submission(self, submission_id):
+        if self.submission and self.submission.id == submission_id:
+            return self.submission
+        return None
+
+    async def retry_failed_submission(self, submission_id):
+        if (
+            self.submission
+            and self.submission.id == submission_id
+            and self.submission.status == HomeworkSubmissionStatus.FAILED
+        ):
+            self.submission = replace(
+                self.submission,
+                status=HomeworkSubmissionStatus.GRADING,
+                grading_error=None,
+                score=None,
+                is_pass=None,
+            )
+            return self.submission
         return None
 
     async def count_submitters(self, homework_id):
         return 0
+
+    async def list_completed_user_ids(self, homework_id):
+        return self.completed_user_ids
 
 
 @pytest.fixture
@@ -97,6 +132,98 @@ async def test_my_homeworks_lists_all_lesson_homework(
     result = await use_case.execute(99, lesson_id=homework.lesson_id)
 
     assert [item.id for item in result] == [homework.id]
+
+
+@pytest.mark.asyncio
+async def test_failed_submission_can_be_retried_without_new_attempt(
+    homework: HomeworkEntity,
+) -> None:
+    repository = HomeworkRepositoryStub(homework)
+    repository.submission = HomeworkSubmissionEntity(
+        id=uuid4(),
+        homework_id=homework.id,
+        user_id=99,
+        object_key="homeworks/submission.zip",
+        original_filename="submission.zip",
+        submitted_at=now_ict(),
+        is_late=False,
+        attempt_number=2,
+        status=HomeworkSubmissionStatus.FAILED,
+        grading_error="429 quota exceeded",
+        score=0,
+        is_pass=False,
+    )
+    queue = AsyncMock()
+    use_case = RetryHomeworkSubmissionUseCase(repository, queue)
+
+    result = await use_case.execute(repository.submission.id, user_id=99)
+
+    assert result.id == repository.submission.id
+    assert result.attempt_number == 2
+    assert result.status is HomeworkSubmissionStatus.GRADING
+    assert result.grading_error is None
+    queue.enqueue_evaluation.assert_awaited_once_with(result.id)
+
+
+@pytest.mark.asyncio
+async def test_submission_retry_is_limited_to_owner_and_failed_status(
+    homework: HomeworkEntity,
+) -> None:
+    repository = HomeworkRepositoryStub(homework)
+    repository.submission = HomeworkSubmissionEntity(
+        id=uuid4(),
+        homework_id=homework.id,
+        user_id=99,
+        object_key="homeworks/submission.zip",
+        original_filename="submission.zip",
+        submitted_at=now_ict(),
+        is_late=False,
+        attempt_number=1,
+        status=HomeworkSubmissionStatus.GRADED,
+    )
+    use_case = RetryHomeworkSubmissionUseCase(repository, AsyncMock())
+
+    with pytest.raises(AppException) as owner_error:
+        await use_case.execute(repository.submission.id, user_id=7)
+    assert owner_error.value.status_code == 404
+
+    with pytest.raises(AppException) as status_error:
+        await use_case.execute(repository.submission.id, user_id=99)
+    assert status_error.value.status_code == 409
+
+
+@pytest.mark.asyncio
+async def test_homework_files_are_zip_only_and_limit_is_20_mb() -> None:
+    assert settings.homework_max_file_size_bytes == 20 * 1024 * 1024
+
+    assert HOMEWORK_SUBMISSION_SUFFIXES == (
+        ".zip",
+        ".rar",
+        ".7z",
+        ".tar.gz",
+        ".gz",
+    )
+
+    with pytest.raises(AppException, match=r"Chỉ chấp nhận file: \.zip"):
+        await upload_homework_file(
+            AsyncMock(),
+            HomeworkFileDTO(filename="requirements.pdf", content=b"pdf"),
+            prefix="homeworks/attachments",
+            allowed_suffixes=HOMEWORK_ATTACHMENT_SUFFIXES,
+        )
+
+
+@pytest.mark.asyncio
+async def test_completed_members_returns_manage_user_ids(
+    homework: HomeworkEntity,
+) -> None:
+    repository = HomeworkRepositoryStub(homework)
+    repository.completed_user_ids = [7, 99]
+    use_case = ListCompletedHomeworkMembersUseCase(repository)
+
+    result = await use_case.execute(homework.id)
+
+    assert [member.user_id for member in result] == [7, 99]
 
 
 @pytest.mark.asyncio
