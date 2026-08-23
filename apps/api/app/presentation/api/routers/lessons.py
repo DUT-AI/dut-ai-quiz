@@ -3,23 +3,18 @@ from uuid import UUID
 from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import APIRouter, HTTPException, Query, UploadFile, File, Form
 
-from app.application.use_cases.lessons.create_lesson_uc import CreateLessonUseCase
-from app.application.use_cases.lessons.delete_lesson_uc import DeleteLessonUseCase
-from app.application.use_cases.lessons.get_lesson_detail_uc import (
+from app.application.use_cases.lessons import (
+    CreateLessonUseCase,
+    DeleteLessonUseCase,
     GetLessonDetailUseCase,
-)
-from app.application.use_cases.lessons.get_lesson_by_slug_uc import (
     GetLessonBySlugUseCase,
-)
-from app.application.use_cases.lessons.list_lessons_uc import ListLessonsUseCase
-from app.application.use_cases.lessons.reorder_lessons_uc import (
+    ListLessonsUseCase,
     ReorderLessonsUseCase,
-)
-from app.application.use_cases.lessons.update_lesson_uc import UpdateLessonUseCase
-from app.application.use_cases.lessons.index_lesson_uc import IndexLessonUseCase
-from app.application.use_cases.lessons.import_notion_lesson_uc import (
+    UpdateLessonUseCase,
+    IndexLessonUseCase,
     ImportNotionLessonUseCase,
 )
+
 from app.domain.interfaces import EmbeddingServiceError
 from app.application.use_cases.questions import ListQuestionsUseCase
 from app.domain.value_objects import Difficulty, PoolType
@@ -32,7 +27,7 @@ from app.presentation.schemas.lessons import (
     LessonUpdate,
     LessonIndexOut,
 )
-from app.presentation.schemas.questions import QuestionListQuery, QuestionOut
+from app.presentation.schemas.questions import QuestionListQuery, QuestionOut, QuestionToStudent
 
 router = APIRouter(prefix="/lessons", tags=["lessons"])
 
@@ -86,8 +81,7 @@ async def list_lesson_questions(
     )
     rows = await use_case.execute(query)
     if not user.has_any_role("admin", "MENTOR"):
-        from app.presentation.api.routers.questions import sanitize_questions_for_student
-        rows = sanitize_questions_for_student(rows)
+        rows = [QuestionToStudent.model_validate(q) for q in rows]
     return rows
 
 
@@ -102,10 +96,9 @@ async def get_lesson(
     if not res:
         raise HTTPException(status_code=404, detail="Lesson not found")
     if not user.has_any_role("admin", "MENTOR"):
-        from app.presentation.api.routers.questions import sanitize_questions_for_student
         import copy
         res = copy.deepcopy(res)
-        res["questions"] = sanitize_questions_for_student(res["questions"])
+        res["questions"] = [QuestionToStudent.model_validate(q) for q in res.get("questions", [])]
     return res
 
 
@@ -133,7 +126,7 @@ async def import_notion_lesson(
     Import a lesson from a ZIP file containing Markdown and images exported from Notion.
     Admin or Mentor only.
     """
-    if not file.filename.endswith(".zip"):
+    if file.filename and not file.filename.endswith(".zip"):
         raise HTTPException(status_code=400, detail="Only ZIP files (.zip) are supported")
 
     mid = None

@@ -1,3 +1,4 @@
+import copy
 from datetime import datetime
 from uuid import UUID
 
@@ -44,8 +45,57 @@ class QuestionUpdate(BaseModel):
     created_by: int | None = None
 
 
+from typing import Any
 from app.domain.entities.question import QuestionStatus, DuplicateStatus
 
+
+class QuestionOptionToStudent(BaseModel):
+    id: str
+    text: str
+    is_correct: bool | None = None
+    fixed: bool = False
+
+    model_config = {"from_attributes": True}
+
+    @field_validator("is_correct", mode="before")
+    @classmethod
+    def hide_correctness(cls, v: Any) -> None:
+        return None
+
+
+class QuestionToStudent(BaseModel):
+    id: UUID
+    pool_type: PoolType
+    difficulty: Difficulty
+    content: str
+    options: list[QuestionOptionToStudent]
+    solution: str | None = None
+    lesson_id: UUID | None = None
+    tags: list[str] = Field(default_factory=list)
+    created_by: int
+    created_at: datetime
+    status: QuestionStatus = QuestionStatus.PUBLIC
+    duplicate_status: DuplicateStatus = DuplicateStatus.NONE
+    duplicate_of_question_id: UUID | None = None
+    is_difficulty_ai_suggested: bool = False
+    is_answer_ai_generated: bool = False
+    is_solution_ai_generated: bool = False
+    import_session_id: UUID | None = None
+
+    model_config = {"from_attributes": True}
+
+    @field_validator("tags", mode="before")
+    @classmethod
+    def convert_tags_to_str(cls, v: list | None) -> list[str]:
+        if not v:
+            return []
+        return [str(item) for item in v]
+
+    @field_validator("solution", mode="before")
+    @classmethod
+    def hide_solution(cls, v: Any) -> None:
+        return None
+    
 class QuestionOut(BaseModel):
     id: UUID
     pool_type: PoolType
