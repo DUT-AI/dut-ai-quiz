@@ -21,7 +21,7 @@ from app.application.use_cases.homeworks._shared import (
     generate_download_url,
     upload_homework_file,
 )
-from app.config import settings
+from app.config import Settings, settings
 from app.core.datetime_utils import now_ict
 from app.domain.entities.homework import (
     HomeworkEntity,
@@ -195,6 +195,7 @@ async def test_submission_retry_is_limited_to_owner_and_failed_status(
 @pytest.mark.asyncio
 async def test_homework_files_are_zip_only_and_limit_is_20_mb() -> None:
     assert settings.homework_max_file_size_bytes == 20 * 1024 * 1024
+    assert "homework_max_file_size_bytes" not in Settings.model_fields
 
     assert HOMEWORK_SUBMISSION_SUFFIXES == (
         ".zip",
