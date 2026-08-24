@@ -40,9 +40,24 @@ Or start all services with `docker compose up`.
 - `GET|POST /api/v1/homeworks`
 - `PATCH|DELETE /api/v1/homeworks/{homework_id}`
 - `POST /api/v1/homeworks/{homework_id}/submissions`
+- `POST /api/v1/homeworks/submissions/{submission_id}/retry`
 - `GET /api/v1/homeworks/{homework_id}/submission/me`
 - `GET /api/v1/homeworks/{homework_id}/submissions`
+- `GET /api/v1/homeworks/{homework_id}/completed-members`
 - Download endpoints return short-lived presigned URLs.
+
+The completed-members endpoint is intended for the Manage service. It requires
+`Authorization: Bearer <MANAGE_API_KEY>` and returns only Manage user IDs:
+
+```json
+{
+  "data": [{"user_id": 7}, {"user_id": 99}],
+  "is_success": true
+}
+```
+
+A member is complete when their latest submission has status `GRADED`. Users
+whose latest attempt is still uploaded, grading, or failed are not included.
 
 Student homework is displayed inside the **Bài tập coding** tab on
 `/lessons/{slug}`. The standalone `/homeworks` page redirects to `/lessons`.
@@ -82,13 +97,19 @@ Creating or updating homework automatically queues rubric generation. The
 generated rubric contains assignment-specific criteria and weights totaling 10
 points; it is stored on that homework and reused for its submissions. Each new
 submission automatically queues grading; no per-submission command is needed.
-For predictable extraction, homework attachments must be PDF or ZIP containing
-one PDF. Student submissions may use `.zip`, `.rar`, `.7z`, `.tar.gz`, or
-`.gz`; archives must contain Python source files. A plain `.gz` is treated as
-one compressed Python source file.
+Homework attachments are optional ZIP files and may contain any file type. If
+the ZIP contains PDFs, text from every PDF is added to the grading requirements.
+Student submissions may be `.zip`, `.rar`, `.7z`, `.tar.gz`, or `.gz`, are
+limited to 20 MB, and must contain at least one Python source file or Jupyter
+notebook. Notebook grading includes code cells, Markdown/raw text cells, and
+textual cell outputs.
+
+When grading ends in `FAILED` (for example, when the grading API quota is
+temporarily exhausted), the owner can call the retry endpoint. It reuses the
+stored artifact and the same attempt number, clears the failed result, and
+queues that submission again without another upload.
 
 The worker validates archive paths, rejects links and password-protected
 content, and limits entry count, Python file count, and total decompressed
-source size. The Docker image includes the system tools required by `rarfile`;
-ZIP, TAR.GZ, GZ, and 7Z are read by Python libraries without executing student
+source size. Submitted code and notebooks are read without executing student
 code.

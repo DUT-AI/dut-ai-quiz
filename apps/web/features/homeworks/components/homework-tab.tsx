@@ -12,12 +12,17 @@ import {
 import { toast } from "sonner";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { useMyHomeworks, useSubmitHomework } from "../queries";
+import {
+  useMyHomeworks,
+  useRetryHomeworkSubmission,
+  useSubmitHomework,
+} from "../queries";
 import { HomeworkCard } from "./homework-card";
 
 export function HomeworkTab({ lessonId }: { lessonId: string }) {
   const { data, isLoading, error } = useMyHomeworks(lessonId || null);
   const submit = useSubmitHomework();
+  const retry = useRetryHomeworkSubmission();
 
   const handleSubmit = async (homeworkId: string, file: File) => {
     try {
@@ -27,6 +32,17 @@ export function HomeworkTab({ lessonId }: { lessonId: string }) {
       const msg = submissionError instanceof Error ? submissionError.message : "Nộp bài thất bại";
       toast.error(msg);
       throw submissionError;
+    }
+  };
+
+  const handleRetry = async (submissionId: string) => {
+    try {
+      await retry.mutateAsync(submissionId);
+      toast.info("Đã dùng lại file cũ. Hệ thống đang chấm bài lại.");
+    } catch (retryError) {
+      const msg = retryError instanceof Error ? retryError.message : "Không thể chấm lại bài";
+      toast.error(msg);
+      throw retryError;
     }
   };
 
@@ -142,6 +158,7 @@ export function HomeworkTab({ lessonId }: { lessonId: string }) {
             <HomeworkCard
               homework={homework}
               onSubmit={handleSubmit}
+              onRetry={handleRetry}
             />
           </motion.div>
         ))}
