@@ -24,6 +24,33 @@ export function PdfImport({ lessonId: propLessonId, onSuccess, onClose }: PdfImp
   const [file, setFile] = useState<File | null>(null);
   const [lessonId, setLessonId] = useState(propLessonId || "");
   const [method, setMethod] = useState<"ocr" | "gemini">("gemini");
+  const [isDragActive, setIsDragActive] = useState(false);
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setIsDragActive(true);
+    } else if (e.type === "dragleave") {
+      setIsDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const selectedFile = e.dataTransfer.files[0];
+      if (selectedFile.name.toLowerCase().endsWith(".pdf")) {
+        setFile(selectedFile);
+        setErrorMsg(null);
+      } else {
+        setErrorMsg("Định dạng file không hợp lệ. Chỉ chấp nhận các file .pdf");
+      }
+    }
+  };
 
   const { data: lessons = [] } = useLessons();
   const importMutation = useImportPDF();
@@ -146,9 +173,18 @@ export function PdfImport({ lessonId: propLessonId, onSuccess, onClose }: PdfImp
             1. Tải file PDF
           </h3>
           <div
-            className={`border-2 border-dashed rounded-3xl p-12 text-center transition-all cursor-pointer h-full min-h-[16rem] flex flex-col items-center justify-center ${file ? "border-blue-500 bg-blue-50/10" : "border-slate-300 hover:border-blue-400 hover:bg-slate-50"
-              }`}
+            className={`border-2 border-dashed rounded-3xl p-12 text-center transition-all cursor-pointer h-full min-h-[16rem] flex flex-col items-center justify-center ${
+              isDragActive
+                ? "border-blue-500 bg-blue-50/20 scale-[1.01]"
+                : file
+                ? "border-blue-500 bg-blue-50/10"
+                : "border-slate-300 hover:border-blue-400 hover:bg-slate-50 dark:hover:bg-white/5"
+            }`}
             onClick={() => document.getElementById("pdf-upload")?.click()}
+            onDragEnter={handleDrag}
+            onDragOver={handleDrag}
+            onDragLeave={handleDrag}
+            onDrop={handleDrop}
           >
             <input
               id="pdf-upload"

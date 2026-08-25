@@ -437,13 +437,11 @@ class UseCaseProvider(Provider):
     @provide(scope=Scope.REQUEST)
     def start_import_use_case(
         self,
-        session: AsyncSession,
         import_session_repo: IImportSessionRepository,
         question_repo: IQuestionRepository,
         ai_parser: PDFAIParserService,
     ) -> StartImportUseCase:
         return StartImportUseCase(
-            session=session,
             import_session_repo=import_session_repo,
             question_repo=question_repo,
             ai_parser=ai_parser,
