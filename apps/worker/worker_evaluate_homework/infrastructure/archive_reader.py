@@ -44,17 +44,24 @@ class S3HomeworkArtifactReader:
         )
         filename = urlparse(object_key).path.casefold()
         if filename.endswith(".pdf"):
-            pdf_bytes = content
+            # Keep legacy attachments readable; newly uploaded attachments are ZIP-only.
+            pdf_files = [("attachment.pdf", content)]
         elif filename.endswith(".zip"):
-            pdf_bytes = await asyncio.to_thread(
-                self._read_single_pdf_from_zip,
+            pdf_files = await asyncio.to_thread(
+                self._read_pdfs_from_zip,
                 content,
             )
         else:
             raise InvalidArtifactError(
-                "File đề dùng để chấm tự động phải là PDF hoặc ZIP chứa một PDF"
+                "File đề dùng để chấm tự động phải là ZIP"
             )
-        return await asyncio.to_thread(self._extract_pdf_text, pdf_bytes)
+        if not pdf_files:
+            return ""
+        parts = [
+            f"### PDF: {name}\n{await asyncio.to_thread(self._extract_pdf_text, data)}"
+            for name, data in pdf_files
+        ]
+        return "\n\n".join(parts)[: settings.homework_grading_max_source_chars]
 
     async def read_submission_sources(
         self,
@@ -107,7 +114,7 @@ class S3HomeworkArtifactReader:
         return b"".join(chunks)
 
     @staticmethod
-    def _read_single_pdf_from_zip(content: bytes) -> bytes:
+    def _read_pdfs_from_zip(content: bytes) -> list[tuple[str, bytes]]:
         try:
             with zipfile.ZipFile(io.BytesIO(content)) as archive:
                 entries = archive.infolist()
@@ -119,18 +126,24 @@ class S3HomeworkArtifactReader:
                     and _safe_member_name(info.filename).casefold().endswith(".pdf")
                     and not _is_metadata_file(info.filename)
                 ]
-                if len(pdf_entries) != 1:
+                total_size = sum(entry.file_size for entry in pdf_entries)
+                if total_size > settings.homework_grading_max_attachment_bytes:
                     raise InvalidArtifactError(
-                        "File ZIP đề bài phải chứa đúng một file PDF"
+                        "Tổng dung lượng PDF trong ZIP vượt quá giới hạn xử lý"
                     )
-                entry = pdf_entries[0]
-                if entry.flag_bits & 0x1:
-                    raise InvalidArtifactError(
-                        "File ZIP đề bài có mật khẩu nên worker không thể đọc"
+                result: list[tuple[str, bytes]] = []
+                for entry in sorted(
+                    pdf_entries,
+                    key=lambda item: item.filename.casefold(),
+                ):
+                    if entry.flag_bits & 0x1:
+                        raise InvalidArtifactError(
+                            f"File {entry.filename} có mật khẩu nên worker không thể đọc"
+                        )
+                    result.append(
+                        (_safe_member_name(entry.filename), archive.read(entry))
                     )
-                if entry.file_size > settings.homework_grading_max_attachment_bytes:
-                    raise InvalidArtifactError("PDF đề bài vượt quá giới hạn xử lý")
-                return archive.read(entry)
+                return result
         except InvalidArtifactError:
             raise
         except (RuntimeError, zipfile.BadZipFile) as exc:
@@ -428,10 +441,10 @@ def _decode_source_file(name: str, content: bytes) -> str:
     decoded = _decode_source(name, content)
     if not name.casefold().endswith(".ipynb"):
         return decoded
-    return _extract_notebook_code(name, decoded)
+    return _extract_notebook_content(name, decoded)
 
 
-def _extract_notebook_code(name: str, content: str) -> str:
+def _extract_notebook_content(name: str, content: str) -> str:
     try:
         notebook = json.loads(content)
     except json.JSONDecodeError as exc:
@@ -441,28 +454,109 @@ def _extract_notebook_code(name: str, content: str) -> str:
     if not isinstance(cells, list):
         raise InvalidArtifactError(f"Notebook {name} không có danh sách cells hợp lệ")
 
-    code_cells: list[str] = []
+    rendered_cells: list[str] = []
     for index, cell in enumerate(cells, start=1):
-        if not isinstance(cell, dict) or cell.get("cell_type") != "code":
+        if not isinstance(cell, dict):
+            raise InvalidArtifactError(f"Notebook {name} có cell #{index} không hợp lệ")
+        cell_type = cell.get("cell_type")
+        if cell_type not in {"code", "markdown", "raw"}:
             continue
-        source = cell.get("source", "")
-        if isinstance(source, list) and all(isinstance(line, str) for line in source):
-            code = "".join(source)
-        elif isinstance(source, str):
-            code = source
-        else:
-            raise InvalidArtifactError(
-                f"Notebook {name} có code cell #{index} không hợp lệ"
-            )
-        if code.strip():
-            normalized = _normalize_notebook_code(code)
-            code_cells.append(
-                f"# --- notebook cell {index} ---\n{normalized.rstrip()}"
+        source = _notebook_text(
+            cell.get("source", ""),
+            error_message=f"Notebook {name} có {cell_type} cell #{index} không hợp lệ",
+        )
+
+        if cell_type == "code":
+            if source.strip():
+                rendered_cells.append(
+                    f"# --- code cell {index} ---\n"
+                    f"{_normalize_notebook_code(source).rstrip()}"
+                )
+            outputs = cell.get("outputs", [])
+            if not isinstance(outputs, list):
+                raise InvalidArtifactError(
+                    f"Notebook {name} có outputs của cell #{index} không hợp lệ"
+                )
+            for output_index, output in enumerate(outputs, start=1):
+                output_text = _notebook_output_text(output)
+                if output_text.strip():
+                    rendered_cells.append(
+                        _comment_notebook_text(
+                            f"output {index}.{output_index}",
+                            output_text,
+                        )
+                    )
+        elif source.strip():
+            rendered_cells.append(
+                _comment_notebook_text(f"{cell_type} cell {index}", source)
             )
 
-    if not code_cells:
-        raise InvalidArtifactError(f"Notebook {name} không chứa code cell")
-    return "\n\n".join(code_cells) + "\n"
+    if not rendered_cells:
+        raise InvalidArtifactError(f"Notebook {name} không chứa nội dung có thể chấm")
+    return "\n\n".join(rendered_cells) + "\n"
+
+
+def _notebook_text(value: Any, *, error_message: str) -> str:
+    if isinstance(value, str):
+        return value
+    if isinstance(value, list) and all(isinstance(item, str) for item in value):
+        return "".join(value)
+    raise InvalidArtifactError(error_message)
+
+
+def _notebook_output_text(output: Any) -> str:
+    if not isinstance(output, dict):
+        return ""
+    output_type = output.get("output_type")
+    if output_type == "stream":
+        return _notebook_text(
+            output.get("text", ""),
+            error_message="Notebook có stream output không hợp lệ",
+        )
+    if output_type == "error":
+        traceback = _notebook_text(
+            output.get("traceback", []),
+            error_message="Notebook có traceback output không hợp lệ",
+        )
+        summary = ": ".join(
+            str(value)
+            for value in (output.get("ename"), output.get("evalue"))
+            if value
+        )
+        return "\n".join(value for value in (summary, traceback) if value)
+    if output_type not in {"display_data", "execute_result"}:
+        return ""
+    data = output.get("data", {})
+    if not isinstance(data, dict):
+        return ""
+    for mime_type in (
+        "text/markdown",
+        "text/plain",
+        "application/json",
+        "text/html",
+    ):
+        if mime_type not in data:
+            continue
+        value = data[mime_type]
+        if mime_type == "application/json":
+            if isinstance(value, str):
+                return value
+            if isinstance(value, list) and all(
+                isinstance(item, str) for item in value
+            ):
+                return "".join(value)
+            return json.dumps(value, ensure_ascii=False)
+        return _notebook_text(
+            value,
+            error_message=f"Notebook có output {mime_type} không hợp lệ",
+        )
+    return ""
+
+
+def _comment_notebook_text(label: str, content: str) -> str:
+    lines = content.splitlines() or [""]
+    commented = "\n".join(f"# {line}" if line else "#" for line in lines)
+    return f"# --- {label} ---\n{commented}"
 
 
 def _normalize_notebook_code(code: str) -> str:

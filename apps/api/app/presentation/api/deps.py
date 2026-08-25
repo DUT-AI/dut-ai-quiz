@@ -1,7 +1,8 @@
+from hmac import compare_digest
 from typing import Annotated, Any, Sequence
 
 from dishka.integrations.fastapi import inject
-from fastapi import Depends, HTTPException, Request
+from fastapi import Depends, Header, HTTPException, Request
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -178,6 +179,29 @@ def require_roles(*allowed_roles: str | UserRole):
     return dependency
 
 
+async def require_manage_service(
+    authorization: Annotated[str | None, Header()] = None,
+) -> None:
+    expected_key = settings.manage_api_key.strip()
+    if not expected_key:
+        raise HTTPException(
+            status_code=503,
+            detail="Manage integration is not configured",
+        )
+
+    scheme, separator, credential = (authorization or "").partition(" ")
+    if (
+        not separator
+        or scheme.casefold() != "bearer"
+        or not compare_digest(credential, expected_key)
+    ):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid Manage service credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+
 CurrentUser = Annotated[UserContext, Depends(get_current_user)]
 AdminUser = Annotated[UserContext, Depends(require_roles(UserRole.ADMIN, "admin"))]
 AdminOrMentorUser = Annotated[
@@ -207,3 +231,4 @@ ProjectDevUser = Annotated[
 TeacherUser = AdminOrMentorUser
 StudentUser = CurrentUser
 OptionalCurrentUser = Annotated[UserContext | None, Depends(get_optional_current_user)]
+ManageService = Annotated[None, Depends(require_manage_service)]

@@ -2,7 +2,6 @@ from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
-
 from app.domain.exceptions.exceptions import HomeworkWorkerUnavailableException
 from app.infrastructure.clients.arq_homework_queue import (
     ArqHomeworkEvaluationQueue,
@@ -40,8 +39,6 @@ async def test_homework_queue_enqueues_when_worker_is_healthy() -> None:
     arq_redis.enqueue_job.assert_awaited_once_with(
         "evaluate_homework_job",
         submission_id=str(submission_id),
-        _job_id=f"homework-evaluate:{submission_id}",
         _queue_name="arq:homework",
         _defer_by=1,
     )
-

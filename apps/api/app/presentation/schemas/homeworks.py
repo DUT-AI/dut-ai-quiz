@@ -1,4 +1,5 @@
 from app.application.dtos.homework import (
+    CompletedHomeworkMemberOutDTO,
     HomeworkOutDTO,
     HomeworkSubmissionOutDTO,
 )
@@ -17,6 +18,11 @@ class HomeworkResponse(BaseModel):
 
 class SubmissionListResponse(BaseModel):
     data: list[HomeworkSubmissionOutDTO]
+    is_success: bool = True
+
+
+class CompletedHomeworkMembersResponse(BaseModel):
+    data: list[CompletedHomeworkMemberOutDTO]
     is_success: bool = True
 
 

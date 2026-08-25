@@ -198,8 +198,17 @@ export function HomeworkFormModal({ open, homework, onClose }: HomeworkFormModal
                       Chọn file
                       <input
                         type="file"
-                        accept=".pdf,.zip"
-                        onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                        accept=".zip"
+                        onChange={(e) => {
+                          const selected = e.target.files?.[0] ?? null;
+                          if (selected && !selected.name.toLowerCase().endsWith(".zip")) {
+                            toast.error("File đề bài đính kèm phải là file .zip");
+                            e.target.value = "";
+                            setFile(null);
+                            return;
+                          }
+                          setFile(selected);
+                        }}
                         className="hidden"
                       />
                     </label>
@@ -207,6 +216,9 @@ export function HomeworkFormModal({ open, homework, onClose }: HomeworkFormModal
                       {file ? file.name : "Chưa chọn file đề đính kèm..."}
                     </span>
                   </div>
+                  <p className="text-[11px] text-gray-navy dark:text-light-blue/70">
+                    ZIP có thể chứa mọi loại file; các file PDF bên trong sẽ được dùng làm yêu cầu bổ sung khi chấm.
+                  </p>
                 </div>
               </div>
 

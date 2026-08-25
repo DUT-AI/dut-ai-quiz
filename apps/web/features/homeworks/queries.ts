@@ -158,6 +158,27 @@ export function useSubmitHomework() {
   });
 }
 
+export function useRetryHomeworkSubmission() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: async (submissionId: string) => {
+      const response = await apiFetch(
+        `/api/v1/homeworks/submissions/${submissionId}/retry`,
+        { method: "POST" },
+      );
+      if (!response.ok) {
+        const body = await response.json().catch(() => null);
+        throw new Error(body?.detail || body?.message || `HTTP ${response.status}`);
+      }
+      return z.object({
+        data: HomeworkSubmissionSchema,
+        is_success: z.boolean(),
+      }).parse(await response.json());
+    },
+    onSuccess: () => client.invalidateQueries({ queryKey: ["homeworks"] }),
+  });
+}
+
 export async function openHomeworkAttachment(homeworkId: string) {
   const response = await apiGet<{ data: { url: string } }>(
     `/api/v1/homeworks/${homeworkId}/attachment-url`,

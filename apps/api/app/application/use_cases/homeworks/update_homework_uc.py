@@ -6,6 +6,7 @@ from app.domain.interfaces.homework_queue import IHomeworkEvaluationQueue
 from app.domain.interfaces.homework_repo import IHomeworkRepository
 
 from ._shared import (
+    HOMEWORK_ATTACHMENT_SUFFIXES,
     build_homework_out,
     ensure_lesson_exists,
     get_homework_or_raise,
@@ -50,7 +51,7 @@ class UpdateHomeworkUseCase:
                 self._storage,
                 payload.file,
                 prefix="homeworks/attachments",
-                required_archive=False,
+                allowed_suffixes=HOMEWORK_ATTACHMENT_SUFFIXES,
             )
 
         updated = await self._repository.update_homework(homework)

@@ -9,7 +9,8 @@ import {
   Clock,
   Sparkles,
   X,
-  FileText
+  FileText,
+  RefreshCcw,
 } from "lucide-react";
 import React, { useState } from "react";
 import { createPortal } from "react-dom";
@@ -26,12 +27,14 @@ import { SubmissionResult } from "./submission-result";
 interface HomeworkCardProps {
   homework: Homework;
   onSubmit: (homeworkId: string, file: File) => Promise<void>;
+  onRetry: (submissionId: string) => Promise<void>;
 }
 
-export function HomeworkCard({ homework, onSubmit }: HomeworkCardProps) {
+export function HomeworkCard({ homework, onSubmit, onRetry }: HomeworkCardProps) {
   const [file, setFile] = useState<File | null>(null);
   const [isDescOpen, setIsDescOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
   const submission = homework.current_submission;
 
   // Determine active steps for timeline
@@ -49,6 +52,18 @@ export function HomeworkCard({ homework, onSubmit }: HomeworkCardProps) {
       // toast is handled in parent
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleRetry = async () => {
+    if (!submission || !submissionFailed || isRetrying) return;
+    setIsRetrying(true);
+    try {
+      await onRetry(submission.id);
+    } catch {
+      // toast is handled in parent
+    } finally {
+      setIsRetrying(false);
     }
   };
 
@@ -178,6 +193,18 @@ export function HomeworkCard({ homework, onSubmit }: HomeworkCardProps) {
         {submission && (
           <div className="mt-4">
             <SubmissionResult submission={submission} />
+            {submissionFailed && (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isRetrying}
+                onClick={handleRetry}
+                className="mt-3 w-full border-amber-500/40 text-amber-700 hover:bg-amber-500/10 dark:text-amber-300"
+              >
+                <RefreshCcw className={`mr-2 size-4 ${isRetrying ? "animate-spin" : ""}`} />
+                {isRetrying ? "Đang gửi yêu cầu..." : "Nộp lại để chấm (dùng file cũ)"}
+              </Button>
+            )}
           </div>
         )}
 
@@ -196,7 +223,7 @@ export function HomeworkCard({ homework, onSubmit }: HomeworkCardProps) {
                   file={file}
                   onFileChange={setFile}
                   allowedSuffixes={[".zip", ".rar", ".7z", ".tar.gz", ".gz"]}
-                  maxSizeMB={10}
+                  maxSizeMB={20}
                 />
               </div>
 
@@ -229,7 +256,7 @@ export function HomeworkCard({ homework, onSubmit }: HomeworkCardProps) {
             </div>
 
             <p className="text-[11px] leading-normal text-gray-navy dark:text-light-blue/70">
-              * Hệ thống chỉ chấp nhận file nén (.zip, .rar, .7z, .tar.gz, .gz).
+              * Chấp nhận .zip, .rar, .7z, .tar.gz, .gz; tối đa 20 MB.
             </p>
           </div>
         </div>

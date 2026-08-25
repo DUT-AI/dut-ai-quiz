@@ -4,8 +4,8 @@ from .hackathon import (
     HackathonRegistrationStatusOutDTO,
     HackathonTeamOutDTO,
 )
-from .user import UserOut
 from .homework import (
+    CompletedHomeworkMemberOutDTO,
     CreateHomeworkDTO,
     HomeworkFileDTO,
     HomeworkOutDTO,
@@ -13,18 +13,20 @@ from .homework import (
     SubmitHomeworkDTO,
     UpdateHomeworkDTO,
 )
+from .user import UserOut
 
 __all__ = [
-    "LoginPayload",
     "AuthTokens",
-    "UserOut",
-    "HackathonTeamOutDTO",
+    "CompletedHomeworkMemberOutDTO",
+    "CreateHomeworkDTO",
     "HackathonRegistrationOutDTO",
     "HackathonRegistrationStatusOutDTO",
+    "HackathonTeamOutDTO",
     "HomeworkFileDTO",
-    "CreateHomeworkDTO",
-    "UpdateHomeworkDTO",
-    "SubmitHomeworkDTO",
     "HomeworkOutDTO",
     "HomeworkSubmissionOutDTO",
+    "LoginPayload",
+    "SubmitHomeworkDTO",
+    "UpdateHomeworkDTO",
+    "UserOut",
 ]
