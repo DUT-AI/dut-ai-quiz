@@ -25,6 +25,7 @@ class Settings(BaseSettings):
 
     manage_base_url: str = ""
     manage_api_key: str = ""
+    third_party_api_keys: str = ""
 
     cors_origins: str = "http://localhost:3000,https://quiz.dutai.site"
 
@@ -168,8 +169,17 @@ class Settings(BaseSettings):
     @property
     def cors_origin_list(self) -> list[str]:
         return [
-            origin.strip() for origin in self.cors_origins.split(",") if origin.strip()
+            origin.strip().rstrip("/")
+            for origin in self.cors_origins.split(",")
+            if origin.strip()
         ]
+
+    @property
+    def third_party_api_key_list(self) -> list[str]:
+        keys = [k.strip() for k in self.third_party_api_keys.split(",") if k.strip()]
+        if self.manage_api_key.strip() and self.manage_api_key.strip() not in keys:
+            keys.append(self.manage_api_key.strip())
+        return keys
 
 
 settings = Settings()

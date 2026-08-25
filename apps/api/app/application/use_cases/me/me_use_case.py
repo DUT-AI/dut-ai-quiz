@@ -1,6 +1,7 @@
 from typing import Any
 
 from app.application.services.auth_roles import quiz_role_from_manage
+from app.config import settings
 from app.core.jwt import decode_access_token
 from app.domain.exceptions.exceptions import AppException
 from app.domain.interfaces import IManageService, IUserRepository
@@ -20,6 +21,18 @@ class GetProfileUseCase:
         self._manage_client = manage_client
 
     async def execute(self, access_token: str | None) -> dict[str, Any]:
+        if settings.auth_dev_bypass:
+            rn = settings.auth_dev_role_name
+            roles = [rn] if isinstance(rn, str) else (rn or ["admin"])
+            return {
+                "id": settings.auth_dev_user_id,
+                "email": "dev@dutai.site",
+                "name": f"Dev User ({roles[0]})",
+                "avatar_url": None,
+                "role_names": roles,
+                "quiz_role": quiz_role_from_manage(roles),
+            }
+
         if not access_token:
             raise AppException("Không tìm thấy access token trong cookie", 401)
 
