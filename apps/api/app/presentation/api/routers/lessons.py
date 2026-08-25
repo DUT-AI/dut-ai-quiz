@@ -18,7 +18,7 @@ from app.application.use_cases.lessons import (
 from app.domain.interfaces import EmbeddingServiceError
 from app.application.use_cases.questions import ListQuestionsUseCase
 from app.domain.value_objects import Difficulty, PoolType
-from app.presentation.api.deps import CurrentUser, AdminOrMentorUser
+from app.presentation.api.deps import CurrentUser, AdminOrMentorUser, OptionalCurrentUser
 from app.presentation.schemas.lessons import (
     LessonCreate,
     LessonDetailOut,
@@ -42,12 +42,13 @@ async def list_lessons(use_case: FromDishka[ListLessonsUseCase]):
 @inject
 async def get_lesson_by_slug(
     slug: str,
-    user: CurrentUser,
     use_case: FromDishka[GetLessonBySlugUseCase],
+    user: OptionalCurrentUser = None,
 ):
     """
     Get lesson by slug.
     Lesson content is stored and managed locally by this service.
+    Publicly viewable by learners, third-party APIs, and guest users.
     """
     res = await use_case.execute(slug)
     if not res:
@@ -59,16 +60,17 @@ async def get_lesson_by_slug(
 @inject
 async def list_lesson_questions(
     lesson_id: UUID,
-    user: CurrentUser,
     use_case: FromDishka[ListQuestionsUseCase],
+    user: OptionalCurrentUser = None,
     pool_type: PoolType | None = None,
     difficulty: Difficulty | None = None,
     tag: str | None = None,
     offset: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=200),
 ):
-    # Guests only see practice questions. Admin/Mentors can filter both PRACTICE and EXAM.
-    if not user.has_any_role("admin", "MENTOR"):
+    # Guests, learners and third-parties only see practice questions. Admin/Mentors can filter both PRACTICE and EXAM.
+    is_teacher = user is not None and user.has_any_role("admin", "MENTOR")
+    if not is_teacher:
         pool_type = PoolType.PRACTICE
 
     query = QuestionListQuery(
@@ -80,7 +82,7 @@ async def list_lesson_questions(
         limit=limit,
     )
     rows = await use_case.execute(query)
-    if not user.has_any_role("admin", "MENTOR"):
+    if not is_teacher:
         rows = [QuestionToStudent.model_validate(q) for q in rows]
     return rows
 
@@ -89,13 +91,14 @@ async def list_lesson_questions(
 @inject
 async def get_lesson(
     lesson_id: str,
-    user: CurrentUser,
     use_case: FromDishka[GetLessonDetailUseCase],
+    user: OptionalCurrentUser = None,
 ):
-    res = await use_case.execute(lesson_id, is_teacher=user.has_any_role("admin", "MENTOR"))
+    is_teacher = user is not None and user.has_any_role("admin", "MENTOR")
+    res = await use_case.execute(lesson_id, is_teacher=is_teacher)
     if not res:
         raise HTTPException(status_code=404, detail="Lesson not found")
-    if not user.has_any_role("admin", "MENTOR"):
+    if not is_teacher:
         import copy
         res = copy.deepcopy(res)
         res["questions"] = [QuestionToStudent.model_validate(q) for q in res.get("questions", [])]

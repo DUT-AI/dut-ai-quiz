@@ -12,8 +12,13 @@ router = APIRouter(prefix="/me", tags=["me"])
 @router.get("")
 @inject
 async def me(request: Request, use_case: FromDishka[GetProfileUseCase]):
-    # Try to get access_token from cookie
-    access_token = request.cookies.get("access_token")
+    # Try to get access_token from Authorization Header first, then Cookie
+    access_token = None
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.strip().startswith("Bearer "):
+        access_token = auth_header.strip().split(" ", 1)[1].strip()
+    if not access_token:
+        access_token = request.cookies.get("access_token")
 
     data = await use_case.execute(access_token)
 

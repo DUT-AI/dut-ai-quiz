@@ -41,8 +41,24 @@ const TEACHER_NAV_ITEMS = [
 
 export const SidebarNav = ({ onCloseMobile }: { onCloseMobile?: () => void }) => {
   const pathname = usePathname();
-  const { user, logout, canManage } = useAuth();
-  const isTeacher = canManage
+  const {
+    user,
+    logout,
+    canManage,
+    canManageLessons,
+    canManageExams,
+    canManageHomeworks,
+    canManageHackathons,
+    canManageStats,
+  } = useAuth();
+
+  const managementNavItems = [
+    { icon: ShieldCheck, label: "Quản lý Đề thi", href: "/teacher/exams", show: canManageExams },
+    { icon: BookOpenCheck, label: "Quản lý Bài tập", href: "/teacher/homeworks", show: canManageHomeworks },
+    { icon: PlusCircle, label: "Quản lý Bài học", href: "/teacher/lessons", show: canManageLessons },
+    { icon: Award, label: "Quản lý Hackathon", href: "/teacher/hackathons", show: canManageHackathons },
+    { icon: BarChart2, label: "Thống kê kết quả", href: "/teacher/stats", show: canManageStats },
+  ].filter((item) => item.show);
 
   return (
     <div className="flex flex-col h-full w-72 py-8 px-4 overflow-y-auto custom-scrollbar">
@@ -86,12 +102,12 @@ export const SidebarNav = ({ onCloseMobile }: { onCloseMobile?: () => void }) =>
           </nav>
         </div>
 
-        {/* Teacher Section (Conditional) */}
-        {isTeacher && (
+        {/* Management Section (Conditional based on granular permissions) */}
+        {managementNavItems.length > 0 && (
           <div className="pt-4 border-t border-gray-100 dark:border-white/5">
-            <p className="px-4 text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-4">Giảng viên / Admin</p>
+            <p className="px-4 text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-4">Giảng viên / Quản trị</p>
             <nav className="space-y-1">
-              {TEACHER_NAV_ITEMS.map((item, idx) => {
+              {managementNavItems.map((item, idx) => {
                 const isActive = pathname.startsWith(item.href);
                 return (
                   <Link

@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 
 
@@ -11,3 +11,5 @@ class UserEntity:
     name: str | None = None
     avatar_url: str | None = None
     created_at: datetime | None = None
+    roles: list[str] = field(default_factory=list)
+

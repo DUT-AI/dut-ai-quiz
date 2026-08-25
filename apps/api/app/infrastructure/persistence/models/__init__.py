@@ -1,4 +1,6 @@
 from .attempt import Attempt, AttemptAnswer, FocusEvent
+from .auth_rbac import Permission, Role, role_permissions, user_roles
+from .base import Base
 from .comment import Comment
 from .comment_reaction import CommentReaction
 from .exam import Exam, ExamQuestion
@@ -41,9 +43,13 @@ __all__ = [
     "Lesson",
     "LessonChunk",
     "Module",
+    "Permission",
     "Question",
+    "Role",
     "Tag",
     "User",
+    "role_permissions",
+    "user_roles",
 ]
 
 export_globals = globals()
