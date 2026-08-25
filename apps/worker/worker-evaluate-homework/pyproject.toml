@@ -1,0 +1,21 @@
+[project]
+name = "dut-ai-quiz-worker-evaluate-homework"
+version = "0.1.0"
+description = "DUT AI Quiz Homework Evaluation background worker"
+requires-python = ">=3.11"
+dependencies = [
+    "dut-ai-quiz-api",
+    "arq>=0.26.0",
+    "py7zr>=1.1.0,<2",
+    "rarfile>=4.2,<5",
+]
+
+[tool.uv.sources]
+dut-ai-quiz-api = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["worker_evaluate_homework"]

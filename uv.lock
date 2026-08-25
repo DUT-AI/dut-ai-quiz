@@ -27,7 +27,10 @@ resolution-markers = [
 [manifest]
 members = [
     "dut-ai-quiz-api",
-    "dut-ai-quiz-worker",
+    "dut-ai-quiz-worker-evaluate-homework",
+    "dut-ai-quiz-worker-hackathon",
+    "dut-ai-quiz-worker-lesson-index",
+    "dut-ai-quiz-worker-pdf-import",
 ]
 
 [[package]]
@@ -918,9 +921,6 @@ dependencies = [
     { name = "httpx" },
     { name = "loguru" },
     { name = "markdown-it-py" },
-    { name = "opendataloader-pdf" },
-    { name = "paddleocr" },
-    { name = "paddlepaddle" },
     { name = "pgvector" },
     { name = "pillow" },
     { name = "pydantic-settings" },
@@ -952,9 +952,6 @@ requires-dist = [
     { name = "httpx", specifier = ">=0.27" },
     { name = "loguru", specifier = ">=0.7.3" },
     { name = "markdown-it-py", specifier = ">=3.0.0" },
-    { name = "opendataloader-pdf", specifier = ">=0.2.0" },
-    { name = "paddleocr", specifier = ">=2.8" },
-    { name = "paddlepaddle", specifier = ">=2.6" },
     { name = "pgvector", specifier = ">=0.4.0" },
     { name = "pillow", specifier = ">=10.0" },
     { name = "pydantic-settings", specifier = ">=2.4" },
@@ -974,12 +971,11 @@ dev = [
 ]
 
 [[package]]
-name = "dut-ai-quiz-worker"
+name = "dut-ai-quiz-worker-evaluate-homework"
 version = "0.1.0"
-source = { editable = "apps/worker" }
+source = { editable = "apps/worker/worker-evaluate-homework" }
 dependencies = [
     { name = "arq" },
-    { name = "docker" },
     { name = "dut-ai-quiz-api" },
     { name = "py7zr" },
     { name = "rarfile" },
@@ -988,10 +984,64 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "arq", specifier = ">=0.26.0" },
-    { name = "docker", specifier = ">=7.0.0" },
     { name = "dut-ai-quiz-api", editable = "apps/api" },
     { name = "py7zr", specifier = ">=1.1.0,<2" },
     { name = "rarfile", specifier = ">=4.2,<5" },
+]
+
+[[package]]
+name = "dut-ai-quiz-worker-hackathon"
+version = "0.1.0"
+source = { editable = "apps/worker/worker-hackathon" }
+dependencies = [
+    { name = "arq" },
+    { name = "docker" },
+    { name = "dut-ai-quiz-api" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "arq", specifier = ">=0.26.0" },
+    { name = "docker", specifier = ">=7.0.0" },
+    { name = "dut-ai-quiz-api", editable = "apps/api" },
+]
+
+[[package]]
+name = "dut-ai-quiz-worker-lesson-index"
+version = "0.1.0"
+source = { editable = "apps/worker/worker-lesson-index" }
+dependencies = [
+    { name = "arq" },
+    { name = "dut-ai-quiz-api" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "arq", specifier = ">=0.26.0" },
+    { name = "dut-ai-quiz-api", editable = "apps/api" },
+]
+
+[[package]]
+name = "dut-ai-quiz-worker-pdf-import"
+version = "0.1.0"
+source = { editable = "apps/worker/worker-pdf-import" }
+dependencies = [
+    { name = "arq" },
+    { name = "dut-ai-quiz-api" },
+    { name = "opendataloader-pdf" },
+    { name = "paddleocr" },
+    { name = "paddlepaddle" },
+    { name = "pillow" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "arq", specifier = ">=0.26.0" },
+    { name = "dut-ai-quiz-api", editable = "apps/api" },
+    { name = "opendataloader-pdf", specifier = ">=0.2.0" },
+    { name = "paddleocr", specifier = ">=2.8" },
+    { name = "paddlepaddle", specifier = ">=2.6" },
+    { name = "pillow", specifier = ">=10.0" },
 ]
 
 [[package]]
