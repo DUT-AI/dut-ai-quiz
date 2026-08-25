@@ -128,6 +128,7 @@ async def import_notion_lesson(
     module_id: str | None = Form(None),
     name: str | None = Form(None),
     description: str | None = Form(None),
+    lesson_id: str | None = Form(None),
 ):
     """
     Import a lesson from a ZIP file containing Markdown and images exported from Notion.
@@ -146,6 +147,16 @@ async def import_notion_lesson(
                 detail=f"Invalid module_id UUID format: {module_id}",
             )
 
+    lid = None
+    if lesson_id and lesson_id.strip() and lesson_id.strip().lower() not in ("null", "undefined", "none", "string"):
+        try:
+            lid = UUID(lesson_id.strip())
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid lesson_id UUID format: {lesson_id}",
+            )
+
     try:
         zip_bytes = await file.read()
         res = await use_case.execute(
@@ -153,6 +164,7 @@ async def import_notion_lesson(
             module_id=mid,
             custom_name=name,
             custom_description=description,
+            lesson_id=lid,
         )
         return res
     except ValueError as e:

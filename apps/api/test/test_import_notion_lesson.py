@@ -6,6 +6,7 @@ import pytest
 from app.domain.entities.lesson import LessonEntity
 from app.domain.interfaces import ILessonRepository, IS3Client
 from app.application.use_cases.lessons.import_notion_lesson_uc import ImportNotionLessonUseCase
+from app.core.datetime_utils import now_ict
 
 
 class MockLessonRepository(ILessonRepository):
@@ -149,3 +150,44 @@ async def test_import_notion_lesson_no_md():
     
     with pytest.raises(ValueError, match="No markdown file"):
         await use_case.execute(zip_bytes=zip_bytes)
+
+
+@pytest.mark.asyncio
+async def test_import_notion_lesson_update():
+    # 1. Create a mock ZIP file
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, "w") as zf:
+        md_content = "# Mask RCNN\nHọc máy và xử lý ngôn ngữ tự nhiên.\n"
+        zf.writestr("Mask RCNN.md", md_content)
+    zip_bytes = zip_buffer.getvalue()
+
+    # 2. Setup mocks with an existing lesson
+    existing_id = uuid4()
+    existing_lesson = LessonEntity(
+        id=existing_id,
+        name="Old Name",
+        description="Old Description",
+        content_md="Old Content",
+        order=5,
+        slug="mask-rcnn",
+        module_id=None,
+        created_at=now_ict()
+    )
+    repo = MockLessonRepository()
+    repo.lessons.append(existing_lesson)
+    storage = MockS3Client()
+    scheduler = MockLessonIndexScheduler()
+    use_case = ImportNotionLessonUseCase(repo, storage, scheduler)
+
+    # 3. Execute update by passing lesson_id
+    updated_lesson = await use_case.execute(
+        zip_bytes=zip_bytes,
+        lesson_id=existing_id
+    )
+
+    # 4. Assertions
+    assert updated_lesson.id == existing_id
+    assert updated_lesson.name == "Mask RCNN"
+    assert updated_lesson.slug == "mask-rcnn"  # It shouldn't conflict with itself and change to mask-rcnn-1
+    assert updated_lesson.content_md == "# Mask RCNN\nHọc máy và xử lý ngôn ngữ tự nhiên.\n"
+    assert len(repo.lessons) == 1  # No duplicate lesson created
