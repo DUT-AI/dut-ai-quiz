@@ -75,9 +75,20 @@ class GetProfileUseCase:
 
         else:
             # Fetch Service A User via ManageServiceClient
+            roles_in_payload = payload.get("roles")
             try:
                 profile = await self._manage_client.get_profile(user_id)
                 if not profile:
+                    if roles_in_payload and isinstance(roles_in_payload, list):
+                        quiz_role = quiz_role_from_manage(roles_in_payload)
+                        return {
+                            "id": user_id,
+                            "email": payload.get("email", f"user{user_id}@dutai.site"),
+                            "name": payload.get("name", f"User #{user_id}"),
+                            "avatar_url": payload.get("avatar_url"),
+                            "role_names": roles_in_payload,
+                            "quiz_role": quiz_role,
+                        }
                     raise AppException(
                         f"Không tìm thấy thông tin tài khoản Manage Service với ID {user_id}",
                         401,
@@ -88,8 +99,6 @@ class GetProfileUseCase:
                     quiz_role = quiz_role_from_manage(profile.role_names)
                 except Exception:
                     pass
-
-
 
                 profile_data = {
                     "id": profile.id,
@@ -107,6 +116,16 @@ class GetProfileUseCase:
                 raise
             except Exception as e:
                 logger.error(f"Error fetching profile from Manage Service: {e}")
+                if roles_in_payload and isinstance(roles_in_payload, list):
+                    quiz_role = quiz_role_from_manage(roles_in_payload)
+                    return {
+                        "id": user_id,
+                        "email": payload.get("email", f"user{user_id}@dutai.site"),
+                        "name": payload.get("name", f"User #{user_id}"),
+                        "avatar_url": payload.get("avatar_url"),
+                        "role_names": roles_in_payload,
+                        "quiz_role": quiz_role,
+                    }
                 raise AppException(
                     f"Lỗi khi lấy thông tin tài khoản từ Manage Service: {str(e)}", 401
                 ) from e
