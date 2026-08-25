@@ -12,7 +12,8 @@ from app.domain.exceptions.exceptions import AppException
 from app.domain.interfaces import IS3Client
 from app.domain.interfaces.homework_repo import IHomeworkRepository
 
-ALLOWED_ARCHIVE_SUFFIXES = (".zip", ".rar", ".7z", ".tar.gz", ".gz")
+HOMEWORK_ATTACHMENT_SUFFIXES = (".zip",)
+HOMEWORK_SUBMISSION_SUFFIXES = (".zip", ".rar", ".7z", ".tar.gz", ".gz")
 
 
 async def get_homework_or_raise(
@@ -38,23 +39,25 @@ async def upload_homework_file(
     file: HomeworkFileDTO | None,
     *,
     prefix: str,
-    required_archive: bool,
+    allowed_suffixes: tuple[str, ...],
 ) -> str | None:
     if file is None:
         return None
-    if not settings.s3_is_configured:
-        raise AppException("Kho lưu trữ chưa được cấu hình", 503)
 
     filename = Path(file.filename or "file").name
-    if required_archive and not filename.casefold().endswith(ALLOWED_ARCHIVE_SUFFIXES):
+    if not filename.casefold().endswith(allowed_suffixes):
+        suffix_list = ", ".join(allowed_suffixes)
         raise AppException(
-            "Chỉ chấp nhận file .zip, .rar, .7z, .tar.gz hoặc .gz",
+            f"Chỉ chấp nhận file: {suffix_list}",
             400,
         )
     if len(file.content) > settings.homework_max_file_size_bytes:
-        raise AppException("File vượt quá giới hạn 10 MB", 400)
+        max_size_mb = settings.homework_max_file_size_bytes // (1024 * 1024)
+        raise AppException(f"File vượt quá giới hạn {max_size_mb} MB", 400)
     if not file.content:
         raise AppException("File rỗng", 400)
+    if not settings.s3_is_configured:
+        raise AppException("Kho lưu trữ chưa được cấu hình", 503)
 
     stamp = now_ict().strftime("%Y%m%d_%H%M%S_%f")
     key = f"{prefix}/{stamp}_{filename}"

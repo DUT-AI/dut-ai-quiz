@@ -9,7 +9,8 @@ import {
   Clock,
   Sparkles,
   X,
-  FileText
+  FileText,
+  RefreshCcw,
 } from "lucide-react";
 import React, { useState } from "react";
 import { createPortal } from "react-dom";
@@ -26,25 +27,43 @@ import { SubmissionResult } from "./submission-result";
 interface HomeworkCardProps {
   homework: Homework;
   onSubmit: (homeworkId: string, file: File) => Promise<void>;
-  isSubmitting: boolean;
+  onRetry: (submissionId: string) => Promise<void>;
 }
 
-export function HomeworkCard({ homework, onSubmit, isSubmitting }: HomeworkCardProps) {
+export function HomeworkCard({ homework, onSubmit, onRetry }: HomeworkCardProps) {
   const [file, setFile] = useState<File | null>(null);
   const [isDescOpen, setIsDescOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
   const submission = homework.current_submission;
 
   // Determine active steps for timeline
-  const step2 = !!submission; // Submitted
+  const submissionFailed = submission?.status === "FAILED";
+  const step2 = !!submission && !submissionFailed; // Successfully accepted
   const step3 = submission?.status === "GRADED"; // Graded
 
   const handleFormSubmit = async () => {
-    if (!file) return;
+    if (!file || isSubmitting) return;
+    setIsSubmitting(true);
     try {
       await onSubmit(homework.id, file);
       setFile(null);
     } catch {
       // toast is handled in parent
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleRetry = async () => {
+    if (!submission || !submissionFailed || isRetrying) return;
+    setIsRetrying(true);
+    try {
+      await onRetry(submission.id);
+    } catch {
+      // toast is handled in parent
+    } finally {
+      setIsRetrying(false);
     }
   };
 
@@ -117,15 +136,25 @@ export function HomeworkCard({ homework, onSubmit, isSubmitting }: HomeworkCardP
             <div className="relative z-10 flex items-center gap-3 sm:flex-col sm:gap-2">
               <div className={`flex h-9 w-9 items-center justify-center rounded-full transition-all duration-300 ${step2
                 ? "bg-primary text-white shadow-sm shadow-primary/30"
-                : "border-2 border-gray-300 bg-white text-gray-400 dark:border-white/30 dark:bg-zinc-950"
+                : submissionFailed
+                  ? "border-2 border-red bg-red/5 text-red"
+                  : "border-2 border-gray-300 bg-white text-gray-400 dark:border-white/30 dark:bg-zinc-950"
                 }`}>
-                {step2 ? <Check className="size-4" /> : <Circle className="size-4 opacity-30" />}
+                {step2 ? (
+                  <Check className="size-4" />
+                ) : submissionFailed ? (
+                  <X className="size-4" />
+                ) : (
+                  <Circle className="size-4 opacity-30" />
+                )}
               </div>
               <div className="text-left sm:text-center">
-                <p className={`text-sm font-bold ${step2 ? "text-dark-blue dark:text-white" : "text-gray-400"}`}>
-                  Đã nộp bài
+                <p className={`text-sm font-bold ${step2 ? "text-dark-blue dark:text-white" : submissionFailed ? "text-red" : "text-gray-400"}`}>
+                  {submissionFailed ? "Nộp bài không đạt" : "Đã nộp bài"}
                 </p>
-                <p className="text-xs text-gray-navy dark:text-light-blue/70">Tải lên file code</p>
+                <p className="text-xs text-gray-navy dark:text-light-blue/70">
+                  {submissionFailed ? "Vui lòng sửa file và nộp lại" : "Tải lên file code"}
+                </p>
               </div>
             </div>
 
@@ -164,6 +193,18 @@ export function HomeworkCard({ homework, onSubmit, isSubmitting }: HomeworkCardP
         {submission && (
           <div className="mt-4">
             <SubmissionResult submission={submission} />
+            {submissionFailed && (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isRetrying}
+                onClick={handleRetry}
+                className="mt-3 w-full border-amber-500/40 text-amber-700 hover:bg-amber-500/10 dark:text-amber-300"
+              >
+                <RefreshCcw className={`mr-2 size-4 ${isRetrying ? "animate-spin" : ""}`} />
+                {isRetrying ? "Đang gửi yêu cầu..." : "Nộp lại để chấm (dùng file cũ)"}
+              </Button>
+            )}
           </div>
         )}
 
@@ -178,10 +219,11 @@ export function HomeworkCard({ homework, onSubmit, isSubmitting }: HomeworkCardP
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
               <div className="flex-1">
                 <FileDropzone
+                  inputId={`homework-file-upload-${homework.id}`}
                   file={file}
                   onFileChange={setFile}
                   allowedSuffixes={[".zip", ".rar", ".7z", ".tar.gz", ".gz"]}
-                  maxSizeMB={10}
+                  maxSizeMB={20}
                 />
               </div>
 
@@ -214,7 +256,7 @@ export function HomeworkCard({ homework, onSubmit, isSubmitting }: HomeworkCardP
             </div>
 
             <p className="text-[11px] leading-normal text-gray-navy dark:text-light-blue/70">
-              * Hệ thống chỉ chấp nhận file nén (.zip, .rar, .7z, .tar.gz, .gz).
+              * Chấp nhận .zip, .rar, .7z, .tar.gz, .gz; tối đa 20 MB.
             </p>
           </div>
         </div>

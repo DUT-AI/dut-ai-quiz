@@ -1,6 +1,7 @@
 import asyncio
 import gzip
 import io
+import json
 import stat
 import tarfile
 import zipfile
@@ -19,6 +20,8 @@ from py7zr.io import BytesIOFactory
 from worker_evaluate_homework.domain import InvalidArtifactError, SourceFile
 
 SUPPORTED_SUBMISSION_SUFFIXES = (".zip", ".rar", ".7z", ".tar.gz", ".gz")
+SUPPORTED_SOURCE_SUFFIXES = (".py", ".ipynb")
+_PYTHON_BODY_CELL_MAGICS = {"%%capture", "%%debug", "%%prun", "%%time", "%%timeit"}
 _READ_CHUNK_SIZE = 64 * 1024
 _MAX_MEMBER_NAME_LENGTH = 512
 
@@ -41,17 +44,24 @@ class S3HomeworkArtifactReader:
         )
         filename = urlparse(object_key).path.casefold()
         if filename.endswith(".pdf"):
-            pdf_bytes = content
+            # Keep legacy attachments readable; newly uploaded attachments are ZIP-only.
+            pdf_files = [("attachment.pdf", content)]
         elif filename.endswith(".zip"):
-            pdf_bytes = await asyncio.to_thread(
-                self._read_single_pdf_from_zip,
+            pdf_files = await asyncio.to_thread(
+                self._read_pdfs_from_zip,
                 content,
             )
         else:
             raise InvalidArtifactError(
-                "File đề dùng để chấm tự động phải là PDF hoặc ZIP chứa một PDF"
+                "File đề dùng để chấm tự động phải là ZIP"
             )
-        return await asyncio.to_thread(self._extract_pdf_text, pdf_bytes)
+        if not pdf_files:
+            return ""
+        parts = [
+            f"### PDF: {name}\n{await asyncio.to_thread(self._extract_pdf_text, data)}"
+            for name, data in pdf_files
+        ]
+        return "\n\n".join(parts)[: settings.homework_grading_max_source_chars]
 
     async def read_submission_sources(
         self,
@@ -104,7 +114,7 @@ class S3HomeworkArtifactReader:
         return b"".join(chunks)
 
     @staticmethod
-    def _read_single_pdf_from_zip(content: bytes) -> bytes:
+    def _read_pdfs_from_zip(content: bytes) -> list[tuple[str, bytes]]:
         try:
             with zipfile.ZipFile(io.BytesIO(content)) as archive:
                 entries = archive.infolist()
@@ -116,18 +126,24 @@ class S3HomeworkArtifactReader:
                     and _safe_member_name(info.filename).casefold().endswith(".pdf")
                     and not _is_metadata_file(info.filename)
                 ]
-                if len(pdf_entries) != 1:
+                total_size = sum(entry.file_size for entry in pdf_entries)
+                if total_size > settings.homework_grading_max_attachment_bytes:
                     raise InvalidArtifactError(
-                        "File ZIP đề bài phải chứa đúng một file PDF"
+                        "Tổng dung lượng PDF trong ZIP vượt quá giới hạn xử lý"
                     )
-                entry = pdf_entries[0]
-                if entry.flag_bits & 0x1:
-                    raise InvalidArtifactError(
-                        "File ZIP đề bài có mật khẩu nên worker không thể đọc"
+                result: list[tuple[str, bytes]] = []
+                for entry in sorted(
+                    pdf_entries,
+                    key=lambda item: item.filename.casefold(),
+                ):
+                    if entry.flag_bits & 0x1:
+                        raise InvalidArtifactError(
+                            f"File {entry.filename} có mật khẩu nên worker không thể đọc"
+                        )
+                    result.append(
+                        (_safe_member_name(entry.filename), archive.read(entry))
                     )
-                if entry.file_size > settings.homework_grading_max_attachment_bytes:
-                    raise InvalidArtifactError("PDF đề bài vượt quá giới hạn xử lý")
-                return archive.read(entry)
+                return result
         except InvalidArtifactError:
             raise
         except (RuntimeError, zipfile.BadZipFile) as exc:
@@ -170,7 +186,7 @@ def _read_zip_sources(content: bytes) -> list[SourceFile]:
         with zipfile.ZipFile(io.BytesIO(content)) as archive:
             entries = archive.infolist()
             _ensure_entry_count(len(entries))
-            selected = _select_python_entries(
+            selected = _select_source_entries(
                 
                     (info.filename, info.file_size, info)
                     for info in entries
@@ -190,7 +206,7 @@ def _read_zip_sources(content: bytes) -> list[SourceFile]:
                 result.append(
                     SourceFile(
                         name=name,
-                        content=_decode_source(
+                        content=_decode_source_file(
                             name,
                             _ensure_size(archive.read(info)),
                         ),
@@ -215,7 +231,7 @@ def _read_tar_sources(content: bytes) -> list[SourceFile]:
                     raise InvalidArtifactError(
                         "Bài nộp TAR.GZ không được chứa symbolic link"
                     )
-            selected = _select_python_entries(
+            selected = _select_source_entries(
                 (info.name, info.size, info) for info in entries if info.isfile()
             )
             result: list[SourceFile] = []
@@ -225,7 +241,9 @@ def _read_tar_sources(content: bytes) -> list[SourceFile]:
                     raise InvalidArtifactError(f"Không thể đọc file {name}")
                 with stream:
                     raw = _read_limited(stream)
-                result.append(SourceFile(name=name, content=_decode_source(name, raw)))
+                result.append(
+                    SourceFile(name=name, content=_decode_source_file(name, raw))
+                )
             return result
     except InvalidArtifactError:
         raise
@@ -236,7 +254,7 @@ def _read_tar_sources(content: bytes) -> list[SourceFile]:
 def _read_gzip_source(content: bytes, filename: str) -> list[SourceFile]:
     archive_name = PurePosixPath(filename.replace("\\", "/")).name
     inner_name = archive_name[:-3]
-    if not inner_name.casefold().endswith(".py"):
+    if not inner_name.casefold().endswith(SUPPORTED_SOURCE_SUFFIXES):
         inner_name = f"{inner_name}.py"
     name = _safe_member_name(inner_name)
     try:
@@ -244,7 +262,7 @@ def _read_gzip_source(content: bytes, filename: str) -> list[SourceFile]:
             raw = _read_limited(stream)
     except (EOFError, gzip.BadGzipFile, OSError) as exc:
         raise InvalidArtifactError("Bài nộp không phải GZ hợp lệ") from exc
-    return [SourceFile(name=name, content=_decode_source(name, raw))]
+    return [SourceFile(name=name, content=_decode_source_file(name, raw))]
 
 
 def _read_7z_sources(content: bytes) -> list[SourceFile]:
@@ -258,7 +276,7 @@ def _read_7z_sources(content: bytes) -> list[SourceFile]:
             _ensure_entry_count(len(infos))
             if any(info.is_symlink for info in infos):
                 raise InvalidArtifactError("Bài nộp 7Z không được chứa symbolic link")
-            selected = _select_python_entries(
+            selected = _select_source_entries(
                 
                     (info.filename, info.uncompressed, info.filename)
                     for info in infos
@@ -277,7 +295,9 @@ def _read_7z_sources(content: bytes) -> list[SourceFile]:
                 product = factory.get(raw_name)
                 product.seek(0)
                 raw = _ensure_size(product.read())
-                result.append(SourceFile(name=name, content=_decode_source(name, raw)))
+                result.append(
+                    SourceFile(name=name, content=_decode_source_file(name, raw))
+                )
             return result
     except InvalidArtifactError:
         raise
@@ -290,7 +310,7 @@ def _read_rar_sources(content: bytes) -> list[SourceFile]:
         with rarfile.RarFile(io.BytesIO(content)) as archive:
             infos = archive.infolist()
             _ensure_entry_count(len(infos))
-            selected = _select_python_entries(
+            selected = _select_source_entries(
                 
                     (info.filename, info.file_size, info)
                     for info in infos
@@ -309,7 +329,9 @@ def _read_rar_sources(content: bytes) -> list[SourceFile]:
                     )
                 with archive.open(info) as stream:
                     raw = _read_limited(stream)
-                result.append(SourceFile(name=name, content=_decode_source(name, raw)))
+                result.append(
+                    SourceFile(name=name, content=_decode_source_file(name, raw))
+                )
             return result
     except InvalidArtifactError:
         raise
@@ -319,7 +341,7 @@ def _read_rar_sources(content: bytes) -> list[SourceFile]:
         raise InvalidArtifactError("Bài nộp không phải RAR hợp lệ") from exc
 
 
-def _select_python_entries(
+def _select_source_entries(
     entries,
 ) -> list[tuple[str, int, Any]]:
     selected: list[tuple[str, int, Any]] = []
@@ -327,7 +349,9 @@ def _select_python_entries(
     total_size = 0
     for raw_name, raw_size, payload in entries:
         name = _safe_member_name(raw_name)
-        if _is_metadata_file(name) or not name.casefold().endswith(".py"):
+        if _is_metadata_file(name) or not name.casefold().endswith(
+            SUPPORTED_SOURCE_SUFFIXES
+        ):
             continue
         size = int(raw_size)
         if size < 0:
@@ -342,11 +366,13 @@ def _select_python_entries(
         selected.append((name, size, payload))
         if len(selected) > settings.homework_grading_max_files:
             raise InvalidArtifactError(
-                "Bài nộp có quá nhiều file Python "
+                "Bài nộp có quá nhiều file code "
                 f"(tối đa {settings.homework_grading_max_files})"
             )
     if not selected:
-        raise InvalidArtifactError("Bài nộp không chứa file Python")
+        raise InvalidArtifactError(
+            "Bài nộp không chứa file Python (.py) hoặc notebook Jupyter (.ipynb)"
+        )
     return sorted(selected, key=lambda item: item[0].casefold())
 
 
@@ -409,3 +435,150 @@ def _decode_source(name: str, content: bytes) -> str:
             raise InvalidArtifactError(
                 f"File {name} phải sử dụng bảng mã UTF-8"
             ) from exc
+
+
+def _decode_source_file(name: str, content: bytes) -> str:
+    decoded = _decode_source(name, content)
+    if not name.casefold().endswith(".ipynb"):
+        return decoded
+    return _extract_notebook_content(name, decoded)
+
+
+def _extract_notebook_content(name: str, content: str) -> str:
+    try:
+        notebook = json.loads(content)
+    except json.JSONDecodeError as exc:
+        raise InvalidArtifactError(f"Notebook {name} không phải JSON hợp lệ") from exc
+
+    cells = notebook.get("cells") if isinstance(notebook, dict) else None
+    if not isinstance(cells, list):
+        raise InvalidArtifactError(f"Notebook {name} không có danh sách cells hợp lệ")
+
+    rendered_cells: list[str] = []
+    for index, cell in enumerate(cells, start=1):
+        if not isinstance(cell, dict):
+            raise InvalidArtifactError(f"Notebook {name} có cell #{index} không hợp lệ")
+        cell_type = cell.get("cell_type")
+        if cell_type not in {"code", "markdown", "raw"}:
+            continue
+        source = _notebook_text(
+            cell.get("source", ""),
+            error_message=f"Notebook {name} có {cell_type} cell #{index} không hợp lệ",
+        )
+
+        if cell_type == "code":
+            if source.strip():
+                rendered_cells.append(
+                    f"# --- code cell {index} ---\n"
+                    f"{_normalize_notebook_code(source).rstrip()}"
+                )
+            outputs = cell.get("outputs", [])
+            if not isinstance(outputs, list):
+                raise InvalidArtifactError(
+                    f"Notebook {name} có outputs của cell #{index} không hợp lệ"
+                )
+            for output_index, output in enumerate(outputs, start=1):
+                output_text = _notebook_output_text(output)
+                if output_text.strip():
+                    rendered_cells.append(
+                        _comment_notebook_text(
+                            f"output {index}.{output_index}",
+                            output_text,
+                        )
+                    )
+        elif source.strip():
+            rendered_cells.append(
+                _comment_notebook_text(f"{cell_type} cell {index}", source)
+            )
+
+    if not rendered_cells:
+        raise InvalidArtifactError(f"Notebook {name} không chứa nội dung có thể chấm")
+    return "\n\n".join(rendered_cells) + "\n"
+
+
+def _notebook_text(value: Any, *, error_message: str) -> str:
+    if isinstance(value, str):
+        return value
+    if isinstance(value, list) and all(isinstance(item, str) for item in value):
+        return "".join(value)
+    raise InvalidArtifactError(error_message)
+
+
+def _notebook_output_text(output: Any) -> str:
+    if not isinstance(output, dict):
+        return ""
+    output_type = output.get("output_type")
+    if output_type == "stream":
+        return _notebook_text(
+            output.get("text", ""),
+            error_message="Notebook có stream output không hợp lệ",
+        )
+    if output_type == "error":
+        traceback = _notebook_text(
+            output.get("traceback", []),
+            error_message="Notebook có traceback output không hợp lệ",
+        )
+        summary = ": ".join(
+            str(value)
+            for value in (output.get("ename"), output.get("evalue"))
+            if value
+        )
+        return "\n".join(value for value in (summary, traceback) if value)
+    if output_type not in {"display_data", "execute_result"}:
+        return ""
+    data = output.get("data", {})
+    if not isinstance(data, dict):
+        return ""
+    for mime_type in (
+        "text/markdown",
+        "text/plain",
+        "application/json",
+        "text/html",
+    ):
+        if mime_type not in data:
+            continue
+        value = data[mime_type]
+        if mime_type == "application/json":
+            if isinstance(value, str):
+                return value
+            if isinstance(value, list) and all(
+                isinstance(item, str) for item in value
+            ):
+                return "".join(value)
+            return json.dumps(value, ensure_ascii=False)
+        return _notebook_text(
+            value,
+            error_message=f"Notebook có output {mime_type} không hợp lệ",
+        )
+    return ""
+
+
+def _comment_notebook_text(label: str, content: str) -> str:
+    lines = content.splitlines() or [""]
+    commented = "\n".join(f"# {line}" if line else "#" for line in lines)
+    return f"# --- {label} ---\n{commented}"
+
+
+def _normalize_notebook_code(code: str) -> str:
+    """Turn IPython-only commands into valid Python without executing them."""
+    lines = code.splitlines()
+    first_content = next((line.lstrip() for line in lines if line.strip()), "")
+    if first_content.startswith("%%"):
+        magic = first_content.split(maxsplit=1)[0].casefold()
+        if magic not in _PYTHON_BODY_CELL_MAGICS:
+            return "\n".join(
+                f"# Jupyter cell magic ignored: {line}" if line else "#"
+                for line in lines
+            )
+
+    normalized: list[str] = []
+    for line in lines:
+        stripped = line.lstrip()
+        if stripped.startswith(("!", "%", "?")):
+            indentation = line[: len(line) - len(stripped)]
+            normalized.append(
+                f"{indentation}pass  # Jupyter command ignored: {stripped}"
+            )
+        else:
+            normalized.append(line)
+    return "\n".join(normalized)

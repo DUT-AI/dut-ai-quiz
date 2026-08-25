@@ -164,3 +164,31 @@ def test_sanitize_questions_for_student():
     assert sanitized[0].solution is None
     assert sanitized[0].options[0].is_correct is None
     assert sanitized[0].options[1].is_correct is None
+
+
+def test_question_to_student_schema_directly():
+    """Test that QuestionToStudent automatically strips solution and is_correct via Pydantic model_validate."""
+    from app.presentation.schemas.questions import QuestionToStudent
+
+    option_1 = QuestionOptionEntity(id="opt-1", text="Option A", is_correct=True)
+    option_2 = QuestionOptionEntity(id="opt-2", text="Option B", is_correct=False)
+    
+    question = QuestionEntity(
+        id=uuid4(),
+        pool_type=PoolType.PRACTICE,
+        difficulty=Difficulty.EASY,
+        content="What is Backprop?",
+        options=[option_1, option_2],
+        solution="Detailed backprop explanation.",
+        lesson_id=uuid4(),
+        tags=["ML", "AI"],
+        created_by=1,
+        created_at=datetime.utcnow()
+    )
+
+    student_q = QuestionToStudent.model_validate(question)
+    assert student_q.solution is None
+    assert student_q.options[0].is_correct is None
+    assert student_q.options[1].is_correct is None
+    assert student_q.tags == ["ML", "AI"]
+

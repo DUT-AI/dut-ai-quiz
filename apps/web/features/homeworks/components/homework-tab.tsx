@@ -12,21 +12,37 @@ import {
 import { toast } from "sonner";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { useMyHomeworks, useSubmitHomework } from "../queries";
+import {
+  useMyHomeworks,
+  useRetryHomeworkSubmission,
+  useSubmitHomework,
+} from "../queries";
 import { HomeworkCard } from "./homework-card";
 
 export function HomeworkTab({ lessonId }: { lessonId: string }) {
   const { data, isLoading, error } = useMyHomeworks(lessonId || null);
   const submit = useSubmitHomework();
+  const retry = useRetryHomeworkSubmission();
 
   const handleSubmit = async (homeworkId: string, file: File) => {
     try {
       await submit.mutateAsync({ homeworkId, file });
-      toast.success("Nộp bài thành công");
+      toast.info("Đã nhận file. Hệ thống đang kiểm tra và chấm điểm.");
     } catch (submissionError) {
       const msg = submissionError instanceof Error ? submissionError.message : "Nộp bài thất bại";
       toast.error(msg);
       throw submissionError;
+    }
+  };
+
+  const handleRetry = async (submissionId: string) => {
+    try {
+      await retry.mutateAsync(submissionId);
+      toast.info("Đã dùng lại file cũ. Hệ thống đang chấm bài lại.");
+    } catch (retryError) {
+      const msg = retryError instanceof Error ? retryError.message : "Không thể chấm lại bài";
+      toast.error(msg);
+      throw retryError;
     }
   };
 
@@ -70,7 +86,9 @@ export function HomeworkTab({ lessonId }: { lessonId: string }) {
 
   // Calculate statistics for the dashboard
   const totalHomeworks = data.data.length;
-  const submittedHomeworks = data.data.filter(h => !!h.current_submission).length;
+  const submittedHomeworks = data.data.filter(
+    h => h.current_submission && h.current_submission.status !== "FAILED"
+  ).length;
   const gradedHomeworks = data.data.filter(
     h => h.current_submission?.status === "GRADED" && typeof h.current_submission.score === "number"
   );
@@ -140,7 +158,7 @@ export function HomeworkTab({ lessonId }: { lessonId: string }) {
             <HomeworkCard
               homework={homework}
               onSubmit={handleSubmit}
-              isSubmitting={submit.isPending}
+              onRetry={handleRetry}
             />
           </motion.div>
         ))}

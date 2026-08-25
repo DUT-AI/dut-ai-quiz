@@ -3,6 +3,7 @@ from redis.asyncio import Redis
 from loguru import logger
 
 from app.application.dtos.user import UserOut
+from app.config import settings
 from app.domain.exceptions.exceptions import AppException
 from app.domain.interfaces import IUserRepository, IManageService
 
@@ -15,6 +16,16 @@ class UserService:
 
     async def get_user_info(self, user_id: int) -> UserOut:
         """Lấy thông tin user từ local DB (Google) hoặc Manage Service (Service-A)."""
+        if settings.auth_dev_bypass and user_id == settings.auth_dev_user_id:
+            rn = settings.auth_dev_role_name
+            role = rn if isinstance(rn, str) else (rn[0] if rn else "admin")
+            return UserOut(
+                id=user_id,
+                name=f"Dev User ({role})",
+                email="dev@dutai.site",
+                avatar_url=None,
+            )
+
         u = await self.user_repo.get_by_id(user_id)
         if u:
             return UserOut(
@@ -25,13 +36,24 @@ class UserService:
             )
 
         # Fallback: lấy từ Manage Service
-        profile = await self.manage_client.get_profile(user_id)
-        if profile:
+        try:
+            profile = await self.manage_client.get_profile(user_id)
+            if profile:
+                return UserOut(
+                    id=user_id,
+                    name=profile.name,
+                    email=profile.email,
+                    avatar_url=profile.avatar_url,
+                )
+        except Exception as e:
+            logger.warning(f"Error fetching profile from Manage Service for user {user_id}: {e}")
+
+        if settings.auth_dev_bypass:
             return UserOut(
                 id=user_id,
-                name=profile.name,
-                email=profile.email,
-                avatar_url=profile.avatar_url,
+                name=f"User #{user_id}",
+                email=f"user{user_id}@dutai.site",
+                avatar_url=None,
             )
 
         raise AppException(
@@ -41,6 +63,15 @@ class UserService:
 
     async def get_user_profile(self, user_id: int) -> dict[str, Any] | None:
         """Lấy profile của user từ Local DB hoặc Cache Redis hoặc Manage Service."""
+        if settings.auth_dev_bypass and user_id == settings.auth_dev_user_id:
+            rn = settings.auth_dev_role_name
+            role = rn if isinstance(rn, str) else (rn[0] if rn else "admin")
+            return {
+                "name": f"Dev User ({role})",
+                "avatar_url": None,
+                "role": role,
+            }
+
         # 1. Check local repository first (e.g. Google user or admin test accounts)
         u = await self.user_repo.get_by_id(user_id)
         if u:
@@ -62,29 +93,39 @@ class UserService:
                 logger.warning(f"Error reading user profile cache: {e}")
 
         # 3. Fallback to Manage Service
-        profile = await self.manage_client.get_profile(user_id)
-        if profile:
-            from app.application.services.auth_roles import quiz_role_from_manage
-            quiz_role = "guest"
-            try:
-                quiz_role = quiz_role_from_manage(profile.role_names)
-            except Exception:
-                pass
-            
-            data = {
-                "name": profile.name,
-                "avatar_url": profile.avatar_url,
-                "role": quiz_role
-            }
-            
-            # Cache resolved profile in Redis for 10 minutes (600s)
-            if self._redis:
+        try:
+            profile = await self.manage_client.get_profile(user_id)
+            if profile:
+                from app.application.services.auth_roles import quiz_role_from_manage
+                quiz_role = "guest"
                 try:
-                    import json
-                    await self._redis.set(cache_key, json.dumps(data), ex=600)
-                except Exception as e:
-                    logger.warning(f"Error writing user profile cache: {e}")
-            return data
+                    quiz_role = quiz_role_from_manage(profile.role_names)
+                except Exception:
+                    pass
+                
+                data = {
+                    "name": profile.name,
+                    "avatar_url": profile.avatar_url,
+                    "role": quiz_role
+                }
+                
+                # Cache resolved profile in Redis for 10 minutes (600s)
+                if self._redis:
+                    try:
+                        import json
+                        await self._redis.set(cache_key, json.dumps(data), ex=600)
+                    except Exception as e:
+                        logger.warning(f"Error writing user profile cache: {e}")
+                return data
+        except Exception as e:
+            logger.warning(f"Error fetching profile from Manage Service for user {user_id}: {e}")
+
+        if settings.auth_dev_bypass:
+            return {
+                "name": f"User #{user_id}",
+                "avatar_url": None,
+                "role": "guest"
+            }
 
         return None
 

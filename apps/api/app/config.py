@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import ClassVar
 
 from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -25,6 +26,7 @@ class Settings(BaseSettings):
 
     manage_base_url: str = ""
     manage_api_key: str = ""
+    third_party_api_keys: str = ""
 
     cors_origins: str = "http://localhost:3000,https://quiz.dutai.site"
 
@@ -80,14 +82,10 @@ class Settings(BaseSettings):
     )
     presigned_url_expire_seconds: int = 3600
 
-    # AI Integration (Gemini / Multimodal)
-    gemini_model_name: str = "gemini-flash-latest"
-
     # Homework submission and external evaluation services.
     homework_checker_api_url: str = ""
     submission_checker_api_url: str = ""
     homework_grading_enabled: bool = True
-    homework_grading_model: str = "gemini-3.5-flash"
     homework_grading_pass_score: float = 7.0
     homework_grading_max_attachment_bytes: int = 20 * 1024 * 1024
     homework_grading_max_source_bytes: int = 5 * 1024 * 1024
@@ -95,7 +93,8 @@ class Settings(BaseSettings):
     homework_grading_max_files: int = 50
     homework_grading_max_archive_entries: int = 500
     homework_plagiarism_threshold: float = 0.8
-    homework_max_file_size_bytes: int = 10 * 1024 * 1024
+    # This limit is application policy, not deployment-specific configuration.
+    homework_max_file_size_bytes: ClassVar[int] = 20 * 1024 * 1024
     homework_grading_timeout_seconds: float = 300.0
     # Lesson semantic search. DUT-AI's Vietnamese SBERT service is the default;
     # local hashing and OpenAI-compatible providers remain available for dev.
@@ -123,9 +122,11 @@ class Settings(BaseSettings):
     max_script_size_bytes: int = 10 * 1024 * 1024  # 10 MB
     max_model_size_bytes: int = 1024 * 1024 * 1024  # 1 GB
 
-    # ================= GEMINI AI (PDF IMPORT) ===================
-    gemini_api_key: str = ""
-    gemini_model: str = "gemini-3.5-flash"
+    # ================= GOOGLE GENAI / GEMMA API KEY =============
+    gemini_api_key: str = Field(
+        default="",
+        validation_alias=AliasChoices("GEMINI_API_KEY", "GOOGLE_API_KEY"),
+    )
 
     # ================= PDF IMPORT CONFIG ========================
     pdf_max_size_mb: int = 20
@@ -170,8 +171,17 @@ class Settings(BaseSettings):
     @property
     def cors_origin_list(self) -> list[str]:
         return [
-            origin.strip() for origin in self.cors_origins.split(",") if origin.strip()
+            origin.strip().rstrip("/")
+            for origin in self.cors_origins.split(",")
+            if origin.strip()
         ]
+
+    @property
+    def third_party_api_key_list(self) -> list[str]:
+        keys = [k.strip() for k in self.third_party_api_keys.split(",") if k.strip()]
+        if self.manage_api_key.strip() and self.manage_api_key.strip() not in keys:
+            keys.append(self.manage_api_key.strip())
+        return keys
 
 
 settings = Settings()

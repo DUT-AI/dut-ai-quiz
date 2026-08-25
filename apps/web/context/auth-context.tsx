@@ -12,10 +12,18 @@ export interface UserContextType {
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
   isAdmin: boolean;
+  isSubAdmin: boolean;
   isMentor: boolean;
+  isEducator: boolean;
+  isProjectDeveloper: boolean;
   isTeammate: boolean;
   isGuest: boolean;
   canManage: boolean;
+  canManageLessons: boolean;
+  canManageExams: boolean;
+  canManageHomeworks: boolean;
+  canManageHackathons: boolean;
+  canManageStats: boolean;
 }
 
 const AuthContext = createContext<UserContextType | undefined>(undefined);
@@ -89,12 +97,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const role = user?.quiz_role;
-  const isAdmin = role === "admin";
-  const isMentor = role === "MENTOR";
-  const isTeammate = role === "teammate";
-  const isGuest = !isAdmin && !isMentor && !isTeammate;
-  const canManage = isAdmin || isMentor;
+  const rawRoles: string[] = Array.isArray(user?.role_names)
+    ? user.role_names.map((r: string) => String(r).trim().toUpperCase())
+    : [];
+  const quizRole = String(user?.quiz_role || "").trim().toUpperCase();
+
+  const isAdmin = rawRoles.includes("ADMIN") || quizRole === "ADMIN";
+  const isSubAdmin = rawRoles.includes("SUB_ADMIN");
+  const isProjectDeveloper = rawRoles.includes("PROJECT_DEVELOPER");
+  const isEducator = rawRoles.includes("EDUCATOR") || rawRoles.includes("MENTOR") || quizRole === "MENTOR";
+  const isMentor = isEducator;
+  const isTeammate = rawRoles.includes("TEAMMATE") || rawRoles.includes("STUDENT") || quizRole === "TEAMMATE";
+  const isGuest = !isAdmin && !isSubAdmin && !isProjectDeveloper && !isEducator && !isTeammate;
+
+  // Granular capability flags
+  const canManageLessons = isAdmin || isSubAdmin || isEducator;
+  const canManageExams = isAdmin || isSubAdmin || isEducator;
+  const canManageHomeworks = isAdmin || isSubAdmin || isEducator;
+  const canManageHackathons = isAdmin || isSubAdmin || isProjectDeveloper;
+  const canManageStats = isAdmin || isSubAdmin || isEducator;
+  const canManage = canManageLessons || canManageHackathons || canManageExams;
 
   return (
     <AuthContext.Provider
@@ -106,10 +128,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         logout,
         refresh: fetchUser,
         isAdmin,
+        isSubAdmin,
         isMentor,
+        isEducator,
+        isProjectDeveloper,
         isTeammate,
         isGuest,
         canManage,
+        canManageLessons,
+        canManageExams,
+        canManageHomeworks,
+        canManageHackathons,
+        canManageStats,
       }}
     >
       {children}

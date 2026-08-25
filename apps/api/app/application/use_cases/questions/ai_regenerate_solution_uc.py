@@ -1,6 +1,7 @@
 import os
 from uuid import UUID
 from google import genai
+from app.config import settings
 from app.domain.interfaces.question_repo import IQuestionRepository
 from app.domain.entities.question import QuestionEntity
 
@@ -13,7 +14,7 @@ class AiRegenerateSolutionUseCase:
         if not q or q.status != "DRAFT":
             return None
 
-        api_key = os.environ.get("GEMINI_API_KEY")
+        api_key = settings.gemini_api_key or os.environ.get("GEMINI_API_KEY")
         if not api_key:
             raise ValueError("GEMINI_API_KEY is missing")
 
@@ -26,7 +27,7 @@ class AiRegenerateSolutionUseCase:
             prompt += f"\nAdditional Instructions from Teacher:\n{custom_prompt}\n"
 
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model="gemma-4-31b-it",
             contents=prompt
         )
         

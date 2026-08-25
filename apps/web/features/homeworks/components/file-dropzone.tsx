@@ -6,6 +6,7 @@ import React, { useState } from "react";
 import { toast } from "sonner";
 
 interface FileDropzoneProps {
+  inputId: string;
   file: File | null;
   onFileChange: (file: File | null) => void;
   allowedSuffixes: string[];
@@ -13,6 +14,7 @@ interface FileDropzoneProps {
 }
 
 export function FileDropzone({
+  inputId,
   file,
   onFileChange,
   allowedSuffixes,
@@ -86,14 +88,14 @@ export function FileDropzone({
     <div className="w-full">
       <input
         type="file"
-        id="homework-file-upload"
+        id={inputId}
         className="hidden"
         accept={allowedSuffixes.join(",")}
         onChange={handleFileInput}
       />
 
       <label
-        htmlFor="homework-file-upload"
+        htmlFor={inputId}
         onDragEnter={handleDrag}
         onDragOver={handleDrag}
         onDragLeave={handleDrag}

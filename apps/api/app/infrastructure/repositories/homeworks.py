@@ -1,10 +1,14 @@
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import and_, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.datetime_utils import now_ict
-from app.domain.entities.homework import HomeworkEntity, HomeworkSubmissionEntity
+from app.domain.entities.homework import (
+    HomeworkEntity,
+    HomeworkSubmissionEntity,
+    HomeworkSubmissionStatus,
+)
 from app.domain.interfaces.homework_repo import IHomeworkRepository
 from app.infrastructure.persistence.models.homework import (
     Homework,
@@ -139,6 +143,33 @@ class HomeworkRepository(IHomeworkRepository):
         )
         return model.to_entity() if model else None
 
+    async def retry_failed_submission(
+        self, submission_id: UUID
+    ) -> HomeworkSubmissionEntity | None:
+        model = await self._session.scalar(
+            update(HomeworkSubmission)
+            .where(
+                HomeworkSubmission.id == submission_id,
+                HomeworkSubmission.status == HomeworkSubmissionStatus.FAILED.value,
+            )
+            .values(
+                status=HomeworkSubmissionStatus.GRADING.value,
+                is_pass=None,
+                score=None,
+                feedback=None,
+                score_details=None,
+                plagiarism_info=None,
+                is_plagiarized=False,
+                plagiarized_from_user_id=None,
+                grading_error=None,
+            )
+            .returning(HomeworkSubmission)
+        )
+        if model is None:
+            return None
+        await self._session.flush()
+        return model.to_entity()
+
     async def list_submissions(
         self, homework_id: UUID
     ) -> list[HomeworkSubmissionEntity]:
@@ -153,6 +184,34 @@ class HomeworkRepository(IHomeworkRepository):
             )
         ).all()
         return [model.to_entity() for model in models]
+
+    async def list_completed_user_ids(self, homework_id: UUID) -> list[int]:
+        latest_attempts = (
+            select(
+                HomeworkSubmission.user_id,
+                func.max(HomeworkSubmission.attempt_number).label("attempt_number"),
+            )
+            .where(HomeworkSubmission.homework_id == homework_id)
+            .group_by(HomeworkSubmission.user_id)
+            .subquery()
+        )
+        stmt = (
+            select(HomeworkSubmission.user_id)
+            .join(
+                latest_attempts,
+                and_(
+                    HomeworkSubmission.user_id == latest_attempts.c.user_id,
+                    HomeworkSubmission.attempt_number
+                    == latest_attempts.c.attempt_number,
+                ),
+            )
+            .where(
+                HomeworkSubmission.homework_id == homework_id,
+                HomeworkSubmission.status == HomeworkSubmissionStatus.GRADED.value,
+            )
+            .order_by(HomeworkSubmission.user_id)
+        )
+        return [int(user_id) for user_id in (await self._session.scalars(stmt)).all()]
 
     async def count_submitters(self, homework_id: UUID) -> int:
         return int(

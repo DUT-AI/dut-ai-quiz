@@ -1,5 +1,6 @@
 import gzip
 import io
+import json
 import tarfile
 import zipfile
 from dataclasses import replace
@@ -30,6 +31,7 @@ from worker_evaluate_homework.infrastructure.archive_reader import (
 from worker_evaluate_homework.infrastructure.gemini_grading_engine import (
     _analyze_sources,
 )
+from worker_evaluate_homework.presentation.arq_tasks import evaluate_homework_job
 
 
 class RepositoryStub:
@@ -146,6 +148,11 @@ class InvalidArtifactReaderStub(ArtifactReaderStub):
         raise InvalidArtifactError("Archive bị hỏng")
 
 
+class InvalidEvaluationUseCaseStub:
+    async def execute(self, submission_id, *, final_attempt):
+        raise InvalidArtifactError("Bài nộp không hợp lệ")
+
+
 @pytest.mark.asyncio
 async def test_submission_is_graded_without_external_checker() -> None:
     homework_id = uuid4()
@@ -226,6 +233,20 @@ async def test_invalid_archive_is_marked_as_final_failure() -> None:
         "Archive bị hỏng",
         True,
     )
+
+
+@pytest.mark.asyncio
+async def test_invalid_submission_marks_arq_job_as_failed() -> None:
+    submission_id = uuid4()
+
+    with pytest.raises(InvalidArtifactError, match="Bài nộp không hợp lệ"):
+        await evaluate_homework_job(
+            {
+                "evaluate_use_case": InvalidEvaluationUseCaseStub(),
+                "job_try": 1,
+            },
+            str(submission_id),
+        )
 
 
 def test_identical_python_sources_are_detected() -> None:
@@ -346,6 +367,153 @@ def test_zip_source_reader_extracts_python_only() -> None:
     )
 
     assert sources == [SourceFile(name="src/main.py", content="print('ok')")]
+
+
+def test_zip_source_reader_extracts_all_gradable_notebook_content() -> None:
+    notebook = {
+        "cells": [
+            {
+                "cell_type": "markdown",
+                "source": ["## Câu trả lời lý thuyết\n", "Độ phức tạp là O(n)."],
+            },
+            {
+                "cell_type": "code",
+                "source": ["def answer():\n", "    return 42\n"],
+            },
+            {
+                "cell_type": "code",
+                "source": "print(answer())",
+                "outputs": [
+                    {"output_type": "stream", "name": "stdout", "text": "42\n"},
+                    {
+                        "output_type": "execute_result",
+                        "data": {"text/plain": ["Result: 42"]},
+                        "execution_count": 2,
+                    },
+                ],
+            },
+        ],
+        "metadata": {},
+        "nbformat": 4,
+        "nbformat_minor": 5,
+    }
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as archive:
+        archive.writestr("submission.ipynb", json.dumps(notebook))
+
+    sources = S3HomeworkArtifactReader._read_python_sources(
+        buffer.getvalue(),
+        "submission.zip",
+    )
+
+    assert sources == [
+        SourceFile(
+            name="submission.ipynb",
+            content=(
+                "# --- markdown cell 1 ---\n"
+                "# ## Câu trả lời lý thuyết\n"
+                "# Độ phức tạp là O(n).\n\n"
+                "# --- code cell 2 ---\n"
+                "def answer():\n"
+                "    return 42\n\n"
+                "# --- code cell 3 ---\n"
+                "print(answer())\n\n"
+                "# --- output 3.1 ---\n"
+                "# 42\n\n"
+                "# --- output 3.2 ---\n"
+                "# Result: 42\n"
+            ),
+        )
+    ]
+
+
+def test_markdown_only_notebook_is_accepted_for_theory_answers() -> None:
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as archive:
+        archive.writestr(
+            "submission.ipynb",
+            json.dumps(
+                {
+                    "cells": [{"cell_type": "markdown", "source": "# Empty"}],
+                    "nbformat": 4,
+                }
+            ),
+        )
+
+    sources = S3HomeworkArtifactReader._read_python_sources(
+        buffer.getvalue(),
+        "submission.zip",
+    )
+
+    assert sources == [
+        SourceFile(
+            name="submission.ipynb",
+            content="# --- markdown cell 1 ---\n# # Empty\n",
+        )
+    ]
+
+
+def test_homework_zip_allows_any_files_and_collects_every_pdf() -> None:
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as archive:
+        archive.writestr("README.md", "instructions")
+        archive.writestr("assets/data.csv", "a,b")
+        archive.writestr("part-2.pdf", b"second pdf")
+        archive.writestr("part-1.PDF", b"first pdf")
+
+    pdfs = S3HomeworkArtifactReader._read_pdfs_from_zip(buffer.getvalue())
+
+    assert pdfs == [
+        ("part-1.PDF", b"first pdf"),
+        ("part-2.pdf", b"second pdf"),
+    ]
+
+
+def test_homework_zip_without_pdf_is_valid() -> None:
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as archive:
+        archive.writestr("requirements.md", "Use Python")
+
+    assert S3HomeworkArtifactReader._read_pdfs_from_zip(buffer.getvalue()) == []
+
+
+def test_notebook_shell_escape_is_not_a_python_syntax_error() -> None:
+    notebook = {
+        "cells": [
+            {
+                "cell_type": "code",
+                "source": [
+                    "!pip install pandas\n",
+                    "%matplotlib inline\n",
+                    "import pandas as pd\n",
+                    "values = pd.Series([1, 2, 3])\n",
+                ],
+            }
+        ],
+        "nbformat": 4,
+    }
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as archive:
+        archive.writestr("analysis.ipynb", json.dumps(notebook))
+
+    sources = S3HomeworkArtifactReader._read_python_sources(
+        buffer.getvalue(),
+        "submission.zip",
+    )
+    analysis = _analyze_sources(HomeworkRubric(topic="Notebook"), sources)
+
+    assert analysis["syntax_errors"] == []
+    assert "Jupyter command ignored: !pip install pandas" in sources[0].content
+    assert "Jupyter command ignored: %matplotlib inline" in sources[0].content
+
+
+def test_shell_escape_in_python_file_remains_a_syntax_error() -> None:
+    analysis = _analyze_sources(
+        HomeworkRubric(topic="Python"),
+        [SourceFile(name="main.py", content="!pip install pandas\nimport pandas")],
+    )
+
+    assert analysis["syntax_errors"]
 
 
 def test_tar_gz_source_reader_extracts_python() -> None:

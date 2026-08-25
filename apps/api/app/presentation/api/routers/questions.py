@@ -26,6 +26,7 @@ from app.presentation.schemas.questions import (
     QuestionCreate,
     QuestionListQuery,
     QuestionOut,
+    QuestionToStudent,
     QuestionUpdate,
     QuestionAnswerIn,
     QuestionAnswerOut,
@@ -44,50 +45,7 @@ router = APIRouter(prefix="/questions", tags=["questions"])
 
 
 def sanitize_questions_for_student(questions: list) -> list:
-    
-    sanitized = []
-    for q in questions:
-        if isinstance(q, dict):
-            q_copy = copy.deepcopy(q)
-            q_copy["solution"] = None
-            if "options" in q_copy:
-                for opt in q_copy["options"]:
-                    if isinstance(opt, dict):
-                        opt["is_correct"] = None
-            sanitized.append(q_copy)
-        elif hasattr(q, "model_copy"):
-            q_copy = q.model_copy(deep=True)
-            q_copy.solution = None
-            if hasattr(q_copy, "options"):
-                for opt in q_copy.options:
-                    opt.is_correct = None
-            sanitized.append(q_copy)
-        else:
-            options_copy = []
-            for opt in q.options:
-                options_copy.append(
-                    QuestionOptionEntity(
-                        id=opt.id,
-                        text=opt.text,
-                        is_correct=None,
-                        fixed=opt.fixed,
-                    )
-                )
-            sanitized.append(
-                QuestionEntity(
-                    id=q.id,
-                    pool_type=q.pool_type,
-                    difficulty=q.difficulty,
-                    content=q.content,
-                    options=options_copy,
-                    solution=None,
-                    lesson_id=q.lesson_id,
-                    tags=q.tags,
-                    created_by=q.created_by,
-                    created_at=q.created_at,
-                )
-            )
-    return sanitized
+    return [QuestionToStudent.model_validate(q) for q in questions]
 
 
 @router.get("", response_model=list[QuestionOut])

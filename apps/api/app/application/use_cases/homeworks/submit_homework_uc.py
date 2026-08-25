@@ -12,7 +12,11 @@ from app.domain.interfaces import IS3Client
 from app.domain.interfaces.homework_queue import IHomeworkEvaluationQueue
 from app.domain.interfaces.homework_repo import IHomeworkRepository
 
-from ._shared import get_homework_or_raise, upload_homework_file
+from ._shared import (
+    HOMEWORK_SUBMISSION_SUFFIXES,
+    get_homework_or_raise,
+    upload_homework_file,
+)
 
 
 class SubmitHomeworkUseCase:
@@ -38,7 +42,7 @@ class SubmitHomeworkUseCase:
             self._storage,
             payload.file,
             prefix=(f"homeworks/{payload.homework_id}/submissions/{payload.user_id}"),
-            required_archive=True,
+            allowed_suffixes=HOMEWORK_SUBMISSION_SUFFIXES,
         )
         if key is None:
             raise ValueError("Submission file is required")

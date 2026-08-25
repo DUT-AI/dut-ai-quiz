@@ -5,11 +5,17 @@ def quiz_role_from_manage(role_names: list[str] | str | None) -> str:
         roles = [role_names]
     else:
         roles = role_names
+        
+    roles_upper = [r.upper() for r in roles]
 
-    if "admin" in roles:
+    if "ADMIN" in roles_upper:
         return "admin"
-    if "MENTOR" in roles:
+    if "SUB_ADMIN" in roles_upper:
+        return "SUB_ADMIN"
+    if "PROJECT_DEVELOPER" in roles_upper:
+        return "PROJECT_DEVELOPER"
+    if "MENTOR" in roles_upper or "EDUCATOR" in roles_upper:
         return "MENTOR"
-    if "teammate" in roles or "student" in roles:
+    if "TEAMMATE" in roles_upper or "STUDENT" in roles_upper:
         return "teammate"
     return "guest"
