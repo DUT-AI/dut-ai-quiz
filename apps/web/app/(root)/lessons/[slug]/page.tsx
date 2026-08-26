@@ -264,7 +264,7 @@ export default function LessonSlugPage() {
       <div className="w-full mt-8">
         {isPreview ? (
           <div>
-            {!currentLesson.slug ? (
+            {!currentLesson.content_md ? (
               <LessonDraft />
             ) : (
               <TheoryTab contentMd={currentLesson.content_md} lessonId={lessonId} />
@@ -279,7 +279,7 @@ export default function LessonSlugPage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
               >
-                {!currentLesson.slug ? (
+                {!currentLesson.content_md ? (
                   <LessonDraft />
                 ) : (
                   <TheoryTab contentMd={currentLesson.content_md} lessonId={lessonId} />

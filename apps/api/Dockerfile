@@ -2,12 +2,9 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     build-essential \
-    libgl1 \
-    libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv
@@ -17,17 +14,19 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 ENV TZ=Asia/Ho_Chi_Minh
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# Copy workspace pyproject and locks
+# Copy workspace configuration and lockfile
 COPY pyproject.toml uv.lock ./
 COPY apps/api/pyproject.toml apps/api/README.md ./apps/api/
-COPY apps/worker/pyproject.toml ./apps/worker/
+COPY apps/worker/worker-hackathon/pyproject.toml ./apps/worker/worker-hackathon/
+COPY apps/worker/worker-lesson-index/pyproject.toml ./apps/worker/worker-lesson-index/
+COPY apps/worker/worker-evaluate-homework/pyproject.toml ./apps/worker/worker-evaluate-homework/
+COPY apps/worker/worker-pdf-import/pyproject.toml ./apps/worker/worker-pdf-import/
 
-# Sync all projects in workspace
-RUN uv sync --frozen --no-cache
+# Sync only this package and its dependencies
+RUN uv sync --package dut-ai-quiz-api --frozen --no-cache
 
-# Copy source code of all workspace apps
+# Copy source code of the api project
 COPY apps/api ./apps/api
-COPY apps/worker ./apps/worker
 
 # Set working directory to api app to run uvicorn
 WORKDIR /app/apps/api

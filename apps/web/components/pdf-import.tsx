@@ -4,8 +4,11 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useImportPDF, useUploadPDF, useLessons } from "@/lib/queries";
 import { Card } from "@/components/ui/card";
-import { Upload, AlertCircle, Loader2, X, FileText, Cpu, Eye } from "lucide-react";
+import { Upload, AlertCircle, Loader2, X, FileText, AlertTriangle } from "lucide-react";
 import { motion } from "framer-motion";
+import { PdfImportProcessing } from "./pdf-import/pdf-import-processing";
+import { PdfImportReview } from "./pdf-import/pdf-import-review";
+import { PdfImportPassword } from "./pdf-import/pdf-import-password";
 
 interface PdfImportProps {
   lessonId?: string;
@@ -14,9 +17,40 @@ interface PdfImportProps {
 }
 
 export function PdfImport({ lessonId: propLessonId, onSuccess, onClose }: PdfImportProps) {
+  const [step, setStep] = useState<"upload" | "password" | "processing" | "review">("upload");
+  const [jobId, setJobId] = useState<string>("");
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
   const [file, setFile] = useState<File | null>(null);
   const [lessonId, setLessonId] = useState(propLessonId || "");
   const [method, setMethod] = useState<"ocr" | "gemini">("gemini");
+  const [isDragActive, setIsDragActive] = useState(false);
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setIsDragActive(true);
+    } else if (e.type === "dragleave") {
+      setIsDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const selectedFile = e.dataTransfer.files[0];
+      if (selectedFile.name.toLowerCase().endsWith(".pdf")) {
+        setFile(selectedFile);
+        setErrorMsg(null);
+      } else {
+        setErrorMsg("Định dạng file không hợp lệ. Chỉ chấp nhận các file .pdf");
+      }
+    }
+  };
 
   const { data: lessons = [] } = useLessons();
   const importMutation = useImportPDF();
@@ -30,6 +64,7 @@ export function PdfImport({ lessonId: propLessonId, onSuccess, onClose }: PdfImp
       return;
     }
 
+    setErrorMsg(null);
     const formData = new FormData();
     formData.append("file", file);
     if (lessonId) {
@@ -39,30 +74,95 @@ export function PdfImport({ lessonId: propLessonId, onSuccess, onClose }: PdfImp
 
     try {
       if (method === "ocr") {
-        await importMutation.mutateAsync(formData);
+        const res = await importMutation.mutateAsync(formData);
+        if (res && res.job_id) {
+          setJobId(res.job_id);
+          setStep("processing");
+        } else {
+          throw new Error("Không nhận được Job ID từ server");
+        }
       } else {
-        await uploadMutation.mutateAsync(formData);
+        const res = await uploadMutation.mutateAsync(formData);
+        if (res && res.ok && res.job_id) {
+          setJobId(res.job_id);
+          setStep("processing");
+        } else if (res && !res.ok && res.is_encrypted) {
+          setErrorMsg(null);
+          setStep("password");
+        } else {
+          throw new Error(res?.error || "Không nhận được Job ID từ server");
+        }
       }
-      alert("Đã gửi file PDF cho AI xử lý ngầm (Background Job). Vui lòng kiểm tra lại danh sách câu hỏi sau ít phút.");
-      onSuccess();
-      if (onClose) onClose();
     } catch (err: any) {
-      alert(err.message || "Lỗi khi gửi PDF");
+      const errMsgStr = err.detail || err.message || "";
+      if (errMsgStr.includes("PDF_LOCKED")) {
+        setErrorMsg(null);
+        setStep("password");
+      } else {
+        setErrorMsg(errMsgStr || "Lỗi khi tải lên file PDF");
+      }
     }
   };
 
-  const content = (
-    <div className="space-y-8">
+  const handlePasswordSubmit = async (password: string) => {
+    if (!file) return;
+
+    setErrorMsg(null);
+    const formData = new FormData();
+    formData.append("file", file);
+    if (lessonId) {
+      formData.append("lesson_id", lessonId);
+      formData.append("target_scope", "LESSON");
+    }
+    formData.append("password", password);
+
+    try {
+      if (method === "ocr") {
+        const res = await importMutation.mutateAsync(formData);
+        if (res && res.job_id) {
+          setJobId(res.job_id);
+          setStep("processing");
+        } else {
+          throw new Error("Không nhận được Job ID từ server");
+        }
+      } else {
+        const res = await uploadMutation.mutateAsync({ formData, hasPassword: true });
+        if (res && res.ok && res.job_id) {
+          setJobId(res.job_id);
+          setStep("processing");
+        } else {
+          throw new Error(res?.error || "Mật khẩu PDF không đúng");
+        }
+      }
+    } catch (err: any) {
+      const errMsgStr = err.detail || err.message || "";
+      setErrorMsg(errMsgStr || "Lỗi giải mã PDF");
+    }
+  };
+
+  const uploadFormContent = (
+    <div className="space-y-8 text-left">
+      {/* Error Alert */}
+      {errorMsg && (
+        <div className="bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900 rounded-3xl p-4 flex gap-3 text-rose-700 dark:text-rose-400">
+          <AlertTriangle className="size-5 shrink-0 mt-0.5" />
+          <div className="text-xs">
+            <p className="font-bold">Lỗi xử lý:</p>
+            <p className="mt-0.5">{errorMsg}</p>
+          </div>
+        </div>
+      )}
+
       {/* Rule Section */}
       <div className="bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800 rounded-3xl p-6">
         <h4 className="text-sm font-bold text-blue-700 dark:text-blue-400 mb-4 flex items-center gap-2">
           <AlertCircle className="w-4 h-4" />
-          Quy trình xử lý AI (Background Job)
+          Quy trình xử lý AI
         </h4>
         <div className="text-[13px] text-slate-600 dark:text-slate-400 space-y-2 leading-relaxed">
           <p>Hệ thống sử dụng luồng xử lý AI đa phương thức để tự động bóc tách câu hỏi, đáp án và hình ảnh.</p>
           <p className="font-semibold text-amber-600">Lưu ý: Quá trình này có thể mất từ 1 đến 5 phút tùy thuộc vào độ dài của file PDF và số lượng hình ảnh bên trong.</p>
-          <p>Câu hỏi sau khi trích xuất sẽ được lưu thẳng vào cơ sở dữ liệu ở trạng thái <span className="font-bold text-indigo-500">DRAFT (Nháp)</span>. Bạn có thể kiểm duyệt và chỉnh sửa lại bằng AI trước khi công khai.</p>
+          <p>Câu hỏi sau khi trích xuất sẽ được lưu vào cơ sở dữ liệu ở trạng thái <span className="font-bold text-indigo-500">DRAFT</span>. Bạn có thể soát lỗi và chỉnh sửa trực tiếp trước khi duyệt công khai.</p>
         </div>
       </div>
 
@@ -73,9 +173,18 @@ export function PdfImport({ lessonId: propLessonId, onSuccess, onClose }: PdfImp
             1. Tải file PDF
           </h3>
           <div
-            className={`border-2 border-dashed rounded-3xl p-12 text-center transition-all cursor-pointer h-full min-h-[16rem] flex flex-col items-center justify-center ${file ? "border-blue-500 bg-blue-50/10" : "border-slate-300 hover:border-blue-400 hover:bg-slate-50"
-              }`}
+            className={`border-2 border-dashed rounded-3xl p-12 text-center transition-all cursor-pointer h-full min-h-[16rem] flex flex-col items-center justify-center ${
+              isDragActive
+                ? "border-blue-500 bg-blue-50/20 scale-[1.01]"
+                : file
+                ? "border-blue-500 bg-blue-50/10"
+                : "border-slate-300 hover:border-blue-400 hover:bg-slate-50 dark:hover:bg-white/5"
+            }`}
             onClick={() => document.getElementById("pdf-upload")?.click()}
+            onDragEnter={handleDrag}
+            onDragOver={handleDrag}
+            onDragLeave={handleDrag}
+            onDrop={handleDrop}
           >
             <input
               id="pdf-upload"
@@ -129,7 +238,7 @@ export function PdfImport({ lessonId: propLessonId, onSuccess, onClose }: PdfImp
             <div className="mt-6 border-t border-slate/10 dark:border-white/10 pt-5">
               <label className="block text-xs font-bold text-slate-500 uppercase mb-3">Cơ chế bóc tách</label>
               <div className="grid grid-cols-1 gap-3">
-                <div 
+                <div
                   onClick={() => setMethod("gemini")}
                   className={`cursor-pointer rounded-xl border p-3 flex flex-col gap-1 transition-all ${method === 'gemini' ? 'border-primary bg-primary/5 shadow-sm ring-1 ring-primary' : 'border-slate-200 dark:border-white/10 hover:border-primary/40 hover:bg-slate-50 dark:hover:bg-white/5'}`}
                 >
@@ -142,7 +251,7 @@ export function PdfImport({ lessonId: propLessonId, onSuccess, onClose }: PdfImp
                   <span className="text-[13px] text-slate-500 ml-6">(Chuyển PDF -&gt; Ảnh -&gt; LLM)</span>
                 </div>
 
-                <div 
+                <div
                   onClick={() => setMethod("ocr")}
                   className={`cursor-pointer rounded-xl border p-3 flex flex-col gap-1 transition-all ${method === 'ocr' ? 'border-primary bg-primary/5 shadow-sm ring-1 ring-primary' : 'border-slate-200 dark:border-white/10 hover:border-primary/40 hover:bg-slate-50 dark:hover:bg-white/5'}`}
                 >
@@ -151,7 +260,7 @@ export function PdfImport({ lessonId: propLessonId, onSuccess, onClose }: PdfImp
                       {method === 'ocr' && <div className="size-2 rounded-full bg-primary" />}
                     </div>
                     <span className="text-sm font-bold text-slate-700 dark:text-white flex items-center flex-wrap gap-1">
-                      2. Parser Chuyên sâu: 
+                      2. Parser Chuyên sâu:
                       <code className="text-[12px] font-mono text-rose-600 bg-rose-50 dark:text-rose-400 dark:bg-rose-500/10 px-1.5 py-0.5 rounded">opendataloader-pdf</code>
                     </span>
                   </div>
@@ -184,8 +293,43 @@ export function PdfImport({ lessonId: propLessonId, onSuccess, onClose }: PdfImp
     </div>
   );
 
+  let modalContent = uploadFormContent;
+  if (step === "password") {
+    modalContent = (
+      <PdfImportPassword
+        fileName={file?.name || ""}
+        onSubmit={handlePasswordSubmit}
+        onCancel={() => {
+          setErrorMsg(null);
+          setStep("upload");
+        }}
+        isPending={isPending}
+        errorMsg={errorMsg}
+      />
+    );
+  } else if (step === "processing") {
+    modalContent = (
+      <PdfImportProcessing
+        jobId={jobId}
+        onCompleted={() => setStep("review")}
+        onFailed={(err) => {
+          setErrorMsg(err);
+          setStep("upload");
+        }}
+      />
+    );
+  } else if (step === "review") {
+    modalContent = (
+      <PdfImportReview
+        jobId={jobId}
+        onSuccess={onSuccess}
+        onClose={onClose}
+      />
+    );
+  }
+
   if (!onClose) {
-    return <div className="space-y-8">{content}</div>;
+    return <div className="space-y-8">{modalContent}</div>;
   }
 
   return (
@@ -210,7 +354,7 @@ export function PdfImport({ lessonId: propLessonId, onSuccess, onClose }: PdfImp
             </div>
             <div>
               <h2 className="text-2xl font-black text-dark-blue dark:text-white uppercase tracking-tight">AI Import PDF</h2>
-              <p className="text-sm text-gray-navy opacity-60">Xử lý tự động trong nền (Background Job)</p>
+              <p className="text-sm text-gray-navy opacity-60">Xử lý tự động trong nền</p>
             </div>
           </div>
           <button onClick={onClose} className="p-3 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">
@@ -218,7 +362,7 @@ export function PdfImport({ lessonId: propLessonId, onSuccess, onClose }: PdfImp
           </button>
         </div>
         <div className="overflow-y-auto max-h-[75vh] p-8 custom-scrollbar">
-          {content}
+          {modalContent}
         </div>
       </motion.div>
     </div>

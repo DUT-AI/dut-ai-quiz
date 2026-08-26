@@ -1,0 +1,150 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# DUT-AI-QUIZ — Git Pre-commit Hook
+# Kiểm tra chất lượng mã nguồn (Linting, Formatting, Typecheck) trước khi commit
+# ==============================================================================
+
+set -e
+
+# Màu sắc thông báo
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+BOLD='\033[1m'
+NC='\033[0m' # No Color
+
+echo -e "${BLUE}${BOLD}======================================================${NC}"
+echo -e "${CYAN}${BOLD}       🔍 DUT AI QUIZ — PRE-COMMIT QUALITY CHECK      ${NC}"
+echo -e "${BLUE}${BOLD}======================================================${NC}"
+
+PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+cd "$PROJECT_ROOT"
+
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
+
+if [ -z "$STAGED_FILES" ]; then
+    echo -e "${GREEN}✓ Không có file nào được stage để commit.${NC}"
+    exit 0
+fi
+
+HAS_ERROR=0
+
+# ------------------------------------------------------------------------------
+# 1. Kiểm tra Conflict Markers còn sót lại
+# ------------------------------------------------------------------------------
+echo -e "\n${BOLD}[1/4] Kiểm tra Conflict Markers...${NC}"
+CONFLICT_FILES=$(git diff --cached --name-only | xargs grep -s -H -n -E "^<<<<<<< |^>>>>>>> " || true)
+if [ -n "$CONFLICT_FILES" ]; then
+    echo -e "${RED}✗ Phát hiện conflict markers chưa được xử lý:${NC}"
+    echo "$CONFLICT_FILES"
+    HAS_ERROR=1
+else
+    echo -e "${GREEN}✓ Không phát hiện conflict marker nào.${NC}"
+fi
+
+# ------------------------------------------------------------------------------
+# 2. Kiểm tra Python Backend & Workers (apps/api, apps/worker)
+# ------------------------------------------------------------------------------
+STAGED_PYTHON=$(echo "$STAGED_FILES" | grep -E '\.(py)$|^apps/api/|^apps/worker/' || true)
+
+if [ -n "$STAGED_PYTHON" ]; then
+    echo -e "\n${BOLD}[2/4] Kiểm tra Python Linter & Formatter (Ruff)...${NC}"
+    
+    # Check Ruff tool
+    if command -v uv >/dev/null 2>&1; then
+        RUFF_CMD="uv run ruff"
+    elif command -v ruff >/dev/null 2>&1; then
+        RUFF_CMD="ruff"
+    else
+        echo -e "${YELLOW}⚠ Không tìm thấy 'uv' hoặc 'ruff'. Bỏ qua kiểm tra Python linting cục bộ.${NC}"
+        RUFF_CMD=""
+    fi
+
+    if [ -n "$RUFF_CMD" ]; then
+        # 2a. Ruff Check
+        echo -e "  - Đang chạy ${CYAN}$RUFF_CMD check apps/api apps/worker${NC}..."
+        if ! $RUFF_CMD check apps/api apps/worker; then
+            echo -e "${RED}✗ Lỗi Python linting phát hiện bởi Ruff!${NC}"
+            echo -e "${YELLOW}  Gợi ý sửa nhanh: make api-lint hoặc uv run ruff check --fix apps/api apps/worker${NC}"
+            HAS_ERROR=1
+        else
+            echo -e "${GREEN}  ✓ Ruff linting: PASS${NC}"
+        fi
+
+        # 2b. Ruff Format Check
+        echo -e "  - Đang chạy ${CYAN}$RUFF_CMD format --check apps/api apps/worker${NC}..."
+        if ! $RUFF_CMD format --check apps/api apps/worker; then
+            echo -e "${RED}✗ Code Python chưa được format theo chuẩn!${NC}"
+            echo -e "${YELLOW}  Gợi ý sửa nhanh: uv run ruff format apps/api apps/worker${NC}"
+            HAS_ERROR=1
+        else
+            echo -e "${GREEN}  ✓ Ruff formatting: PASS${NC}"
+        fi
+    fi
+else
+    echo -e "\n${BOLD}[2/4] Python Backend & Workers: Bỏ qua (không có thay đổi file Python).${NC}"
+fi
+
+# ------------------------------------------------------------------------------
+# 3. Kiểm tra Frontend Web (apps/web) - ESLint
+# ------------------------------------------------------------------------------
+STAGED_WEB=$(echo "$STAGED_FILES" | grep -E '^apps/web/' || true)
+
+if [ -n "$STAGED_WEB" ]; then
+    echo -e "\n${BOLD}[3/4] Kiểm tra Frontend ESLint (apps/web)...${NC}"
+    
+    if [ -d "apps/web" ]; then
+        if command -v npm >/dev/null 2>&1; then
+            echo -e "  - Đang chạy ${CYAN}npm --prefix apps/web run lint${NC}..."
+            if ! npm --prefix apps/web run lint; then
+                echo -e "${RED}✗ Lỗi ESLint trong apps/web!${NC}"
+                echo -e "${YELLOW}  Gợi ý sửa nhanh: npm --prefix apps/web run lint:fix${NC}"
+                HAS_ERROR=1
+            else
+                echo -e "${GREEN}  ✓ Frontend ESLint: PASS${NC}"
+            fi
+        else
+            echo -e "${YELLOW}⚠ Không tìm thấy 'npm'. Bỏ qua kiểm tra Frontend ESLint.${NC}"
+        fi
+    fi
+else
+    echo -e "\n${BOLD}[3/4] Frontend ESLint: Bỏ qua (không có thay đổi trong apps/web).${NC}"
+fi
+
+# ------------------------------------------------------------------------------
+# 4. Kiểm tra Frontend Web (apps/web) - TypeScript Typecheck
+# ------------------------------------------------------------------------------
+if [ -n "$STAGED_WEB" ]; then
+    echo -e "\n${BOLD}[4/4] Kiểm tra Frontend TypeScript Types (apps/web)...${NC}"
+    
+    if [ -d "apps/web" ]; then
+        if command -v npm >/dev/null 2>&1; then
+            echo -e "  - Đang chạy ${CYAN}npm --prefix apps/web run type-check${NC}..."
+            if ! npm --prefix apps/web run type-check; then
+                echo -e "${RED}✗ Lỗi TypeScript Type Checking trong apps/web!${NC}"
+                HAS_ERROR=1
+            else
+                echo -e "${GREEN}  ✓ TypeScript Typecheck: PASS${NC}"
+            fi
+        fi
+    fi
+else
+    echo -e "\n${BOLD}[4/4] Frontend TypeScript: Bỏ qua (không có thay đổi trong apps/web).${NC}"
+fi
+
+# ------------------------------------------------------------------------------
+# Kết luận
+# ------------------------------------------------------------------------------
+echo -e "\n${BLUE}${BOLD}======================================================${NC}"
+if [ $HAS_ERROR -ne 0 ]; then
+    echo -e "${RED}${BOLD}❌ PRE-COMMIT FAILED: Vui lòng sửa các lỗi trên trước khi commit!${NC}"
+    echo -e "${YELLOW}Nếu bạn thực sự cần bỏ qua (không khuyến khích): git commit --no-verify${NC}"
+    echo -e "${BLUE}${BOLD}======================================================${NC}\n"
+    exit 1
+else
+    echo -e "${GREEN}${BOLD}✅ ALL CHECKS PASSED: Chất lượng code đảm bảo! Tiến hành commit...${NC}"
+    echo -e "${BLUE}${BOLD}======================================================${NC}\n"
+    exit 0
+fi

@@ -8,49 +8,10 @@ from uuid import UUID, uuid4
 
 from app.config import settings
 from app.core.datetime_utils import now_ict
+from app.core.string_utils import slugify_vietnamese
 from app.domain.entities.lesson import LessonEntity
 from app.domain.interfaces import ILessonRepository, IS3Client
 from app.application.services.lesson_index_scheduler import LessonIndexScheduler
-
-
-def slugify_vietnamese(text: str) -> str:
-    """Convert Vietnamese and special characters to clean URL slug."""
-    vietnamese_map = {
-        'à': 'a', 'á': 'a', 'ả': 'a', 'ã': 'a', 'ạ': 'a',
-        'ă': 'a', 'ằ': 'a', 'ắ': 'a', 'ẳ': 'a', 'ẵ': 'a', 'ặ': 'a',
-        'â': 'a', 'ầ': 'a', 'ấ': 'a', 'ẩ': 'a', 'ẫ': 'a', 'ậ': 'a',
-        'đ': 'd',
-        'è': 'e', 'é': 'e', 'ẻ': 'e', 'ẽ': 'e', 'ẹ': 'e',
-        'ê': 'e', 'ề': 'e', 'ế': 'e', 'ể': 'e', 'ễ': 'e', 'ệ': 'e',
-        'ì': 'i', 'í': 'i', 'ỉ': 'i', 'ĩ': 'i', 'ị': 'i',
-        'ò': 'o', 'ó': 'o', 'ỏ': 'o', 'õ': 'o', 'ọ': 'o',
-        'ô': 'o', 'ồ': 'o', 'ố': 'o', 'ổ': 'o', 'ỗ': 'o', 'ộ': 'o',
-        'ơ': 'o', 'ờ': 'o', 'ớ': 'o', 'ở': 'o', 'ỡ': 'o', 'ợ': 'o',
-        'ù': 'u', 'ú': 'u', 'ủ': 'u', 'ũ': 'u', 'ụ': 'u',
-        'ư': 'u', 'ừ': 'u', 'ứ': 'u', 'ử': 'u', 'ữ': 'u', 'ự': 'u',
-        'ỳ': 'y', 'ý': 'y', 'ỷ': 'y', 'ỹ': 'y', 'ỵ': 'y',
-        'À': 'a', 'Á': 'a', 'Ả': 'a', 'Ã': 'a', 'Ạ': 'a',
-        'Ă': 'a', 'Ằ': 'a', 'Ắ': 'a', 'Ẳ': 'a', 'Ẵ': 'a', 'Ặ': 'a',
-        'Â': 'a', 'Ầ': 'a', 'Ấ': 'a', 'Ẩ': 'a', 'Ẫ': 'a', 'Ậ': 'a',
-        'Đ': 'd',
-        'È': 'e', 'É': 'e', 'Ẻ': 'e', 'Ẽ': 'e', 'Ẹ': 'e',
-        'Ê': 'e', 'Ề': 'e', 'Ế': 'e', 'Ể': 'e', 'Ễ': 'e', 'Ệ': 'e',
-        'Ì': 'i', 'Í': 'i', 'Ỉ': 'i', 'Ĩ': 'i', 'Ị': 'i',
-        'Ò': 'o', 'Ó': 'o', 'Ỏ': 'o', 'Õ': 'o', 'Ọ': 'o',
-        'Ô': 'o', 'Ồ': 'o', 'Ố': 'o', 'Ổ': 'o', 'Ỗ': 'o', 'Ộ': 'o',
-        'Ơ': 'o', 'Ờ': 'o', 'Ớ': 'o', 'Ở': 'o', 'Ỡ': 'o', 'Ợ': 'o',
-        'Ù': 'u', 'Ú': 'u', 'Ủ': 'u', 'Ũ': 'u', 'Ụ': 'u',
-        'Ư': 'u', 'Ừ': 'u', 'Ứ': 'u', 'Ử': 'u', 'Ữ': 'u', 'Ự': 'u',
-        'Ý': 'y', 'Ỳ': 'y', 'Ỷ': 'y', 'Ỹ': 'y', 'Ỵ': 'y'
-    }
-    for char, replacement in vietnamese_map.items():
-        text = text.replace(char, replacement)
-    
-    text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("utf-8")
-    text = text.lower()
-    text = re.sub(r"[^a-z0-9_-]", "-", text)
-    text = re.sub(r"-+", "-", text)
-    return text.strip("-")
 
 
 class ImportNotionLessonUseCase:
@@ -72,6 +33,7 @@ class ImportNotionLessonUseCase:
         module_id: UUID | None = None,
         custom_name: str | None = None,
         custom_description: str | None = None,
+        lesson_id: UUID | None = None,
     ) -> LessonEntity:
         """Parse ZIP file, extract & upload images, update MD links, and save the lesson."""
         
@@ -150,8 +112,8 @@ class ImportNotionLessonUseCase:
             else:
                 lesson_description = f"Lesson imported from {os.path.basename(md_filename)}"
 
-        # 4. Generate lesson ID
-        lesson_id = uuid4()
+        # 4. Generate or use existing lesson ID
+        lesson_id = lesson_id or uuid4()
 
         # 5. Upload images and collect public URLs
         uploaded_urls: dict[str, str] = {}
@@ -209,27 +171,42 @@ class ImportNotionLessonUseCase:
 
         content_md = re.sub(r"<img\s+[^>]*src=[\"']([^\"']+)[\"'][^>]*>", html_img_replacer, content_md)
 
-        # 7. Generate unique slug
+        # 7. Generate unique slug (allow same slug if updating the same lesson)
         base_slug = slugify_vietnamese(lesson_name)
         slug = base_slug
         counter = 1
-        while await self._repo.get_by_slug(slug) is not None:
+        while True:
+            existing = await self._repo.get_by_slug(slug)
+            if existing is None or existing.id == lesson_id:
+                break
             slug = f"{base_slug}-{counter}"
             counter += 1
 
-        # 8. Create & Save lesson entity
-        entity = LessonEntity(
-            id=lesson_id,
-            name=lesson_name,
-            description=lesson_description,
-            content_md=content_md,
-            order=0, # Defaults to 0, can be updated later
-            slug=slug,
-            module_id=module_id,
-            created_at=now_ict(),
-        )
+        # 8. Create or Update lesson entity
+        existing_entity = None
+        if lesson_id:
+            existing_entity = await self._repo.get(lesson_id)
 
-        saved = await self._repo.add(entity)
+        if existing_entity:
+            existing_entity.name = lesson_name
+            existing_entity.description = lesson_description
+            existing_entity.content_md = content_md
+            existing_entity.slug = slug
+            if module_id:
+                existing_entity.module_id = module_id
+            saved = await self._repo.update(existing_entity)
+        else:
+            entity = LessonEntity(
+                id=lesson_id,
+                name=lesson_name,
+                description=lesson_description,
+                content_md=content_md,
+                order=0, # Defaults to 0, can be updated later
+                slug=slug,
+                module_id=module_id,
+                created_at=now_ict(),
+            )
+            saved = await self._repo.add(entity)
         
         # 9. Trigger semantic indexing for search
         await self._scheduler.schedule(saved)

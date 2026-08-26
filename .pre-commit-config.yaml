@@ -1,0 +1,35 @@
+# See https://pre-commit.com for more information
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-merge-conflict
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.4
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: local
+    hooks:
+      - id: next-lint
+        name: Next.js ESLint (apps/web)
+        entry: bash -c "cd apps/web && npm run lint"
+        language: system
+        files: ^apps/web/
+        pass_filenames: false
+
+      - id: next-type-check
+        name: TypeScript Type Check (apps/web)
+        entry: bash -c "cd apps/web && npm run type-check"
+        language: system
+        files: ^apps/web/
+        pass_filenames: false
