@@ -16,8 +16,6 @@ def quiz_role_from_manage(role_names: list[str] | str | None) -> str:
         return "PROJECT_DEVELOPER"
     if "EDUCATOR" in roles_upper:
         return "EDUCATOR"
-    if "MENTOR" in roles_upper:
-        return "MENTOR"
-    if "TEAMMATE" in roles_upper or "STUDENT" in roles_upper:
+    if "TEAMMATE" in roles_upper or "STUDENT" in roles_upper or "MENTOR" in roles_upper:
         return "teammate"
     return "guest"

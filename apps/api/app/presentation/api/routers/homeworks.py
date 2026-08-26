@@ -25,7 +25,8 @@ from app.application.use_cases.homeworks import (
     UpdateHomeworkUseCase,
 )
 from app.config import settings
-from app.presentation.api.deps import AdminOrEducatorUser, CurrentUser, ManageService
+from app.domain.entities.auth_enums import SystemPermission
+from app.presentation.api.deps import EducatorUser, CurrentUser, ManageService
 from app.presentation.schemas.homeworks import (
     CompletedHomeworkMembersResponse,
     DownloadUrlData,
@@ -68,7 +69,7 @@ async def list_my_homeworks(
 @router.get("", response_model=HomeworkListResponse)
 @inject
 async def list_homeworks(
-    user: AdminOrEducatorUser,
+    user: EducatorUser,
     use_case: FromDishka[ListHomeworksUseCase],
     lesson_id: UUID | None = None,
 ) -> HomeworkListResponse:
@@ -78,7 +79,7 @@ async def list_homeworks(
 @router.post("", response_model=HomeworkResponse)
 @inject
 async def create_homework(
-    user: AdminOrEducatorUser,
+    user: EducatorUser,
     use_case: FromDishka[CreateHomeworkUseCase],
     title: Annotated[str, Form()],
     lesson_id: Annotated[UUID, Form()],
@@ -102,7 +103,7 @@ async def create_homework(
 @inject
 async def update_homework(
     homework_id: UUID,
-    user: AdminOrEducatorUser,
+    user: EducatorUser,
     use_case: FromDishka[UpdateHomeworkUseCase],
     title: Annotated[str | None, Form()] = None,
     lesson_id: Annotated[UUID | None, Form()] = None,
@@ -126,7 +127,7 @@ async def update_homework(
 @inject
 async def archive_homework(
     homework_id: UUID,
-    user: AdminOrEducatorUser,
+    user: EducatorUser,
     use_case: FromDishka[ArchiveHomeworkUseCase],
 ) -> SuccessResponse:
     await use_case.execute(homework_id)
@@ -190,7 +191,7 @@ async def get_my_submission(
 @inject
 async def list_submissions(
     homework_id: UUID,
-    user: AdminOrEducatorUser,
+    user: EducatorUser,
     use_case: FromDishka[ListHomeworkSubmissionsUseCase],
 ) -> SubmissionListResponse:
     return SubmissionListResponse(data=await use_case.execute(homework_id))
@@ -241,7 +242,7 @@ async def submission_download_url(
             url=await use_case.execute(
                 submission_id,
                 user.id,
-                can_manage=user.has_any_role("admin", "MENTOR"),
+                can_manage=user.has_permission(SystemPermission.MANAGE_HOMEWORK),
             )
         )
     )

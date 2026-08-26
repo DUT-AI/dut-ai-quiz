@@ -49,11 +49,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   const hasAccess =
     allowedSet.length === 0 ||
     userRoles.some((r) => allowedSet.includes(r)) ||
-    (allowedSet.includes("ADMIN") && userRoles.includes("ADMIN")) ||
-    (allowedSet.includes("MENTOR") && (userRoles.includes("MENTOR") || userRoles.includes("EDUCATOR"))) ||
-    (allowedSet.includes("EDUCATOR") && (userRoles.includes("MENTOR") || userRoles.includes("EDUCATOR"))) ||
-    (allowedSet.includes("PROJECT_DEVELOPER") && userRoles.includes("PROJECT_DEVELOPER")) ||
-    (allowedSet.includes("SUB_ADMIN") && userRoles.includes("SUB_ADMIN"));
+    userRoles.includes("ADMIN");
 
   if (!hasAccess) {
     return (

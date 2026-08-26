@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from dishka.integrations.fastapi import FromDishka, inject
-from app.presentation.api.deps import AdminOrEducatorUser
+from app.presentation.api.deps import EducatorUser
 from app.domain.interfaces import IManageService
 from app.presentation.schemas.external import (
     ExternalUsersResponse,
@@ -16,7 +16,7 @@ router = APIRouter(prefix="/external", tags=["external"])
 @router.get("/teams", response_model=ExternalTeamsResponse)
 @inject
 async def get_external_teams(
-    user: AdminOrEducatorUser,
+    user: EducatorUser,
     manage_service: FromDishka[IManageService],
 ):
     teams = await manage_service.get_teams()
@@ -43,7 +43,7 @@ async def get_external_teams(
 @router.get("/users", response_model=ExternalUsersResponse)
 @inject
 async def get_external_users(
-    user: AdminOrEducatorUser,
+    user: EducatorUser,
     manage_service: FromDishka[IManageService],
 ):
     users = await manage_service.get_users()
