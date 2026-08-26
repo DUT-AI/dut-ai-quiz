@@ -18,7 +18,7 @@ from app.application.use_cases.lessons import (
 from app.domain.interfaces import EmbeddingServiceError
 from app.application.use_cases.questions import ListQuestionsUseCase
 from app.domain.value_objects import Difficulty, PoolType
-from app.presentation.api.deps import CurrentUser, AdminOrMentorUser, OptionalCurrentUser
+from app.presentation.api.deps import CurrentUser, EducatorUser, OptionalCurrentUser
 from app.presentation.schemas.lessons import (
     LessonCreate,
     LessonDetailOut,
@@ -108,7 +108,7 @@ async def get_lesson(
 @router.post("", response_model=LessonOut)
 @inject
 async def create_lesson(
-    user: AdminOrMentorUser,
+    user: EducatorUser,
     body: LessonCreate,
     use_case: FromDishka[CreateLessonUseCase],
 ):
@@ -118,7 +118,7 @@ async def create_lesson(
 @router.post("/import-notion", response_model=LessonOut)
 @inject
 async def import_notion_lesson(
-    user: AdminOrMentorUser,
+    user: EducatorUser,
     use_case: FromDishka[ImportNotionLessonUseCase],
     file: UploadFile = File(..., description="ZIP file exported from Notion containing markdown and images"),
     module_id: str | None = Form(None),
@@ -128,7 +128,7 @@ async def import_notion_lesson(
 ):
     """
     Import a lesson from a ZIP file containing Markdown and images exported from Notion.
-    Admin or Mentor only.
+    Educator or Admin only.
     """
     if file.filename and not file.filename.endswith(".zip"):
         raise HTTPException(status_code=400, detail="Only ZIP files (.zip) are supported")
@@ -175,11 +175,11 @@ async def import_notion_lesson(
 @router.post("/reorder")
 @inject
 async def reorder_lessons(
-    user: AdminOrMentorUser,
+    user: EducatorUser,
     body: LessonReorder,
     use_case: FromDishka[ReorderLessonsUseCase],
 ):
-    """Reorder lessons in the system. Admin or Mentor only."""
+    """Reorder lessons in the system. Educator or Admin only."""
     await use_case.execute(body)
     return {"ok": True}
 
@@ -187,7 +187,7 @@ async def reorder_lessons(
 @router.patch("/{lesson_id}", response_model=LessonOut)
 @inject
 async def update_lesson(
-    user: AdminOrMentorUser,
+    user: EducatorUser,
     lesson_id: str,
     body: LessonUpdate,
     use_case: FromDishka[UpdateLessonUseCase],
@@ -203,7 +203,7 @@ async def update_lesson(
 )
 @inject
 async def reindex_lesson(
-    user: AdminOrMentorUser,
+    user: EducatorUser,
     lesson_id: UUID,
     use_case: FromDishka[IndexLessonUseCase],
 ):
@@ -219,7 +219,7 @@ async def reindex_lesson(
 @router.delete("/{lesson_id}")
 @inject
 async def delete_lesson(
-    user: AdminOrMentorUser,
+    user: EducatorUser,
     lesson_id: str,
     use_case: FromDishka[DeleteLessonUseCase],
 ):

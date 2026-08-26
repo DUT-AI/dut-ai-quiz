@@ -115,6 +115,21 @@ def test_admin_role_resolves_all_permissions():
         assert p.value in resolved
 
 
+def test_mentor_role_resolves_only_teammate_permissions():
+    resolved = resolve_permissions_for_roles(["MENTOR"])
+    # Has teammate permissions
+    assert SystemPermission.READ_LESSON.value in resolved
+    assert SystemPermission.PLAY_ARENA_GAME.value in resolved
+    assert SystemPermission.SUBMIT_HOMEWORK.value in resolved
+    assert SystemPermission.PRACTICE_QUESTION.value in resolved
+    # Does NOT have Educator or Management permissions
+    assert SystemPermission.CREATE_LESSON.value not in resolved
+    assert SystemPermission.MANAGE_LESSON.value not in resolved
+    assert SystemPermission.MANAGE_HOMEWORK.value not in resolved
+    assert SystemPermission.MANAGE_EXAM.value not in resolved
+    assert SystemPermission.MANAGE_HACKATHON.value not in resolved
+
+
 # ============================================================================
 # 2. RBAC FASTAPI DEPENDENCY TESTS (RequirePermissions & Admin Override)
 # ============================================================================
@@ -142,6 +157,17 @@ async def test_require_permissions_denied():
     # Teammate trying to manage hackathon
     user = UserContext(id=1, roles=["TEAMMATE"])
     dep = RequirePermissions([SystemPermission.MANAGE_HACKATHON])
+    with pytest.raises(HTTPException) as exc_info:
+        await dep(user)
+    assert exc_info.value.status_code == 403
+    assert "Forbidden: Insufficient permissions" in exc_info.value.detail
+
+
+@pytest.mark.asyncio
+async def test_mentor_denied_educator_dependency():
+    # Mentor role trying to create lesson or manage LMS
+    user = UserContext(id=10, roles=["MENTOR"])
+    dep = RequirePermissions([SystemPermission.CREATE_LESSON])
     with pytest.raises(HTTPException) as exc_info:
         await dep(user)
     assert exc_info.value.status_code == 403

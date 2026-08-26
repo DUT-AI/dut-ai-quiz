@@ -204,18 +204,16 @@ async def require_manage_service(
 
 CurrentUser = Annotated[UserContext, Depends(get_current_user)]
 AdminUser = Annotated[UserContext, Depends(require_roles(UserRole.ADMIN, "admin"))]
-AdminOrMentorUser = Annotated[
-    UserContext,
-    Depends(require_roles(UserRole.ADMIN, UserRole.EDUCATOR, "admin", "MENTOR")),
-]
 EducatorUser = Annotated[
     UserContext,
     Depends(
         require_roles(
-            UserRole.ADMIN, UserRole.EDUCATOR, "admin", "MENTOR", "educator"
+            UserRole.ADMIN, UserRole.EDUCATOR, "admin", "EDUCATOR", "educator"
         )
     ),
 ]
+AdminOrEducatorUser = EducatorUser
+TeacherUser = EducatorUser
 ProjectDevUser = Annotated[
     UserContext,
     Depends(
@@ -228,7 +226,6 @@ ProjectDevUser = Annotated[
         )
     ),
 ]
-TeacherUser = AdminOrMentorUser
 StudentUser = CurrentUser
 OptionalCurrentUser = Annotated[UserContext | None, Depends(get_optional_current_user)]
 ManageService = Annotated[None, Depends(require_manage_service)]

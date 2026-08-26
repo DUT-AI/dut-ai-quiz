@@ -20,7 +20,8 @@ from app.application.use_cases.questions import (
 from app.config import settings
 from app.domain.interfaces import EmbeddingServiceError
 from app.domain.value_objects import Difficulty, PoolType
-from app.presentation.api.deps import CurrentUser, AdminOrMentorUser
+from app.domain.entities.auth_enums import SystemPermission
+from app.presentation.api.deps import CurrentUser, EducatorUser
 from app.presentation.schemas.questions import (
     QuestionBulkCreate,
     QuestionCreate,
@@ -64,7 +65,7 @@ async def list_questions_route(
     limit: int = Query(50, ge=1, le=2000),
 ):
     # For guests/students, we only allow viewing PUBLIC questions.
-    if not user.has_any_role("admin", "MENTOR"):
+    if not user.has_permission(SystemPermission.MANAGE_QUESTION):
         pool_type = PoolType.PRACTICE
         status = QuestionStatus.PUBLIC
     elif status is None:
@@ -82,7 +83,7 @@ async def list_questions_route(
         limit=limit,
     )
     rows = await use_case.execute(q)
-    if not user.has_any_role("admin", "MENTOR"):
+    if not user.has_permission(SystemPermission.MANAGE_QUESTION):
         rows = sanitize_questions_for_student(rows)
     return rows
 
@@ -90,7 +91,7 @@ async def list_questions_route(
 @router.post("", response_model=QuestionOut)
 @inject
 async def create_question_route(
-    user: AdminOrMentorUser,
+    user: EducatorUser,
     body: QuestionCreate,
     use_case: FromDishka[CreateQuestionUseCase],
 ):
@@ -106,7 +107,7 @@ async def find_related_questions_route(
     use_case: FromDishka[FindRelatedQuestionsUseCase],
 ):
     pool_type = body.pool_type
-    if not user.has_any_role("admin", "MENTOR"):
+    if not user.has_permission(SystemPermission.MANAGE_QUESTION):
         pool_type = PoolType.PRACTICE
 
     try:
@@ -129,7 +130,7 @@ async def find_related_questions_route(
 @router.get("/{question_id}", response_model=QuestionOut)
 @inject
 async def get_question_route(
-    user: AdminOrMentorUser,
+    user: EducatorUser,
     question_id: UUID,
     use_case: FromDishka[GetQuestionUseCase],
 ):
@@ -142,7 +143,7 @@ async def get_question_route(
 @router.patch("/{question_id}", response_model=QuestionOut)
 @inject
 async def update_question_route(
-    user: AdminOrMentorUser,
+    user: EducatorUser,
     question_id: UUID,
     body: QuestionUpdate,
     use_case: FromDishka[UpdateQuestionUseCase],
@@ -156,7 +157,7 @@ async def update_question_route(
 @router.delete("/{question_id}")
 @inject
 async def delete_question_route(
-    user: AdminOrMentorUser,
+    user: EducatorUser,
     question_id: UUID,
     use_case: FromDishka[DeleteQuestionUseCase],
 ):
@@ -169,7 +170,7 @@ async def delete_question_route(
 @router.post("/bulk", response_model=list[QuestionOut])
 @inject
 async def bulk_create_questions_route(
-    user: AdminOrMentorUser,
+    user: EducatorUser,
     body: QuestionBulkCreate,
     use_case: FromDishka[BulkCreateQuestionsUseCase],
 ):
@@ -224,7 +225,7 @@ async def get_related_lessons_route(
 @router.post("/{question_id}/heartbeat")
 @inject
 async def heartbeat_question_route(
-    user: AdminOrMentorUser,
+    user: EducatorUser,
     question_id: UUID,
     use_case: FromDishka[HeartbeatQuestionUseCase],
 ):
@@ -237,7 +238,7 @@ async def heartbeat_question_route(
 @router.post("/{question_id}/ai-regenerate", response_model=QuestionOut)
 @inject
 async def ai_regenerate_route(
-    user: AdminOrMentorUser,
+    user: EducatorUser,
     question_id: UUID,
     body: AiRegenerateRequest,
     use_case: FromDishka[AiRegenerateSolutionUseCase],
@@ -252,7 +253,7 @@ async def ai_regenerate_route(
 @router.put("/{question_id}/publish", response_model=QuestionOut)
 @inject
 async def publish_question_route(
-    user: AdminOrMentorUser,
+    user: EducatorUser,
     question_id: UUID,
     use_case: FromDishka[PublishQuestionUseCase],
 ):

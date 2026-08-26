@@ -114,7 +114,7 @@ export function CommentItem({
 
   const getRoleBadge = (role?: string | null) => {
     if (!role) return null;
-    const isStaff = role.toLowerCase() === "admin" || role.toLowerCase() === "mentor";
+    const isStaff = role.toLowerCase() === "admin" || role.toLowerCase() === "educator";
     if (!isStaff) return null;
 
     return (
@@ -135,7 +135,7 @@ export function CommentItem({
   };
 
   const isAuthor = user?.id === comment.user_id;
-  const isStaff = user?.quiz_role === "admin" || user?.quiz_role === "MENTOR";
+  const isStaff = user?.quiz_role?.toLowerCase() === "admin" || user?.quiz_role?.toUpperCase() === "EDUCATOR";
   const canDelete = isAuthor || isStaff;
 
   // Max depth is 3, replies can only go down to level 3
