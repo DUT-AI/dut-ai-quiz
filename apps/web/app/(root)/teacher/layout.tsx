@@ -14,7 +14,7 @@ export default function TeacherLayout({
     <ProtectedRoute
       allowedRoles={[
         "admin",
-        "MENTOR",
+        "ADMIN",
         "EDUCATOR",
         "PROJECT_DEVELOPER",
         "SUB_ADMIN",

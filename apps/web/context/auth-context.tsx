@@ -105,9 +105,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isAdmin = rawRoles.includes("ADMIN") || quizRole === "ADMIN";
   const isSubAdmin = rawRoles.includes("SUB_ADMIN");
   const isProjectDeveloper = rawRoles.includes("PROJECT_DEVELOPER");
-  const isEducator = rawRoles.includes("EDUCATOR") || rawRoles.includes("MENTOR") || quizRole === "MENTOR";
-  const isMentor = isEducator;
-  const isTeammate = rawRoles.includes("TEAMMATE") || rawRoles.includes("STUDENT") || quizRole === "TEAMMATE";
+  const isEducator = rawRoles.includes("EDUCATOR") || quizRole === "EDUCATOR";
+  const isMentor = rawRoles.includes("MENTOR") || quizRole === "MENTOR";
+  const isTeammate = rawRoles.includes("TEAMMATE") || rawRoles.includes("STUDENT") || quizRole === "TEAMMATE" || isMentor;
   const isGuest = !isAdmin && !isSubAdmin && !isProjectDeveloper && !isEducator && !isTeammate;
 
   // Granular capability flags

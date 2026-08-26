@@ -92,7 +92,7 @@ ROLE_ALIASES: dict[str, UserRole] = {
     "administrator": UserRole.ADMIN,
     "educator": UserRole.EDUCATOR,
     "teacher": UserRole.EDUCATOR,
-    "mentor": UserRole.EDUCATOR,
+    "mentor": UserRole.TEAMMATE,
     "project_developer": UserRole.PROJECT_DEVELOPER,
     "developer": UserRole.PROJECT_DEVELOPER,
     "sub_admin": UserRole.SUB_ADMIN,
