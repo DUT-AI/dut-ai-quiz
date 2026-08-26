@@ -60,7 +60,7 @@ services:
     worker-hackathon:
         build:
             context: .
-            dockerfile: apps/worker/Dockerfile
+            dockerfile: apps/worker/worker-hackathon/Dockerfile
         container_name: dut-ai-quiz-worker-hackathon
         restart: unless-stopped
         init: true
@@ -88,7 +88,7 @@ services:
     worker-lesson-index:
         build:
             context: .
-            dockerfile: apps/worker/Dockerfile
+            dockerfile: apps/worker/worker-lesson-index/Dockerfile
         container_name: dut-ai-quiz-worker-lesson-index
         restart: unless-stopped
         init: true
@@ -108,7 +108,7 @@ services:
     worker-evaluate-homework:
         build:
             context: .
-            dockerfile: apps/worker/Dockerfile
+            dockerfile: apps/worker/worker-evaluate-homework/Dockerfile
         container_name: dut-ai-quiz-worker-evaluate-homework
         restart: unless-stopped
         init: true
@@ -130,7 +130,7 @@ services:
     pdf-worker:
         build:
             context: .
-            dockerfile: apps/worker/Dockerfile
+            dockerfile: apps/worker/worker-pdf-import/Dockerfile
         container_name: dut-ai-quiz-pdf-worker
         restart: unless-stopped
         init: true

@@ -131,6 +131,8 @@ class QuestionListQuery(BaseModel):
     lesson_id: UUID | None = None
     tag: str | None = None
     import_session_id: UUID | None = None
+    status: QuestionStatus | None = None
+    related_questions: bool | None = None
     offset: int = 0
     limit: int = 50
 

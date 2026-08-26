@@ -2,9 +2,12 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
+# Install system dependencies (build-essential, libgl1, libglib2.0-0 for PaddleOCR/OpenCV)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     build-essential \
+    libgl1 \
+    libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv
@@ -23,16 +26,14 @@ COPY apps/worker/worker-evaluate-homework/pyproject.toml ./apps/worker/worker-ev
 COPY apps/worker/worker-pdf-import/pyproject.toml ./apps/worker/worker-pdf-import/
 
 # Sync only this package and its dependencies
-RUN uv sync --package dut-ai-quiz-api --frozen --no-cache
+RUN uv sync --package dut-ai-quiz-worker-pdf-import --frozen --no-cache
 
-# Copy source code of the api project
+# Copy source code of required packages
 COPY apps/api ./apps/api
+COPY apps/worker/worker-pdf-import ./apps/worker/worker-pdf-import
 
-# Set working directory to api app to run uvicorn
-WORKDIR /app/apps/api
+# Set working directory to worker app to run arq
+WORKDIR /app/apps/worker/worker-pdf-import
 
-# Expose port
-EXPOSE 8076
-
-# Run the application
-CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8076"]
+# Run arq worker
+CMD ["uv", "run", "arq", "worker_pdf_import.presentation.arq_tasks.WorkerSettings"]
