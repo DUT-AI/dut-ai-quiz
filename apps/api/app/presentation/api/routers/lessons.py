@@ -34,7 +34,10 @@ router = APIRouter(prefix="/lessons", tags=["lessons"])
 
 @router.get("", response_model=list[LessonOut])
 @inject
-async def list_lessons(use_case: FromDishka[ListLessonsUseCase]):
+async def list_lessons(
+    user: CurrentUser,
+    use_case: FromDishka[ListLessonsUseCase],
+):
     return await use_case.execute()
 
 
@@ -42,13 +45,12 @@ async def list_lessons(use_case: FromDishka[ListLessonsUseCase]):
 @inject
 async def get_lesson_by_slug(
     slug: str,
+    user: CurrentUser,
     use_case: FromDishka[GetLessonBySlugUseCase],
-    user: OptionalCurrentUser = None,
 ):
     """
     Get lesson by slug.
-    Lesson content is stored and managed locally by this service.
-    Publicly viewable by learners, third-party APIs, and guest users.
+    Requires authentication via Bearer Token, Cookie, or Third-party API Key (X-API-Key / ?api_key=).
     """
     res = await use_case.execute(slug)
     if not res:
@@ -60,16 +62,16 @@ async def get_lesson_by_slug(
 @inject
 async def list_lesson_questions(
     lesson_id: UUID,
+    user: CurrentUser,
     use_case: FromDishka[ListQuestionsUseCase],
-    user: OptionalCurrentUser = None,
     pool_type: PoolType | None = None,
     difficulty: Difficulty | None = None,
     tag: str | None = None,
     offset: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=200),
 ):
-    # Guests, learners and third-parties only see practice questions. Admin/Mentors can filter both PRACTICE and EXAM.
-    is_teacher = user is not None and user.has_any_role("admin", "MENTOR")
+    # Learners and third-parties only see practice questions. Educators/Admins can filter both PRACTICE and EXAM.
+    is_teacher = user.has_permission(SystemPermission.MANAGE_LESSON)
     if not is_teacher:
         pool_type = PoolType.PRACTICE
 
@@ -91,10 +93,10 @@ async def list_lesson_questions(
 @inject
 async def get_lesson(
     lesson_id: str,
+    user: CurrentUser,
     use_case: FromDishka[GetLessonDetailUseCase],
-    user: OptionalCurrentUser = None,
 ):
-    is_teacher = user is not None and user.has_any_role("admin", "MENTOR")
+    is_teacher = user.has_permission(SystemPermission.MANAGE_LESSON)
     res = await use_case.execute(lesson_id, is_teacher=is_teacher)
     if not res:
         raise HTTPException(status_code=404, detail="Lesson not found")
