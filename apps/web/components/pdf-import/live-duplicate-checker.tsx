@@ -35,7 +35,7 @@ export function LiveDuplicateChecker({ content, poolType }: Props) {
         <div>
           <p className="font-bold">Cảnh báo trùng lặp ({Math.round(duplicate.score * 100)}%):</p>
           <p className="line-clamp-2 italic text-slate-600 dark:text-slate-400 mt-0.5">
-            "{duplicate.content}"
+            &ldquo;{duplicate.content}&rdquo;
           </p>
         </div>
       </div>

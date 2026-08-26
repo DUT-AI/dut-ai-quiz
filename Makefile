@@ -3,7 +3,8 @@
 
 .PHONY: help db-up db-down db-logs api-sync api-dev api-lint \
 	migrate migrate-down alembic-revision alembic-history alembic-current \
-	dev-web web-dev worker-hackathon worker-lesson-index worker-evaluate-homework
+	dev-web web-dev worker-hackathon worker-lesson-index worker-evaluate-homework \
+	lint lint-fix type-check check hooks-install
 
 API_DIR := apps/api
 WEB_DIR := apps/web
@@ -27,6 +28,11 @@ help:
 	@echo "  worker-hackathon - chạy worker chấm Hackathon"
 	@echo "  worker-lesson-index - chạy worker index bài học"
 	@echo "  worker-evaluate-homework - chạy worker chấm bài tập"
+	@echo "  lint             - chạy linter cho tất cả các module (Python + Web)"
+	@echo "  lint-fix         - tự động sửa lỗi lint có thể fix cho tất cả module"
+	@echo "  type-check       - kiểm tra TypeScript types cho apps/web"
+	@echo "  check            - chạy kiểm tra toàn diện chất lượng tất cả module"
+	@echo "  hooks-install    - cài đặt và kích hoạt Git Pre-commit Hook"
 
 api-sync:
 	cd $(API_DIR) && uv sync --group dev
@@ -35,7 +41,7 @@ api-dev: api-sync
 	cd $(API_DIR) && uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 api-lint:
-	cd $(API_DIR) && uv run ruff check app --fix
+	uv run ruff check apps/api apps/worker --fix
 
 migrate: 
 	cd $(API_DIR) && uv run alembic upgrade head
@@ -65,3 +71,22 @@ worker-lesson-index:
 
 worker-evaluate-homework:
 	cd $(WORKER_DIR) && uv run arq worker_evaluate_homework.presentation.arq_tasks.WorkerSettings
+
+lint:
+	uv run ruff check apps/api apps/worker
+	cd $(WEB_DIR) && npm run lint
+
+lint-fix:
+	uv run ruff check apps/api apps/worker --fix
+	uv run ruff format apps/api apps/worker
+	cd $(WEB_DIR) && npm run lint:fix
+
+type-check:
+	cd $(WEB_DIR) && npm run type-check
+
+check:
+	@bash .githooks/pre-commit
+
+hooks-install:
+	@bash scripts/setup-hooks.sh
+
