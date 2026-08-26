@@ -30,7 +30,7 @@ from app.application.use_cases.pdf_import import (
     ReviewDraftQuestionsUseCase,
     StartImportUseCase,
 )
-from app.presentation.api.deps import AdminOrMentorUser, CurrentUser
+from app.presentation.api.deps import AdminOrEducatorUser, CurrentUser
 from app.presentation.schemas.pdf_import_v2 import (
     ApproveQuestionRequest,
     ApproveQuestionResponse,
@@ -57,7 +57,7 @@ router = APIRouter(prefix="/pdf-import", tags=["pdf-import"])
 @router.post("/import-pdf", response_model=StartPdfImportResponse, status_code=202)
 @inject
 async def import_pdf_route(
-    user: AdminOrMentorUser,
+    user: AdminOrEducatorUser,
     use_case: FromDishka[StartPdfImportUseCase],
     file: UploadFile = File(...),
     lesson_id: str | None = Form(None),
@@ -85,7 +85,7 @@ async def import_pdf_route(
 @router.post("/upload", response_model=PDFUploadResponse, status_code=202)
 @inject
 async def upload_pdf(
-    user: AdminOrMentorUser,
+    user: AdminOrEducatorUser,
     uc: FromDishka[StartImportUseCase],
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
@@ -133,7 +133,7 @@ async def upload_pdf(
 @router.post("/upload-with-password", response_model=PDFUploadResponse, status_code=202)
 @inject
 async def upload_pdf_with_password(
-    user: AdminOrMentorUser,
+    user: AdminOrEducatorUser,
     uc: FromDishka[StartImportUseCase],
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
@@ -174,7 +174,7 @@ async def upload_pdf_with_password(
 @inject
 async def get_import_status(
     job_id: UUID,
-    user: AdminOrMentorUser,
+    user: AdminOrEducatorUser,
     uc: FromDishka[GetImportStatusUseCase],
 ):
     """Poll trạng thái xử lý PDF import job."""
@@ -191,7 +191,7 @@ async def get_import_status(
 @inject
 async def list_draft_questions(
     job_id: UUID,
-    user: AdminOrMentorUser,
+    user: AdminOrEducatorUser,
     uc: FromDishka[ReviewDraftQuestionsUseCase],
     offset: int = 0,
     limit: int = 50,
@@ -213,7 +213,7 @@ async def list_draft_questions(
 async def approve_question(
     question_id: UUID,
     body: ApproveQuestionRequest,
-    user: AdminOrMentorUser,
+    user: AdminOrEducatorUser,
     uc: FromDishka[ApproveQuestionUseCase],
 ):
     """Duyệt câu hỏi DRAFT thành PUBLIC. Admin có thể chỉnh sửa trước khi duyệt."""
@@ -239,7 +239,7 @@ async def approve_question(
 @inject
 async def reject_question(
     question_id: UUID,
-    user: AdminOrMentorUser,
+    user: AdminOrEducatorUser,
     uc: FromDishka[RejectQuestionUseCase],
 ):
     """Xóa câu hỏi DRAFT và dọn sạch ảnh trên MinIO."""
@@ -262,7 +262,7 @@ async def reject_question(
 async def regenerate_solution(
     question_id: UUID,
     body: RegenerateSolutionRequest,
-    user: AdminOrMentorUser,
+    user: AdminOrEducatorUser,
     uc: FromDishka[RegenerateSolutionUseCase],
 ):
     """🪄 Gọi Gemini AI sinh lại lời giải cho câu hỏi."""
@@ -281,7 +281,7 @@ async def regenerate_solution(
 @inject
 async def acquire_lock(
     question_id: UUID,
-    user: AdminOrMentorUser,
+    user: AdminOrEducatorUser,
     uc: FromDishka[AcquireLockUseCase],
 ):
     """Chiếm review lock khi admin mở câu hỏi DRAFT để chỉnh sửa."""
@@ -293,7 +293,7 @@ async def acquire_lock(
 @inject
 async def heartbeat_lock(
     question_id: UUID,
-    user: AdminOrMentorUser,
+    user: AdminOrEducatorUser,
     uc: FromDishka[HeartbeatLockUseCase],
 ):
     """Gia hạn review lock TTL (frontend gọi mỗi 30 giây)."""

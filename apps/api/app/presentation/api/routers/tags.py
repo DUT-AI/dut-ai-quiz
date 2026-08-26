@@ -8,7 +8,7 @@ from app.application.use_cases.tags.tags_use_case import (
     DeleteTagUseCase,
     ListTagsUseCase,
 )
-from app.presentation.api.deps import AdminOrMentorUser, CurrentUser
+from app.presentation.api.deps import AdminOrEducatorUser, CurrentUser
 from app.presentation.schemas.tags import TagCreate, TagOut
 
 router = APIRouter(prefix="/tags", tags=["tags"])
@@ -27,7 +27,7 @@ async def list_tags_route(
 @router.post("", response_model=TagOut)
 @inject
 async def create_tag_route(
-    user: AdminOrMentorUser,
+    user: AdminOrEducatorUser,
     body: TagCreate,
     use_case: FromDishka[CreateTagUseCase],
 ):
@@ -39,7 +39,7 @@ async def create_tag_route(
 @inject
 async def delete_tag_route(
     tag_id: UUID,
-    user: AdminOrMentorUser,
+    user: AdminOrEducatorUser,
     use_case: FromDishka[DeleteTagUseCase],
 ):
     """Delete a tag by its ID. Admin or Mentor only."""

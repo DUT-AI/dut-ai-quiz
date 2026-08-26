@@ -212,7 +212,7 @@ EducatorUser = Annotated[
         )
     ),
 ]
-AdminOrMentorUser = EducatorUser
+AdminOrEducatorUser = EducatorUser
 TeacherUser = EducatorUser
 ProjectDevUser = Annotated[
     UserContext,

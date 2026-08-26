@@ -20,7 +20,7 @@ from app.application.use_cases.questions import (
 from app.config import settings
 from app.domain.interfaces import EmbeddingServiceError
 from app.domain.value_objects import Difficulty, PoolType
-from app.presentation.api.deps import CurrentUser, AdminOrMentorUser
+from app.presentation.api.deps import CurrentUser, AdminOrEducatorUser
 from app.presentation.schemas.questions import (
     QuestionBulkCreate,
     QuestionCreate,
@@ -90,7 +90,7 @@ async def list_questions_route(
 @router.post("", response_model=QuestionOut)
 @inject
 async def create_question_route(
-    user: AdminOrMentorUser,
+    user: AdminOrEducatorUser,
     body: QuestionCreate,
     use_case: FromDishka[CreateQuestionUseCase],
 ):
@@ -129,7 +129,7 @@ async def find_related_questions_route(
 @router.get("/{question_id}", response_model=QuestionOut)
 @inject
 async def get_question_route(
-    user: AdminOrMentorUser,
+    user: AdminOrEducatorUser,
     question_id: UUID,
     use_case: FromDishka[GetQuestionUseCase],
 ):
@@ -142,7 +142,7 @@ async def get_question_route(
 @router.patch("/{question_id}", response_model=QuestionOut)
 @inject
 async def update_question_route(
-    user: AdminOrMentorUser,
+    user: AdminOrEducatorUser,
     question_id: UUID,
     body: QuestionUpdate,
     use_case: FromDishka[UpdateQuestionUseCase],
@@ -156,7 +156,7 @@ async def update_question_route(
 @router.delete("/{question_id}")
 @inject
 async def delete_question_route(
-    user: AdminOrMentorUser,
+    user: AdminOrEducatorUser,
     question_id: UUID,
     use_case: FromDishka[DeleteQuestionUseCase],
 ):
@@ -169,7 +169,7 @@ async def delete_question_route(
 @router.post("/bulk", response_model=list[QuestionOut])
 @inject
 async def bulk_create_questions_route(
-    user: AdminOrMentorUser,
+    user: AdminOrEducatorUser,
     body: QuestionBulkCreate,
     use_case: FromDishka[BulkCreateQuestionsUseCase],
 ):
@@ -224,7 +224,7 @@ async def get_related_lessons_route(
 @router.post("/{question_id}/heartbeat")
 @inject
 async def heartbeat_question_route(
-    user: AdminOrMentorUser,
+    user: AdminOrEducatorUser,
     question_id: UUID,
     use_case: FromDishka[HeartbeatQuestionUseCase],
 ):
@@ -237,7 +237,7 @@ async def heartbeat_question_route(
 @router.post("/{question_id}/ai-regenerate", response_model=QuestionOut)
 @inject
 async def ai_regenerate_route(
-    user: AdminOrMentorUser,
+    user: AdminOrEducatorUser,
     question_id: UUID,
     body: AiRegenerateRequest,
     use_case: FromDishka[AiRegenerateSolutionUseCase],
@@ -252,7 +252,7 @@ async def ai_regenerate_route(
 @router.put("/{question_id}/publish", response_model=QuestionOut)
 @inject
 async def publish_question_route(
-    user: AdminOrMentorUser,
+    user: AdminOrEducatorUser,
     question_id: UUID,
     use_case: FromDishka[PublishQuestionUseCase],
 ):

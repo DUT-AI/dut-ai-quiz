@@ -8,7 +8,7 @@ from app.application.use_cases.modules import (
     UpdateModuleUseCase,
     ReorderModulesUseCase,
 )
-from app.presentation.api.deps import AdminOrMentorUser, CurrentUser
+from app.presentation.api.deps import AdminOrEducatorUser, CurrentUser
 from app.presentation.schemas.modules import (
     ModuleCreate,
     ModuleDetailOut,
@@ -44,7 +44,7 @@ async def list_modules(
 @router.post("", response_model=ModuleOut)
 @inject
 async def create_module(
-    user: AdminOrMentorUser,
+    user: AdminOrEducatorUser,
     body: ModuleCreate,
     use_case: FromDishka[CreateModuleUseCase],
 ):
@@ -55,7 +55,7 @@ async def create_module(
 @router.post("/reorder")
 @inject
 async def reorder_modules(
-    user: AdminOrMentorUser,
+    user: AdminOrEducatorUser,
     body: ModuleReorder,
     use_case: FromDishka[ReorderModulesUseCase],
 ):
@@ -67,7 +67,7 @@ async def reorder_modules(
 @router.patch("/{module_id}", response_model=ModuleOut)
 @inject
 async def update_module(
-    user: AdminOrMentorUser,
+    user: AdminOrEducatorUser,
     module_id: str,
     body: ModuleUpdate,
     use_case: FromDishka[UpdateModuleUseCase],
@@ -82,7 +82,7 @@ async def update_module(
 @router.delete("/{module_id}")
 @inject
 async def delete_module(
-    user: AdminOrMentorUser,
+    user: AdminOrEducatorUser,
     module_id: str,
     use_case: FromDishka[DeleteModuleUseCase],
 ):
