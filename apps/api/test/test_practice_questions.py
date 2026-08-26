@@ -49,6 +49,9 @@ async def test_list_practice_questions_use_case():
         difficulty=None,
         lesson_id=lesson_id,
         tag=None,
+        import_session_id=None,
+        status=None,
+        related_questions=None,
         offset=0,
         limit=50
     )
