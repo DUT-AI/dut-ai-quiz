@@ -4,6 +4,8 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiGet, apiPostJson } from "@/lib/api";
 
+import { AppRole, getUserNormalizedRoles, hasAnyRole, normalizeRole } from "@/lib/permissions";
+
 export interface UserContextType {
   user: any | null;
   isAuthenticated: boolean;
@@ -11,19 +13,26 @@ export interface UserContextType {
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
+  roles: string[];
   isAdmin: boolean;
   isSubAdmin: boolean;
   isMentor: boolean;
+  isTrainer: boolean;
   isEducator: boolean;
   isProjectDeveloper: boolean;
+  isLeader: boolean;
   isTeammate: boolean;
+  isHR: boolean;
   isGuest: boolean;
   canManage: boolean;
   canManageLessons: boolean;
   canManageExams: boolean;
   canManageHomeworks: boolean;
+  canManageQuestions: boolean;
   canManageHackathons: boolean;
   canManageStats: boolean;
+  hasRole: (role: AppRole | string) => boolean;
+  hasAnyRole: (roles: (AppRole | string)[]) => boolean;
 }
 
 const AuthContext = createContext<UserContextType | undefined>(undefined);
@@ -97,26 +106,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const rawRoles: string[] = Array.isArray(user?.role_names)
-    ? user.role_names.map((r: string) => String(r).trim().toUpperCase())
-    : [];
-  const quizRole = String(user?.quiz_role || "").trim().toUpperCase();
+  const roles = getUserNormalizedRoles(user);
 
-  const isAdmin = rawRoles.includes("ADMIN") || quizRole === "ADMIN";
-  const isSubAdmin = rawRoles.includes("SUB_ADMIN");
-  const isProjectDeveloper = rawRoles.includes("PROJECT_DEVELOPER");
-  const isEducator = rawRoles.includes("EDUCATOR") || quizRole === "EDUCATOR";
-  const isMentor = rawRoles.includes("MENTOR") || quizRole === "MENTOR";
-  const isTeammate = rawRoles.includes("TEAMMATE") || rawRoles.includes("STUDENT") || quizRole === "TEAMMATE" || isMentor;
-  const isGuest = !isAdmin && !isSubAdmin && !isProjectDeveloper && !isEducator && !isTeammate;
+  const isAdmin = roles.includes(AppRole.ADMIN);
+  const isSubAdmin = roles.includes(AppRole.SUB_ADMIN);
+  const isEducator = roles.includes(AppRole.EDUCATOR);
+  const isProjectDeveloper = roles.includes(AppRole.PROJECT_DEVELOPER);
+  const isLeader = roles.includes(AppRole.LEADER);
+  const isMentor = roles.includes(AppRole.MENTOR);
+  const isTrainer = roles.includes(AppRole.TRAINER);
+  const isHR = roles.includes(AppRole.HR);
+  const isTeammate =
+    roles.includes(AppRole.TEAMMATE) ||
+    roles.includes(AppRole.STUDENT) ||
+    isLeader ||
+    isMentor ||
+    isTrainer;
 
-  // Granular capability flags
-  const canManageLessons = isAdmin || isSubAdmin || isEducator;
-  const canManageExams = isAdmin || isSubAdmin || isEducator;
-  const canManageHomeworks = isAdmin || isSubAdmin || isEducator;
-  const canManageHackathons = isAdmin || isSubAdmin || isProjectDeveloper;
+  const isGuest = !isAdmin && !isSubAdmin && !isProjectDeveloper && !isEducator && !isTeammate && !isHR;
+
+  // Granular capability flags based on Use Case Diagram & verified requirements:
+  // 1. LMS Management (Lessons, Homeworks, Questions): Admin & Educator ONLY
+  const canManageLessons = isAdmin || isEducator;
+  const canManageHomeworks = isAdmin || isEducator;
+  const canManageQuestions = isAdmin || isEducator;
+
+  // 2. Exam Management: Admin & Sub-Admin ONLY
+  const canManageExams = isAdmin || isSubAdmin;
+
+  // 3. Hackathon Management: Admin & Project Developer ONLY
+  const canManageHackathons = isAdmin || isProjectDeveloper;
+
+  // 4. Stats: Admin, Sub-Admin, Educator
   const canManageStats = isAdmin || isSubAdmin || isEducator;
-  const canManage = canManageLessons || canManageHackathons || canManageExams;
+
+  // 5. General Teacher Portal Entry
+  const canManage = canManageLessons || canManageExams || canManageHackathons || canManageStats;
+
+  const checkHasRole = (role: AppRole | string) => {
+    return hasAnyRole(user, [role]);
+  };
+
+  const checkHasAnyRole = (allowedRoles: (AppRole | string)[]) => {
+    return hasAnyRole(user, allowedRoles);
+  };
 
   return (
     <AuthContext.Provider
@@ -127,19 +160,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         logout,
         refresh: fetchUser,
+        roles,
         isAdmin,
         isSubAdmin,
         isMentor,
+        isTrainer,
         isEducator,
         isProjectDeveloper,
+        isLeader,
         isTeammate,
+        isHR,
         isGuest,
         canManage,
         canManageLessons,
         canManageExams,
         canManageHomeworks,
+        canManageQuestions,
         canManageHackathons,
         canManageStats,
+        hasRole: checkHasRole,
+        hasAnyRole: checkHasAnyRole,
       }}
     >
       {children}

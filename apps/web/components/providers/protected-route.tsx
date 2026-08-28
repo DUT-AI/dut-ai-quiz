@@ -2,17 +2,28 @@
 
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/auth-context";
+import { useAuth, type UserContextType } from "@/context/auth-context";
+import { hasAnyRole, getUserNormalizedRoles, AppRole } from "@/lib/permissions";
 import { ShieldAlert, ArrowLeft, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  allowedRoles: string[];
+  allowedRoles?: string[];
+  customCheck?: (user: any, auth: UserContextType) => boolean;
+  deniedTitle?: string;
+  deniedMessage?: string;
 }
 
-export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
-  const { user, isAuthenticated, isLoading } = useAuth();
+export function ProtectedRoute({
+  children,
+  allowedRoles,
+  customCheck,
+  deniedTitle,
+  deniedMessage,
+}: ProtectedRouteProps) {
+  const auth = useAuth();
+  const { user, isAuthenticated, isLoading, roles } = auth;
   const router = useRouter();
 
   useEffect(() => {
@@ -21,7 +32,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
     }
   }, [isLoading, isAuthenticated, router]);
 
-  // 1. Loading state with premium spin animation
+  // 1. Loading state with spin animation
   if (isLoading) {
     return (
       <div className="h-[60vh] w-full flex flex-col items-center justify-center gap-4">
@@ -38,20 +49,22 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
     return null; // Will redirect via useEffect
   }
 
-  // 3. Unauthorized state: check access across all roles
-  const userRoles = [
-    ...(Array.isArray(user?.role_names) ? user.role_names : []),
-    user?.quiz_role || "",
-  ].map((r: string) => String(r).trim().toUpperCase());
+  // 3. Unauthorized state
+  const isRoleAllowed =
+    !allowedRoles ||
+    allowedRoles.length === 0 ||
+    roles.includes(AppRole.ADMIN) ||
+    hasAnyRole(user, allowedRoles);
 
-  const allowedSet = (allowedRoles || []).map((r) => r.trim().toUpperCase());
+  const isCustomAllowed = customCheck ? customCheck(user, auth) : true;
 
-  const hasAccess =
-    allowedSet.length === 0 ||
-    userRoles.some((r) => allowedSet.includes(r)) ||
-    userRoles.includes("ADMIN");
+  const hasAccess = isRoleAllowed && isCustomAllowed;
 
   if (!hasAccess) {
+    const displayRoles = Array.isArray(user?.role_names) && user.role_names.length > 0
+      ? user.role_names.join(", ")
+      : (user?.quiz_role || "Thành viên");
+
     return (
       <div className="min-h-[70vh] w-full flex items-center justify-center px-4 py-12">
         <motion.div
@@ -60,7 +73,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
           transition={{ duration: 0.5, ease: "easeOut" }}
           className="w-full max-w-lg bg-white/70 dark:bg-zinc-900/50 backdrop-blur-md rounded-3xl border border-gray-100 dark:border-white/5 p-8 md:p-12 text-center shadow-xl shadow-slate-100/50 dark:shadow-none flex flex-col items-center"
         >
-          {/* Lock Icon Wrapper with bounce micro-animation */}
+          {/* Lock Icon Wrapper */}
           <motion.div
             initial={{ scale: 0.8 }}
             animate={{ scale: [0.8, 1.1, 1] }}
@@ -71,19 +84,25 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
           </motion.div>
 
           <h1 className="text-2xl font-black text-dark-blue dark:text-white uppercase tracking-tight mb-4">
-            Từ chối truy cập
+            {deniedTitle || "Từ chối truy cập"}
           </h1>
-          
+
           <p className="text-sm text-gray-navy dark:text-light-blue opacity-80 max-w-sm mb-10 leading-relaxed">
-            Tài khoản của bạn với vai trò <span className="font-bold text-red uppercase">{(user?.quiz_role || "Guest")}</span> không có quyền truy cập vào khu vực quản trị này.
+            {deniedMessage || (
+              <>
+                Tài khoản của bạn với vai trò{" "}
+                <span className="font-bold text-red uppercase">{displayRoles}</span>{" "}
+                không có quyền truy cập vào khu vực quản trị này.
+              </>
+            )}
           </p>
 
-          {/* Action buttons with hover effects */}
+          {/* Action buttons */}
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => router.push("/dashboard")}
-            className="w-full py-4 px-6 rounded-2xl bg-primary text-white font-bold text-sm shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all flex items-center justify-center gap-2"
+            className="w-full py-4 px-6 rounded-2xl bg-primary text-white font-bold text-sm shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             <ArrowLeft className="size-4" />
             Quay lại trang chính
@@ -96,3 +115,4 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   // 4. Authorized state: render contents
   return <>{children}</>;
 }
+
