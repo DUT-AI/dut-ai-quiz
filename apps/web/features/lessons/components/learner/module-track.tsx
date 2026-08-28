@@ -57,7 +57,7 @@ const DYNAMIC_THEMES = [
 ];
 
 export function ModuleTrack({ module, lessons, index }: Props) {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
   const theme = DYNAMIC_THEMES[index % DYNAMIC_THEMES.length];
 
   // Group lessons by order value
