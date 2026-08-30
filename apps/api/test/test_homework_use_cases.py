@@ -80,6 +80,18 @@ class HomeworkRepositoryStub:
     async def list_completed_user_ids(self, homework_id):
         return self.completed_user_ids
 
+    async def list_completed_members_by_lesson(self, lesson_id):
+        from app.application.dtos.homework import CompletedHomeworkMemberOutDTO
+
+        return [
+            CompletedHomeworkMemberOutDTO(
+                user_id=uid,
+                submission_count=2,
+                max_score=9.5,
+            )
+            for uid in self.completed_user_ids
+        ]
+
 
 @pytest.fixture
 def homework() -> HomeworkEntity:
@@ -218,13 +230,27 @@ async def test_homework_files_are_zip_only_and_limit_is_20_mb() -> None:
 async def test_completed_members_returns_manage_user_ids(
     homework: HomeworkEntity,
 ) -> None:
+    from app.domain.entities.lesson import LessonEntity
+
     repository = HomeworkRepositoryStub(homework)
     repository.completed_user_ids = [7, 99]
-    use_case = ListCompletedHomeworkMembersUseCase(repository)
+    lesson_repo = AsyncMock()
+    lesson = LessonEntity(
+        id=homework.lesson_id,
+        name="Lesson 1",
+        slug="lesson-1",
+        description="",
+        order=1,
+        created_at=now_ict(),
+    )
+    lesson_repo.get_by_slug.return_value = lesson
+    use_case = ListCompletedHomeworkMembersUseCase(repository, lesson_repo)
 
-    result = await use_case.execute(homework.id)
+    result = await use_case.execute("lesson-1")
 
     assert [member.user_id for member in result] == [7, 99]
+    assert [member.submission_count for member in result] == [2, 2]
+    assert [member.max_score for member in result] == [9.5, 9.5]
 
 
 @pytest.mark.asyncio

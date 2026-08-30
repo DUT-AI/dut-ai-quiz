@@ -1,3 +1,4 @@
+from app.domain.entities.auth_enums import SystemPermission
 from uuid import UUID
 
 from dishka.integrations.fastapi import FromDishka, inject
@@ -18,7 +19,7 @@ from app.application.use_cases.lessons import (
 from app.domain.interfaces import EmbeddingServiceError
 from app.application.use_cases.questions import ListQuestionsUseCase
 from app.domain.value_objects import Difficulty, PoolType
-from app.presentation.api.deps import CurrentUser, EducatorUser, OptionalCurrentUser
+from app.presentation.api.deps import CurrentUser, EducatorUser
 from app.presentation.schemas.lessons import (
     LessonCreate,
     LessonDetailOut,
@@ -139,21 +140,21 @@ async def import_notion_lesson(
     if module_id and module_id.strip() and module_id.strip().lower() not in ("null", "undefined", "none", "string"):
         try:
             mid = UUID(module_id.strip())
-        except ValueError:
+        except ValueError as e:
             raise HTTPException(
                 status_code=400,
                 detail=f"Invalid module_id UUID format: {module_id}",
-            )
+            ) from e
 
     lid = None
     if lesson_id and lesson_id.strip() and lesson_id.strip().lower() not in ("null", "undefined", "none", "string"):
         try:
             lid = UUID(lesson_id.strip())
-        except ValueError:
+        except ValueError as e:
             raise HTTPException(
                 status_code=400,
                 detail=f"Invalid lesson_id UUID format: {lesson_id}",
-            )
+            ) from e
 
     try:
         zip_bytes = await file.read()
@@ -166,11 +167,11 @@ async def import_notion_lesson(
         )
         return res
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Failed to import lesson: {str(e)}"
-        )
+        ) from e 
 
 
 
@@ -231,4 +232,4 @@ async def delete_lesson(
             raise HTTPException(status_code=404, detail="Lesson not found")
         return {"ok": True}
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e

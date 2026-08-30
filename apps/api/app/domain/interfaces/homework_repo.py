@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Any
 from uuid import UUID
 
 from app.domain.entities.homework import HomeworkEntity, HomeworkSubmissionEntity
@@ -66,6 +67,13 @@ class IHomeworkRepository(ABC):
     @abstractmethod
     async def list_completed_user_ids(self, homework_id: UUID) -> list[int]:
         """List users whose latest submission has finished grading."""
+        raise NotImplementedError
+
+    @abstractmethod
+    async def list_completed_members_by_lesson(
+        self, lesson_id: UUID
+    ) -> list[Any]:
+        """List member completion stats for homeworks in the given lesson."""
         raise NotImplementedError
 
     @abstractmethod
