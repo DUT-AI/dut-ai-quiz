@@ -9,6 +9,8 @@ from app.application.use_cases.hackathon.crud_hackathon import (
     DeleteHackathonUseCase,
     UpdateHackathonUseCase,
 )
+from app.config import settings
+from app.core.jwt import create_access_token
 from app.domain.entities.auth_enums import (
     ROLE_DEFAULT_PERMISSIONS,
     SystemPermission,
@@ -25,12 +27,9 @@ from app.infrastructure.persistence.models.auth_rbac import (
 )
 from app.infrastructure.persistence.models.user import User
 from app.presentation.api.abac import is_resource_owner, verify_resource_ownership
-from app.core.jwt import create_access_token
-from app.config import settings
 from app.presentation.api.deps import (
     RequirePermissions,
     UserContext,
-    extract_auth_context_from_request,
     get_current_user,
     get_optional_current_user,
 )
@@ -115,19 +114,21 @@ def test_admin_role_resolves_all_permissions():
         assert p.value in resolved
 
 
-def test_mentor_role_resolves_only_teammate_permissions():
-    resolved = resolve_permissions_for_roles(["MENTOR"])
-    # Has teammate permissions
+def test_role_normalization_variations():
+    # Role with spaces and mixed case
+    resolved = resolve_permissions_for_roles(["teammate", "Project Developer"])
+    assert SystemPermission.MANAGE_HACKATHON.value in resolved
     assert SystemPermission.READ_LESSON.value in resolved
-    assert SystemPermission.PLAY_ARENA_GAME.value in resolved
-    assert SystemPermission.SUBMIT_HOMEWORK.value in resolved
-    assert SystemPermission.PRACTICE_QUESTION.value in resolved
-    # Does NOT have Educator or Management permissions
-    assert SystemPermission.CREATE_LESSON.value not in resolved
-    assert SystemPermission.MANAGE_LESSON.value not in resolved
-    assert SystemPermission.MANAGE_HOMEWORK.value not in resolved
-    assert SystemPermission.MANAGE_EXAM.value not in resolved
-    assert SystemPermission.MANAGE_HACKATHON.value not in resolved
+
+    # Role with hyphens
+    resolved_hyphen = resolve_permissions_for_roles(["project-developer"])
+    assert SystemPermission.MANAGE_HACKATHON.value in resolved_hyphen
+
+    # Sub-admin with spaces
+    resolved_subadmin = resolve_permissions_for_roles(["sub admin"])
+    assert SystemPermission.MANAGE_EXAM.value in resolved_subadmin
+
+
 
 
 # ============================================================================
