@@ -1,6 +1,5 @@
 from app.application.dtos import AuthTokens, LoginPayload
 from app.application.services.auth_roles import quiz_role_from_manage
-from app.config import settings
 from app.core.jwt import create_access_token
 from app.domain.interfaces import IManageService
 from app.domain.exceptions.exceptions import AppException
@@ -12,21 +11,6 @@ class LoginByManageAccountUseCase:
         self._manage_client = manage_client
 
     async def execute(self, payload: LoginPayload) -> AuthTokens:
-        if settings.auth_dev_bypass:
-            rn = settings.auth_dev_role_name
-            roles = [rn] if isinstance(rn, str) else (rn or ["admin"])
-            local_jwt = create_access_token(
-                {
-                    "user_id": settings.auth_dev_user_id,
-                    "roles": roles,
-                    "type": "service_a",
-                }
-            )
-            return AuthTokens(
-                access_token=local_jwt,
-                refresh_token="",
-            )
-
         try:
             # 1. Login to Manage Service
             tokens = await self._manage_client.login(payload.model_dump())
