@@ -1,16 +1,28 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useHackathons } from "@/lib/queries";
 import { type Hackathon } from "../types";
 import { HackathonRow } from "./hackathon-row";
 import { HackathonFormModal } from "./hackathon-form-modal";
 import { AnimatePresence } from "framer-motion";
 import { Award, Plus } from "lucide-react";
+import { useAuth } from "@/context/auth-context";
+import { isOwnerOrAdmin } from "@/lib/permissions";
 
 export function HackathonList() {
-  const { data: hackathons, isLoading, error } = useHackathons();
+  const { data: rawHackathons, isLoading, error } = useHackathons();
+  const { user, isAdmin } = useAuth();
   const [showCreate, setShowCreate] = useState(false);
+
+  // Admin có quyền xem tất cả, Project Developer chỉ xem giải đấu do chính mình tạo (own)
+  const hackathons = useMemo(() => {
+    if (!rawHackathons) return [];
+    if (isAdmin || isOwnerOrAdmin(user, null)) {
+      return rawHackathons;
+    }
+    return rawHackathons.filter((h) => Number(h.created_by) === Number(user?.id));
+  }, [rawHackathons, isAdmin, user]);
 
   return (
     <div className="space-y-8">

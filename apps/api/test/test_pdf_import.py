@@ -56,8 +56,9 @@ async def test_successful_pdf_import(mock_fitz_open, use_case, mock_pdf_import_q
         job_id=response.job_id,
         file_path=os.path.join("/tmp/pdf_uploads", f"{response.job_id}.pdf"),
         user_id=1,
+        lesson_id=None,
         target_scope=None,
-        password=None
+        password=None,
     )
 
 @pytest.mark.asyncio
