@@ -59,7 +59,15 @@ export function hasAnyRole(user: any, allowedRoles: (AppRole | string)[]): boole
 export function isOwnerOrAdmin(user: any, ownerId?: number | null): boolean {
   if (!user) return false;
   const userRoles = getUserNormalizedRoles(user);
-  if (userRoles.includes(AppRole.ADMIN)) return true;
-  if (!ownerId) return false;
+  if (
+    userRoles.includes(AppRole.ADMIN) ||
+    userRoles.includes("ADMIN") ||
+    String(user?.quiz_role || "").toLowerCase() === "admin" ||
+    (Array.isArray(user?.role_names) &&
+      user.role_names.some((r: string) => String(r).toLowerCase() === "admin"))
+  ) {
+    return true;
+  }
+  if (ownerId === undefined || ownerId === null) return false;
   return Number(user.id) === Number(ownerId);
 }

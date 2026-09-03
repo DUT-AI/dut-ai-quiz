@@ -8,18 +8,58 @@ import { useLogin } from "./use-login";
 import { Loader2 } from "lucide-react";
 
 export default function LoginPage() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, logout } = useAuth();
   const router = useRouter();
   const { register, handleSubmit, errors, isPending } = useLogin();
 
-  if (isAuthenticated && !isLoading) {
-    router.push("/dashboard");
-    return null;
-  }
+  React.useEffect(() => {
+    if (isAuthenticated && !isLoading) {
+      router.push("/dashboard");
+    }
+  }, [isAuthenticated, isLoading, router]);
 
   const handleGoogleLogin = () => {
     window.location.href = `${API_BASE}/api/v1/auth/google/login`;
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-zinc-950">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+          <p className="text-sm font-bold text-gray-500">Đang tải...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isAuthenticated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-zinc-950 px-4 py-12">
+        <div className="w-full max-w-md space-y-6 text-center bg-white dark:bg-zinc-900 p-8 rounded-3xl shadow-sm border border-gray-100 dark:border-white/5">
+          <Loader2 className="h-8 w-8 animate-spin text-emerald-600 mx-auto" />
+          <div className="space-y-1">
+            <h3 className="font-bold text-lg text-gray-900 dark:text-white">Bạn đã đăng nhập</h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Đang chuyển hướng đến Dashboard...</p>
+          </div>
+          <div className="flex justify-center gap-3 pt-2">
+            <button
+              onClick={() => router.push("/dashboard")}
+              className="px-4 py-2 text-xs font-bold bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition"
+            >
+              Vào Dashboard ngay
+            </button>
+            <button
+              onClick={() => logout()}
+              className="px-4 py-2 text-xs font-bold border border-red/20 text-red rounded-xl hover:bg-red/5 transition"
+            >
+              Đăng xuất
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
