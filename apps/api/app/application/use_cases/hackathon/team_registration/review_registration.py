@@ -26,6 +26,7 @@ class ReviewRegistrationUseCase:
         status: RegistrationStatus,
         reviewer_id: int,
         rejection_reason: str | None = None,
+        is_admin: bool = False,
     ) -> HackathonRegistrationEntity:
         reg = await self._reg_repo.get(registration_id)
         if not reg:
@@ -35,7 +36,7 @@ class ReviewRegistrationUseCase:
         if not hackathon:
             raise AppException("Hackathon không tồn tại", 404)
 
-        if hackathon.created_by != reviewer_id:
+        if not is_admin and hackathon.created_by != reviewer_id:
             raise AppException("Bạn không có quyền duyệt đăng ký cho giải đấu này", 403)
 
         if status not in (RegistrationStatus.APPROVED, RegistrationStatus.REJECTED):

@@ -28,7 +28,12 @@ async def list_hackathon_tasks_route(
     hackathon_id: UUID,
     use_case: FromDishka[ListHackathonTasksUseCase],
 ):
-    rows = await use_case.execute(hackathon_id, user.id, quiz_role_from_manage(user.roles))
+    rows = await use_case.execute(
+        hackathon_id,
+        user.id,
+        quiz_role_from_manage(user.roles),
+        is_admin=user.is_admin(),
+    )
     if rows is None:
         raise HTTPException(status_code=404, detail="Not found")
     return rows
@@ -43,7 +48,12 @@ async def create_hackathon_task_route(
     use_case: FromDishka[CreateHackathonTaskUseCase],
 ):
     try:
-        res = await use_case.execute(hackathon_id, body, user.id)
+        res = await use_case.execute(
+            hackathon_id,
+            body,
+            user.id,
+            is_admin=user.is_admin(),
+        )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     if not res:
@@ -59,7 +69,13 @@ async def get_hackathon_task_route(
     task_id: UUID,
     use_case: FromDishka[GetHackathonTaskUseCase],
 ):
-    res = await use_case.execute(hackathon_id, task_id, user.id, quiz_role_from_manage(user.roles))
+    res = await use_case.execute(
+        hackathon_id,
+        task_id,
+        user.id,
+        quiz_role_from_manage(user.roles),
+        is_admin=user.is_admin(),
+    )
     if not res:
         raise HTTPException(status_code=404, detail="Not found")
     return res
@@ -75,7 +91,13 @@ async def update_hackathon_task_route(
     use_case: FromDishka[UpdateHackathonTaskUseCase],
 ):
     try:
-        res = await use_case.execute(hackathon_id, task_id, body, user.id)
+        res = await use_case.execute(
+            hackathon_id,
+            task_id,
+            body,
+            user.id,
+            is_admin=user.is_admin(),
+        )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     if not res:
@@ -91,7 +113,12 @@ async def delete_hackathon_task_route(
     task_id: UUID,
     use_case: FromDishka[DeleteHackathonTaskUseCase],
 ):
-    ok = await use_case.execute(hackathon_id, task_id, user.id)
+    ok = await use_case.execute(
+        hackathon_id,
+        task_id,
+        user.id,
+        is_admin=user.is_admin(),
+    )
     if not ok:
         raise HTTPException(status_code=404, detail="Not found")
     return {"ok": True}

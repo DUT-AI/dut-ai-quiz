@@ -102,7 +102,7 @@ async def list_registrations_route(
     hackathon_id: UUID,
     use_case: FromDishka[ListRegistrationsUseCase],
 ):
-    return await use_case(hackathon_id, user.id)
+    return await use_case(hackathon_id, user.id, is_admin=user.is_admin())
 
 
 @router.post(
@@ -117,4 +117,10 @@ async def review_registration_route(
     body: ReviewRegistrationInput,
     use_case: FromDishka[ReviewRegistrationUseCase],
 ):
-    return await use_case(reg_id, body.status, user.id, body.rejection_reason)
+    return await use_case(
+        reg_id,
+        body.status,
+        user.id,
+        body.rejection_reason,
+        is_admin=user.is_admin(),
+    )

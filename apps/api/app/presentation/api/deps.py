@@ -231,7 +231,10 @@ ProjectDevUser = Annotated[
             UserRole.SUB_ADMIN,
             UserRole.PROJECT_DEVELOPER,
             "admin",
+            "ADMIN",
             "PROJECT_DEVELOPER",
+            "project_developer",
+            "project developer",
         )
     ),
 ]
