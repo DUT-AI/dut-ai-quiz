@@ -5,23 +5,34 @@ from dishka import Provider, Scope, provide
 from redis.asyncio import Redis
 
 from app.domain.interfaces import (
-    IBlogCache,
     IDUTAIManageCache,
     IManageService,
     IS3Client,
     IHackathonSubmissionStore,
     ISubmissionQueue,
+    IEmbeddingService,
+    ILessonIndexQueue,
+    IHomeworkEvaluationQueue,
 )
+from app.domain.interfaces.pdf_import_queue import IPdfImportQueue
+from app.config import settings
 from app.infrastructure.clients import (
     DUTAIManageService,
     GoogleOAuthClient,
 )
-from app.infrastructure.clients.blog_service import BlogServiceClient
 from app.infrastructure.clients.minio_client import MinioClient
 from app.infrastructure.clients.hackathon_submission_store import (
     MinIOHackathonSubmissionStore,
 )
 from app.infrastructure.clients.arq_submission_queue import ArqSubmissionQueue
+from app.infrastructure.clients.arq_lesson_index_queue import ArqLessonIndexQueue
+from app.infrastructure.clients.arq_pdf_import_queue import ArqPdfImportQueue
+from app.infrastructure.clients.arq_homework_queue import ArqHomeworkEvaluationQueue
+from app.infrastructure.clients.embedding_service import (
+    DutAiEmbeddingService,
+    LocalHashingEmbeddingService,
+    OpenAICompatibleEmbeddingService,
+)
 
 
 class ClientProvider(Provider):
@@ -46,13 +57,6 @@ class ClientProvider(Provider):
         return DUTAIManageService(client, cache)
 
     @provide(scope=Scope.APP)
-    def get_blog_service_client(
-        self, client: httpx.AsyncClient, blog_cache: IBlogCache
-    ) -> BlogServiceClient:
-        """Provide blog service client with cache interface."""
-        return BlogServiceClient(client, blog_cache)
-
-    @provide(scope=Scope.APP)
     def get_minio_client(self) -> IS3Client:
         """Provide concrete MinIO S3 client."""
         return MinioClient()
@@ -68,3 +72,27 @@ class ClientProvider(Provider):
     def get_arq_submission_queue(self, redis: Redis) -> ISubmissionQueue:
         """Provide concrete Arq submission queue service."""
         return ArqSubmissionQueue(redis)
+
+    @provide(scope=Scope.APP)
+    def get_arq_lesson_index_queue(self, redis: Redis) -> ILessonIndexQueue:
+        return ArqLessonIndexQueue(redis)
+
+    @provide(scope=Scope.APP)
+    def get_pdf_import_queue(self, redis: Redis) -> IPdfImportQueue:
+        return ArqPdfImportQueue(redis)
+
+    @provide(scope=Scope.APP)
+    def get_arq_homework_queue(
+        self, redis: Redis
+    ) -> IHomeworkEvaluationQueue:
+        return ArqHomeworkEvaluationQueue(redis)
+
+    @provide(scope=Scope.APP)
+    def get_embedding_service(
+        self, client: httpx.AsyncClient
+    ) -> IEmbeddingService:
+        if settings.embedding_provider.casefold() == "local":
+            return LocalHashingEmbeddingService(settings)
+        if settings.embedding_provider.casefold() == "dutai":
+            return DutAiEmbeddingService(client, settings)
+        return OpenAICompatibleEmbeddingService(client, settings)

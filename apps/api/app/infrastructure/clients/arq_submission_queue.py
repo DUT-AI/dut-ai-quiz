@@ -3,6 +3,7 @@ from redis.asyncio import Redis
 from arq.connections import ArqRedis
 
 from app.domain.interfaces.submission_queue import ISubmissionQueue
+from app.config import settings
 
 
 class ArqSubmissionQueue(ISubmissionQueue):
@@ -19,4 +20,6 @@ class ArqSubmissionQueue(ISubmissionQueue):
         await self._arq_redis.enqueue_job(
             "evaluate_submission_job",
             submission_id=str(submission_id),
+            _job_id=f"submission:{submission_id}",
+            _queue_name=settings.hackathon_queue_name,
         )

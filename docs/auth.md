@@ -2,14 +2,14 @@
 
 ## Dịch vụ bên ngoài
 
-- **Đăng nhập**: `POST https://manage.dutai.site/api/v1/auth/login` (body: `email`, `password`) — response đính kèm **cookie** session.
-- **Người dùng hiện tại**: `GET https://manage.dutai.site/api/v1/auth/me` — ví dụ `data`: `id` (int), `name`, `email`, `role_name`, `permissions`, …
+- **Đăng nhập**: `POST https://manage.dutai.io.vn/api/v1/auth/login` (body: `email`, `password`) — response đính kèm **cookie** session.
+- **Người dùng hiện tại**: `GET https://manage.dutai.io.vn/api/v1/auth/me` — ví dụ `data`: `id` (int), `name`, `email`, `role_name`, `permissions`, …
 
 ## Domain & cookie
 
 - **Frontend quiz**: `https://quiz.dutai.site`
-- **Auth / quản lý**: `https://manage.dutai.site`
-- Cùng **eTLD+1** **`.dutai.site`** (chỉ khác subdomain). Cookie session nên được Auth cấu hình **`Domain=.dutai.site`** (và `Secure`, `SameSite` phù hợp) để trình duyệt gửi cookie trong luồng cùng “site” tổng.
+- **Auth / quản lý**: `https://manage.dutai.io.vn`
+- Vì khác **eTLD+1** (`.dutai.site` và `.dutai.io.vn`), cơ chế chia sẻ Cookie trực tiếp qua domain chung `.dutai.site` sẽ không hoạt động. Dự phòng dùng token qua Header Authorization hoặc BFF (Next.js server).
 
 **Việc cần làm khi triển khai**: xác nhận thực tế header `Set-Cookie` từ manage (`Domain`, `Secure`, `SameSite`).
 

@@ -51,6 +51,23 @@ Monorepo: **FastAPI** (`apps/api`) + **Next.js** (`apps/web`). Tài liệu: [doc
 
 Ứng dụng quiz không có form đăng nhập: đăng nhập qua **manage** (`MANAGE_BASE_URL`), cookie `Domain=.dutai.site` gửi kèm request tới API quiz. Dev có thể dùng `AUTH_DEV_BYPASS=true` (xem `.env.example`).
 
+## Code Quality & Pre-commit Hooks
+
+Dự án đã tích hợp Git Pre-commit Hook để tự động kiểm tra chất lượng code của tất cả các module trước khi `git commit`:
+
+1. **Kích hoạt hook (chỉ cần chạy 1 lần)**:
+   ```bash
+   make hooks-install
+   # hoặc: bash scripts/setup-hooks.sh
+   ```
+
+2. **Chạy kiểm tra thủ công**:
+   - Kiểm tra toàn diện mọi module: `make check`
+   - Linting (Python + Web): `make lint`
+   - Tự động sửa lỗi lint: `make lint-fix`
+   - Kiểm tra kiểu dữ liệu frontend TypeScript: `make type-check`
+
 ## Tham chiếu UI
 
 [reference/frontend-quizz-app](reference/frontend-quizz-app) — chỉ tham khảo; luồng dữ liệu thật qua REST `/api/v1`.
+

@@ -26,6 +26,8 @@ from app.presentation.api.routers import (
     questions,
     tags,
     uploads,
+    comments,
+    homeworks,
 )
 
 
@@ -67,3 +69,5 @@ app.include_router(game.router, prefix="/api/v1")
 app.include_router(uploads.router, prefix="/api/v1")
 app.include_router(pdf_import.router, prefix="/api/v1")
 app.include_router(external.router, prefix="/api/v1")
+app.include_router(comments.router, prefix="/api/v1")
+app.include_router(homeworks.router, prefix="/api/v1")

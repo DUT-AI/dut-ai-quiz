@@ -1,5 +1,5 @@
 import random
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 from fastapi import HTTPException
 
@@ -11,6 +11,7 @@ from app.domain.interfaces import (
     IQuestionRepository,
 )
 from app.domain.value_objects import Difficulty, PoolType, GameSessionStatus
+from app.infrastructure.cache.game_leaderboard_cache import GameLeaderboardCache
 from app.presentation.schemas.game import GamificationStartIn
 
 
@@ -20,14 +21,34 @@ class StartGameSessionUseCase:
         ps_repo: IGameSessionRepository,
         question_repo: IQuestionRepository,
         lesson_repo: ILessonRepository,
+        cache: GameLeaderboardCache = None,
     ):
         self._ps_repo = ps_repo
         self._question_repo = question_repo
         self._lesson_repo = lesson_repo
+        self._cache = cache
+
 
     async def execute(
         self, user_id: int, payload: GamificationStartIn
     ) -> GameSessionEntity:
+        # Auto-finish any existing IN_PROGRESS session for this lesson+user
+        # so that the client never needs to call finishSession separately.
+        existing = await self._ps_repo.get_active_by_lesson(user_id, payload.lesson_slug)
+        if existing and existing.status == GameSessionStatus.IN_PROGRESS:
+            existing.status = GameSessionStatus.COMPLETED
+            existing.completed_at = now_ict()
+            lesson_slug_for_decay = existing.snapshot.get("lesson_slug", payload.lesson_slug) if existing.snapshot else payload.lesson_slug
+            count_completed = await self._ps_repo.count_completed_by_lesson(user_id, lesson_slug_for_decay)
+            decay = max(0.2, 1.0 - (count_completed * 0.2))
+            if existing.snapshot and "gamification" in existing.snapshot:
+                base_points = existing.snapshot["gamification"].get("points", 0)
+                existing.snapshot["gamification"]["final_score"] = base_points * decay
+                existing.snapshot["gamification"]["attempt_count"] = count_completed + 1
+            await self._ps_repo.save(existing)
+            if self._cache:
+                await self._cache.invalidate(lesson_slug_for_decay)
+
         # Find lesson by slug, id or name
         lessons = await self._lesson_repo.list_all()
         target_lesson_id = None
@@ -52,6 +73,12 @@ class StartGameSessionUseCase:
             offset=0,
             limit=1000,
         )
+
+        if not questions:
+            raise HTTPException(
+                status_code=400,
+                detail="Bài học này chưa có câu hỏi luyện tập thi đấu nào dưới database."
+            )
 
         # Check user's history to prioritize unseen questions
         history = await self._ps_repo.list_history(user_id)

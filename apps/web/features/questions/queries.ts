@@ -15,12 +15,22 @@ export function useQuestions(params?: {
   pool_type?: string;
   tag?: string;
   lesson_id?: string;
+  import_session_id?: string;
+  status?: string;
+  difficulty?: string;
+  related_questions?: boolean;
+  offset?: number;
   limit?: number;
 }) {
   const search = new URLSearchParams();
   if (params?.pool_type) search.set("pool_type", params.pool_type);
   if (params?.tag) search.set("tag", params.tag);
   if (params?.lesson_id) search.set("lesson_id", params.lesson_id);
+  if (params?.import_session_id) search.set("import_session_id", params.import_session_id);
+  if (params?.status) search.set("status", params.status);
+  if (params?.difficulty) search.set("difficulty", params.difficulty);
+  if (params?.related_questions !== undefined) search.set("related_questions", String(params.related_questions));
+  if (params?.offset !== undefined) search.set("offset", String(params.offset));
   if (params?.limit) search.set("limit", String(params.limit));
 
   const qs = search.toString() ? `?${search.toString()}` : "";
@@ -68,8 +78,8 @@ export function useDeleteQuestion() {
 export function useBulkCreateQuestions() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: { 
-      questions: { question: string; options: any[]; solution?: string; pool_type?: string }[]; 
+    mutationFn: (body: {
+      questions: { question: string; options: any[]; solution?: string; pool_type?: string }[];
       lesson_id?: string;
       pool_type?: string;
       tags?: string[];
@@ -88,6 +98,40 @@ export function useParsePDF() {
         "/api/v1/questions/parse-pdf",
         formData,
         PDFParseResponseSchema
+      );
+      return res.data;
+    },
+  });
+}
+
+export function useImportPDF() {
+  return useMutation({
+    mutationFn: async (formData: FormData) => {
+      const backendUrl = process.env.NODE_ENV === "development" ? "http://localhost:8000" : "";
+      const path = backendUrl ? `${backendUrl}/api/v1/pdf-import/import-pdf` : "/api/v1/pdf-import/import-pdf";
+
+      const res = await apiClient.post<{ job_id: string; status: string; message: string }>(
+        path,
+        formData
+      );
+      return res.data;
+    },
+  });
+}
+
+export function useUploadPDF() {
+  return useMutation({
+    mutationFn: async (args: FormData | { formData: FormData; hasPassword?: boolean }) => {
+      const formData = args instanceof FormData ? args : args.formData;
+      const hasPassword = args instanceof FormData ? false : !!args.hasPassword;
+
+      const backendUrl = process.env.NODE_ENV === "development" ? "http://localhost:8000" : "";
+      const endpoint = hasPassword ? "/api/v1/pdf-import/upload-with-password" : "/api/v1/pdf-import/upload";
+      const path = backendUrl ? `${backendUrl}${endpoint}` : endpoint;
+
+      const res = await apiClient.post<{ ok: boolean; job_id?: string; status?: string; error?: string; is_encrypted?: boolean }>(
+        path,
+        formData
       );
       return res.data;
     },
@@ -150,6 +194,128 @@ export function useQuestion(id: string) {
     queryKey: ["question", id],
     queryFn: () => apiGet<QuestionOut>(`/api/v1/questions/${id}`, QuestionOutSchema),
     enabled: !!id,
+  });
+}
+
+export function useImportSessionStatus(jobId: string, enabled: boolean = false) {
+  const backendUrl = process.env.NODE_ENV === "development" ? "http://localhost:8000" : "";
+  const path = backendUrl ? `${backendUrl}/api/v1/pdf-import/${jobId}/status` : `/api/v1/pdf-import/${jobId}/status`;
+
+  return useQuery({
+    queryKey: ["pdf-import", "status", jobId],
+    queryFn: () =>
+      apiGet<{
+        job_id: string;
+        status: "PROCESSING" | "COMPLETED" | "FAILED";
+        total_questions: number;
+        processed_questions: number;
+        error_message: string | null;
+        file_name: string;
+        created_at: string;
+      }>(path),
+    enabled: !!jobId && enabled,
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      if (data?.status === "COMPLETED" || data?.status === "FAILED") {
+        return false;
+      }
+      return 2000;
+    },
+  });
+}
+
+export function useDraftQuestions(jobId: string) {
+  const backendUrl = process.env.NODE_ENV === "development" ? "http://localhost:8000" : "";
+  const path = backendUrl ? `${backendUrl}/api/v1/pdf-import/${jobId}/questions` : `/api/v1/pdf-import/${jobId}/questions`;
+
+  return useQuery({
+    queryKey: ["pdf-import", "questions", jobId],
+    queryFn: () =>
+      apiGet<{
+        questions: any[];
+        total: number;
+      }>(path),
+    enabled: !!jobId,
+  });
+}
+
+export function useApproveQuestion() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      payload,
+    }: {
+      id: string;
+      payload: {
+        content?: string;
+        solution?: string;
+        difficulty?: string;
+        lesson_id?: string;
+      };
+    }) => {
+      const backendUrl = process.env.NODE_ENV === "development" ? "http://localhost:8000" : "";
+      const path = backendUrl ? `${backendUrl}/api/v1/pdf-import/questions/${id}/approve` : `/api/v1/pdf-import/questions/${id}/approve`;
+      return apiPatch<{ ok: boolean; question_id: string; status: string }>(
+        path,
+        payload
+      );
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["questions"] });
+      void qc.invalidateQueries({ queryKey: ["pdf-import", "questions"] });
+    },
+  });
+}
+
+export function useRejectQuestion() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const backendUrl = process.env.NODE_ENV === "development" ? "http://localhost:8000" : "";
+      const path = backendUrl ? `${backendUrl}/api/v1/pdf-import/questions/${id}` : `/api/v1/pdf-import/questions/${id}`;
+      const res = await apiClient.delete<{ ok: boolean; question_id: string; deleted: boolean }>(path);
+      return res.data;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["questions"] });
+      void qc.invalidateQueries({ queryKey: ["pdf-import", "questions"] });
+    },
+  });
+}
+
+export function useRegenerateSolution() {
+  return useMutation({
+    mutationFn: async ({ id, admin_hint }: { id: string; admin_hint?: string }) => {
+      const backendUrl = process.env.NODE_ENV === "development" ? "http://localhost:8000" : "";
+      const path = backendUrl ? `${backendUrl}/api/v1/pdf-import/questions/${id}/regenerate-solution` : `/api/v1/pdf-import/questions/${id}/regenerate-solution`;
+      return apiPost<{ ok: boolean; question_id: string; solution: string }>(
+        path,
+        { admin_hint: admin_hint || "" }
+      );
+    },
+  });
+}
+
+export function useCheckRelatedQuestions(params: {
+  content: string;
+  pool_type?: string;
+  enabled?: boolean;
+}) {
+  return useQuery({
+    queryKey: ["questions", "related-live", params.content, params.pool_type],
+    queryFn: () => {
+      const backendUrl = process.env.NODE_ENV === "development" ? "http://localhost:8000" : "";
+      const path = backendUrl ? `${backendUrl}/api/v1/questions/related` : `/api/v1/questions/related`;
+      return apiPost<any[]>(path, {
+        content: params.content,
+        pool_type: params.pool_type || "PRACTICE",
+        limit: 5,
+        min_score: 0.7,
+      });
+    },
+    enabled: !!params.enabled && params.content.trim().length >= 5,
+    staleTime: 30_000,
   });
 }
 

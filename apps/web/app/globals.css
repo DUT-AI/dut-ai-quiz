@@ -89,15 +89,40 @@
     overscroll-behavior: none;
   }
 
-  .overflow-y-auto,
-  .overflow-x-auto,
-  .overflow-auto,
+  .overflow-y-auto {
+    overscroll-behavior-y: contain;
+  }
+
+  .overflow-x-auto {
+    overscroll-behavior-x: contain;
+    overscroll-behavior-y: auto;
+  }
+
+  .overflow-auto {
+    overscroll-behavior: contain;
+  }
+
   .custom-scrollbar,
   .theory-scrollbar {
-    overscroll-behavior: contain;
+    overscroll-behavior-x: contain;
+    overscroll-behavior-y: auto;
   }
 }
 .whitespace-pre-wrap {
   white-space: pre-wrap;
 }
 
+/* Custom View Transition styles for theme toggle ripple */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* Ensure the new view is always on top so it expands and covers the old view */
+::view-transition-old(root) {
+  z-index: 1;
+}
+::view-transition-new(root) {
+  z-index: 9999;
+}

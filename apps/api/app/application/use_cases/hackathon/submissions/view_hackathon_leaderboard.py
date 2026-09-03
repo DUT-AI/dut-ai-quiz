@@ -13,7 +13,16 @@ class ViewHackathonLeaderboardUseCase:
         self._cache = cache
         self._leaderboard_service = leaderboard_service
 
-    async def __call__(self, hackathon_id: UUID, is_private: bool = False, limit: int = 100) -> list[dict]:
+    async def __call__(
+        self,
+        hackathon_id: UUID,
+        is_private: bool = False,
+        limit: int = 100,
+        force_refresh: bool = False,
+    ) -> list[dict]:
+        if force_refresh:
+            await self._cache.invalidate(hackathon_id)
+
         cached = await self._cache.get(hackathon_id, is_private)
         if cached is not None:
             return cached

@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
-
+from uuid import UUID
+from datetime import datetime
 from app.presentation.schemas.questions import QuestionOptionIn
 
 class ParsedQuestionPreview(BaseModel):
@@ -17,3 +18,17 @@ class PDFImportRequest(BaseModel):
     question_delimiter: str = r"Câu \d+[:.]"
     option_prefixes: str = "A,B,C,D"
     correct_answer_marker: str = "" # e.g. "*" or "Đáp án: "
+
+class StartPdfImportResponse(BaseModel):
+    job_id: UUID
+    status: str
+    message: str
+
+class ImportSessionStatusResponse(BaseModel):
+    id: UUID
+    user_id: int
+    target_scope: str | None
+    status: str
+    error_message: str | None
+    created_at: datetime
+    updated_at: datetime | None

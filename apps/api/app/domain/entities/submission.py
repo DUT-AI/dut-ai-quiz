@@ -30,3 +30,7 @@ class HackathonSubmissionEntity:
     error_message: str | None = None
     logs: str | None = None
     updated_at: datetime | None = None
+
+    @property
+    def score(self) -> float | None:
+        return self.public_score

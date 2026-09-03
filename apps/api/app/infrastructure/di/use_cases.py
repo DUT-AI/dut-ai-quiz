@@ -1,6 +1,15 @@
 from dishka import Provider, Scope, provide
+from redis.asyncio import Redis
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.application.services.pdf_parser import PDFParserService
+from app.application.services.hackathon_leaderboard import (
+    HackathonLeaderboardAppService,
+)
+from app.application.services.lesson_chunker import LessonChunker
+from app.application.services.lesson_embedding_indexer import LessonEmbeddingIndexer
+from app.application.services.lesson_index_scheduler import LessonIndexScheduler
+from app.application.services.pdf_ai_parser import PDFAIParserService
+from app.application.services.question_embedding import QuestionEmbeddingService
 from app.application.services.user_service import UserService
 from app.application.use_cases.attempts import (
     GetAttemptDetailUseCase,
@@ -19,6 +28,12 @@ from app.application.use_cases.auth import (
     LoginByManageAccountUseCase,
     LogoutUseCase,
 )
+from app.application.use_cases.comment import (
+    CreateCommentUseCase,
+    DeleteCommentUseCase,
+    GetCommentsUseCase,
+    ToggleReactionUseCase,
+)
 from app.application.use_cases.exams.exam_use_case import (
     CreateExamUseCase,
     DeleteExamUseCase,
@@ -29,6 +44,17 @@ from app.application.use_cases.exams.exam_use_case import (
     UpdateExamUseCase,
 )
 from app.application.use_cases.exams.stats_use_case import GetExamStatsUseCase
+from app.application.use_cases.game import (
+    FinishGameSessionUseCase,
+    GetActiveGameSessionUseCase,
+    GetGameHistorySummaryUseCase,
+    GetGameLeaderboardUseCase,
+    GetGameSessionUseCase,
+    ListGameHistoryUseCase,
+    PatchGameAnswerUseCase,
+    StartGameSessionUseCase,
+    UseItemGameUseCase,
+)
 from app.application.use_cases.hackathon import (
     CancelRegistrationUseCase,
     CreateHackathonTaskUseCase,
@@ -53,66 +79,95 @@ from app.application.use_cases.hackathon.submissions import (
     CancelSubmissionUseCase,
     GetSubmissionLogsUseCase,
     ListSubmissionsUseCase,
-    SubmitTaskUseCase,
     PresignSubmitUseCase,
+    SubmitTaskUseCase,
     ViewHackathonLeaderboardUseCase,
 )
-from app.application.services.hackathon_leaderboard import HackathonLeaderboardAppService
-from app.domain.services.hackathon_leaderboard import HackathonLeaderboardDomainService
+from app.application.use_cases.homeworks import (
+    ArchiveHomeworkUseCase,
+    CreateHomeworkUseCase,
+    GetHomeworkAttachmentUrlUseCase,
+    GetHomeworkSubmissionDownloadUrlUseCase,
+    GetMyHomeworkSubmissionUseCase,
+    ListCompletedHomeworkMembersUseCase,
+    ListHomeworkSubmissionsUseCase,
+    ListHomeworksUseCase,
+    ListMyHomeworksUseCase,
+    RetryHomeworkSubmissionUseCase,
+    SubmitHomeworkUseCase,
+    UpdateHomeworkUseCase,
+)
 from app.application.use_cases.leaderboard.leaderboard_use_case import (
     GetLeaderboardUseCase,
 )
 from app.application.use_cases.lessons.create_lesson_uc import CreateLessonUseCase
 from app.application.use_cases.lessons.delete_lesson_uc import DeleteLessonUseCase
+from app.application.use_cases.lessons.get_lesson_by_slug_uc import (
+    GetLessonBySlugUseCase,
+)
 from app.application.use_cases.lessons.get_lesson_detail_uc import (
     GetLessonDetailUseCase,
 )
-from app.application.use_cases.lessons.get_lesson_from_blog_uc import (
-    GetLessonBySlugUseCase,
+from app.application.use_cases.lessons.import_notion_lesson_uc import (
+    ImportNotionLessonUseCase,
 )
+from app.application.use_cases.lessons.index_lesson_uc import IndexLessonUseCase
 from app.application.use_cases.lessons.list_lessons_uc import ListLessonsUseCase
+from app.application.use_cases.lessons.reorder_lessons_uc import (
+    ReorderLessonsUseCase,
+)
 from app.application.use_cases.lessons.update_lesson_uc import UpdateLessonUseCase
+from app.application.use_cases.me.me_use_case import GetProfileUseCase
 from app.application.use_cases.modules import (
     CreateModuleUseCase,
     DeleteModuleUseCase,
     ListModulesUseCase,
-    UpdateModuleUseCase,
     ReorderModulesUseCase,
-    SuggestModulesUseCase,
+    UpdateModuleUseCase,
 )
-from app.application.use_cases.me.me_use_case import GetProfileUseCase
-from app.application.use_cases.game import (
-    FinishGameSessionUseCase,
-    GetActiveGameSessionUseCase,
-    GetGameHistorySummaryUseCase,
-    GetGameLeaderboardUseCase,
-    GetGameSessionUseCase,
-    ListGameHistoryUseCase,
-    PatchGameAnswerUseCase,
-    StartGameSessionUseCase,
-    UseItemGameUseCase,
+from app.application.use_cases.pdf_import import (
+    AcquireLockUseCase,
+    ApproveQuestionUseCase,
+    GetImportStatusUseCase,
+    HeartbeatLockUseCase,
+    RegenerateSolutionUseCase,
+    RejectQuestionUseCase,
+    ReviewDraftQuestionsUseCase,
+    StartImportUseCase,
 )
 from app.application.use_cases.questions import (
+    AiRegenerateSolutionUseCase,
+    AnswerQuestionUseCase,
     BulkCreateQuestionsUseCase,
     CreateQuestionUseCase,
     DeleteQuestionUseCase,
+    FindRelatedQuestionsUseCase,
     GetQuestionUseCase,
+    GetRelatedLessonsUseCase,
+    HeartbeatQuestionUseCase,
     ListQuestionsUseCase,
+    PublishQuestionUseCase,
+    StartPdfImportUseCase,
     UpdateQuestionUseCase,
 )
 from app.application.use_cases.tags.tags_use_case import (
-    ListTagsUseCase,
     CreateTagUseCase,
     DeleteTagUseCase,
+    ListTagsUseCase,
 )
 from app.application.use_cases.uploads.presign_upload import PresignUploadUseCase
+from app.config import settings
 from app.domain.events.bus import EventBus
 from app.domain.interfaces import (
     IAttemptRepository,
     IFocusEventRepository,
+    IImportSessionRepository,
     IManageService,
+    IQuestionRepository,
+    IS3Client,
     IUserRepository,
 )
+from app.domain.services.hackathon_leaderboard import HackathonLeaderboardDomainService
 from app.infrastructure.cache.redis_client import ProfileCache
 
 
@@ -181,6 +236,54 @@ class UseCaseProvider(Provider):
     )
     list_submissions_use_case = provide(ListSubmissionsUseCase, scope=Scope.REQUEST)
     presign_upload_use_case = provide(PresignUploadUseCase, scope=Scope.REQUEST)
+    list_my_homeworks_use_case = provide(
+        ListMyHomeworksUseCase,
+        scope=Scope.REQUEST,
+    )
+    list_homeworks_use_case = provide(
+        ListHomeworksUseCase,
+        scope=Scope.REQUEST,
+    )
+    create_homework_use_case = provide(
+        CreateHomeworkUseCase,
+        scope=Scope.REQUEST,
+    )
+    update_homework_use_case = provide(
+        UpdateHomeworkUseCase,
+        scope=Scope.REQUEST,
+    )
+    archive_homework_use_case = provide(
+        ArchiveHomeworkUseCase,
+        scope=Scope.REQUEST,
+    )
+    submit_homework_use_case = provide(
+        SubmitHomeworkUseCase,
+        scope=Scope.REQUEST,
+    )
+    retry_homework_submission_use_case = provide(
+        RetryHomeworkSubmissionUseCase,
+        scope=Scope.REQUEST,
+    )
+    get_my_homework_submission_use_case = provide(
+        GetMyHomeworkSubmissionUseCase,
+        scope=Scope.REQUEST,
+    )
+    list_homework_submissions_use_case = provide(
+        ListHomeworkSubmissionsUseCase,
+        scope=Scope.REQUEST,
+    )
+    list_completed_homework_members_use_case = provide(
+        ListCompletedHomeworkMembersUseCase,
+        scope=Scope.REQUEST,
+    )
+    get_homework_attachment_url_use_case = provide(
+        GetHomeworkAttachmentUrlUseCase,
+        scope=Scope.REQUEST,
+    )
+    get_homework_submission_download_url_use_case = provide(
+        GetHomeworkSubmissionDownloadUrlUseCase,
+        scope=Scope.REQUEST,
+    )
 
     # questions
     create_question_use_case = provide(CreateQuestionUseCase, scope=Scope.REQUEST)
@@ -190,6 +293,25 @@ class UseCaseProvider(Provider):
     update_question_use_case = provide(UpdateQuestionUseCase, scope=Scope.REQUEST)
     bulk_create_questions_use_case = provide(
         BulkCreateQuestionsUseCase, scope=Scope.REQUEST
+    )
+    answer_question_use_case = provide(AnswerQuestionUseCase, scope=Scope.REQUEST)
+    get_related_lessons_use_case = provide(
+        GetRelatedLessonsUseCase, scope=Scope.REQUEST
+    )
+    start_pdf_import_use_case = provide(
+        StartPdfImportUseCase, scope=Scope.REQUEST
+    )
+    heartbeat_question_use_case = provide(
+        HeartbeatQuestionUseCase, scope=Scope.REQUEST
+    )
+    ai_regenerate_solution_use_case = provide(
+        AiRegenerateSolutionUseCase, scope=Scope.REQUEST
+    )
+    publish_question_use_case = provide(
+        PublishQuestionUseCase, scope=Scope.REQUEST
+    )
+    find_related_questions_use_case = provide(
+        FindRelatedQuestionsUseCase, scope=Scope.REQUEST
     )
 
     # tags
@@ -251,17 +373,35 @@ class UseCaseProvider(Provider):
 
     list_lessons_use_case = provide(ListLessonsUseCase, scope=Scope.REQUEST)
     create_lesson_use_case = provide(CreateLessonUseCase, scope=Scope.REQUEST)
+    import_notion_lesson_use_case = provide(
+        ImportNotionLessonUseCase, scope=Scope.REQUEST
+    )
     update_lesson_use_case = provide(UpdateLessonUseCase, scope=Scope.REQUEST)
     delete_lesson_use_case = provide(DeleteLessonUseCase, scope=Scope.REQUEST)
     get_lesson_detail_use_case = provide(GetLessonDetailUseCase, scope=Scope.REQUEST)
     get_lesson_by_slug_use_case = provide(GetLessonBySlugUseCase, scope=Scope.REQUEST)
+    reorder_lessons_use_case = provide(ReorderLessonsUseCase, scope=Scope.REQUEST)
+    index_lesson_use_case = provide(IndexLessonUseCase, scope=Scope.REQUEST)
+    lesson_embedding_indexer = provide(
+        LessonEmbeddingIndexer, scope=Scope.REQUEST
+    )
+    lesson_index_scheduler = provide(LessonIndexScheduler, scope=Scope.REQUEST)
+    question_embedding_service = provide(
+        QuestionEmbeddingService, scope=Scope.REQUEST
+    )
+
+    @provide(scope=Scope.REQUEST)
+    def lesson_chunker(self) -> LessonChunker:
+        return LessonChunker(
+            target_tokens=settings.lesson_chunk_target_tokens,
+            max_tokens=settings.lesson_chunk_max_tokens,
+        )
 
     list_modules_use_case = provide(ListModulesUseCase, scope=Scope.REQUEST)
     create_module_use_case = provide(CreateModuleUseCase, scope=Scope.REQUEST)
     update_module_use_case = provide(UpdateModuleUseCase, scope=Scope.REQUEST)
     delete_module_use_case = provide(DeleteModuleUseCase, scope=Scope.REQUEST)
     reorder_modules_use_case = provide(ReorderModulesUseCase, scope=Scope.REQUEST)
-    suggest_modules_use_case = provide(SuggestModulesUseCase, scope=Scope.REQUEST)
 
     # auth & me
     proxy_login_use_case = provide(LoginByManageAccountUseCase, scope=Scope.REQUEST)
@@ -281,13 +421,71 @@ class UseCaseProvider(Provider):
         return GetProfileUseCase(cache, user_repo, manage_client)
 
     @provide(scope=Scope.REQUEST)
-    def pdf_parser_service(self) -> PDFParserService:
-        return PDFParserService()
-
-    @provide(scope=Scope.REQUEST)
     def user_service(
         self,
         user_repo: IUserRepository,
         manage_client: IManageService,
+        redis: Redis,
     ) -> UserService:
-        return UserService(user_repo, manage_client)
+        return UserService(user_repo, manage_client, redis)
+
+    # comments
+    create_comment_use_case = provide(CreateCommentUseCase, scope=Scope.REQUEST)
+    get_comments_use_case = provide(GetCommentsUseCase, scope=Scope.REQUEST)
+    toggle_reaction_use_case = provide(ToggleReactionUseCase, scope=Scope.REQUEST)
+    delete_comment_use_case = provide(DeleteCommentUseCase, scope=Scope.REQUEST)
+
+    # PDF Import
+    get_import_status_use_case = provide(GetImportStatusUseCase, scope=Scope.REQUEST)
+    review_draft_questions_use_case = provide(ReviewDraftQuestionsUseCase, scope=Scope.REQUEST)
+    heartbeat_lock_use_case = provide(HeartbeatLockUseCase, scope=Scope.REQUEST)
+
+    @provide(scope=Scope.REQUEST)
+    def pdf_ai_parser_service(self, s3_client: IS3Client) -> PDFAIParserService:
+        return PDFAIParserService(s3_client)
+
+    @provide(scope=Scope.REQUEST)
+    def start_import_use_case(
+        self,
+        import_session_repo: IImportSessionRepository,
+        question_repo: IQuestionRepository,
+        ai_parser: PDFAIParserService,
+    ) -> StartImportUseCase:
+        return StartImportUseCase(
+            import_session_repo=import_session_repo,
+            question_repo=question_repo,
+            ai_parser=ai_parser,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def approve_question_use_case(
+        self,
+        session: AsyncSession,
+        redis: Redis,
+    ) -> ApproveQuestionUseCase:
+        return ApproveQuestionUseCase(session=session, redis=redis)
+
+    @provide(scope=Scope.REQUEST)
+    def reject_question_use_case(
+        self,
+        session: AsyncSession,
+        redis: Redis,
+        s3_client: IS3Client,
+    ) -> RejectQuestionUseCase:
+        return RejectQuestionUseCase(session=session, redis=redis, s3_client=s3_client)
+
+    @provide(scope=Scope.REQUEST)
+    def regenerate_solution_use_case(
+        self,
+        session: AsyncSession,
+        ai_parser: PDFAIParserService,
+    ) -> RegenerateSolutionUseCase:
+        return RegenerateSolutionUseCase(session=session, ai_parser=ai_parser)
+
+    @provide(scope=Scope.REQUEST)
+    def acquire_lock_use_case(
+        self,
+        session: AsyncSession,
+        redis: Redis,
+    ) -> AcquireLockUseCase:
+        return AcquireLockUseCase(session=session, redis=redis)

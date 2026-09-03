@@ -12,6 +12,11 @@ class AppException(Exception):
             self.status_code = status_code
 
 
+class HomeworkWorkerUnavailableException(AppException):
+    status_code = 503
+    message = "Worker chấm bài chưa sẵn sàng. Vui lòng thử lại sau."
+
+
 class AttemptNotFoundException(AppException):
     status_code = 404
     message = "Not found or not completed"
@@ -60,4 +65,3 @@ class ExamNoQuestionsException(AppException):
 class BadRequestException(AppException):
     def __init__(self, message: str):
         super().__init__(message, 400)
-

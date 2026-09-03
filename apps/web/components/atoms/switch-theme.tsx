@@ -1,53 +1,32 @@
 "use client";
-import { useThemeStore } from "@/store/theme-store";
-import Image from "next/image";
-import { useEffect } from "react";
+
+import { useThemeTransition } from "@/hooks/use-theme-transition";
+import { motion } from "framer-motion";
+import { Sun, Moon } from "lucide-react";
 
 const SwitchTheme = () => {
-  const { toggleDarkMode, darkMode } = useThemeStore();
-
-  useEffect(() => {
-    const switchElement = document.getElementById("switch") as HTMLInputElement;
-    if (switchElement) {
-      switchElement.checked = darkMode;
-    }
-  }, [darkMode]);
+  const { darkMode, toggleWithTransition } = useThemeTransition();
 
   return (
-    <div className="flex items-center gap-x-2 md:pr-6 lg:p-0 xl:gap-x-4">
-      <Image
-        src={
-          darkMode
-            ? "/assets/images/icon-sun-light.svg"
-            : "/assets/images/icon-sun-dark.svg"
-        }
-        alt="moon"
-        width={20}
-        height={20}
-        className="xl:size-7"
-      />
-      <label className="relative inline-flex cursor-pointer items-center">
-        <input
-          onChange={toggleDarkMode}
-          id="switch"
-          type="checkbox"
-          className="peer sr-only"
-        />
-        <label htmlFor="switch" className="hidden"></label>
-        <div className="peer h-6 w-11 rounded-full border-none bg-silver bg-primary after:absolute after:left-[2px] after:top-0.5 after:h-5 after:w-5 after:rounded-full  after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
-      </label>
-      <Image
-        src={
-          darkMode
-            ? "/assets/images/icon-moon-light.svg"
-            : "/assets/images/icon-moon-dark.svg"
-        }
-        className="xl:size-7"
-        alt="moon"
-        width={20}
-        height={20}
-      />
-    </div>
+    <motion.button
+      onClick={toggleWithTransition}
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+      className="flex items-center justify-center size-10 md:size-12 rounded-xl border border-gray-200 bg-white text-slate-800 shadow-sm transition-colors duration-200 hover:bg-gray-50 focus:outline-none dark:border-white/10 dark:bg-navy-blue dark:text-white dark:hover:bg-white/5"
+      aria-label="Toggle theme"
+    >
+      <motion.div
+        animate={{ rotate: darkMode ? 360 : 0 }}
+        transition={{ duration: 0.5, ease: "easeInOut" }}
+        className="flex items-center justify-center"
+      >
+        {darkMode ? (
+          <Sun className="size-5 md:size-6 text-white fill-white/10" />
+        ) : (
+          <Moon className="size-5 md:size-6 text-slate-700 fill-slate-700/10" />
+        )}
+      </motion.div>
+    </motion.button>
   );
 };
 

@@ -1,7 +1,8 @@
 services:
     postgres:
-        image: postgres:16-alpine
+        image: pgvector/pgvector:pg16
         container_name: dut-ai-quiz-postgres
+        restart: unless-stopped
         environment:
             - TZ=Asia/Ho_Chi_Minh
             - POSTGRES_USER=${POSTGRES_USER:-postgres}
@@ -21,6 +22,7 @@ services:
     redis:
         image: redis:7-alpine
         container_name: dut-ai-quiz-redis
+        restart: unless-stopped
         environment:
             - TZ=Asia/Ho_Chi_Minh
         ports:
@@ -36,6 +38,7 @@ services:
             context: .
             dockerfile: apps/api/Dockerfile
         container_name: dut-ai-quiz-api
+        restart: unless-stopped
         env_file:
             - .env
         environment:
@@ -54,11 +57,13 @@ services:
             redis:
                 condition: service_healthy
 
-    worker:
+    worker-hackathon:
         build:
             context: .
-            dockerfile: apps/worker/Dockerfile
-        container_name: dut-ai-quiz-worker
+            dockerfile: apps/worker/worker-hackathon/Dockerfile
+        container_name: dut-ai-quiz-worker-hackathon
+        restart: unless-stopped
+        init: true
         env_file:
             - .env
         environment:
@@ -78,6 +83,73 @@ services:
                 condition: service_healthy
             redis:
                 condition: service_healthy
+        command: ["uv", "run", "arq", "worker_hackathon.presentation.arq_tasks.WorkerSettings"]
+
+    worker-lesson-index:
+        build:
+            context: .
+            dockerfile: apps/worker/worker-lesson-index/Dockerfile
+        container_name: dut-ai-quiz-worker-lesson-index
+        restart: unless-stopped
+        init: true
+        env_file:
+            - .env
+        environment:
+            - TZ=Asia/Ho_Chi_Minh
+            - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-dut_ai_quiz}
+            - REDIS_URL=redis://redis:6379/${REDIS_DB:-0}
+        depends_on:
+            postgres:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+        command: ["uv", "run", "arq", "worker_lesson_index.presentation.arq_tasks.WorkerSettings"]
+
+    worker-evaluate-homework:
+        build:
+            context: .
+            dockerfile: apps/worker/worker-evaluate-homework/Dockerfile
+        container_name: dut-ai-quiz-worker-evaluate-homework
+        restart: unless-stopped
+        init: true
+        env_file:
+            - .env
+        environment:
+            - TZ=Asia/Ho_Chi_Minh
+            - POSTGRES_HOST=postgres
+            - POSTGRES_PORT=5432
+            - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+            - REDIS_URL=redis://redis:6379/${REDIS_DB:-0}
+        depends_on:
+            postgres:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+        command: ["uv", "run", "arq", "worker_evaluate_homework.presentation.arq_tasks.WorkerSettings"]
+
+    pdf-worker:
+        build:
+            context: .
+            dockerfile: apps/worker/worker-pdf-import/Dockerfile
+        container_name: dut-ai-quiz-pdf-worker
+        restart: unless-stopped
+        init: true
+        env_file:
+            - .env
+        environment:
+            - TZ=Asia/Ho_Chi_Minh
+            - POSTGRES_HOST=postgres
+            - POSTGRES_PORT=5432
+            - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-dut_ai_quiz}
+            - REDIS_URL=redis://redis:6379/${REDIS_DB:-0}
+            - REDIS_HOST=redis
+            - REDIS_PORT=6379
+        depends_on:
+            postgres:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+        command: ["uv", "run", "arq", "worker_pdf_import.presentation.arq_tasks.WorkerSettings"]
 
     web:
         build:
@@ -85,8 +157,9 @@ services:
             dockerfile: Dockerfile
             args:
                 - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://quiz.dutai.site}
-                - NEXT_PUBLIC_MANAGE_LOGIN_URL=${NEXT_PUBLIC_MANAGE_LOGIN_URL:-https://manage.dutai.site}
+                - NEXT_PUBLIC_MANAGE_LOGIN_URL=${NEXT_PUBLIC_MANAGE_LOGIN_URL:-https://manage.dutai.io.vn/dashboard}
         container_name: dut-ai-quiz-web
+        restart: unless-stopped
         env_file:
             - .env
         environment:

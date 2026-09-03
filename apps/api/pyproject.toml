@@ -21,6 +21,11 @@ dependencies = [
   "loguru>=0.7.3",
   "pymupdf>=1.24",
   "pyjwt>=2.13.0",
+  "markdown-it-py>=3.0.0",
+  "pgvector>=0.4.0",
+  "google-genai>=1.0",
+  "pillow>=10.0",
+  "python-slugify>=8.0.4",
 ]
 
 [build-system]
@@ -36,3 +41,6 @@ dev = [
   "pytest-asyncio>=1.4.0",
   "ruff>=0.8",
 ]
+
+[tool.pytest.ini_options]
+addopts = "--ignore=test_api.py"

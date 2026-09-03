@@ -301,6 +301,8 @@ export function useSubmissions(taskId: string, options?: any) {
         z.array(HackathonSubmissionSchema)
       ),
     staleTime: 5_000,
+    refetchInterval: 3_000,
+    refetchIntervalInBackground: false,
     enabled: !!taskId,
     ...options,
   });

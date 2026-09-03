@@ -1,6 +1,7 @@
 from uuid import UUID, uuid4
 
 from app.application.use_cases.attempts.rescore_use_case import RescoreAttemptUseCase
+from app.application.services.question_embedding import QuestionEmbeddingService
 from app.domain.entities.question import QuestionEntity, QuestionOptionEntity
 from app.domain.interfaces import IAttemptRepository, IQuestionRepository
 from app.presentation.schemas.questions import (
@@ -14,10 +15,12 @@ class UpdateQuestionUseCase:
         question_repo: IQuestionRepository,
         att_repo: IAttemptRepository,
         rescore_use_case: RescoreAttemptUseCase,
+        question_embedding: QuestionEmbeddingService,
     ):
         self._question_repo = question_repo
         self._att_repo = att_repo
         self._rescore_use_case = rescore_use_case
+        self._question_embedding = question_embedding
 
     async def execute(
         self, question_id: UUID, payload: QuestionUpdate
@@ -41,6 +44,9 @@ class UpdateQuestionUseCase:
                 setattr(entity, k, options)
             else:
                 setattr(entity, k, v)
+
+        if entity.embedding is None or {"content", "options"} & data.keys():
+            await self._question_embedding.prepare(entity)
 
         updated = await self._question_repo.update(entity)
         if updated:

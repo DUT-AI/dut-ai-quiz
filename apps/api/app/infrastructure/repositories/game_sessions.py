@@ -65,6 +65,7 @@ class GameSessionRepository(IGameSessionRepository):
             .where(GameSession.user_id == user_id)
             .where(GameSession.status == GameSessionStatus.COMPLETED)
             .where(GameSession.tags_filter.contains([lesson_slug]))
+            .where(GameSession.question_limit > 0)
         )
         return r.scalar() or 0
 
@@ -76,6 +77,7 @@ class GameSessionRepository(IGameSessionRepository):
             select(GameSession.id)
             .where(GameSession.status == GameSessionStatus.COMPLETED)
             .where(GameSession.tags_filter.contains([lesson_slug]))
+            .where(GameSession.question_limit > 0)
             .distinct(GameSession.user_id)
             .order_by(
                 GameSession.user_id,
@@ -85,11 +87,24 @@ class GameSessionRepository(IGameSessionRepository):
                 cast(GameSession.snapshot['gamification']['attempt_count'].astext, Integer).asc().nulls_last(),
             )
         ).subquery()
+
+        # Count total completed attempts for each user
+        count_subq = (
+            select(
+                GameSession.user_id,
+                func.count(GameSession.id).label("total_attempts")
+            )
+            .where(GameSession.status == GameSessionStatus.COMPLETED)
+            .where(GameSession.tags_filter.contains([lesson_slug]))
+            .where(GameSession.question_limit > 0)
+            .group_by(GameSession.user_id)
+        ).subquery()
         
         stmt = (
-            select(GameSession, User)
+            select(GameSession, User, count_subq.c.total_attempts)
             .outerjoin(User, User.id == GameSession.user_id)
             .join(subq, GameSession.id == subq.c.id)
+            .outerjoin(count_subq, GameSession.user_id == count_subq.c.user_id)
             .order_by(
                 cast(GameSession.snapshot['gamification']['final_score'].astext, Float).desc().nulls_last(),
                 cast(GameSession.snapshot['gamification']['gold'].astext, Integer).desc().nulls_last(),
@@ -112,7 +127,7 @@ class GameSessionRepository(IGameSessionRepository):
                 "final_score": float(ps.get('final_score', 0)),
                 "gold": int(ps.get('gold', 0)),
                 "total_time_response": float(ps.get('total_time_response', 0)),
-                "attempt_count": int(ps.get('attempt_count', 0))
+                "attempt_count": int(row.total_attempts) if row.total_attempts is not None else int(ps.get('attempt_count', 0))
             })
             
         return result

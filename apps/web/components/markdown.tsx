@@ -57,11 +57,36 @@ export const markdownComponents = {
       {children}
     </li>
   ),
-  a: ({ children, href }: any) => (
-    <a href={href} target="_blank" rel="noopener noreferrer" className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 underline underline-offset-4 decoration-emerald-600/30 hover:decoration-emerald-500 transition-colors font-medium break-all">
-      {children}
-    </a>
-  ),
+  a: ({ children, href }: any) => {
+    let finalHref = href;
+    if (href === "url" || !href) {
+      const text = React.Children.toArray(children)
+        .map((child: any) => {
+          if (typeof child === "string") return child;
+          if (child && child.props && typeof child.props.children === "string") {
+            return child.props.children;
+          }
+          return "";
+        })
+        .join("")
+        .trim();
+      
+      if (text.startsWith("http://") || text.startsWith("https://")) {
+        finalHref = text;
+      }
+    }
+
+    return (
+      <a
+        href={finalHref}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 underline underline-offset-4 decoration-emerald-600/30 hover:decoration-emerald-500 transition-colors font-medium break-all"
+      >
+        {children}
+      </a>
+    );
+  },
   strong: ({ children }: any) => (
     <strong className="font-bold text-slate-900 dark:text-white">
       {children}

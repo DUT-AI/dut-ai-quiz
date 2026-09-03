@@ -44,7 +44,7 @@ class GoogleAuthUseCase:
                 await self._user_repo.update(db_user)
 
         local_jwt = create_access_token(
-            {"user_id": db_user.id, "role": db_user.role, "type": "google"}
+            {"user_id": db_user.id, "roles": [db_user.role or "guest"], "type": "google"}
         )
 
         return AuthTokens(
@@ -57,10 +57,6 @@ class GoogleAuthUseCase:
     ) -> AuthTokens:
         service_a_user_id = int(profile.id)
         role_names = profile.role_names
-        try:
-            service_a_role = quiz_role_from_manage(role_names)
-        except Exception:
-            service_a_role = "guest"
 
         # User exists in Service A -> Generate JWT linked to Service A ID directly (No DB row needed)
         logger.info(
@@ -69,7 +65,7 @@ class GoogleAuthUseCase:
         local_jwt = create_access_token(
             {
                 "user_id": service_a_user_id,
-                "role": service_a_role,
+                "roles": role_names or ["guest"],
                 "type": "service_a",
             }
         )

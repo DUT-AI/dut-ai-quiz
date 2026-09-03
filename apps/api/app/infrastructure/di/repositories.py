@@ -6,12 +6,18 @@ from app.domain.interfaces import (
     IExamRepository,
     IFocusEventRepository,
     ILessonRepository,
+    ILessonChunkRepository,
     IModuleRepository,
     IGameSessionRepository,
     IQuestionRepository,
     ITagRepository,
     IUserRepository,
+    ICommentRepository,
+    ICommentReactionRepository,
+    IImportSessionRepository,
+    IHomeworkRepository,
 )
+from app.domain.interfaces.import_session_repo import IImportSessionRepository
 from app.domain.interfaces.hackathon_repo import (
     IHackathonRepository,
     IHackathonTaskRepository,
@@ -24,6 +30,7 @@ from app.infrastructure.repositories.exam_questions import ExamQuestionRepositor
 from app.infrastructure.repositories.exams import ExamRepository
 from app.infrastructure.repositories.focus_events import FocusEventRepository
 from app.infrastructure.repositories.lessons import LessonRepository
+from app.infrastructure.repositories.lesson_chunks import LessonChunkRepository
 from app.infrastructure.repositories.modules import ModuleRepository
 from app.infrastructure.repositories.game_sessions import GameSessionRepository
 from app.infrastructure.repositories.questions import QuestionRepository
@@ -36,6 +43,10 @@ from app.infrastructure.repositories.hackathons import (
     HackathonRegistrationRepository,
     HackathonSubmissionRepository,
 )
+from app.infrastructure.repositories.comments import CommentRepository
+from app.infrastructure.repositories.comment_reactions import CommentReactionRepository
+from app.infrastructure.repositories.import_sessions import ImportSessionRepository
+from app.infrastructure.repositories.homeworks import HomeworkRepository
 
 
 class RepositoryProvider(Provider):
@@ -43,6 +54,9 @@ class RepositoryProvider(Provider):
 
     # Đăng ký kèm theo tham số provides để map concrete class với interface của nó
     lesson_repo = provide(LessonRepository, provides=ILessonRepository)
+    lesson_chunk_repo = provide(
+        LessonChunkRepository, provides=ILessonChunkRepository
+    )
     module_repo = provide(ModuleRepository, provides=IModuleRepository)
     user_repo = provide(UserRepository, provides=IUserRepository)
     exam_repo = provide(ExamRepository, provides=IExamRepository)
@@ -69,3 +83,7 @@ class RepositoryProvider(Provider):
     hackathon_submission_repo = provide(
         HackathonSubmissionRepository, provides=IHackathonSubmissionRepository
     )
+    comment_repo = provide(CommentRepository, provides=ICommentRepository)
+    comment_reaction_repo = provide(CommentReactionRepository, provides=ICommentReactionRepository)
+    import_session_repo = provide(ImportSessionRepository, provides=IImportSessionRepository)
+    homework_repo = provide(HomeworkRepository, provides=IHomeworkRepository)

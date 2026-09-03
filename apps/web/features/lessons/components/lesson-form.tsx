@@ -5,20 +5,23 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { BookOpen, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { LessonSchema, type Lesson } from "../types";
+import { LessonSchema, type Lesson, type Module } from "../types";
 import { z } from "zod";
 
-export const LessonFormSchema = LessonSchema.omit({ id: true });
+export const LessonFormSchema = LessonSchema.omit({ id: true, content_md: true }).extend({
+  content_md: z.string().optional(),
+});
 export type LessonFormInput = z.infer<typeof LessonFormSchema>;
 
 interface LessonFormProps {
   initialData?: Lesson;
+  modules: Module[];
   onSubmit: (data: LessonFormInput) => void | Promise<void>;
   onCancel: () => void;
   isPending: boolean;
 }
 
-export function LessonForm({ initialData, onSubmit, onCancel, isPending }: LessonFormProps) {
+export function LessonForm({ initialData, modules, onSubmit, onCancel, isPending }: LessonFormProps) {
   const isEdit = !!initialData;
 
   const {
@@ -33,6 +36,7 @@ export function LessonForm({ initialData, onSubmit, onCancel, isPending }: Lesso
       order: initialData?.order || 1,
       slug: initialData?.slug || "",
       content_md: initialData?.content_md || "",
+      module_id: initialData?.module_id || null,
     },
   });
 
@@ -51,6 +55,21 @@ export function LessonForm({ initialData, onSubmit, onCancel, isPending }: Lesso
         {errors.name && (
           <p className="text-red-500 text-xs font-bold px-1">{errors.name.message}</p>
         )}
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-xs font-black text-gray-navy dark:text-light-blue/80 opacity-50 dark:opacity-100 uppercase tracking-widest px-1">
+          Nội dung bài học (Markdown)
+        </label>
+        <textarea
+          placeholder="Viết nội dung lý thuyết của bài học bằng Markdown..."
+          rows={14}
+          {...register("content_md")}
+          className="w-full px-6 py-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 focus:border-primary outline-none transition-all font-mono text-sm resize-y text-dark-blue dark:text-white"
+        />
+        <p className="text-[11px] text-gray-navy/60 dark:text-light-blue/50 px-1">
+          Nội dung này được lưu trực tiếp trong hệ thống và dùng để tạo chỉ mục tìm kiếm bài học liên quan.
+        </p>
       </div>
 
       <div className="space-y-2">
@@ -79,25 +98,47 @@ export function LessonForm({ initialData, onSubmit, onCancel, isPending }: Lesso
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
           <label className="text-xs font-black text-gray-navy dark:text-light-blue/80 opacity-50 dark:opacity-100 uppercase tracking-widest px-1">
-            Thứ tự
+            Chương (Module)
+          </label>
+          <div className="relative">
+            <select
+              {...register("module_id")}
+              className="w-full px-6 py-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 focus:border-primary outline-none transition-all font-bold text-dark-blue dark:text-white appearance-none"
+            >
+              <option value="">-- Chưa phân loại --</option>
+              {modules.map((m) => (
+                <option key={m.id} value={m.id}>
+                  Chương {m.order}: {m.name}
+                </option>
+              ))}
+            </select>
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </div>
+          </div>
+          {errors.module_id && (
+            <p className="text-red-500 text-xs font-bold px-1">{errors.module_id.message}</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-xs font-black text-gray-navy dark:text-light-blue/80 opacity-50 dark:opacity-100 uppercase tracking-widest px-1 flex items-center justify-between">
+            <span>Thứ tự</span>
+            <span className="text-[10px] font-medium opacity-60 normal-case tracking-normal flex items-center gap-1">
+              <BookOpen className="size-3" /> Học phần chính
+            </span>
           </label>
           <input
             type="number"
             {...register("order", { valueAsNumber: true })}
-            className="w-full px-6 py-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 focus:border-primary outline-none transition-all font-medium text-dark-blue dark:text-white"
+            className="w-full px-6 py-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 focus:border-primary outline-none transition-all font-bold text-dark-blue dark:text-white text-lg"
           />
           {errors.order && (
             <p className="text-red-500 text-xs font-bold px-1">{errors.order.message}</p>
           )}
-        </div>
-        <div className="flex flex-col justify-end">
-          <div className="flex items-center gap-2 p-4 text-xs font-bold text-gray-navy dark:text-light-blue/70 opacity-40 dark:opacity-100">
-            <BookOpen className="size-4" />
-            Học phần chính
-          </div>
         </div>
       </div>
 

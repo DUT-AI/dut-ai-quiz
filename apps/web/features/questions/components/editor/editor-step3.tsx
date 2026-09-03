@@ -7,11 +7,12 @@ import type { QuestionFormValues } from "../../types";
 
 interface EditorStep3Props {
   insertFormat: (field: "content" | "solution" | string, before: string, after?: string) => void;
+  onInsertLink?: (field: "content" | "solution" | string) => void;
   uploading: string | null;
   onUploadFile: (file: File, field: "content" | "solution" | string) => Promise<void>;
 }
 
-export function EditorStep3({ insertFormat, uploading, onUploadFile }: EditorStep3Props) {
+export function EditorStep3({ insertFormat, onInsertLink, uploading, onUploadFile }: EditorStep3Props) {
   const { register } = useFormContext<QuestionFormValues>();
 
   return (
@@ -20,12 +21,21 @@ export function EditorStep3({ insertFormat, uploading, onUploadFile }: EditorSte
         <Sparkles className="size-4 text-primary" /> Hướng dẫn chi tiết / Lời giải
       </label>
       <div className="flex flex-col rounded-3xl overflow-hidden border border-gray-200 dark:border-white/10 focus-within:border-primary/50 transition-all bg-gray-50 dark:bg-white/5">
-        <EditorToolbar onInsert={(before, after) => insertFormat("solution", before, after)} />
+        <EditorToolbar 
+          onInsert={(before, after) => insertFormat("solution", before, after)} 
+          onInsertLink={() => onInsertLink?.("solution")}
+        />
         <div className="relative group">
           <textarea
             id="editor-solution"
             {...register("solution")}
             onPaste={(e) => handlePasteImage(e, (file) => onUploadFile(file, "solution"))}
+            onKeyDown={(e) => {
+              if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+                e.preventDefault();
+                onInsertLink?.("solution");
+              }
+            }}
             placeholder="Hướng dẫn giải bài tập, hỗ trợ LaTeX và dán ảnh..."
             className="w-full px-6 py-4 bg-transparent border-0 outline-none transition-all font-medium text-sm resize-none overflow-hidden focus:bg-white dark:focus:bg-navy-blue"
           />

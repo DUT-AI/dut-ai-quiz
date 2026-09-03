@@ -1,10 +1,13 @@
 "use client";
 
 import React from "react";
-import { useRouter } from "next/navigation";
-import { Swords, Play } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { GameTabHero } from "./game-tab-hero";
+import { GameTabRules } from "./game-tab-rules";
+import { GameTabBackground } from "./game-tab-background";
 import GameLeaderboard from "@/features/game/components/game-leaderboard";
+import GamePersonalBest from "@/features/game/components/game-personal-best";
+import { useActiveGameSession } from "@/features/game/queries";
+import { useLessonBySlug } from "../queries";
 
 interface GameTabProps {
   lessonId: string;
@@ -12,33 +15,49 @@ interface GameTabProps {
 }
 
 export function GameTab({ lessonId, slug }: GameTabProps) {
-  const router = useRouter();
+  const { data: activeSession, isLoading: isLoadingSession } = useActiveGameSession(slug);
+  const { data: lesson } = useLessonBySlug(slug);
 
   return (
-    <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch px-4 md:px-0 py-4">
-      {/* Left Column: Old clean card style */}
-      <div className="lg:col-span-7 flex flex-col items-center justify-center text-center py-12 md:py-16 bg-white dark:bg-navy-blue/40 border border-gray-150 dark:border-white/10 rounded-[2.5rem] shadow-xl p-8 md:p-12">
-        <div className="size-20 rounded-3xl bg-indigo-500/10 flex items-center justify-center text-indigo-500 mb-8 animate-bounce">
-          <Swords className="size-10" />
-        </div>
-        <h3 className="text-3xl font-black text-dark-blue dark:text-white mb-4">
-          Đấu Trường Luyện Tập
-        </h3>
-        <p className="text-gray-navy dark:text-light-blue opacity-75 max-w-md text-base leading-relaxed mb-8 font-medium">
-          Sử dụng các vật phẩm như Khiên bảo vệ, Nhân đôi điểm và cạnh tranh bảng xếp hạng với các học viên khác bằng cách trả lời nhanh các câu hỏi!
-        </p>
-        <Button
-          onClick={() => router.push(`/lessons/${slug}/game`)}
-          className="py-6 px-10 rounded-[1.8rem] bg-indigo-500 text-white font-black uppercase tracking-widest hover:bg-indigo-600 shadow-xl shadow-indigo-500/25 active:scale-95 transition-all text-xs flex items-center gap-3"
-        >
-          <Play className="size-4 fill-current animate-pulse" />
-          Bắt đầu thi đấu
-        </Button>
-      </div>
+    <div className="w-full max-w-7xl mx-auto px-4 md:px-0 py-6 font-sans relative">
+      
+      {/* Outer border gradient wrapper */}
+      <div className="w-full p-[1.5px] bg-gradient-to-br from-indigo-500/20 via-purple-500/10 to-pink-500/20 dark:from-indigo-500/40 dark:via-fuchsia-500/20 dark:to-cyan-500/40 rounded-3xl md:rounded-[2.5rem] shadow-2xl relative overflow-hidden transition-all duration-300">
+        
+        {/* Glow ambient background spotlight base */}
+        <div className="absolute inset-0 bg-white/95 dark:bg-[#0B1226]/90 transition-colors duration-300 pointer-events-none" />
+        
+        {/* Dynamic game tab background (grids, ambient spotlights, floaters) */}
+        <GameTabBackground />
 
-      {/* Right Column: Modern Leaderboard */}
-      <div className="lg:col-span-5 w-full flex">
-        <GameLeaderboard lessonSlug={slug} variant="modern" />
+        {/* Inner Content Card (Glassmorphism design) */}
+        <div className="relative z-10 w-full rounded-[calc(1.5rem-1.5px)] md:rounded-[calc(2.5rem-1.5px)] p-4 sm:p-6 md:p-10 flex flex-col gap-8 backdrop-blur-xl">
+          
+          {/* Header Hero Section */}
+          <GameTabHero 
+            slug={slug} 
+            activeSession={activeSession} 
+            isLoadingSession={isLoadingSession} 
+            hasGameQuestions={lesson?.has_game_questions !== false}
+          />
+
+          {/* Content Stack */}
+          <div className="flex flex-col gap-8">
+            {/* Rules Section */}
+            <GameTabRules />
+
+            {/* Personal Best Section (Full Width) */}
+            <div className="w-full">
+              <GamePersonalBest lessonSlug={slug} variant="modern" />
+            </div>
+
+            {/* Leaderboard Section (Full Width) */}
+            <div className="w-full">
+              <GameLeaderboard lessonSlug={slug} variant="modern" />
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
   );

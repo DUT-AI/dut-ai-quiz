@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Skull, Swords, Heart } from "lucide-react";
 import dynamic from "next/dynamic";
+import CircularTimer from "./circular-timer";
 
 interface BossHudProps {
   status: "idle" | "attack" | "damage" | "defeat"; // Enemy status
@@ -16,6 +17,13 @@ interface BossHudProps {
   playerMaxHp: number; // Player max HP
   monsterType: "slime" | "spider" | "bat" | "golem" | "eye";
   playerLvl: number; // Player character level (1 to 4)
+  // Timer props
+  timerMax: number;
+  timerFrozen: boolean;
+  isAnswered: boolean;
+  questionId: string;
+  timeLeftRef: React.MutableRefObject<number>;
+  onTimeOut: () => void;
 }
 
 // Client-only Rive Player to avoid Next.js SSR document/window issues
@@ -259,6 +267,12 @@ export default function BossHud({
   playerMaxHp,
   monsterType,
   playerLvl,
+  timerMax,
+  timerFrozen,
+  isAnswered,
+  questionId,
+  timeLeftRef,
+  onTimeOut,
 }: BossHudProps) {
   const [activeProjectile, setActiveProjectile] = useState<"player-slash" | "boss-fireball" | null>(null);
   const [playerParticles, setPlayerParticles] = useState<{ id: number; x: number; y: number }[]>([]);
@@ -305,7 +319,7 @@ export default function BossHud({
   }, [status]);
 
   return (
-    <div className="relative w-full flex flex-col items-center select-none font-mono text-zinc-900 dark:text-slate-100">
+    <div className="relative w-full flex flex-col items-center select-none font-mono text-zinc-900 dark:text-zinc-100">
       {/* CSS Animations style tag */}
       <style jsx global>{`
         @keyframes float-slow {
@@ -325,10 +339,10 @@ export default function BossHud({
       `}</style>
 
       {/* ─── HP STATS HUD PANELS (Rounded, Cartoon 2D Outlined - Split 2 sides with hearts) ─── */}
-      <div className="w-full bg-white dark:bg-slate-900 border-3 border-zinc-900 dark:border-slate-700 p-3 shadow-md shadow-stone-800/10 dark:shadow-none grid grid-cols-12 gap-1 mb-4 items-center rounded-none">
+      <div className="w-full bg-white dark:bg-navy-blue border-3 border-zinc-900 dark:border-zinc-700 p-3 shadow-md shadow-stone-800/10 dark:shadow-none grid grid-cols-12 gap-1 mb-4 items-center rounded-none">
         {/* Left Column: Player Stats (5 cols) */}
         <div className="col-span-5 flex flex-col items-start">
-          <div className="text-[10px] md:text-xs text-zinc-900 dark:text-slate-200 font-extrabold tracking-wider mb-1 flex items-center gap-1">
+          <div className="text-[10px] md:text-xs text-zinc-900 dark:text-zinc-200 font-extrabold tracking-wider mb-1 flex items-center gap-1">
             🛡️ DŨNG SĨ (CẤP {playerLvl})
           </div>
           <div className="flex items-center gap-1.5 flex-wrap">
@@ -344,8 +358,8 @@ export default function BossHud({
                   >
                     <Heart
                       className={`w-3.5 h-3.5 md:w-4 md:h-4 ${isFilled
-                        ? "text-red-500 fill-red-500 stroke-zinc-900 dark:stroke-slate-950 stroke-2 filter drop-shadow-[0.5px_1px_0px_rgba(24,24,27,1)]"
-                        : "text-zinc-350 fill-zinc-100 dark:fill-slate-800 stroke-zinc-400 dark:stroke-slate-650 stroke-1"
+                        ? "text-red-500 fill-red-500 stroke-zinc-900 dark:stroke-zinc-950 stroke-2 filter drop-shadow-[0.5px_1px_0px_rgba(24,24,27,1)]"
+                        : "text-zinc-350 fill-zinc-100 dark:fill-zinc-800 stroke-zinc-400 dark:stroke-zinc-600 stroke-1"
                         }`}
                     />
                   </motion.div>
@@ -358,16 +372,16 @@ export default function BossHud({
 
         {/* Middle Column: Vertical Dash Divider (2 cols) */}
         <div className="col-span-2 flex justify-center h-8">
-          <div className="w-[1.5px] h-full border-l-2 border-dashed border-zinc-300 dark:border-slate-800" />
+          <div className="w-[1.5px] h-full border-l-2 border-dashed border-zinc-300 dark:border-zinc-800" />
         </div>
 
         {/* Right Column: Boss Stats (5 cols) */}
         <div className="col-span-5 flex flex-col items-end">
-          <div className="text-[10px] md:text-xs text-zinc-900 dark:text-slate-200 font-extrabold tracking-wider mb-1 flex items-center gap-1 justify-end">
+          <div className="text-[10px] md:text-xs text-zinc-900 dark:text-zinc-200 font-extrabold tracking-wider mb-1 flex items-center gap-1 justify-end">
             {monsterType === "golem" || monsterType === "eye" ? (
               <Skull className="w-3 h-3 text-red-500" />
             ) : (
-              <Swords className="w-3 h-3 text-zinc-700 dark:text-slate-400" />
+              <Swords className="w-3 h-3 text-zinc-700 dark:text-zinc-400" />
             )}
             {name}
           </div>
@@ -385,8 +399,8 @@ export default function BossHud({
                   >
                     <Heart
                       className={`w-3.5 h-3.5 md:w-4 md:h-4 ${isFilled
-                        ? "text-rose-500 fill-rose-500 stroke-zinc-900 dark:stroke-slate-950 stroke-2 filter drop-shadow-[0.5px_1px_0px_rgba(24,24,27,1)]"
-                        : "text-zinc-355 fill-zinc-100 dark:fill-slate-800 stroke-zinc-400 dark:stroke-slate-650 stroke-1"
+                        ? "text-rose-500 fill-rose-500 stroke-zinc-900 dark:stroke-zinc-950 stroke-2 filter drop-shadow-[0.5px_1px_0px_rgba(24,24,27,1)]"
+                        : "text-zinc-355 fill-zinc-100 dark:fill-zinc-800 stroke-zinc-400 dark:stroke-zinc-600 stroke-1"
                         }`}
                     />
                   </motion.div>
@@ -399,15 +413,27 @@ export default function BossHud({
 
       {/* ─── RPG BATTLE ARENA (PLAYER VS MONSTER/BOSS) ─── */}
       <div
-        className={`w-full h-56 md:h-72 lg:h-80 border-4 border-zinc-900 dark:border-slate-700 rounded-none relative flex justify-between items-end px-3 md:px-6 lg:px-8 pb-3 overflow-hidden shadow-lg shadow-stone-800/12 dark:shadow-none ${arenaBgClass}`}
+        className={`w-full h-56 md:h-72 lg:h-80 border-4 border-zinc-900 dark:border-zinc-700 rounded-none relative flex justify-between items-end px-3 md:px-6 lg:px-8 pb-3 overflow-hidden shadow-lg shadow-stone-800/12 dark:shadow-none ${arenaBgClass}`}
       >
         {/* Cartoon cloud decoration (Only in slime stage) */}
         {monsterType === "slime" && (
           <div className="absolute top-4 left-1/4 w-12 h-6 bg-white/50 dark:bg-white/10 rounded-full blur-[1px] pointer-events-none animate-[float-slow_12s_infinite_linear]" />
         )}
 
-        {/* Decorative Grid Line in middle */}
-        <div className="absolute left-1/2 top-0 bottom-0 w-[2px] bg-zinc-900/10 dark:bg-slate-950/20 border-l border-dashed border-zinc-900/20 pointer-events-none" />
+        {/* Decorative Grid Line in middle (shifted down to clear the stopwatch timer) */}
+        <div className="absolute left-1/2 top-20 md:top-24 lg:top-28 bottom-0 w-[2px] bg-zinc-900/10 dark:bg-zinc-950/20 border-l border-dashed border-zinc-900/20 pointer-events-none" />
+
+        {/* ⏳ HIGH-PERFORMANCE CIRCULAR STOPWATCH TIMER */}
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30">
+          <CircularTimer
+            timerMax={timerMax}
+            timerFrozen={timerFrozen}
+            isAnswered={isAnswered}
+            questionId={questionId}
+            timeLeftRef={timeLeftRef}
+            onTimeOut={onTimeOut}
+          />
+        </div>
 
         {/* ─── 1. PLAYER VISUAL MODEL (LEFT) ─── */}
         <div className="relative flex flex-col items-center w-28 md:w-36 lg:w-48 mb-1 md:mb-2">
@@ -425,7 +451,7 @@ export default function BossHud({
               <RivePlayer playerLvl={playerLvl} />
             </div>
 
-            <span className="text-[9px] md:text-[10px] font-extrabold text-zinc-900 dark:text-slate-200 mt-1 md:mt-2 bg-white dark:bg-slate-800 border-2 border-zinc-900 dark:border-slate-700 px-1.5 py-0.5 tracking-wider shadow-sm">
+            <span className="text-[9px] md:text-[10px] font-extrabold text-zinc-900 dark:text-zinc-200 mt-1 md:mt-2 bg-white dark:bg-zinc-800 border-2 border-zinc-900 dark:border-zinc-700 px-1.5 py-0.5 tracking-wider shadow-sm">
               DŨNG SĨ
             </span>
           </motion.div>
@@ -435,7 +461,7 @@ export default function BossHud({
             {playerParticles.map((p) => (
               <motion.div
                 key={p.id}
-                className="absolute w-2 h-2 bg-red-500 rounded-full border border-zinc-900 dark:border-slate-950 z-20"
+                className="absolute w-2 h-2 bg-red-500 rounded-full border border-zinc-900 dark:border-zinc-950 z-20"
                 initial={{ x: 0, y: 0, scale: 1, opacity: 1 }}
                 animate={{ x: p.x, y: p.y, scale: 0.1, opacity: 0 }}
                 transition={{ duration: 0.5, ease: "easeOut" }}
@@ -509,7 +535,7 @@ export default function BossHud({
                 {/* Render Monster Custom SVG */}
                 {renderMonsterSvg(monsterType, status)}
 
-                <span className="text-[9px] md:text-[10px] font-extrabold text-zinc-900 dark:text-slate-200 mt-1 md:mt-2 bg-white dark:bg-slate-800 border-2 border-zinc-900 dark:border-slate-700 px-1.5 py-0.5 tracking-wider shadow-sm">
+                <span className="text-[9px] md:text-[10px] font-extrabold text-zinc-900 dark:text-zinc-200 mt-1 md:mt-2 bg-white dark:bg-zinc-800 border-2 border-zinc-900 dark:border-zinc-700 px-1.5 py-0.5 tracking-wider shadow-sm">
                   {name}
                 </span>
               </motion.div>

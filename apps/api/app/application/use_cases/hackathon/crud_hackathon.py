@@ -1,19 +1,26 @@
+from datetime import datetime
 from uuid import UUID, uuid4
+
+from fastapi import HTTPException
 
 from app.core.datetime_utils import utc_to_ict
 from app.domain.entities.hackathon import HackathonEntity
 from app.domain.interfaces import IHackathonRepository
 from app.presentation.schemas.hackathons import HackathonCreate, HackathonUpdate
-from datetime import datetime
 
-from fastapi import HTTPException
 
 class CreateHackathonUseCase:
     def __init__(self, hackathon_repo: IHackathonRepository):
         self._hackathon_repo = hackathon_repo
 
-    async def execute(self, payload: HackathonCreate, admin_user_id: int) -> HackathonEntity:
-        if(payload.start_time and payload.end_time and payload.start_time >= payload.end_time):
+    async def execute(
+        self, payload: HackathonCreate, user_id: int
+    ) -> HackathonEntity:
+        if (
+            payload.start_time
+            and payload.end_time
+            and payload.start_time >= payload.end_time
+        ):
             raise HTTPException(
                 status_code=400, detail="start_time must be before end_time"
             )
@@ -35,8 +42,8 @@ class CreateHackathonUseCase:
             else None,
             participation_mode=payload.participation_mode,
             max_team_members=payload.max_team_members,
-            created_by=admin_user_id,
-            created_at=datetime.now()
+            created_by=user_id,
+            created_at=datetime.now(),
         )
         return await self._hackathon_repo.add(entity)
 
@@ -45,7 +52,9 @@ class ListHackathonsUseCase:
     def __init__(self, hackathon_repo: IHackathonRepository):
         self._hackathon_repo = hackathon_repo
 
-    async def execute(self, user_id: int, quiz_role: str) -> list[HackathonEntity]:
+    async def execute(
+        self, user_id: int, quiz_role: str
+    ) -> list[HackathonEntity]:
         return await self._hackathon_repo.list_all()
 
 
@@ -53,7 +62,9 @@ class GetHackathonUseCase:
     def __init__(self, hackathon_repo: IHackathonRepository):
         self._hackathon_repo = hackathon_repo
 
-    async def execute(self, hackathon_id: UUID, user_id: int, quiz_role: str) -> HackathonEntity | None:
+    async def execute(
+        self, hackathon_id: UUID, user_id: int, quiz_role: str
+    ) -> HackathonEntity | None:
         entity = await self._hackathon_repo.get(hackathon_id)
         return entity
 
@@ -63,12 +74,28 @@ class UpdateHackathonUseCase:
         self._hackathon_repo = hackathon_repo
 
     async def execute(
-        self, hackathon_id: UUID, payload: HackathonUpdate, admin_user_id: int
+        self,
+        hackathon_id: UUID,
+        payload: HackathonUpdate,
+        user_id: int,
+        is_admin: bool = False,
     ) -> HackathonEntity | None:
         entity = await self._hackathon_repo.get(hackathon_id)
-        if not entity or entity.created_by != admin_user_id:
+        if not entity:
             return None
-        if(payload.start_time and payload.end_time and payload.start_time >= payload.end_time):
+
+        # ABAC Ownership Check: Only owner or admin can update
+        if not is_admin and entity.created_by != user_id:
+            raise HTTPException(
+                status_code=403,
+                detail="Forbidden: You do not have permission to update this hackathon (Ownership required)",
+            )
+
+        if (
+            payload.start_time
+            and payload.end_time
+            and payload.start_time >= payload.end_time
+        ):
             raise HTTPException(
                 status_code=400, detail="start_time must be before end_time"
             )
@@ -85,9 +112,19 @@ class DeleteHackathonUseCase:
     def __init__(self, hackathon_repo: IHackathonRepository):
         self._hackathon_repo = hackathon_repo
 
-    async def execute(self, hackathon_id: UUID, admin_user_id: int) -> bool:
+    async def execute(
+        self, hackathon_id: UUID, user_id: int, is_admin: bool = False
+    ) -> bool:
         entity = await self._hackathon_repo.get(hackathon_id)
-        if not entity or entity.created_by != admin_user_id:
+        if not entity:
             return False
+
+        # ABAC Ownership Check: Only owner or admin can delete
+        if not is_admin and entity.created_by != user_id:
+            raise HTTPException(
+                status_code=403,
+                detail="Forbidden: You do not have permission to delete this hackathon (Ownership required)",
+            )
+
         await self._hackathon_repo.delete(entity)
         return True

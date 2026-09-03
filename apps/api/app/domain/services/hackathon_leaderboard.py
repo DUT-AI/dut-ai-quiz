@@ -1,4 +1,3 @@
-from typing import Dict, List, Tuple
 from app.domain.entities.hackathon import HackathonTaskEntity, MetricType
 from app.domain.entities.submission import HackathonSubmissionEntity, SubmissionStatus
 from app.domain.value_objects.hackathon_leaderboard import HackathonLeaderboardRow
@@ -122,7 +121,8 @@ class HackathonLeaderboardDomainService:
                     # not submitted = 0.0 normalized score
                     normalized_scores.append(0.0)
 
-            total_score = sum(normalized_scores) / len(tasks) if tasks else 0.0
+            # Each task contributes up to one normalized point.
+            total_score = sum(normalized_scores)
 
             participant_stats.append(
                 {

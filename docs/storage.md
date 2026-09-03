@@ -1,31 +1,40 @@
-# Lưu trữ đối tượng (MinIO / S3-compatible)
+# Lưu trữ đối tượng S3-compatible
 
-Dự án dùng **MinIO** (API tương thích S3) cho ảnh đính kèm câu hỏi; database chỉ lưu **URL** công khai hoặc path trong bucket.
+Dự án dùng API **S3-compatible** cho dataset hackathon, script dự đoán,
+model weights, file dự đoán và ảnh đính kèm. Database chỉ lưu URL hoặc object
+reference; nội dung file nằm trong bucket S3.
 
 ## Biến môi trường (gợi ý)
 
 | Biến | Mô tả |
 | ---- | ----- |
-| `MINIO_ENDPOINT` | Host API (không gồm scheme), ví dụ `minio.dutai.site` |
-| `MINIO_SECURE` | `True` nếu client dùng **HTTPS** (`https://...`) |
-| `MINIO_ACCESS_KEY` | Access key (S3 API) |
-| `MINIO_SECRET_KEY` | Secret key |
-| `MINIO_BUCKET_NAME` | Tên bucket chứa object (ảnh quiz, v.v.) |
-| `MINIO_CONSOLE_PORT` | Cổng **console** MinIO (vận hành), không nhất thiết dùng trong app |
+| `S3_ENDPOINT` | Endpoint đầy đủ, gồm scheme và port nếu có, ví dụ `http://localhost:9000` |
+| `S3_ACCESS_KEY` | Access key |
+| `S3_SECRET_KEY` | Secret key |
+| `S3_REGION` | Region dùng để ký request, mặc định `us-east-1` |
+| `S3_BUCKET_NAME` | Bucket chứa dataset và artifact |
+| `S3_FORCE_PATH_STYLE` | `true` với MinIO và đa số S3-compatible endpoint nội bộ |
 
-**Gốc tài khoản server MinIO** (tạo bucket, vận hành) — thường chỉ dùng khi bootstrap, không nhúng trực tiếp vào code path upload của app nếu đã dùng access key riêng:
+Các biến `MINIO_ENDPOINT`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`,
+`MINIO_BUCKET_NAME` và `MINIO_SECURE` cũ vẫn được hỗ trợ để tương thích ngược.
+Khi cả hai bộ cùng tồn tại, `S3_*` được ưu tiên.
 
-| Biến | Mô tả |
-| ---- | ----- |
-| `MINIO_ROOT_USER` | User root của MinIO |
-| `MINIO_ROOT_PASSWORD` | Mật khẩu root |
-
-Khuyến nghị: dùng **access key / secret** riêng cho ứng dụng (policy chỉ bucket cần thiết), không dùng root trong app production.
+Khuyến nghị: dùng access key riêng cho ứng dụng với policy chỉ giới hạn trong
+bucket cần thiết, không dùng tài khoản quản trị trong production.
 
 ## Ứng dụng Quiz
 
-- Endpoint upload: `POST /api/v1/uploads/presign` (xem [api.md](api.md)) — backend ký URL (presigned PUT) hoặc upload server-side tùy triển khai.
-- URL lưu trong `questions` / metadata: chuỗi đầy đủ hoặc base URL + key — thống nhất một quy ước khi code.
+- Dataset của task được upload qua `POST /api/v1/uploads/presign`.
+- Script `predict.py` và model weights được upload bằng presigned PUT do endpoint
+  `POST /api/v1/hackathons/tasks/{task_id}/presign-submit` cấp.
+- Worker tải các object bằng S3 SDK, chạy chấm bài và upload `predict.csv` trở lại
+  cùng thư mục submission.
+
+Object key hiện dùng các prefix:
+
+- Dataset: `hackathons/{hackathon_id}/task-tests/{uuid}/...`
+- Script/model: `hackathons/{hackathon_slug}/{sender_slug}/{submission_id}/...`
+- Prediction: cùng prefix submission, tên `predict.csv`
 
 ## Bảo mật
 
@@ -37,15 +46,16 @@ Khuyến nghị: dùng **access key / secret** riêng cho ứng dụng (policy c
 Sao chép nội dung sau vào `.env` (giá trị thật chỉ giữ local) hoặc vào `.env.example` với placeholder:
 
 ```env
-# MinIO Storage
-MINIO_ROOT_USER=
-MINIO_ROOT_PASSWORD=
-MINIO_ENDPOINT=minio.dutai.site
-MINIO_CONSOLE_PORT=10001
-MINIO_ACCESS_KEY=
-MINIO_SECRET_KEY=
-MINIO_BUCKET_NAME=dut-ai-manager-dev
-MINIO_SECURE=True
+# S3-compatible storage
+S3_ENDPOINT=http://localhost:9000
+S3_ACCESS_KEY=
+S3_SECRET_KEY=
+S3_REGION=us-east-1
+S3_BUCKET_NAME=hackathon
+S3_FORCE_PATH_STYLE=true
 ```
 
-`MINIO_SECURE=True` → client SDK dùng **HTTPS** tới `MINIO_ENDPOINT`.
+Endpoint phải truy cập được từ API, worker và trình duyệt người dùng vì frontend
+upload trực tiếp bằng presigned URL. Bucket cần CORS cho phương thức `PUT` từ
+origin của web app. Bucket phải được tạo trước khi khởi động luồng upload; ứng
+dụng không tự tạo bucket hoặc tự thay đổi policy/CORS trên hạ tầng.

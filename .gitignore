@@ -7,6 +7,7 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 .venv/
+.worker-venv/
 venv/
 apps/api/.venv/
 apps/web/.next/
@@ -15,4 +16,13 @@ node_modules/
 apps/web/node_modules/
 *.egg-info/
 dist/
+*-local.*.log
 .DS_Store
+*.log
+web-restart.err.log
+web-restart.out.log
+api-restart.err.log
+api-restart.out.log
+.vscode/
+submission/
+submission.zip

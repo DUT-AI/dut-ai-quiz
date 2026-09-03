@@ -106,7 +106,9 @@ export function HackathonLeaderboard({ hackathonId, tasks }: HackathonLeaderboar
                     </div>
                   </td>
                   <td className="px-6 py-4 text-right text-gray-navy/70 dark:text-light-blue/70">
-                    {formatDateTime(row.updated_at)}
+                    {row.latest_submission_time
+                      ? formatDateTime(row.latest_submission_time)
+                      : "-"}
                   </td>
                 </tr>
               );

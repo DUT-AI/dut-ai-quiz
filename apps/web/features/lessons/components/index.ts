@@ -10,6 +10,4 @@ export * from "./lesson-loading";
 export * from "./lesson-not-found";
 export * from "./lesson-header";
 export * from "./lesson-draft";
-export * from "./teacher-lesson-row";
-
-
+export * from "./learner";

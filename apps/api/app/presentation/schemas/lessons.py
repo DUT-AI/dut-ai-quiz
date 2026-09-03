@@ -47,3 +47,29 @@ class LessonDetailOut(LessonOut):
     """Schema for detailed lesson output including questions."""
 
     questions: list[QuestionOut] = []
+    has_game_questions: bool = False
+
+
+
+class LessonReorderItem(BaseModel):
+    id: UUID
+    order: int
+    module_id: UUID | None = None
+
+
+class LessonReorder(BaseModel):
+    items: list[LessonReorderItem]
+
+
+class RelatedLessonOut(BaseModel):
+    id: UUID
+    name: str
+    description: str
+    slug: str | None
+    score: float
+    matched_chunk: str
+
+
+class LessonIndexOut(BaseModel):
+    lesson_id: UUID
+    status: str

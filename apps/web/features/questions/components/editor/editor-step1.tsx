@@ -7,15 +7,20 @@ import { TagSelector } from "../tag-selector";
 import { EditorToolbar } from "./editor-toolbar";
 import { handlePasteImage } from "@/lib/upload-utils";
 import type { QuestionFormValues } from "../../types";
+import { LiveDuplicateChecker } from "@/components/pdf-import/live-duplicate-checker";
 
 interface EditorStep1Props {
   insertFormat: (field: "content" | "solution" | string, before: string, after?: string) => void;
+  onInsertLink?: (field: "content" | "solution" | string) => void;
   uploading: string | null;
   onUploadFile: (file: File, field: "content" | "solution" | string) => Promise<void>;
 }
 
-export function EditorStep1({ insertFormat, uploading, onUploadFile }: EditorStep1Props) {
-  const { register, control, formState: { errors } } = useFormContext<QuestionFormValues>();
+export function EditorStep1({ insertFormat, onInsertLink, uploading, onUploadFile }: EditorStep1Props) {
+  const { register, control, watch, formState: { errors } } = useFormContext<QuestionFormValues>();
+
+  const contentVal = watch("content");
+  const poolTypeVal = watch("pool_type");
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -59,13 +64,22 @@ export function EditorStep1({ insertFormat, uploading, onUploadFile }: EditorSte
           <FileText className="size-4 text-primary" /> Nội dung câu hỏi
         </label>
         <div className="flex flex-col rounded-3xl overflow-hidden border border-gray-200 dark:border-white/10 focus-within:border-primary/50 transition-all bg-gray-50 dark:bg-white/5">
-          <EditorToolbar onInsert={(before, after) => insertFormat("content", before, after)} />
+          <EditorToolbar 
+            onInsert={(before, after) => insertFormat("content", before, after)} 
+            onInsertLink={() => onInsertLink?.("content")}
+          />
           <div className="relative group">
             <textarea
               id="editor-content"
               {...register("content")}
               autoFocus
               onPaste={(e) => handlePasteImage(e, (file) => onUploadFile(file, "content"))}
+              onKeyDown={(e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+                  e.preventDefault();
+                  onInsertLink?.("content");
+                }
+              }}
               placeholder="Nhập nội dung câu hỏi, $...$ cho LaTeX, hỗ trợ dán ảnh (Ctrl+V)..."
               className={`w-full px-6 py-4 bg-transparent border-0 outline-none transition-all font-medium text-lg leading-relaxed resize-none overflow-hidden ${
                 errors.content ? "bg-red/5" : "focus:bg-white dark:focus:bg-navy-blue"
@@ -85,6 +99,9 @@ export function EditorStep1({ insertFormat, uploading, onUploadFile }: EditorSte
             </div>
           </div>
         </div>
+        
+        <LiveDuplicateChecker content={contentVal || ""} poolType={poolTypeVal} />
+
         {errors.content && (
           <p className="text-red text-xs px-2">{errors.content.message}</p>
         )}

@@ -2,14 +2,17 @@
 
 import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { RotateCcw, Lightbulb, Edit3, Trash2, Sparkles, Check, XCircle } from "lucide-react";
+import { Lightbulb, Edit3, Trash2, Sparkles, Check, XCircle, BookOpen, ArrowRight } from "lucide-react";
+import Link from "next/link";
+import { z } from "zod";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Markdown } from "@/components/markdown";
-import type { QuestionOut } from "@/lib/types";
+import { RelatedLessonSchema, type QuestionOut, type RelatedLesson } from "@/lib/types";
 import { useAuth } from "@/context/auth-context";
+import { apiGet, apiPost } from "@/lib/api";
 
 interface QuestionCardProps {
   q: QuestionOut;
@@ -28,6 +31,12 @@ export const QuestionCard = React.memo(
 
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [isRevealed, setIsRevealed] = useState(false);
+    const [result, setResult] = useState<{
+      isCorrect: boolean;
+      correctOptionId: string;
+      solution: string | null;
+    } | null>(null);
+    const [relatedLessons, setRelatedLessons] = useState<RelatedLesson[]>([]);
 
     // Load state from sessionStorage on mount
     React.useEffect(() => {
@@ -38,6 +47,7 @@ export const QuestionCard = React.memo(
           if (data[q.id]) {
             setSelectedId(data[q.id].selectedId || null);
             setIsRevealed(data[q.id].isRevealed || false);
+            setResult(data[q.id].result || null);
           }
         }
       } catch (e) {
@@ -45,24 +55,90 @@ export const QuestionCard = React.memo(
       }
     }, [storageKey, q.id]);
 
-    const handleSelect = (optionId: string) => {
-      if (isRevealed) return;
-      setSelectedId(optionId);
-      setIsRevealed(true);
+    React.useEffect(() => {
+      if (!isRevealed || q.pool_type !== "PRACTICE") {
+        setRelatedLessons([]);
+        return;
+      }
+      let cancelled = false;
+      apiGet<RelatedLesson[]>(
+        `/api/v1/questions/${q.id}/related-lessons?limit=3`,
+        z.array(RelatedLessonSchema)
+      )
+        .then((lessons) => {
+          if (!cancelled) setRelatedLessons(lessons);
+        })
+        .catch(() => {
+          // Answering still works when semantic search is disabled/unavailable.
+          if (!cancelled) setRelatedLessons([]);
+        });
+      return () => {
+        cancelled = true;
+      };
+    }, [isRevealed, q.id, q.pool_type]);
 
-      try {
-        const stored = sessionStorage.getItem(storageKey) || "{}";
-        const data = JSON.parse(stored);
-        data[q.id] = { selectedId: optionId, isRevealed: true };
-        sessionStorage.setItem(storageKey, JSON.stringify(data));
-      } catch (e) {
-        console.error("Failed to save progress", e);
+    const handleSelect = async (optionId: string) => {
+      if (isRevealed) return;
+
+      // Check if this option already contains is_correct info (teacher/creator view)
+      const teacherOption = q.options.find(
+        (o) => o.is_correct !== undefined && o.is_correct !== null
+      );
+
+      if (teacherOption) {
+        const correctOpt = q.options.find((o) => o.is_correct);
+        const correctId = correctOpt?.id || "";
+        const isCorr = optionId === correctId;
+        const newResult = {
+          isCorrect: isCorr,
+          correctOptionId: correctId,
+          solution: q.solution || null,
+        };
+
+        setSelectedId(optionId);
+        setIsRevealed(true);
+        setResult(newResult);
+
+        try {
+          const stored = sessionStorage.getItem(storageKey) || "{}";
+          const data = JSON.parse(stored);
+          data[q.id] = { selectedId: optionId, isRevealed: true, result: newResult };
+          sessionStorage.setItem(storageKey, JSON.stringify(data));
+        } catch (e) {
+          console.error("Failed to save progress", e);
+        }
+      } else {
+        try {
+          const res = await apiPost<{
+            is_correct: boolean;
+            correct_option_id: string;
+            solution: string | null;
+          }>(`/api/v1/questions/${q.id}/answer`, { option_id: optionId });
+
+          const newResult = {
+            isCorrect: res.is_correct,
+            correctOptionId: res.correct_option_id,
+            solution: res.solution,
+          };
+
+          setSelectedId(optionId);
+          setIsRevealed(true);
+          setResult(newResult);
+
+          const stored = sessionStorage.getItem(storageKey) || "{}";
+          const data = JSON.parse(stored);
+          data[q.id] = { selectedId: optionId, isRevealed: true, result: newResult };
+          sessionStorage.setItem(storageKey, JSON.stringify(data));
+        } catch (e) {
+          console.error("Failed to validate answer", e);
+        }
       }
     };
 
     const handleReset = () => {
       setSelectedId(null);
       setIsRevealed(false);
+      setResult(null);
 
       try {
         const stored = sessionStorage.getItem(storageKey) || "{}";
@@ -85,7 +161,7 @@ export const QuestionCard = React.memo(
           className={cn(
             "border-none shadow-lg bg-white dark:bg-navy-blue/60 rounded-3xl overflow-hidden hover:shadow-xl transition-all border-l-4 text-left",
             isRevealed
-              ? q.options.find((o) => o.id === selectedId)?.is_correct
+              ? (result?.isCorrect ?? q.options.find((o) => o.id === selectedId)?.is_correct)
                 ? "border-l-green"
                 : "border-l-red"
               : "border-l-primary/20"
@@ -118,7 +194,9 @@ export const QuestionCard = React.memo(
                 <div className="grid grid-cols-1 gap-3">
                   {q.options.map((opt, i) => {
                     const isSelected = selectedId === opt.id;
-                    const isCorrect = opt.is_correct;
+                    const isCorrect = result
+                      ? opt.id === result.correctOptionId
+                      : opt.is_correct;
 
                     let statusStyles =
                       "bg-gray-50/50 dark:bg-white/5 border-gray-100 dark:border-white/5 hover:border-primary/30";
@@ -178,7 +256,7 @@ export const QuestionCard = React.memo(
                 </div>
 
                 <AnimatePresence>
-                  {isRevealed && q.solution && (
+                  {isRevealed && (result?.solution || q.solution) && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
@@ -190,7 +268,50 @@ export const QuestionCard = React.memo(
                           Hướng dẫn chi tiết
                         </h4>
                         <div className="text-dark-blue dark:text-white leading-relaxed font-medium select-text">
-                          <Markdown content={q.solution} />
+                          <Markdown content={result?.solution || q.solution || ""} />
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <AnimatePresence>
+                  {isRevealed && relatedLessons.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      className="overflow-hidden"
+                    >
+                      <div className="mt-6 space-y-3">
+                        <h4 className="flex items-center gap-2 text-[10px] font-black text-gray-navy dark:text-light-blue uppercase tracking-widest">
+                          <BookOpen className="size-4 text-primary" />
+                          Bài học liên quan
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          {relatedLessons.map((lesson) => {
+                            const content = (
+                              <div className="h-full p-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10 hover:border-primary/40 transition-colors">
+                                <p className="font-bold text-dark-blue dark:text-white line-clamp-2">
+                                  {lesson.name}
+                                </p>
+                                {lesson.description && (
+                                  <p className="mt-2 text-xs text-gray-navy dark:text-light-blue/70 line-clamp-2">
+                                    {lesson.description}
+                                  </p>
+                                )}
+                                <span className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-primary">
+                                  Xem bài học <ArrowRight className="size-3" />
+                                </span>
+                              </div>
+                            );
+                            return lesson.slug ? (
+                              <Link key={lesson.id} href={`/lessons/${lesson.slug}`}>
+                                {content}
+                              </Link>
+                            ) : (
+                              <div key={lesson.id}>{content}</div>
+                            );
+                          })}
                         </div>
                       </div>
                     </motion.div>
@@ -226,8 +347,9 @@ export const QuestionCard = React.memo(
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="text-primary font-bold flex items-center gap-2 hover:bg-primary/10 px-4 py-2 rounded-2xl"
-                    onClick={() => onExplain(q)}
+                    disabled={!isRevealed}
+                    className="text-primary font-bold flex items-center gap-2 hover:bg-primary/10 px-4 py-2 rounded-2xl disabled:opacity-50 disabled:pointer-events-none"
+                    onClick={() => onExplain({ ...q, solution: result?.solution || q.solution })}
                   >
                     <Sparkles className="size-4" />
                     Xem gợi ý

@@ -3,6 +3,7 @@ from uuid import UUID
 from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import APIRouter, HTTPException
 
+from app.application.services.auth_roles import quiz_role_from_manage
 from app.application.use_cases.hackathon import (
     CreateHackathonTaskUseCase,
     DeleteHackathonTaskUseCase,
@@ -10,7 +11,7 @@ from app.application.use_cases.hackathon import (
     ListHackathonTasksUseCase,
     UpdateHackathonTaskUseCase,
 )
-from app.presentation.api.deps import AdminOrMentorUser, CurrentUser
+from app.presentation.api.deps import CurrentUser, ProjectDevUser
 from app.presentation.schemas.hackathons import (
     HackathonTaskCreate,
     HackathonTaskOut,
@@ -27,7 +28,7 @@ async def list_hackathon_tasks_route(
     hackathon_id: UUID,
     use_case: FromDishka[ListHackathonTasksUseCase],
 ):
-    rows = await use_case.execute(hackathon_id, user.id, user.quiz_role)
+    rows = await use_case.execute(hackathon_id, user.id, quiz_role_from_manage(user.roles))
     if rows is None:
         raise HTTPException(status_code=404, detail="Not found")
     return rows
@@ -36,7 +37,7 @@ async def list_hackathon_tasks_route(
 @router.post("/{hackathon_id}/tasks", response_model=HackathonTaskOut)
 @inject
 async def create_hackathon_task_route(
-    user: AdminOrMentorUser,
+    user: ProjectDevUser,
     hackathon_id: UUID,
     body: HackathonTaskCreate,
     use_case: FromDishka[CreateHackathonTaskUseCase],
@@ -58,7 +59,7 @@ async def get_hackathon_task_route(
     task_id: UUID,
     use_case: FromDishka[GetHackathonTaskUseCase],
 ):
-    res = await use_case.execute(hackathon_id, task_id, user.id, user.quiz_role)
+    res = await use_case.execute(hackathon_id, task_id, user.id, quiz_role_from_manage(user.roles))
     if not res:
         raise HTTPException(status_code=404, detail="Not found")
     return res
@@ -67,7 +68,7 @@ async def get_hackathon_task_route(
 @router.patch("/{hackathon_id}/tasks/{task_id}", response_model=HackathonTaskOut)
 @inject
 async def update_hackathon_task_route(
-    user: AdminOrMentorUser,
+    user: ProjectDevUser,
     hackathon_id: UUID,
     task_id: UUID,
     body: HackathonTaskUpdate,
@@ -85,7 +86,7 @@ async def update_hackathon_task_route(
 @router.delete("/{hackathon_id}/tasks/{task_id}")
 @inject
 async def delete_hackathon_task_route(
-    user: AdminOrMentorUser,
+    user: ProjectDevUser,
     hackathon_id: UUID,
     task_id: UUID,
     use_case: FromDishka[DeleteHackathonTaskUseCase],

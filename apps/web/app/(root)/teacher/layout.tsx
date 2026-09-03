@@ -11,7 +11,14 @@ export default function TeacherLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ProtectedRoute allowedRoles={["admin", "MENTOR"]}>
+    <ProtectedRoute
+      allowedRoles={[
+        "ADMIN",
+        "EDUCATOR",
+        "PROJECT_DEVELOPER",
+        "SUB_ADMIN",
+      ]}
+    >
       <div className="w-full bg-slate-50 dark:bg-zinc-950">{children}</div>
     </ProtectedRoute>
   );

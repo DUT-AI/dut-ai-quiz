@@ -1,6 +1,7 @@
 from uuid import uuid4
 
 from app.core.datetime_utils import now_ict
+from app.application.services.question_embedding import QuestionEmbeddingService
 from app.domain.entities.question import QuestionEntity, QuestionOptionEntity
 from app.domain.entities.tag import TagEntity
 from app.domain.interfaces import IQuestionRepository, ITagRepository
@@ -8,8 +9,13 @@ from app.presentation.schemas.questions import QuestionBulkCreate, QuestionCreat
 
 
 class CreateQuestionUseCase:
-    def __init__(self, question_repo: IQuestionRepository):
+    def __init__(
+        self,
+        question_repo: IQuestionRepository,
+        question_embedding: QuestionEmbeddingService,
+    ):
         self._question_repo = question_repo
+        self._question_embedding = question_embedding
 
     async def execute(self, payload: QuestionCreate) -> QuestionEntity:
         options = [
@@ -34,13 +40,20 @@ class CreateQuestionUseCase:
             created_by=payload.created_by or 1,
             created_at=now_ict(),
         )
+        await self._question_embedding.prepare(entity)
         return await self._question_repo.add(entity)
 
 
 class BulkCreateQuestionsUseCase:
-    def __init__(self, question_repo: IQuestionRepository, tag_repo: ITagRepository):
+    def __init__(
+        self,
+        question_repo: IQuestionRepository,
+        tag_repo: ITagRepository,
+        question_embedding: QuestionEmbeddingService,
+    ):
         self._question_repo = question_repo
         self._tag_repo = tag_repo
+        self._question_embedding = question_embedding
 
     async def execute(self, payload: QuestionBulkCreate) -> list[QuestionEntity]:
         # Collect all unique tag names
@@ -106,4 +119,5 @@ class BulkCreateQuestionsUseCase:
                 )
             )
 
+        await self._question_embedding.prepare_many(entities)
         return await self._question_repo.add_bulk(entities)

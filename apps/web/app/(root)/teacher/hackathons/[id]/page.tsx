@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useHackathon, useDeleteHackathon } from "@/features/hackathons/queries";
+import { useAuth } from "@/context/auth-context";
+import { isOwnerOrAdmin } from "@/lib/permissions";
 import {
   HackathonTasksTab,
   HackathonRegistrationsTab,
@@ -17,6 +19,7 @@ import {
   Trash2,
   Calendar,
   Award,
+  ShieldAlert,
 } from "lucide-react";
 import { cn, formatDateTime } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -29,12 +32,15 @@ export default function TeacherHackathonDetailPage() {
   const searchParams = useSearchParams();
   const hackathonId = params?.id as string;
 
+  const { user, isAdmin } = useAuth();
   const { data: hackathon, isLoading, error } = useHackathon(hackathonId);
   const deleteMutation = useDeleteHackathon();
 
   const tabParam = searchParams?.get("tab");
   const initialTab = (tabParam === "registrations" || tabParam === "edit") ? tabParam : "tasks";
   const [activeTab, setActiveTab] = useState<"tasks" | "registrations" | "edit">(initialTab);
+
+  const isOwner = isOwnerOrAdmin(user, hackathon?.created_by);
 
   const handleDelete = async () => {
     if (!hackathon) return;
@@ -74,6 +80,39 @@ export default function TeacherHackathonDetailPage() {
         >
           <ArrowLeft className="size-4" />
           Quay lại danh sách
+        </Button>
+      </div>
+    );
+  }
+
+  // Owner verification: Project Developer can only manage hackathons they created or Admin
+  if (!isOwner) {
+    return (
+      <div className="text-left py-10 space-y-6 max-w-2xl">
+        <div className="p-8 rounded-3xl bg-amber-500/10 border border-amber-500/20 text-dark-blue dark:text-white space-y-4 shadow-sm">
+          <div className="flex items-center gap-3 text-amber-600 dark:text-amber-400">
+            <div className="size-10 rounded-2xl bg-amber-500/10 flex items-center justify-center">
+              <ShieldAlert className="size-6" />
+            </div>
+            <div>
+              <h3 className="font-black text-lg">Xác thực quyền sở hữu (Owner Verification)</h3>
+              <p className="text-xs text-gray-navy dark:text-light-blue opacity-70">
+                Chỉ người tạo giải đấu hoặc Quản trị viên mới có quyền quản trị.
+              </p>
+            </div>
+          </div>
+
+          <p className="text-sm text-gray-navy dark:text-light-blue opacity-85 leading-relaxed">
+            Bạn đang xem giải đấu <span className="font-bold text-primary">&ldquo;{hackathon.name}&rdquo;</span>. Do bạn không phải là người tạo giải đấu này và không có quyền Admin, bạn không thể truy cập các chức năng quản trị đề bài, duyệt đơn đăng ký hoặc chỉnh sửa thông tin.
+          </p>
+        </div>
+
+        <Button
+          onClick={() => router.push("/teacher/hackathons")}
+          className="rounded-2xl flex items-center gap-2 px-6 py-3"
+        >
+          <ArrowLeft className="size-4" />
+          Quay lại danh sách Hackathon
         </Button>
       </div>
     );

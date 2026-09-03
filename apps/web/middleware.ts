@@ -5,12 +5,13 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get("access_token")?.value;
   const { pathname } = request.nextUrl;
 
-  // Protected paths
+  // Protected paths (Requires login)
   const isProtectedPath =
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/exams") ||
-    pathname.startsWith("/lessons") ||
     pathname.startsWith("/history") ||
+    pathname.startsWith("/homeworks") ||
+    pathname.startsWith("/hackathons") ||
     pathname.startsWith("/teacher");
 
   // Auth paths
@@ -35,8 +36,9 @@ export const config = {
     "/login",
     "/dashboard/:path*",
     "/exams/:path*",
-    "/lessons/:path*",
     "/history/:path*",
+    "/homeworks/:path*",
+    "/hackathons/:path*",
     "/teacher/:path*",
   ],
 };

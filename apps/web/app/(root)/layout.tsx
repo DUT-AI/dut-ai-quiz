@@ -11,7 +11,7 @@ import { Menu, Rocket } from "lucide-react";
 const RootLayout = ({ children }: { children: React.ReactNode }) => {
   const { isLoading } = useAuth();
   const pathname = usePathname();
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   // 1. Loading state during hydration/auth validation
@@ -55,17 +55,26 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
         />
       )}
 
+      {/* Invisible Hover Trigger Zone at the Left Edge (Desktop only) */}
+      {isCollapsed && (
+        <div
+          className="hidden lg:block fixed left-0 top-0 bottom-0 w-3 z-40 bg-transparent"
+          onMouseEnter={() => setIsCollapsed(false)}
+        />
+      )}
+
       {/* Sidebar Container */}
       <aside
+        onMouseLeave={() => setIsCollapsed(true)}
         className={cn(
           "h-full flex-shrink-0 bg-white dark:bg-navy-blue border-r border-gray-100 dark:border-white/5 transition-all duration-300 ease-in-out z-50 overflow-hidden w-72",
           // Mobile Drawer
-          "fixed lg:static inset-y-0 left-0 lg:h-full transform transition-transform lg:transform-none",
+          "fixed lg:static inset-y-0 left-0 lg:h-full transform lg:transform-none",
           isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
           // Desktop Collapsible (using margin-left transition instead of width collapse for super smooth sliding and high performance)
           isCollapsed
-            ? "lg:-ml-72 lg:opacity-0 lg:pointer-events-none lg:border-r-0"
-            : "lg:ml-0 lg:opacity-100"
+            ? "lg:-ml-72 lg:pointer-events-none lg:border-r-0"
+            : "lg:ml-0"
         )}
       >
         <SidebarNav onCloseMobile={() => setIsMobileOpen(false)} />

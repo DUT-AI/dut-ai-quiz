@@ -26,6 +26,7 @@ export function useActiveGameSession(lessonSlug: string, options?: any) {
     gcTime: 0, // Disable caching so it's always fetched fresh when component mounts
     retry: false, // Don't retry on 404
     enabled: !!lessonSlug,
+    refetchOnWindowFocus: false,
     ...options,
   });
 }
@@ -39,7 +40,12 @@ export function useStartGameSession() {
         body,
         StartGameSessionResponseSchema
       ),
-    onSuccess: (_, variables) => {
+    onSuccess: (data, variables) => {
+      // Pre-populate the active session cache with the newly created session
+      qc.setQueryData(
+        ["game", "sessions", "active", variables.lesson_slug],
+        data
+      );
       void qc.invalidateQueries({
         queryKey: ["game", "sessions", "active", variables.lesson_slug],
       });

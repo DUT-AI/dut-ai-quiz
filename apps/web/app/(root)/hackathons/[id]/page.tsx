@@ -283,14 +283,15 @@ export default function StudentHackathonDetailPage() {
                               </div>
 
                               {/* Submissions Section */}
-                              <Tabs defaultValue="submissions" className="w-full">
-                                <TabsList className="grid w-full grid-cols-1 mb-4">
-                                  <TabsTrigger value="submissions">Nộp bài & Lịch sử</TabsTrigger>
-                                </TabsList>
-                                <TabsContent value="submissions">
+                              <details open className="group w-full">
+                                <summary className="flex w-full cursor-pointer list-none items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-bold text-primary transition-colors hover:bg-primary/5 dark:border-white/10 dark:bg-white/[0.02]">
+                                  Nộp bài & Lịch sử
+                                  <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
+                                </summary>
+                                <div className="pt-4">
                                   <HackathonTaskSubmissions hackathonId={hackathon.id} taskId={task.id} />
-                                </TabsContent>
-                              </Tabs>
+                                </div>
+                              </details>
                             </div>
                           </motion.div>
                         )}

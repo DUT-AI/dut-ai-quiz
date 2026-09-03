@@ -21,6 +21,7 @@ import {
   useDeleteHackathonTask,
 } from "../queries";
 import { type Hackathon, type HackathonTask, type MetricType } from "../types";
+import { TestFileUpload } from "./test-file-upload";
 
 interface HackathonTasksModalProps {
   hackathon: Hackathon;
@@ -46,6 +47,7 @@ export function HackathonTasksModal({
   const [privateTestUrl, setPrivateTestUrl] = useState("");
   const [metricType, setMetricType] = useState<MetricType>("accuracy");
   const [maxSubmissions, setMaxSubmissions] = useState(10);
+  const [testUploads, setTestUploads] = useState({ public: false, private: false });
 
   const openCreateForm = () => {
     setIsCreating(true);
@@ -71,6 +73,10 @@ export function HackathonTasksModal({
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (testUploads.public || testUploads.private) {
+      toast.error("Vui lòng chờ tải file test lên S3 hoàn tất.");
+      return;
+    }
     if (!name.trim()) {
       toast.error("Vui lòng nhập tên đề bài");
       return;
@@ -234,8 +240,28 @@ export function HackathonTasksModal({
                   />
                 </div>
 
-                {/* Public Test URL */}
-                <div className="space-y-1.5">
+                <TestFileUpload
+                  hackathonId={hackathon.id}
+                  kind="public"
+                  value={publicTestUrl}
+                  onChange={setPublicTestUrl}
+                  onUploadingChange={(uploading) =>
+                    setTestUploads((current) => ({ ...current, public: uploading }))
+                  }
+                />
+
+                <TestFileUpload
+                  hackathonId={hackathon.id}
+                  kind="private"
+                  value={privateTestUrl}
+                  onChange={setPrivateTestUrl}
+                  onUploadingChange={(uploading) =>
+                    setTestUploads((current) => ({ ...current, private: uploading }))
+                  }
+                />
+
+                {/* Legacy URL inputs remain available in state for existing tasks. */}
+                <div className="hidden">
                   <label className="text-[10px] font-black text-gray-navy dark:text-light-blue/70 uppercase tracking-wider">
                     URL Test Công khai (Public Test URL)
                   </label>
@@ -248,8 +274,7 @@ export function HackathonTasksModal({
                   />
                 </div>
 
-                {/* Private Test URL */}
-                <div className="space-y-1.5">
+                <div className="hidden">
                   <label className="text-[10px] font-black text-gray-navy dark:text-light-blue/70 uppercase tracking-wider">
                     URL Test Nội bộ (Private Test URL)
                   </label>
@@ -291,7 +316,12 @@ export function HackathonTasksModal({
                 </Button>
                 <Button
                   type="submit"
-                  disabled={createTaskMutation.isPending || updateTaskMutation.isPending}
+                  disabled={
+                    createTaskMutation.isPending ||
+                    updateTaskMutation.isPending ||
+                    testUploads.public ||
+                    testUploads.private
+                  }
                   className="rounded-xl px-8 py-5 bg-primary text-white font-bold flex items-center gap-2 shadow-lg shadow-primary/20 hover:bg-primary/95"
                 >
                   <Save className="size-4" />

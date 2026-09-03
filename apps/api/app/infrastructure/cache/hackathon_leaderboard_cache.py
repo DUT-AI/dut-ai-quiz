@@ -24,3 +24,9 @@ class RedisHackathonLeaderboardCache(IHackathonLeaderboardCache):
     async def set(self, hackathon_id: UUID, leaderboard: list[dict], is_private: bool = False) -> None:
         key = self._make_key(hackathon_id, is_private)
         await self._redis.set(key, json.dumps(leaderboard), ex=self._ttl)
+
+    async def invalidate(self, hackathon_id: UUID) -> None:
+        await self._redis.delete(
+            self._make_key(hackathon_id, False),
+            self._make_key(hackathon_id, True),
+        )

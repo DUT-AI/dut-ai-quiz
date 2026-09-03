@@ -1,8 +1,8 @@
 "use client";
+
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, ArrowLeft, CheckCircle2, Save, FileText, Users, ListChecks } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import { cn, formatToLocalDatetime } from "@/lib/utils";
 import StepInfo, { ExamInfoData } from "./StepInfo";
 import StepParticipants from "./StepParticipants";
@@ -42,13 +42,13 @@ export default function ExamStepper({ initialData }: Props) {
 
   const handleNext = () => {
     if (currentStep < STEPS.length - 1) {
-      setCurrentStep(curr => curr + 1);
+      setCurrentStep((curr) => curr + 1);
     }
   };
 
   const handleBack = () => {
     if (currentStep > 0) {
-      setCurrentStep(curr => curr - 1);
+      setCurrentStep((curr) => curr - 1);
     }
   };
 
@@ -79,14 +79,14 @@ export default function ExamStepper({ initialData }: Props) {
         const newExam = await createExam.mutateAsync(payload);
         examId = newExam.id;
       }
-      
+
       if (questionIds.length > 0 && examId) {
-        await setQuestions.mutateAsync({ 
-          examId, 
-          questionIds: questionIds 
+        await setQuestions.mutateAsync({
+          examId,
+          questionIds: questionIds,
         });
       }
-      
+
       router.push("/teacher/exams");
     } catch (err) {
       console.error("Save failed", err);
@@ -96,49 +96,90 @@ export default function ExamStepper({ initialData }: Props) {
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto space-y-8 pb-20">
-      {/* Header & Steps Indicator */}
-      <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-        <div className="flex items-center gap-4 p-1.5 rounded-[2.5rem] bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5">
-          {STEPS.map((step, idx) => {
-            const Icon = step.icon;
-            const isActive = currentStep === idx;
-            const isDone = currentStep > idx;
-            
-            return (
-              <div key={step.id} className="flex items-center">
+    <div className="w-full max-w-6xl mx-auto space-y-6">
+      {/* Top Navigation & Steps Indicator */}
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white dark:bg-navy-blue/80 p-3 rounded-[2.5rem] border border-gray-100 dark:border-white/10 shadow-sm">
+        {/* Left: Back button & Stepper Pills */}
+        <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
+          {currentStep > 0 ? (
+            <button
+              type="button"
+              onClick={handleBack}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-[2rem] font-bold text-xs text-gray-navy hover:bg-gray-100 dark:hover:bg-white/10 transition-all shrink-0"
+            >
+              <ArrowLeft className="size-4" />
+              Quay lại
+            </button>
+          ) : <div />}
+
+          <div className="flex items-center gap-1.5 p-1 rounded-[2rem] bg-gray-50 dark:bg-white/5 overflow-x-auto custom-scrollbar">
+            {STEPS.map((step, idx) => {
+              const Icon = step.icon;
+              const isActive = currentStep === idx;
+              const isDone = currentStep > idx;
+
+              return (
                 <button
-                  onClick={() => idx < currentStep && setCurrentStep(idx)}
+                  key={step.id}
+                  type="button"
+                  onClick={() => setCurrentStep(idx)}
                   className={cn(
-                    "flex items-center gap-3 px-6 py-3 rounded-[2rem] transition-all",
-                    isActive ? "bg-white dark:bg-navy-blue shadow-lg text-primary scale-105" : 
-                    isDone ? "text-green" : "text-gray-navy opacity-40"
+                    "flex items-center gap-2 px-4 py-2 rounded-[1.8rem] transition-all text-xs font-bold whitespace-nowrap",
+                    isActive
+                      ? "bg-white dark:bg-navy-blue shadow-md text-primary scale-105"
+                      : isDone
+                      ? "text-green"
+                      : "text-gray-navy opacity-50 hover:opacity-100"
                   )}
                 >
-                  <div className={cn(
-                    "size-8 rounded-xl flex items-center justify-center transition-all",
-                    isActive ? "bg-primary text-white shadow-lg shadow-primary/30" : 
-                    isDone ? "bg-green text-white" : "bg-gray-200 dark:bg-white/10"
-                  )}>
-                    {isDone ? <CheckCircle2 className="size-5" /> : <Icon className="size-4" />}
+                  <div
+                    className={cn(
+                      "size-6 rounded-lg flex items-center justify-center text-[10px]",
+                      isActive
+                        ? "bg-primary text-white"
+                        : isDone
+                        ? "bg-green text-white"
+                        : "bg-gray-200 dark:bg-white/10"
+                    )}
+                  >
+                    {isDone ? <CheckCircle2 className="size-3.5" /> : <Icon className="size-3" />}
                   </div>
-                  <span className="text-xs font-black uppercase tracking-widest hidden sm:block">
-                    {step.title}
-                  </span>
+                  <span className="uppercase tracking-wider">{step.title}</span>
                 </button>
-                {idx < STEPS.length - 1 && (
-                  <div className="w-10 h-px bg-gray-200 dark:bg-white/10 mx-2 hidden md:block" />
-                )}
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Right: Actions (Next & Save) */}
+        <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+          {currentStep < STEPS.length - 1 && (
+            <button
+              type="button"
+              onClick={handleNext}
+              className="group px-5 py-3 rounded-[2rem] bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase tracking-widest text-xs flex items-center gap-2 shadow-lg shadow-indigo-500/20 hover:scale-105 active:scale-95 transition-all"
+            >
+              Tiếp theo
+              <ArrowRight className="size-4 group-hover:translate-x-0.5 transition-transform" />
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={isSaving || !formData.title || questionIds.length === 0}
+            className="px-7 py-3 rounded-[2rem] bg-gradient-to-br from-primary to-pink-500 text-white font-black uppercase tracking-widest text-xs flex items-center gap-2 shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:grayscale"
+          >
+            {isSaving ? "Đang lưu..." : "Lưu kỳ thi"}
+            <Save className="size-4" />
+          </button>
         </div>
       </div>
 
       {/* Step Content */}
       <div className="min-h-[500px]">
         {currentStep === 0 && (
-          <StepInfo data={formData} onChange={d => setFormData(prev => ({ ...prev, ...d }))} />
+          <StepInfo data={formData} onChange={(d) => setFormData((prev) => ({ ...prev, ...d }))} />
         )}
         {currentStep === 1 && (
           <StepParticipants selectedIds={participantIds} onChange={setParticipantIds} />
@@ -146,41 +187,6 @@ export default function ExamStepper({ initialData }: Props) {
         {currentStep === 2 && (
           <StepQuestions selectedIds={questionIds} onChange={setQuestionIds} />
         )}
-      </div>
-
-      {/* Navigation Footer */}
-      <div className="fixed bottom-0 left-0 right-0 p-6 bg-white/80 dark:bg-navy-blue/80 backdrop-blur-xl border-t border-gray-100 dark:border-white/5 z-50">
-        <div className="max-w-6xl mx-auto flex justify-between items-center">
-          <button
-            onClick={handleBack}
-            disabled={currentStep === 0}
-            className="flex items-center gap-2 px-8 py-4 rounded-[2rem] font-bold text-gray-navy hover:bg-gray-100 dark:hover:bg-white/5 transition-all disabled:opacity-0"
-          >
-            <ArrowLeft className="size-5" />
-            Quay lại
-          </button>
-
-          <div className="flex gap-4">
-            {currentStep < STEPS.length - 1 ? (
-              <button
-                onClick={handleNext}
-                className="group px-10 py-5 rounded-[2rem] bg-indigo-600 text-white font-black uppercase tracking-widest text-xs flex items-center gap-3 shadow-xl shadow-indigo-500/30 hover:scale-105 active:scale-95 transition-all"
-              >
-                Tiếp theo
-                <ArrowRight className="size-5 group-hover:translate-x-1 transition-transform" />
-              </button>
-            ) : (
-              <button
-                onClick={handleSave}
-                disabled={isSaving || !formData.title || questionIds.length === 0}
-                className="px-10 py-5 rounded-[2rem] bg-gradient-to-br from-primary to-pink-500 text-white font-black uppercase tracking-widest text-xs flex items-center gap-3 shadow-xl shadow-primary/30 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:grayscale"
-              >
-                {isSaving ? "Đang lưu..." : "Lưu kỳ thi"}
-                <Save className="size-5" />
-              </button>
-            )}
-          </div>
-        </div>
       </div>
     </div>
   );

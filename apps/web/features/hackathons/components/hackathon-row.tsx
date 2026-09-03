@@ -2,9 +2,11 @@
 
 import React from "react";
 import { type Hackathon } from "../types";
-import { Calendar, Users } from "lucide-react";
+import { Calendar, Users, ShieldCheck, Eye } from "lucide-react";
 import { formatDateTime, getParticipationModeLabel } from "@/lib/utils";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/auth-context";
+import { isOwnerOrAdmin } from "@/lib/permissions";
 
 interface HackathonRowProps {
   hackathon: Hackathon;
@@ -12,6 +14,8 @@ interface HackathonRowProps {
 
 export function HackathonRow({ hackathon }: HackathonRowProps) {
   const router = useRouter();
+  const { user, isAdmin } = useAuth();
+  const isOwner = isOwnerOrAdmin(user, hackathon.created_by);
 
   const isExpired = hackathon.end_time ? new Date(hackathon.end_time) < new Date() : false;
   const isStarted = hackathon.start_time ? new Date(hackathon.start_time) <= new Date() : false;
@@ -45,6 +49,19 @@ export function HackathonRow({ hackathon }: HackathonRowProps) {
             {!isStarted && hackathon.start_time && (
               <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/10">
                 Sắp diễn ra
+              </span>
+            )}
+
+            {/* Ownership badge */}
+            {isOwner ? (
+              <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-primary/10 text-primary border border-primary/10 flex items-center gap-1">
+                <ShieldCheck className="size-3" />
+                {isAdmin ? "Admin" : "Người tạo"}
+              </span>
+            ) : (
+              <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 dark:bg-white/5 text-gray-navy/70 dark:text-light-blue/50 border border-gray-200 dark:border-white/10 flex items-center gap-1">
+                <Eye className="size-3" />
+                Chỉ xem
               </span>
             )}
           </div>

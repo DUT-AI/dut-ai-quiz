@@ -11,6 +11,7 @@ from .enums import (
     GameSessionStatus,
 )
 from .submission import SubmissionStorageInfo
+from .lesson_chunk import LessonChunkDraft, LessonChunkMatch
 
 __all__ = [
     "ShuffledOption",
@@ -22,4 +23,6 @@ __all__ = [
     "PoolType",
     "GameSessionStatus",
     "SubmissionStorageInfo",
+    "LessonChunkDraft",
+    "LessonChunkMatch",
 ]

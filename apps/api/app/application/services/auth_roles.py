@@ -1,3 +1,6 @@
+from app.domain.entities.auth_enums import UserRole, normalize_role
+
+
 def quiz_role_from_manage(role_names: list[str] | str | None) -> str:
     if not role_names:
         return "guest"
@@ -6,10 +9,16 @@ def quiz_role_from_manage(role_names: list[str] | str | None) -> str:
     else:
         roles = role_names
 
-    if "admin" in roles:
+    normalized_roles = {normalize_role(r) for r in roles}
+
+    if UserRole.ADMIN in normalized_roles:
         return "admin"
-    if "MENTOR" in roles:
-        return "MENTOR"
-    if "teammate" in roles or "student" in roles:
+    if UserRole.SUB_ADMIN in normalized_roles:
+        return "SUB_ADMIN"
+    if UserRole.PROJECT_DEVELOPER in normalized_roles:
+        return "PROJECT_DEVELOPER"
+    if UserRole.EDUCATOR in normalized_roles:
+        return "EDUCATOR"
+    if UserRole.TEAMMATE in normalized_roles:
         return "teammate"
     return "guest"
