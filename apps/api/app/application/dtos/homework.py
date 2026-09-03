@@ -39,6 +39,10 @@ class SubmitHomeworkDTO(BaseModel):
 
 class CompletedHomeworkMemberOutDTO(BaseModel):
     user_id: int
+    submission_count: int = 1
+    max_score: float | None = 100.0
+
+
 
 
 class HomeworkSubmissionOutDTO(BaseModel):

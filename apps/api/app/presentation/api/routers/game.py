@@ -14,7 +14,7 @@ from app.application.use_cases.game import (
     PatchGameAnswerUseCase,
     UseItemGameUseCase,
 )
-from app.presentation.api.deps import CurrentUser
+from app.presentation.api.deps import CurrentUser, ManageService
 from app.presentation.schemas.game import (
     GamificationStartIn,
     GamificationAnswerPatchIn,
@@ -25,6 +25,7 @@ from app.presentation.schemas.game import (
 )
 
 router = APIRouter(prefix="/game", tags=["game"])
+
 
 
 def sanitize_game_snapshot(snapshot: dict | None) -> dict | None:
@@ -149,6 +150,17 @@ async def game_history_summary(
     return await use_case.execute(user.id)
 
 
+@router.get("/users/{user_id}/summary", response_model=list[GameLessonSummaryOut])
+@inject
+async def get_user_game_summary_for_manage(
+    user_id: int,
+    _service: ManageService,
+    use_case: FromDishka[GetGameHistorySummaryUseCase]
+):
+    """Lấy tóm tắt lịch sử game của 1 học viên dành cho Manage Service"""
+    return await use_case.execute(user_id)
+
+
 @router.get("/{lesson_slug}/leaderboard", response_model=list[GameLeaderboardRowOut])
 @inject
 async def get_game_leaderboard(
@@ -156,3 +168,4 @@ async def get_game_leaderboard(
     use_case: FromDishka[GetGameLeaderboardUseCase]
 ):
     return await use_case.execute(lesson_slug)
+

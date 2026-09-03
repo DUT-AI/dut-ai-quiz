@@ -15,7 +15,5 @@ class ListCompletedHomeworkMembersUseCase:
         homework_id: UUID,
     ) -> list[CompletedHomeworkMemberOutDTO]:
         await get_homework_or_raise(self._repository, homework_id)
-        return [
-            CompletedHomeworkMemberOutDTO(user_id=user_id)
-            for user_id in await self._repository.list_completed_user_ids(homework_id)
-        ]
+        return await self._repository.list_completed_members(homework_id)
+

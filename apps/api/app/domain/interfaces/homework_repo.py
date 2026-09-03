@@ -1,7 +1,11 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
 
+from app.application.dtos.homework import (
+    CompletedHomeworkMemberOutDTO,
+)
 from app.domain.entities.homework import HomeworkEntity, HomeworkSubmissionEntity
+
 
 
 class IHomeworkRepository(ABC):
@@ -69,5 +73,13 @@ class IHomeworkRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def list_completed_members(
+        self, homework_id: UUID
+    ) -> list[CompletedHomeworkMemberOutDTO]:
+        """List completed homework member details including email, submission count, max score."""
+        raise NotImplementedError
+
+    @abstractmethod
     async def count_submitters(self, homework_id: UUID) -> int:
         raise NotImplementedError
+

@@ -119,7 +119,19 @@ class GameSessionRepository(IGameSessionRepository):
         
         result = []
         for row in rows:
-            ps = row.GameSession.snapshot.get('gamification', {})
+            snapshot = row.GameSession.snapshot or {}
+            ps = snapshot.get('gamification', {})
+            questions = snapshot.get('questions', [])
+            answers = snapshot.get('answers', {})
+
+            total_questions = len(questions) if questions else (row.GameSession.question_limit or 0)
+            answered_questions = len(answers) if isinstance(answers, dict) else 0
+            is_completed = bool(
+                row.GameSession.status == GameSessionStatus.COMPLETED
+                and total_questions > 0
+                and answered_questions >= total_questions
+            )
+
             result.append({
                 "user_id": row.User.id if row.User else row.GameSession.user_id,
                 "username": row.User.name if row.User else None,
@@ -127,7 +139,10 @@ class GameSessionRepository(IGameSessionRepository):
                 "final_score": float(ps.get('final_score', 0)),
                 "gold": int(ps.get('gold', 0)),
                 "total_time_response": float(ps.get('total_time_response', 0)),
-                "attempt_count": int(row.total_attempts) if row.total_attempts is not None else int(ps.get('attempt_count', 0))
+                "attempt_count": int(row.total_attempts) if row.total_attempts is not None else int(ps.get('attempt_count', 0)),
+                "is_completed": is_completed,
+                "total_questions": total_questions,
+                "answered_questions": answered_questions,
             })
             
         return result

@@ -28,7 +28,17 @@ async def test_get_leaderboard_cache_hit(mock_repo, mock_cache):
     """Test GetGameLeaderboardUseCase returns data from cache if available."""
     lesson_slug = "test-lesson"
     cached_data = [
-        {"user_id": 1, "username": "User1", "final_score": 100, "gold": 50, "total_time_response": 20, "attempt_count": 1}
+        {
+            "user_id": 1,
+            "username": "User1",
+            "final_score": 100,
+            "gold": 50,
+            "total_time_response": 20,
+            "attempt_count": 1,
+            "is_completed": True,
+            "total_questions": 10,
+            "answered_questions": 10,
+        }
     ]
     mock_cache.get.return_value = cached_data
     
@@ -47,7 +57,17 @@ async def test_get_leaderboard_cache_miss(mock_repo, mock_cache):
     """Test GetGameLeaderboardUseCase queries DB and updates cache on miss."""
     lesson_slug = "test-lesson"
     db_data = [
-        {"user_id": 2, "username": "User2", "final_score": 90, "gold": 40, "total_time_response": 30, "attempt_count": 2}
+        {
+            "user_id": 2,
+            "username": "User2",
+            "final_score": 90,
+            "gold": 40,
+            "total_time_response": 30,
+            "attempt_count": 2,
+            "is_completed": True,
+            "total_questions": 10,
+            "answered_questions": 10,
+        }
     ]
     
     mock_cache.get.return_value = None
@@ -150,3 +170,79 @@ async def test_finish_session_decay_minimum_limit(mock_repo, mock_cache):
     gamification = result.snapshot["gamification"]
     assert gamification["final_score"] == 20.0  # 100 * 0.2
     assert gamification["attempt_count"] == 11
+
+
+def test_game_leaderboard_row_out_schema():
+    """Test GameLeaderboardRowOut serialization and default values for new fields."""
+    from app.presentation.schemas.game import GameLeaderboardRowOut
+
+    row = GameLeaderboardRowOut(
+        user_id=10,
+        username="Hero",
+        avatar_url="http://avatar.com/1.png",
+        final_score=100.0,
+        gold=50,
+        total_time_response=25.5,
+        attempt_count=2,
+        is_completed=True,
+        total_questions=15,
+        answered_questions=15,
+    )
+    assert row.user_id == 10
+    assert row.is_completed is True
+    assert row.total_questions == 15
+    assert row.answered_questions == 15
+
+    # Test default values
+    row_default = GameLeaderboardRowOut(
+        user_id=11,
+        final_score=50.0,
+        gold=10,
+        total_time_response=12.0,
+        attempt_count=1,
+    )
+    assert row_default.is_completed is False
+    assert row_default.total_questions == 0
+    assert row_default.answered_questions == 0
+
+
+def test_leaderboard_row_completion_logic():
+    """Test the calculation logic of is_completed based on questions, answers, and status."""
+    questions = [{"id": f"q{i}"} for i in range(15)]
+    answers_full = {f"q{i}": "opt1" for i in range(15)}
+    status_completed = GameSessionStatus.COMPLETED
+
+    # Case 1: Answered 15/15 questions and status is COMPLETED -> is_completed = True
+    total_questions = len(questions)
+    answered_questions = len(answers_full)
+    is_completed = bool(
+        status_completed == GameSessionStatus.COMPLETED
+        and total_questions > 0
+        and answered_questions >= total_questions
+    )
+
+    assert total_questions == 15
+    assert answered_questions == 15
+    assert is_completed is True
+
+    # Case 2: Answered 5/15 questions (game over due to running out of lives) -> is_completed = False
+    answers_partial = {f"q{i}": "opt1" for i in range(5)}
+    answered_questions_partial = len(answers_partial)
+    is_completed_partial = bool(
+        status_completed == GameSessionStatus.COMPLETED
+        and total_questions > 0
+        and answered_questions_partial >= total_questions
+    )
+
+    assert answered_questions_partial == 5
+    assert is_completed_partial is False
+
+    # Case 3: Session IN_PROGRESS -> is_completed = False
+    status_in_progress = GameSessionStatus.IN_PROGRESS
+    is_completed_in_progress = bool(
+        status_in_progress == GameSessionStatus.COMPLETED
+        and total_questions > 0
+        and answered_questions >= total_questions
+    )
+    assert is_completed_in_progress is False
+

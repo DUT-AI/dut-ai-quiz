@@ -80,6 +80,20 @@ class HomeworkRepositoryStub:
     async def list_completed_user_ids(self, homework_id):
         return self.completed_user_ids
 
+    async def list_completed_members(self, homework_id):
+        from app.application.dtos.homework import CompletedHomeworkMemberOutDTO
+
+        return [
+            CompletedHomeworkMemberOutDTO(
+                user_id=uid,
+                submission_count=1,
+                max_score=100.0,
+            )
+            for uid in self.completed_user_ids
+        ]
+
+
+
 
 @pytest.fixture
 def homework() -> HomeworkEntity:
