@@ -198,17 +198,16 @@ async def list_submissions(
 
 
 @router.get(
-    "/{homework_id}/completed-members",
+    "/{lesson_slug}/completed-members",
     response_model=CompletedHomeworkMembersResponse,
 )
 @inject
 async def list_completed_members_for_manage(
-    homework_id: UUID,
-    _service: ManageService,
+    lesson_slug: str,
     use_case: FromDishka[ListCompletedHomeworkMembersUseCase],
 ) -> CompletedHomeworkMembersResponse:
     return CompletedHomeworkMembersResponse(
-        data=await use_case.execute(homework_id)
+        data=await use_case.execute(lesson_slug)
     )
 
 

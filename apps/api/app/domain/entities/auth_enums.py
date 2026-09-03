@@ -107,7 +107,7 @@ ROLE_ALIASES: dict[str, UserRole] = {
 def normalize_role(role: str | UserRole) -> UserRole | None:
     if isinstance(role, UserRole):
         return role
-    key = str(role).strip().lower()
+    key = str(role).strip().lower().replace(" ", "_").replace("-", "_")
     return ROLE_ALIASES.get(key)
 
 

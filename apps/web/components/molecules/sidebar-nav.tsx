@@ -50,6 +50,7 @@ export const SidebarNav = ({ onCloseMobile }: { onCloseMobile?: () => void }) =>
     canManageLessons,
     canManageExams,
     canManageHomeworks,
+    canManageQuestions,
     canManageHackathons,
     canManageStats,
   } = useAuth();
@@ -58,9 +59,14 @@ export const SidebarNav = ({ onCloseMobile }: { onCloseMobile?: () => void }) =>
     { icon: ShieldCheck, label: "Quản lý Đề thi", href: "/teacher/exams", show: canManageExams },
     { icon: BookOpenCheck, label: "Quản lý Bài tập", href: "/teacher/homeworks", show: canManageHomeworks },
     { icon: PlusCircle, label: "Quản lý Bài học", href: "/teacher/lessons", show: canManageLessons },
+    { icon: FileText, label: "Duyệt câu hỏi", href: "/teacher/questions/review", show: canManageQuestions },
     { icon: Award, label: "Quản lý Hackathon", href: "/teacher/hackathons", show: canManageHackathons },
     { icon: BarChart2, label: "Thống kê kết quả", href: "/teacher/stats", show: canManageStats },
   ].filter((item) => item.show);
+
+  const displayRole = Array.isArray(user?.role_names) && user.role_names.length > 0
+    ? user.role_names.join(", ")
+    : (user?.quiz_role || "Thành viên");
 
   return (
     <div className="flex flex-col h-full w-72 py-8 px-4 overflow-y-auto custom-scrollbar">
@@ -145,7 +151,9 @@ export const SidebarNav = ({ onCloseMobile }: { onCloseMobile?: () => void }) =>
             </div>
             <div className="overflow-hidden flex-1">
               <p className="text-sm font-bold text-dark-blue dark:text-white truncate">{user?.name || "Người dùng"}</p>
-              <p className="text-[10px] text-gray-navy dark:text-light-blue opacity-60 uppercase">{user?.quiz_role || "Guest"}</p>
+              <p className="text-[10px] text-gray-navy dark:text-light-blue opacity-60 uppercase truncate" title={displayRole}>
+                {displayRole}
+              </p>
             </div>
           </div>
           <button

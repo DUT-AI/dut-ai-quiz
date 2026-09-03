@@ -13,7 +13,7 @@ export default function LoginPage() {
   const { register, handleSubmit, errors, isPending } = useLogin();
 
   if (isAuthenticated && !isLoading) {
-    router.push("/");
+    router.push("/dashboard");
     return null;
   }
 

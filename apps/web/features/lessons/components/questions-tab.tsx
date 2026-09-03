@@ -39,8 +39,8 @@ export function QuestionsTab({ lessonId, isAdminView = false, lessonName }: Ques
     lesson_id: lessonId,
   });
 
-  const { canManage } = useAuth();
-  const isTeacher = isAdminView && canManage;
+  const { canManageQuestions } = useAuth();
+  const isTeacher = isAdminView && canManageQuestions;
 
   const [explainingQuestion, setExplainingQuestion] = useState<QuestionOut | null>(null);
   const [showBulkModal, setShowBulkModal] = useState(false);
