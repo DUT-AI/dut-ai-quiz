@@ -1,6 +1,7 @@
 from uuid import UUID
 
 from redis.asyncio import Redis
+
 from worker_hackathon.domain.interfaces.cancellation import ICancellationToken
 
 

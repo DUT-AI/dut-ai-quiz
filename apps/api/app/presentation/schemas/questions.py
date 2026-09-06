@@ -1,10 +1,8 @@
-import copy
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, Field, field_validator
-
 from app.domain.value_objects import Difficulty, PoolType
+from pydantic import BaseModel, Field, field_validator
 
 
 class QuestionOptionIn(BaseModel):
@@ -46,7 +44,8 @@ class QuestionUpdate(BaseModel):
 
 
 from typing import Any
-from app.domain.entities.question import QuestionStatus, DuplicateStatus
+
+from app.domain.entities.question import DuplicateStatus, QuestionStatus
 
 
 class QuestionOptionToStudent(BaseModel):
@@ -95,7 +94,7 @@ class QuestionToStudent(BaseModel):
     @classmethod
     def hide_solution(cls, v: Any) -> None:
         return None
-    
+
 class QuestionOut(BaseModel):
     id: UUID
     pool_type: PoolType

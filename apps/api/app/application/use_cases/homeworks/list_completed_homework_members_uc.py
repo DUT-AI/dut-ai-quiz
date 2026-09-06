@@ -1,4 +1,3 @@
-from uuid import UUID
 
 from app.application.dtos.homework import CompletedHomeworkMemberOutDTO
 from app.domain.exceptions.exceptions import AppException

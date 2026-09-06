@@ -592,12 +592,13 @@ def test_rar_extension_is_dispatched(
 @pytest.mark.asyncio
 async def test_openai_llm_client_and_grading_engine() -> None:
     from unittest.mock import AsyncMock, MagicMock
+
+    from worker_evaluate_homework.infrastructure.gemini_grading_engine import (
+        HomeworkGradingEngine,
+    )
     from worker_evaluate_homework.infrastructure.llm_clients import (
         OpenAILLMClient,
         _extract_json,
-    )
-    from worker_evaluate_homework.infrastructure.gemini_grading_engine import (
-        HomeworkGradingEngine,
     )
 
     # Test _extract_json helper

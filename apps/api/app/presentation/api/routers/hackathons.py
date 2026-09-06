@@ -13,7 +13,6 @@ from app.application.use_cases.hackathon import (
     UpdateHackathonUseCase,
 )
 from app.domain.entities.auth_enums import SystemPermission
-from app.presentation.api.abac import verify_resource_ownership
 from app.presentation.api.deps import CurrentUser, RequirePermissions, UserContext
 from app.presentation.schemas.hackathons import (
     HackathonCreate,

@@ -10,17 +10,15 @@ from __future__ import annotations
 import uuid
 from uuid import UUID
 
-from fastapi import BackgroundTasks
-from loguru import logger
-
-from app.application.services.pdf_ai_parser import PDFAIParserService, PDFValidationResult
-from app.config import settings
+from app.application.services.pdf_ai_parser import PDFAIParserService
+from app.core.datetime_utils import now_ict
 from app.domain.entities.import_session import ImportSessionEntity
 from app.domain.entities.question import QuestionEntity, QuestionOptionEntity
 from app.domain.interfaces.import_session_repo import IImportSessionRepository
 from app.domain.interfaces.question_repo import IQuestionRepository
 from app.domain.value_objects import Difficulty, PoolType
-from app.core.datetime_utils import now_ict
+from fastapi import BackgroundTasks
+from loguru import logger
 
 
 class StartImportUseCase:

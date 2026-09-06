@@ -2,8 +2,6 @@ import random
 from typing import Any
 from uuid import UUID
 
-from fastapi import HTTPException
-
 from app.domain.interfaces import (
     IGameSessionRepository,
     IQuestionRepository,
@@ -11,6 +9,7 @@ from app.domain.interfaces import (
 from app.domain.value_objects import GameSessionStatus
 from app.domain.value_objects.gamification import ITEM_PRICES, GamificationItem
 from app.presentation.schemas.game import GamificationUseItemIn
+from fastapi import HTTPException
 
 
 class UseItemGameUseCase:

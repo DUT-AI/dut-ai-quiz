@@ -1,11 +1,13 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
+
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from app.core.datetime_utils import now_ict
 from app.domain.entities.user import UserEntity
 
-from .base import Base
 from .auth_rbac import user_roles
+from .base import Base
 
 if TYPE_CHECKING:
     from .auth_rbac import Role

@@ -1,12 +1,11 @@
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from fastapi import HTTPException
-
 from app.core.datetime_utils import utc_to_ict
 from app.domain.entities.hackathon import HackathonEntity
 from app.domain.interfaces import IHackathonRepository
 from app.presentation.schemas.hackathons import HackathonCreate, HackathonUpdate
+from fastapi import HTTPException
 
 
 class CreateHackathonUseCase:

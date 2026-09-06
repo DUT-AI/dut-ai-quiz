@@ -1,17 +1,16 @@
 import io
 import os
 import re
-import unicodedata
 import urllib.parse
 import zipfile
 from uuid import UUID, uuid4
 
+from app.application.services.lesson_index_scheduler import LessonIndexScheduler
 from app.config import settings
 from app.core.datetime_utils import now_ict
 from app.core.string_utils import slugify_vietnamese
 from app.domain.entities.lesson import LessonEntity
 from app.domain.interfaces import ILessonRepository, IS3Client
-from app.application.services.lesson_index_scheduler import LessonIndexScheduler
 
 
 class ImportNotionLessonUseCase:
@@ -36,7 +35,7 @@ class ImportNotionLessonUseCase:
         lesson_id: UUID | None = None,
     ) -> LessonEntity:
         """Parse ZIP file, extract & upload images, update MD links, and save the lesson."""
-        
+
         # 1. Read ZIP in memory
         try:
             z = zipfile.ZipFile(io.BytesIO(zip_bytes))
@@ -47,16 +46,16 @@ class ImportNotionLessonUseCase:
         md_filename = None
         md_content = None
         images_data: dict[str, bytes] = {}  # maps full zip path and basename to bytes
-        
+
         image_extensions = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".bmp"}
-        
+
         def process_zip(zip_obj: zipfile.ZipFile) -> None:
             nonlocal md_filename, md_content
             for name in zip_obj.namelist():
                 # Skip directories
                 if name.endswith("/"):
                     continue
-                    
+
                 _, ext = os.path.splitext(name.lower())
                 if ext == ".md":
                     # Save first markdown file found
@@ -76,7 +75,7 @@ class ImportNotionLessonUseCase:
                             process_zip(inner_z)
                     except zipfile.BadZipFile:
                         pass
-        
+
         process_zip(z)
 
         if not md_filename or md_content is None:
@@ -121,12 +120,12 @@ class ImportNotionLessonUseCase:
             # Only upload unique original names (skip basenames to avoid double upload if full path is also mapped)
             if img_name in uploaded_urls or ("/" not in img_name and os.path.basename(img_name) != img_name):
                 continue
-            
+
             # Sanitize image filename
             safe_basename = slugify_vietnamese(os.path.splitext(os.path.basename(img_name))[0])
             ext = os.path.splitext(img_name)[1].lower()
             s3_key = f"uploads/lessons/{lesson_id}/{safe_basename}{ext}"
-            
+
             # Upload
             self._storage.upload_fileobj(
                 io.BytesIO(img_bytes),
@@ -134,7 +133,7 @@ class ImportNotionLessonUseCase:
                 s3_key
             )
             public_url = self._storage.get_object_url(settings.s3_bucket_name, s3_key)
-            
+
             # Map both full name and basename to this URL
             uploaded_urls[img_name] = public_url
             uploaded_urls[os.path.basename(img_name)] = public_url
@@ -146,7 +145,7 @@ class ImportNotionLessonUseCase:
             # URL decode path and normalize separators
             decoded = urllib.parse.unquote(url.split("#")[0].split("?")[0]).replace("\\", "/")
             basename = os.path.basename(decoded)
-            
+
             if decoded in uploaded_urls:
                 return f"![{alt}]({uploaded_urls[decoded]})"
             elif basename in uploaded_urls:
@@ -162,7 +161,7 @@ class ImportNotionLessonUseCase:
                 url = src_match.group(1)
                 decoded = urllib.parse.unquote(url.split("#")[0].split("?")[0]).replace("\\", "/")
                 basename = os.path.basename(decoded)
-                
+
                 if decoded in uploaded_urls:
                     return full_tag.replace(url, uploaded_urls[decoded])
                 elif basename in uploaded_urls:
@@ -207,8 +206,8 @@ class ImportNotionLessonUseCase:
                 created_at=now_ict(),
             )
             saved = await self._repo.add(entity)
-        
+
         # 9. Trigger semantic indexing for search
         await self._scheduler.schedule(saved)
-        
+
         return saved

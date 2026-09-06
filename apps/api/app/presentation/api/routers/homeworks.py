@@ -26,7 +26,7 @@ from app.application.use_cases.homeworks import (
 )
 from app.config import settings
 from app.domain.entities.auth_enums import SystemPermission
-from app.presentation.api.deps import EducatorUser, CurrentUser, ManageService
+from app.presentation.api.deps import CurrentUser, EducatorUser
 from app.presentation.schemas.homeworks import (
     CompletedHomeworkMembersResponse,
     DownloadUrlData,

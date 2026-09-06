@@ -1,15 +1,17 @@
+import uuid
 from datetime import datetime
 from uuid import UUID
-import uuid
 
-from sqlalchemy import ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import ForeignKey, Integer, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql.sqltypes import Enum
 
 from app.core.datetime_utils import now_ict
 from app.domain.entities.comment import CommentEntity, TargetType
+
 from .base import Base
+
 
 class Comment(Base):
     __tablename__ = "comments"

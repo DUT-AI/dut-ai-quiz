@@ -3,10 +3,10 @@ from urllib.parse import unquote, urlparse
 from urllib.request import urlretrieve
 
 import boto3
+from app.config import settings
 from botocore.client import Config
 from botocore.exceptions import BotoCoreError, ClientError
 
-from app.config import settings
 from worker_hackathon.domain.interfaces.artifact_store import IArtifactStore
 
 

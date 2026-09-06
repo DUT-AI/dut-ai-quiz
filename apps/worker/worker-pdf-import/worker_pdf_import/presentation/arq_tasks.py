@@ -1,18 +1,17 @@
-from worker_pdf_import.process_pdf_import_uc import ProcessPdfImportUseCase
-from worker_pdf_import.service.ai_pdf_parser import AIPdfParserStrategy
 from urllib.parse import urlparse
 from uuid import UUID
 
 import httpx
-from arq.connections import RedisSettings
-from loguru import logger
-from redis.asyncio import from_url
-
 from app.config import settings
 from app.infrastructure.database import AsyncSessionLocal
 from app.infrastructure.repositories.import_sessions import ImportSessionRepository
 from app.infrastructure.repositories.questions import QuestionRepository
+from arq.connections import RedisSettings
+from loguru import logger
+from redis.asyncio import from_url
 
+from worker_pdf_import.process_pdf_import_uc import ProcessPdfImportUseCase
+from worker_pdf_import.service.ai_pdf_parser import AIPdfParserStrategy
 
 
 async def startup(ctx):

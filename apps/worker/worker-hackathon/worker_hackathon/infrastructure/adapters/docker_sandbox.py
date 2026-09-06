@@ -1,11 +1,12 @@
 import asyncio
 import os
 import time
-from typing import Any, Dict
+from typing import Any
 
 import docker
 from docker.errors import APIError, ContainerError, ImageNotFound
 from loguru import logger
+
 from worker_hackathon.domain.interfaces.sandbox import CancelCheck, ISandbox
 
 
@@ -26,7 +27,7 @@ class DockerSandbox(ISandbox):
         nano_cpus: int = 1000000000,
         submission_id: str | None = None,
         cancel_check: CancelCheck | None = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         await asyncio.to_thread(self._ensure_image)
 
         container = None

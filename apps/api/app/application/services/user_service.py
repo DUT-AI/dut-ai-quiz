@@ -1,11 +1,11 @@
 from typing import Any
-from redis.asyncio import Redis
-from loguru import logger
 
 from app.application.dtos.user import UserOut
 from app.config import settings
 from app.domain.exceptions.exceptions import AppException
-from app.domain.interfaces import IUserRepository, IManageService
+from app.domain.interfaces import IManageService, IUserRepository
+from loguru import logger
+from redis.asyncio import Redis
 
 
 class UserService:
@@ -102,13 +102,13 @@ class UserService:
                     quiz_role = quiz_role_from_manage(profile.role_names)
                 except Exception:
                     pass
-                
+
                 data = {
                     "name": profile.name,
                     "avatar_url": profile.avatar_url,
                     "role": quiz_role
                 }
-                
+
                 # Cache resolved profile in Redis for 10 minutes (600s)
                 if self._redis:
                     try:

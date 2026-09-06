@@ -1,10 +1,10 @@
 from uuid import UUID
 
-from app.domain.exceptions.exceptions import AppException
 from app.domain.entities.hackathon import (
     HackathonRegistrationEntity,
     RegistrationStatus,
 )
+from app.domain.exceptions.exceptions import AppException
 from app.domain.interfaces import (
     IHackathonRegistrationRepository,
     IHackathonRepository,

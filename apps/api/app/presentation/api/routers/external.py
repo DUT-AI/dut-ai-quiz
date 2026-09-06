@@ -1,13 +1,14 @@
-from fastapi import APIRouter
 from dishka.integrations.fastapi import FromDishka, inject
-from app.presentation.api.deps import EducatorUser
+from fastapi import APIRouter
+
 from app.domain.interfaces import IManageService
+from app.presentation.api.deps import EducatorUser
 from app.presentation.schemas.external import (
-    ExternalUsersResponse,
+    ExternalTeamMemberOut,
+    ExternalTeamOut,
     ExternalTeamsResponse,
     ExternalUserOut,
-    ExternalTeamOut,
-    ExternalTeamMemberOut,
+    ExternalUsersResponse,
 )
 
 router = APIRouter(prefix="/external", tags=["external"])

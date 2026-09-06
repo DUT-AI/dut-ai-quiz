@@ -1,7 +1,6 @@
 from uuid import UUID, uuid4
 
 import pytest
-
 from app.application.use_cases.lessons.list_lessons_uc import ListLessonsUseCase
 from app.core.datetime_utils import now_ict
 from app.domain.entities.lesson import LessonEntity

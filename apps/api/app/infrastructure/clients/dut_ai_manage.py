@@ -1,16 +1,17 @@
+from datetime import datetime
+
 import httpx
 from fastapi import HTTPException
 from loguru import logger
-from datetime import datetime
 
 from app.config import settings
-from app.domain.interfaces import IDUTAIManageCache, IManageService
 from app.domain.entities.manage_service import (
+    ManageAuthTokens,
     ManageTeamEntity,
     ManageUserEntity,
-    ManageAuthTokens,
     ManageUserProfile,
 )
+from app.domain.interfaces import IDUTAIManageCache, IManageService
 
 
 class DUTAIManageService(IManageService):

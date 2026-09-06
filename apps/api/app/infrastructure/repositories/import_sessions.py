@@ -1,5 +1,6 @@
 from uuid import UUID
-from sqlalchemy import select, update
+
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities.import_session import ImportSessionEntity
@@ -23,7 +24,7 @@ class ImportSessionRepository(IImportSessionRepository):
         if not model:
             return None
         return model.to_entity()
-        
+
     async def get(self, session_id: UUID) -> ImportSessionEntity | None:
         return await self.get_by_id(session_id)
 
@@ -34,7 +35,7 @@ class ImportSessionRepository(IImportSessionRepository):
 
         model.status = entity.status
         model.error_message = entity.error_message
-        
+
         # update fields...
         model.target_scope = entity.target_scope
         model.file_name = entity.file_name
@@ -43,7 +44,7 @@ class ImportSessionRepository(IImportSessionRepository):
         model.lesson_id = entity.lesson_id
         if entity.updated_at:
             model.updated_at = entity.updated_at
-        
+
         self.session.add(model)
         await self.session.flush()
         await self.session.refresh(model)

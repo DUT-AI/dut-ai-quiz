@@ -1,5 +1,6 @@
+from collections.abc import Sequence
 from hmac import compare_digest
-from typing import Annotated, Any, Sequence
+from typing import Annotated, Any
 
 from dishka.integrations.fastapi import inject
 from fastapi import Depends, Header, HTTPException, Request

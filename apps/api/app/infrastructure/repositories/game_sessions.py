@@ -1,11 +1,12 @@
 from uuid import UUID
 
-from sqlalchemy import select, func, cast, Float, Integer
+from sqlalchemy import Float, Integer, cast, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities.game import GameSessionEntity
 from app.domain.interfaces import IGameSessionRepository
 from app.infrastructure.persistence.models import GameSession
+
 
 class GameSessionRepository(IGameSessionRepository):
     def __init__(self, session: AsyncSession) -> None:
@@ -99,7 +100,7 @@ class GameSessionRepository(IGameSessionRepository):
             .where(GameSession.question_limit > 0)
             .group_by(GameSession.user_id)
         ).subquery()
-        
+
         stmt = (
             select(GameSession, User, count_subq.c.total_attempts)
             .outerjoin(User, User.id == GameSession.user_id)
@@ -113,10 +114,10 @@ class GameSessionRepository(IGameSessionRepository):
             )
             .limit(limit)
         )
-        
+
         r = await self._s.execute(stmt)
         rows = r.all()
-        
+
         result = []
         for row in rows:
             ps = row.GameSession.snapshot.get('gamification', {})
@@ -129,5 +130,5 @@ class GameSessionRepository(IGameSessionRepository):
                 "total_time_response": float(ps.get('total_time_response', 0)),
                 "attempt_count": int(row.total_attempts) if row.total_attempts is not None else int(ps.get('attempt_count', 0))
             })
-            
+
         return result

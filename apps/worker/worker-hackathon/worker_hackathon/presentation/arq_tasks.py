@@ -1,12 +1,12 @@
 import os
 from urllib.parse import urlparse
 
+from app.config import settings
 from arq import cron
 from arq.connections import RedisSettings
 from loguru import logger
 from redis.asyncio import from_url
 
-from app.config import settings
 from worker_hackathon.application.use_cases.evaluate_submission import (
     EvaluateSubmissionUseCase,
 )

@@ -6,18 +6,17 @@ Create Date: 2026-07-04 09:00:00.000000
 
 """
 
-from typing import Sequence, Union
+from collections.abc import Sequence
 
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects.postgresql import ENUM as PGEnum
 
-
 # revision identifiers, used by Alembic.
 revision: str = "6c2f7de1a9ab"
-down_revision: Union[str, None] = "cc1812904cd2"
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = "cc1812904cd2"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 metric_type_enum = PGEnum(

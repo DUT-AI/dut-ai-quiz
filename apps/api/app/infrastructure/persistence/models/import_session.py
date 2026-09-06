@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID, uuid4
-import sqlalchemy
 
+import sqlalchemy
 from sqlalchemy.dialects.postgresql import UUID as pgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -22,7 +22,7 @@ class ImportSession(Base):
     total_questions: Mapped[int] = mapped_column(default=0)
     processed_questions: Mapped[int] = mapped_column(default=0)
     status: Mapped[ImportSessionStatus] = mapped_column(
-        sqlalchemy.Enum(ImportSessionStatus, native_enum=False, length=50), 
+        sqlalchemy.Enum(ImportSessionStatus, native_enum=False, length=50),
         default=ImportSessionStatus.PROCESSING
     )
     error_message: Mapped[str | None] = mapped_column(nullable=True)

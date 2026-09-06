@@ -1,10 +1,10 @@
 from uuid import UUID
 
+from app.application.services.lesson_index_scheduler import LessonIndexScheduler
+from app.core.string_utils import slugify_vietnamese
 from app.domain.entities.lesson import LessonEntity
 from app.domain.interfaces import ILessonRepository
-from app.application.services.lesson_index_scheduler import LessonIndexScheduler
 from app.presentation.schemas.lessons import LessonUpdate
-from app.core.string_utils import slugify_vietnamese
 
 
 class UpdateLessonUseCase:
@@ -41,7 +41,7 @@ class UpdateLessonUseCase:
             slug = payload.slug if slug_passed else entity.slug
             if not slug or not slug.strip():
                 slug = slugify_vietnamese(entity.name)
-            
+
             # Ensure slug is unique (allow own slug)
             base_slug = slug
             counter = 1

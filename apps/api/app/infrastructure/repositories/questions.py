@@ -4,8 +4,8 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities.question import QuestionEntity, QuestionStatus
-from app.domain.value_objects import Difficulty, PoolType
 from app.domain.interfaces import IQuestionRepository, QuestionSimilarityMatch
+from app.domain.value_objects import Difficulty, PoolType
 from app.infrastructure.persistence.models import Question, Tag
 
 
@@ -18,10 +18,10 @@ class QuestionRepository(IQuestionRepository):
         for ids in tag_ids_list:
             if ids:
                 unique_ids.update(ids)
-        
+
         if not unique_ids:
             return {}
-            
+
         stmt = select(Tag.id, Tag.name).where(Tag.id.in_(unique_ids))
         res = await self._s.execute(stmt)
         return {row.id: row.name for row in res}
@@ -50,7 +50,7 @@ class QuestionRepository(IQuestionRepository):
         limit: int = 50,
     ) -> list[QuestionEntity]:
         from sqlalchemy.orm import aliased
-        
+
         PublicQuestion = aliased(Question)
         distance = Question.embedding.cosine_distance(PublicQuestion.embedding)
         has_dup_exists = select(1).where(
@@ -86,7 +86,7 @@ class QuestionRepository(IQuestionRepository):
                 tag_stmt = select(Tag.id).where(Tag.name == tag)
                 tag_res = await self._s.execute(tag_stmt)
                 tag_uuid = tag_res.scalar_one_or_none()
-            
+
             if tag_uuid:
                 stmt = stmt.where(func.array_position(Question.tags, tag_uuid).isnot(None))
             else:
@@ -101,10 +101,10 @@ class QuestionRepository(IQuestionRepository):
         )
         r = await self._s.execute(stmt)
         rows = r.all()
-        
+
         models = [row[0] for row in rows]
         tag_map = await self._resolve_tag_names([m.tags for m in models])
-        
+
         entities = []
         for model, has_duplicate in rows:
             ent = model.to_entity()
@@ -132,7 +132,7 @@ class QuestionRepository(IQuestionRepository):
         self._s.add(model)
         await self._s.flush()
         await self._s.refresh(model)
-        
+
         tag_map = await self._resolve_tag_names([model.tags])
         res_entity = model.to_entity()
         res_entity.tags = [tag_map[tid] for tid in model.tags if tid in tag_map]
@@ -151,7 +151,7 @@ class QuestionRepository(IQuestionRepository):
                         pass
                 elif isinstance(t, pyUUID):
                     tag_uuids.append(t)
-            
+
             model = Question.from_entity(e)
             model.tags = tag_uuids
             models.append(model)
@@ -160,10 +160,10 @@ class QuestionRepository(IQuestionRepository):
         await self._s.flush()
         for model in models:
             await self._s.refresh(model)
-            
+
         all_tags = [m.tags for m in models]
         tag_map = await self._resolve_tag_names(all_tags)
-        
+
         res_entities = []
         for model in models:
             ent = model.to_entity()
@@ -187,7 +187,7 @@ class QuestionRepository(IQuestionRepository):
             model.embedding = entity.embedding
             model.embedding_model = entity.embedding_model
             model.embedding_source_hash = entity.embedding_source_hash
-            
+
             from uuid import UUID as pyUUID
             tag_uuids = []
             for t in entity.tags:
@@ -199,10 +199,10 @@ class QuestionRepository(IQuestionRepository):
                 elif isinstance(t, pyUUID):
                     tag_uuids.append(t)
             model.tags = tag_uuids
-            
+
             await self._s.flush()
             await self._s.refresh(model)
-            
+
             tag_map = await self._resolve_tag_names([model.tags])
             res_entity = model.to_entity()
             res_entity.tags = [tag_map[tid] for tid in model.tags if tid in tag_map]

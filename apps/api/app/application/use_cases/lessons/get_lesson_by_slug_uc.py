@@ -16,7 +16,7 @@ class GetLessonBySlugUseCase:
         lesson = await self._lesson_repo.get_by_slug(slug)
         if not lesson:
             raise NotFoundException("Lesson not found!")
-        
+
         game_questions = await self._question_repo.list_all(
             pool_type=PoolType.GAME,
             lesson_id=lesson.id,

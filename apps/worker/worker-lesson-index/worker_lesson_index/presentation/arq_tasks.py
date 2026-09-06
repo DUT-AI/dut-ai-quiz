@@ -2,11 +2,6 @@ from urllib.parse import urlparse
 from uuid import UUID
 
 import httpx
-from arq import Retry
-from arq.connections import RedisSettings
-from loguru import logger
-from sqlalchemy import func, select
-
 from app.application.services.lesson_chunker import LessonChunker
 from app.application.services.lesson_embedding_indexer import LessonEmbeddingIndexer
 from app.config import settings
@@ -19,6 +14,10 @@ from app.infrastructure.clients.embedding_service import (
 from app.infrastructure.database import AsyncSessionLocal
 from app.infrastructure.repositories.lesson_chunks import LessonChunkRepository
 from app.infrastructure.repositories.lessons import LessonRepository
+from arq import Retry
+from arq.connections import RedisSettings
+from loguru import logger
+from sqlalchemy import func, select
 
 
 async def startup(ctx):

@@ -6,12 +6,12 @@ from datetime import datetime, timedelta
 from urllib.parse import unquote, urlparse
 from uuid import UUID
 
-from loguru import logger
-
 from app.domain.entities.submission import (
     HackathonSubmissionEntity,
     SubmissionStatus,
 )
+from loguru import logger
+
 from worker_hackathon.domain.interfaces.artifact_store import IArtifactStore
 from worker_hackathon.domain.interfaces.cancellation import ICancellationToken
 from worker_hackathon.domain.interfaces.evaluator import IEvaluator

@@ -1,28 +1,28 @@
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException
 from dishka.integrations.fastapi import FromDishka, inject
+from fastapi import APIRouter, HTTPException
 
 from app.application.use_cases.attempts import (
-    StartAttemptUseCase,
-    SubmitAttemptUseCase,
-    GetAttemptUseCase,
     GetAttemptDetailUseCase,
+    GetAttemptUseCase,
     ListExamAttemptsUseCase,
     PatchAttemptAnswersUseCase,
     RecordFocusEventUseCase,
     ReviewAttemptUseCase,
+    StartAttemptUseCase,
+    SubmitAttemptUseCase,
 )
 from app.application.use_cases.exams.exam_use_case import GetExamUseCase
-from app.presentation.api.deps import EducatorUser, CurrentUser
+from app.presentation.api.deps import CurrentUser, EducatorUser
 from app.presentation.schemas.attempts import (
+    AttemptAnswerOut,
     AttemptAnswersPatch,
     AttemptOut,
     StartAttemptOut,
-    AttemptAnswerOut,
 )
-from app.presentation.schemas.questions import QuestionOut
 from app.presentation.schemas.common import FocusEventIn
+from app.presentation.schemas.questions import QuestionOut
 
 router = APIRouter(tags=["attempts"])
 

@@ -1,13 +1,13 @@
 from datetime import datetime
 from uuid import UUID
-from redis.asyncio import Redis
 
-from app.domain.entities.submission import SubmissionStatus, HackathonSubmissionEntity
+from app.domain.entities.submission import HackathonSubmissionEntity, SubmissionStatus
 from app.domain.exceptions.exceptions import AppException
 from app.domain.interfaces.hackathon_repo import (
     IHackathonSubmissionRepository,
     IHackathonTeamRepository,
 )
+from redis.asyncio import Redis
 
 
 class CancelSubmissionUseCase:

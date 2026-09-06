@@ -187,11 +187,11 @@ def _read_zip_sources(content: bytes) -> list[SourceFile]:
             entries = archive.infolist()
             _ensure_entry_count(len(entries))
             selected = _select_source_entries(
-                
+
                     (info.filename, info.file_size, info)
                     for info in entries
                     if not info.is_dir()
-                
+
             )
             result: list[SourceFile] = []
             for name, _, info in selected:
@@ -277,11 +277,11 @@ def _read_7z_sources(content: bytes) -> list[SourceFile]:
             if any(info.is_symlink for info in infos):
                 raise InvalidArtifactError("Bài nộp 7Z không được chứa symbolic link")
             selected = _select_source_entries(
-                
+
                     (info.filename, info.uncompressed, info.filename)
                     for info in infos
                     if info.is_file
-                
+
             )
             factory = BytesIOFactory(
                 limit=settings.homework_grading_max_source_bytes + 1
@@ -311,11 +311,11 @@ def _read_rar_sources(content: bytes) -> list[SourceFile]:
             infos = archive.infolist()
             _ensure_entry_count(len(infos))
             selected = _select_source_entries(
-                
+
                     (info.filename, info.file_size, info)
                     for info in infos
                     if not info.is_dir()
-                
+
             )
             result: list[SourceFile] = []
             for name, _, info in selected:

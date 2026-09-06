@@ -2,7 +2,7 @@ from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import APIRouter
 
 from app.application.use_cases.uploads.presign_upload import PresignUploadUseCase
-from app.presentation.api.deps import SessionDep, CurrentUser
+from app.presentation.api.deps import CurrentUser, SessionDep
 from app.presentation.schemas.attempts import PresignBody
 
 router = APIRouter(prefix="/uploads", tags=["uploads"])

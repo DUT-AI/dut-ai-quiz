@@ -2,43 +2,43 @@ from uuid import UUID
 
 from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel
 
 from app.application.use_cases.questions import (
+    AiRegenerateSolutionUseCase,
+    AnswerQuestionUseCase,
     BulkCreateQuestionsUseCase,
     CreateQuestionUseCase,
     DeleteQuestionUseCase,
+    FindRelatedQuestionsUseCase,
     GetQuestionUseCase,
-    ListQuestionsUseCase,
-    UpdateQuestionUseCase,
-    AnswerQuestionUseCase,
     GetRelatedLessonsUseCase,
     HeartbeatQuestionUseCase,
-    AiRegenerateSolutionUseCase,
+    ListQuestionsUseCase,
     PublishQuestionUseCase,
-    FindRelatedQuestionsUseCase,
+    UpdateQuestionUseCase,
 )
 from app.config import settings
+from app.domain.entities.auth_enums import SystemPermission
+from app.domain.entities.question import QuestionStatus
 from app.domain.interfaces import EmbeddingServiceError
 from app.domain.value_objects import Difficulty, PoolType
-from app.domain.entities.auth_enums import SystemPermission
 from app.presentation.api.deps import CurrentUser, EducatorUser
+from app.presentation.schemas.lessons import RelatedLessonOut
 from app.presentation.schemas.questions import (
+    QuestionAnswerIn,
+    QuestionAnswerOut,
     QuestionBulkCreate,
     QuestionCreate,
     QuestionListQuery,
     QuestionOut,
     QuestionToStudent,
     QuestionUpdate,
-    QuestionAnswerIn,
-    QuestionAnswerOut,
     RelatedQuestionOut,
     RelatedQuestionsIn,
 )
-from pydantic import BaseModel
-from app.presentation.schemas.lessons import RelatedLessonOut
-import copy
-from app.domain.entities.question import QuestionEntity, QuestionOptionEntity, QuestionStatus
-    
+
+
 class AiRegenerateRequest(BaseModel):
     custom_prompt: str | None = None
 

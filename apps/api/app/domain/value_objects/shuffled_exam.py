@@ -1,5 +1,5 @@
-from dataclasses import dataclass, asdict
-from typing import Any, TYPE_CHECKING
+from dataclasses import asdict, dataclass
+from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 if TYPE_CHECKING:

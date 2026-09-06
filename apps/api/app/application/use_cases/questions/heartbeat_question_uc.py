@@ -1,6 +1,8 @@
 from uuid import UUID
-from redis.asyncio import Redis
+
 from app.domain.interfaces.question_repo import IQuestionRepository
+from redis.asyncio import Redis
+
 
 class HeartbeatQuestionUseCase:
     def __init__(self, redis: Redis, question_repo: IQuestionRepository):
@@ -15,7 +17,7 @@ class HeartbeatQuestionUseCase:
 
         lock_key = f"lock:question:{question_id}"
         current_lock = await self.redis.get(lock_key)
-        
+
         # If someone else holds the lock, fail
         if current_lock and current_lock != str(admin_id):
             return False

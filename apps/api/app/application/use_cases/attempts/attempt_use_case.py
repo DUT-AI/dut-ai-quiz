@@ -4,13 +4,13 @@ from app.core.datetime_utils import now_ict
 from app.domain.entities.attempt import FocusEventEntity
 from app.domain.events.attempts import AttemptViolationEvent
 from app.domain.events.bus import EventBus
-from app.domain.value_objects import AttemptStatus
 from app.domain.interfaces import (
     IAttemptRepository,
     IExamQuestionRepository,
     IFocusEventRepository,
     IQuestionRepository,
 )
+from app.domain.value_objects import AttemptStatus
 from app.presentation.schemas.attempts import AttemptAnswersPatch
 from app.presentation.schemas.common import FocusEventIn
 

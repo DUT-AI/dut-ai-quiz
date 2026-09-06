@@ -1,32 +1,31 @@
-from app.domain.entities.auth_enums import SystemPermission
 from uuid import UUID
 
 from dishka.integrations.fastapi import FromDishka, inject
-from fastapi import APIRouter, HTTPException, Query, UploadFile, File, Form
+from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile
 
 from app.application.use_cases.lessons import (
     CreateLessonUseCase,
     DeleteLessonUseCase,
-    GetLessonDetailUseCase,
     GetLessonBySlugUseCase,
+    GetLessonDetailUseCase,
+    ImportNotionLessonUseCase,
+    IndexLessonUseCase,
     ListLessonsUseCase,
     ReorderLessonsUseCase,
     UpdateLessonUseCase,
-    IndexLessonUseCase,
-    ImportNotionLessonUseCase,
 )
-
-from app.domain.interfaces import EmbeddingServiceError
 from app.application.use_cases.questions import ListQuestionsUseCase
+from app.domain.entities.auth_enums import SystemPermission
+from app.domain.interfaces import EmbeddingServiceError
 from app.domain.value_objects import Difficulty, PoolType
 from app.presentation.api.deps import CurrentUser, EducatorUser
 from app.presentation.schemas.lessons import (
     LessonCreate,
     LessonDetailOut,
+    LessonIndexOut,
     LessonOut,
     LessonReorder,
     LessonUpdate,
-    LessonIndexOut,
 )
 from app.presentation.schemas.questions import QuestionListQuery, QuestionOut, QuestionToStudent
 
@@ -171,7 +170,7 @@ async def import_notion_lesson(
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Failed to import lesson: {str(e)}"
-        ) from e 
+        ) from e
 
 
 

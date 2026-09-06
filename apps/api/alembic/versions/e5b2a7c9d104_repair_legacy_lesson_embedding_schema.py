@@ -12,7 +12,6 @@ from alembic import op
 from pgvector.sqlalchemy import Vector
 from sqlalchemy.dialects import postgresql
 
-
 revision: str = "e5b2a7c9d104"
 down_revision: str | Sequence[str] | None = "c36dc2df5ded"
 branch_labels: str | Sequence[str] | None = None

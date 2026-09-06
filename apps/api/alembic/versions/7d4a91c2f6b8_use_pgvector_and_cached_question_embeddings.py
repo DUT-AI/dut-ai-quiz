@@ -5,18 +5,17 @@ Revises: 2b9f6c8d1e34
 Create Date: 2026-07-22
 """
 
-from typing import Sequence, Union
+from collections.abc import Sequence
 
+import sqlalchemy as sa
 from alembic import op
 from pgvector.sqlalchemy import Vector
-import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
-
 revision: str = "7d4a91c2f6b8"
-down_revision: Union[str, None] = "2b9f6c8d1e34"
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = "2b9f6c8d1e34"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:

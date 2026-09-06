@@ -1,18 +1,17 @@
 import random
 from uuid import uuid4
 
-from fastapi import HTTPException
-
 from app.core.datetime_utils import now_ict
 from app.domain.entities.game import GameSessionEntity
 from app.domain.interfaces import (
-    ILessonRepository,
     IGameSessionRepository,
+    ILessonRepository,
     IQuestionRepository,
 )
-from app.domain.value_objects import Difficulty, PoolType, GameSessionStatus
+from app.domain.value_objects import Difficulty, GameSessionStatus, PoolType
 from app.infrastructure.cache.game_leaderboard_cache import GameLeaderboardCache
 from app.presentation.schemas.game import GamificationStartIn
+from fastapi import HTTPException
 
 
 class StartGameSessionUseCase:

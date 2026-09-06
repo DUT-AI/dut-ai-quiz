@@ -5,17 +5,17 @@ Revises: 7fda307f1a07
 Create Date: 2026-07-10 16:37:10.589280
 
 """
-from typing import Sequence, Union
+from collections.abc import Sequence
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision: str = 'a66a1656a354'
-down_revision: Union[str, None] = '7fda307f1a07'
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = '7fda307f1a07'
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
@@ -27,17 +27,17 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_tags_name'), 'tags', ['name'], unique=True)
-    
+
     # Data migration for tags
     import uuid
     from datetime import datetime
-    
+
     bind = op.get_bind()
-    
+
     # Get all questions and their tags
     res = bind.execute(sa.text("SELECT id, tags FROM questions"))
     rows = res.fetchall()
-    
+
     # Collect unique tag names
     unique_tag_names = set()
     for row in rows:
@@ -46,7 +46,7 @@ def upgrade() -> None:
             for tag in tags_list:
                 if tag and tag.strip():
                     unique_tag_names.add(tag.strip())
-                    
+
     # Map tag name to UUID
     tag_to_uuid = {}
     for tag_name in unique_tag_names:
@@ -63,7 +63,7 @@ def upgrade() -> None:
                 sa.text("INSERT INTO tags (id, name, created_at) VALUES (:id, :name, :created_at) ON CONFLICT (name) DO NOTHING"),
                 {"id": new_uuid, "name": tag_name, "created_at": datetime.utcnow()}
             )
-            
+
     # Update questions with UUIDs
     for row in rows:
         q_id = row[0]
@@ -79,7 +79,7 @@ def upgrade() -> None:
                         new_tags.append(name_stripped)
                 else:
                     new_tags.append(tag)
-            
+
             # Update with array of UUID strings
             bind.execute(
                 sa.text("UPDATE questions SET tags = :tags WHERE id = :id"),

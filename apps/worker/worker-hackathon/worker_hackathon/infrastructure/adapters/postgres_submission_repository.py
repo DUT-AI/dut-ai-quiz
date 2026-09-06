@@ -1,12 +1,12 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import and_, func, or_, select
-
 from app.domain.entities.hackathon import HackathonTaskEntity
 from app.domain.entities.submission import HackathonSubmissionEntity, SubmissionStatus
 from app.infrastructure.database import AsyncSessionLocal
 from app.infrastructure.persistence.models import HackathonSubmission, HackathonTask
+from sqlalchemy import and_, func, or_, select
+
 from worker_hackathon.domain.interfaces.submission_repository import ISubmissionRepository
 
 

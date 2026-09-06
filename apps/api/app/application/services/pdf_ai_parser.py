@@ -11,16 +11,13 @@ import uuid
 from dataclasses import dataclass, field
 from typing import Any
 
-from pydantic import BaseModel, Field
-
 import fitz  # PyMuPDF
+from app.config import settings
+from app.domain.interfaces.s3_client import IS3Client
 from google import genai
 from google.genai import types as genai_types
 from loguru import logger
-
-from app.config import settings
-from app.domain.interfaces.s3_client import IS3Client
-
+from pydantic import BaseModel, Field
 
 # ---------------------------------------------------------------------------
 # Data Transfer Objects (internal)
@@ -271,7 +268,7 @@ class PDFAIParserService:
                         ),
                     )
                 raw_text = response.text.strip() if response.text else ""
-                
+
                 # Cleanup markdown codeblocks phòng trường hợp hiếm
                 raw_text = re.sub(r"^```(?:json)?\s*", "", raw_text, flags=re.MULTILINE)
                 raw_text = re.sub(r"\s*```$", "", raw_text, flags=re.MULTILINE)
@@ -288,9 +285,9 @@ class PDFAIParserService:
                     raw_questions = data
                 elif isinstance(data, dict):
                     raw_questions = (
-                        data.get("questions") 
-                        or data.get("items") 
-                        or data.get("data") 
+                        data.get("questions")
+                        or data.get("items")
+                        or data.get("data")
                         or []
                     )
 
@@ -408,7 +405,7 @@ class PDFAIParserService:
                     )
                     for opt in q.get("options", []) if isinstance(opt, dict)
                 ]
-                
+
                 pq = ParsedQuestion(
                     content=q.get("content", ""),
                     options=options,
@@ -419,7 +416,7 @@ class PDFAIParserService:
                     is_difficulty_ai_suggested=bool(q.get("is_difficulty_ai_suggested", True)),
                     image_urls=[url for _, url in all_refs],
                 )
-                
+
                 if pq.content:
                     batch_questions.append(pq)
             return batch_questions

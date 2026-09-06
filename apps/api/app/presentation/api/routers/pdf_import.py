@@ -25,12 +25,16 @@ from app.application.use_cases.pdf_import import (
     ApproveQuestionUseCase,
     GetImportStatusUseCase,
     HeartbeatLockUseCase,
-    RejectQuestionUseCase,
     RegenerateSolutionUseCase,
+    RejectQuestionUseCase,
     ReviewDraftQuestionsUseCase,
     StartImportUseCase,
 )
-from app.presentation.api.deps import EducatorUser, CurrentUser
+from app.application.use_cases.questions.start_pdf_import_uc import (
+    StartPdfImportUseCase,
+)
+from app.presentation.api.deps import EducatorUser
+from app.presentation.schemas.pdf_import import StartPdfImportResponse
 from app.presentation.schemas.pdf_import_v2 import (
     ApproveQuestionRequest,
     ApproveQuestionResponse,
@@ -38,13 +42,9 @@ from app.presentation.schemas.pdf_import_v2 import (
     ImportSessionStatusResponse,
     LockResponse,
     PDFUploadResponse,
-    RejectQuestionResponse,
     RegenerateSolutionRequest,
     RegenerateSolutionResponse,
-)
-from app.presentation.schemas.pdf_import import StartPdfImportResponse
-from app.application.use_cases.questions.start_pdf_import_uc import (
-    StartPdfImportUseCase,
+    RejectQuestionResponse,
 )
 
 router = APIRouter(prefix="/pdf-import", tags=["pdf-import"])

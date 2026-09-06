@@ -1,7 +1,7 @@
 import csv
 import math
 import os
-from typing import Any, List
+from typing import Any
 
 from loguru import logger
 
@@ -19,7 +19,7 @@ class CsvEvaluator(IEvaluator):
         self._cupy = self._load_cupy() if prefer_gpu else None
 
     @staticmethod
-    def calculate_accuracy(y_true: List[str], y_pred: List[str]) -> float:
+    def calculate_accuracy(y_true: list[str], y_pred: list[str]) -> float:
         if not y_true or len(y_true) != len(y_pred):
             return 0.0
         correct = sum(
@@ -28,7 +28,7 @@ class CsvEvaluator(IEvaluator):
         return correct / len(y_true)
 
     @staticmethod
-    def calculate_rmse(y_true: List[float], y_pred: List[float]) -> float:
+    def calculate_rmse(y_true: list[float], y_pred: list[float]) -> float:
         if not y_true or len(y_true) != len(y_pred):
             return 0.0
         mse = sum((gt - pred) ** 2 for gt, pred in zip(y_true, y_pred)) / len(y_true)
@@ -36,7 +36,7 @@ class CsvEvaluator(IEvaluator):
 
     @staticmethod
     def calculate_f1(
-        y_true: List[str], y_pred: List[str], positive_label: str = "1"
+        y_true: list[str], y_pred: list[str], positive_label: str = "1"
     ) -> float:
         if not y_true or len(y_true) != len(y_pred):
             return 0.0
@@ -203,7 +203,7 @@ class CsvEvaluator(IEvaluator):
 
     def _read_csv_first_column(self, path: str) -> list[str]:
         values = []
-        with open(path, mode="r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             reader = csv.reader(f)
             next(reader, None)
             for row in reader:

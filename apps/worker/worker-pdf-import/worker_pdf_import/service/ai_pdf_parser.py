@@ -1,20 +1,20 @@
-import os
 import json
+import os
+import re
+import tempfile
 import time
-from loguru import logger
-from google import genai
+
+import opendataloader_pdf
+from app.config import settings
 from app.domain.interfaces.pdf_parser_strategy import IPdfParserStrategy
 from app.presentation.schemas.pdf_import import ParsedQuestionPreview
 from app.presentation.schemas.questions import QuestionOptionIn
-import tempfile
-import opendataloader_pdf
-import re
-from paddleocr import PaddleOCR
-from app.config import settings
-
+from google import genai
+from loguru import logger
+from PIL import Image
 from pydantic import BaseModel
 
-from PIL import Image
+
 class OptionSchema(BaseModel):
     id: str
     text: str
@@ -67,7 +67,7 @@ class AIPdfParserStrategy(IPdfParserStrategy):
 
             output_md = os.path.join(tmpdir, f"{job_id}.md")
             if os.path.exists(output_md):
-                with open(output_md, "r", encoding="utf-8") as f:
+                with open(output_md, encoding="utf-8") as f:
                     markdown_text = f.read()
             else:
                 markdown_text = ""

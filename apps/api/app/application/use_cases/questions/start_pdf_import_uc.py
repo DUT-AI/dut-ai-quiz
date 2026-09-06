@@ -1,16 +1,16 @@
-import uuid
 import hashlib
-from datetime import datetime
-import fitz  
-from redis.asyncio import Redis
 import os
+import uuid
+from datetime import datetime
 
+import fitz
 from app.domain.entities.import_session import ImportSessionEntity, ImportSessionStatus
 from app.domain.interfaces.import_session_repo import IImportSessionRepository
 from app.domain.interfaces.pdf_import_queue import IPdfImportQueue
 from app.presentation.schemas.pdf_import import StartPdfImportResponse
+from redis.asyncio import Redis
 
-import tempfile
+
 class StartPdfImportUseCase:
     def __init__(
         self,
@@ -49,7 +49,7 @@ class StartPdfImportUseCase:
 
         if len(doc) < 1:
             raise ValueError("PDF must not be empty")
-            
+
         doc.close()
 
         # 2. Redis Lock for Duplicate Upload prevention (TTL: 60s)
@@ -67,7 +67,7 @@ class StartPdfImportUseCase:
         upload_dir = "/tmp/pdf_uploads"
         os.makedirs(upload_dir, exist_ok=True)
         file_path = os.path.join(upload_dir, f"{job_id}.pdf")
-        
+
         with open(file_path, "wb") as f:
             f.write(pdf_bytes)
 

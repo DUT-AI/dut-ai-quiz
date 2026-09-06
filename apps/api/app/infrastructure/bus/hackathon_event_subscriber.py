@@ -1,9 +1,10 @@
-import json
 import asyncio
-from typing import AsyncIterator
-from redis.asyncio import Redis
+import json
+from collections.abc import AsyncIterator
 
 from app.domain.interfaces import IHackathonEventSubscriber
+from redis.asyncio import Redis
+
 
 class RedisHackathonEventSubscriber(IHackathonEventSubscriber):
     def __init__(self, redis: Redis):
@@ -30,7 +31,7 @@ class RedisHackathonEventSubscriber(IHackathonEventSubscriber):
                         yield None
                 else:
                     yield None
-                    
+
                 await asyncio.sleep(0)
         finally:
             await pubsub.unsubscribe(self._channel)

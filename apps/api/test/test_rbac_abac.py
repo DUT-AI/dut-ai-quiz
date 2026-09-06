@@ -3,8 +3,6 @@ from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
-from fastapi import HTTPException
-
 from app.application.use_cases.hackathon.crud_hackathon import (
     DeleteHackathonUseCase,
     UpdateHackathonUseCase,
@@ -15,7 +13,6 @@ from app.domain.entities.auth_enums import (
     ROLE_DEFAULT_PERMISSIONS,
     SystemPermission,
     UserRole,
-    normalize_role,
     resolve_permissions_for_roles,
 )
 from app.domain.entities.hackathon import HackathonEntity
@@ -34,7 +31,7 @@ from app.presentation.api.deps import (
     get_optional_current_user,
 )
 from app.presentation.schemas.hackathons import HackathonUpdate
-
+from fastapi import HTTPException
 
 # ============================================================================
 # 1. ENUMS & MULTI-ROLE ADDITIVE PERMISSION TESTS

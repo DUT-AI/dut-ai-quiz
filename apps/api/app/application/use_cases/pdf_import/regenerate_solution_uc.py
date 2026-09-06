@@ -1,11 +1,10 @@
 """RegenerateSolutionUseCase — AI sinh lại lời giải cho một câu hỏi."""
 from uuid import UUID
 
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.application.services.pdf_ai_parser import PDFAIParserService
 from app.infrastructure.persistence.models import Question
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class RegenerateSolutionUseCase:

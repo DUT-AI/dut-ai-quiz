@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable
-from typing import Any, Dict
+from typing import Any
 
 CancelCheck = Callable[[], Awaitable[bool]]
 
@@ -16,7 +16,7 @@ class ISandbox(ABC):
         nano_cpus: int = 1000000000,
         submission_id: str | None = None,
         cancel_check: CancelCheck | None = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Executes a script inside an isolated environment.
         """

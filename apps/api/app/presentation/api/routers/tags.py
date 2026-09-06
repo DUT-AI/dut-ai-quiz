@@ -8,7 +8,7 @@ from app.application.use_cases.tags.tags_use_case import (
     DeleteTagUseCase,
     ListTagsUseCase,
 )
-from app.presentation.api.deps import EducatorUser, CurrentUser
+from app.presentation.api.deps import CurrentUser, EducatorUser
 from app.presentation.schemas.tags import TagCreate, TagOut
 
 router = APIRouter(prefix="/tags", tags=["tags"])

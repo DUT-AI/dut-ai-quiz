@@ -1,11 +1,11 @@
 from uuid import UUID
 
-from app.domain.value_objects import AttemptStatus
 from app.domain.interfaces import (
     IAttemptRepository,
     IExamQuestionRepository,
     IExamRepository,
 )
+from app.domain.value_objects import AttemptStatus
 from app.presentation.schemas.stats import (
     ExamStatsOut,
     ExamSummary,

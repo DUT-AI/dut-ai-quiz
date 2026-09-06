@@ -1,11 +1,9 @@
 """ReviewDraftQuestionsUseCase — List DRAFT questions of an import session."""
 from uuid import UUID
 
+from app.infrastructure.persistence.models import Question
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.domain.entities.question import QuestionEntity, QuestionOptionEntity
-from app.infrastructure.persistence.models import Question
 
 
 class ReviewDraftQuestionsUseCase:

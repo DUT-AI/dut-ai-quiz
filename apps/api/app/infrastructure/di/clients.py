@@ -1,38 +1,38 @@
-from typing import AsyncIterable
+from collections.abc import AsyncIterable
 
 import httpx
 from dishka import Provider, Scope, provide
 from redis.asyncio import Redis
 
+from app.config import settings
 from app.domain.interfaces import (
     IDUTAIManageCache,
+    IEmbeddingService,
+    IHackathonSubmissionStore,
+    IHomeworkEvaluationQueue,
+    ILessonIndexQueue,
     IManageService,
     IS3Client,
-    IHackathonSubmissionStore,
     ISubmissionQueue,
-    IEmbeddingService,
-    ILessonIndexQueue,
-    IHomeworkEvaluationQueue,
 )
 from app.domain.interfaces.pdf_import_queue import IPdfImportQueue
-from app.config import settings
 from app.infrastructure.clients import (
     DUTAIManageService,
     GoogleOAuthClient,
 )
-from app.infrastructure.clients.minio_client import MinioClient
-from app.infrastructure.clients.hackathon_submission_store import (
-    MinIOHackathonSubmissionStore,
-)
-from app.infrastructure.clients.arq_submission_queue import ArqSubmissionQueue
+from app.infrastructure.clients.arq_homework_queue import ArqHomeworkEvaluationQueue
 from app.infrastructure.clients.arq_lesson_index_queue import ArqLessonIndexQueue
 from app.infrastructure.clients.arq_pdf_import_queue import ArqPdfImportQueue
-from app.infrastructure.clients.arq_homework_queue import ArqHomeworkEvaluationQueue
+from app.infrastructure.clients.arq_submission_queue import ArqSubmissionQueue
 from app.infrastructure.clients.embedding_service import (
     DutAiEmbeddingService,
     LocalHashingEmbeddingService,
     OpenAICompatibleEmbeddingService,
 )
+from app.infrastructure.clients.hackathon_submission_store import (
+    MinIOHackathonSubmissionStore,
+)
+from app.infrastructure.clients.minio_client import MinioClient
 
 
 class ClientProvider(Provider):

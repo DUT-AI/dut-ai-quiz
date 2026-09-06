@@ -2,8 +2,8 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, field_validator
 from app.domain.entities.hackathon import MetricType, RegistrationStatus
+from pydantic import BaseModel, field_validator
 
 ParticipationMode = Literal["individual", "team", "both"]
 

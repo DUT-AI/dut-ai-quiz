@@ -8,16 +8,13 @@ This placeholder restores the missing revision referenced by the current databas
 state. It intentionally performs no schema change.
 """
 
-from typing import Sequence, Union
-
-from alembic import op
-
+from collections.abc import Sequence
 
 # revision identifiers, used by Alembic.
 revision: str = "cc1812904cd2"
-down_revision: Union[str, None] = "8e800767ffdc"
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = "8e800767ffdc"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:

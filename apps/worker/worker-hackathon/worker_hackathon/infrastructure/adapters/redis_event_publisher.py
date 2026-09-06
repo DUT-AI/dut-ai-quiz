@@ -2,9 +2,9 @@ import json
 from datetime import datetime
 from uuid import UUID
 
+from app.domain.entities.submission import HackathonSubmissionEntity
 from redis.asyncio import Redis
 
-from app.domain.entities.submission import HackathonSubmissionEntity
 from worker_hackathon.domain.interfaces.event_publisher import ISubmissionEventPublisher
 
 

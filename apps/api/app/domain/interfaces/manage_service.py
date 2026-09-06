@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
+
 from app.domain.entities.manage_service import (
+    ManageAuthTokens,
     ManageTeamEntity,
     ManageUserEntity,
-    ManageAuthTokens,
     ManageUserProfile,
 )
 

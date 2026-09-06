@@ -6,15 +6,14 @@ HeartbeatLockUseCase: Gia hạn TTL lock mỗi 30 giây từ frontend.
 """
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import UUID
-
-from redis.asyncio import Redis
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.infrastructure.persistence.models import Question
+from redis.asyncio import Redis
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class AcquireLockUseCase:
@@ -47,7 +46,7 @@ class AcquireLockUseCase:
         model = r.scalar_one_or_none()
         if model:
             model.review_locked_by = admin_id
-            model.review_locked_at = datetime.now(timezone.utc)
+            model.review_locked_at = datetime.now(UTC)
             await self._s.flush()
 
         return {

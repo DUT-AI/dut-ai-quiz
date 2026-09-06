@@ -1,7 +1,7 @@
 from uuid import UUID, uuid4
 
-from app.application.use_cases.attempts.rescore_use_case import RescoreAttemptUseCase
 from app.application.services.question_embedding import QuestionEmbeddingService
+from app.application.use_cases.attempts.rescore_use_case import RescoreAttemptUseCase
 from app.domain.entities.question import QuestionEntity, QuestionOptionEntity
 from app.domain.interfaces import IAttemptRepository, IQuestionRepository
 from app.presentation.schemas.questions import (

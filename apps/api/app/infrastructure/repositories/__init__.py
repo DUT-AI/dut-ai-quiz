@@ -1,7 +1,10 @@
 from .attempts import AttemptAnswerRepository, AttemptRepository
+from .comment_reactions import CommentReactionRepository
+from .comments import CommentRepository
 from .exam_questions import ExamQuestionRepository
 from .exams import ExamRepository
 from .focus_events import FocusEventRepository
+from .game_sessions import GameSessionRepository
 from .hackathons import (
     HackathonRegistrationRepository,
     HackathonRepository,
@@ -9,16 +12,13 @@ from .hackathons import (
     HackathonTaskRepository,
     HackathonTeamRepository,
 )
-from .lessons import LessonRepository
+from .import_sessions import ImportSessionRepository
 from .lesson_chunks import LessonChunkRepository
+from .lessons import LessonRepository
 from .modules import ModuleRepository
-from .game_sessions import GameSessionRepository
 from .questions import QuestionRepository
 from .tags import TagRepository
 from .users import UserRepository
-from .comments import CommentRepository
-from .comment_reactions import CommentReactionRepository
-from .import_sessions import ImportSessionRepository
 
 __all__ = [
     "UserRepository",

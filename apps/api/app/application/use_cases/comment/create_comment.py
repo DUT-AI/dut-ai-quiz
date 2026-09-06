@@ -1,9 +1,10 @@
 from uuid import UUID
 
-from app.domain.entities.comment import CommentEntity, TargetType
-from app.domain.interfaces import ICommentRepository
-from app.domain.exceptions.exceptions import AppException
 from app.application.services.user_service import UserService
+from app.domain.entities.comment import CommentEntity, TargetType
+from app.domain.exceptions.exceptions import AppException
+from app.domain.interfaces import ICommentRepository
+
 
 class CreateCommentUseCase:
     def __init__(self, comment_repo: ICommentRepository, user_service: UserService):
@@ -13,10 +14,10 @@ class CreateCommentUseCase:
     async def execute(self, user_id: int, target_type: TargetType, content: str, target_id: UUID = None, parent_id: UUID = None, image_urls: list[str] = None) -> CommentEntity:
         if len(content) > 5000:
             raise AppException(status_code=400, message="Nội dung không được vượt quá 5000 ký tự.")
-            
+
         if image_urls and len(image_urls) > 3:
             raise AppException(status_code=400, message="Chỉ được phép đính kèm tối đa 3 hình ảnh.")
-            
+
         if target_type == TargetType.lesson_qna and not target_id:
             raise AppException(status_code=400, message="Bình luận bài học yêu cầu target_id.")
 
@@ -29,7 +30,7 @@ class CreateCommentUseCase:
             parent_id=parent_id,
             image_urls=image_urls or []
         )
-        
+
         created_comment = await self._comment_repo.create(comment)
         await self._user_service.resolve_authors([created_comment])
         return created_comment
