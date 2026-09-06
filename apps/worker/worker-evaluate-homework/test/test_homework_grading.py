@@ -587,3 +587,111 @@ def test_rar_extension_is_dispatched(
     )
 
     assert sources == expected
+
+
+@pytest.mark.asyncio
+async def test_openai_llm_client_and_grading_engine() -> None:
+    from unittest.mock import AsyncMock, MagicMock
+    from worker_evaluate_homework.infrastructure.llm_clients import (
+        OpenAILLMClient,
+        _extract_json,
+    )
+    from worker_evaluate_homework.infrastructure.gemini_grading_engine import (
+        HomeworkGradingEngine,
+    )
+
+    # Test _extract_json helper
+    assert _extract_json('```json\n{"status": true}\n```') == '{"status": true}'
+    assert _extract_json('Result is: {"status": true} done') == '{"status": true}'
+
+    mock_client = MagicMock()
+    mock_response = MagicMock()
+    mock_response.raise_for_status = MagicMock()
+
+    rubric_payload = {
+        "title": "Bài 1: Linear Regression",
+        "description": "Cài đặt thuật toán hồi quy",
+        "required_files": ["main.py"],
+        "allowed_libraries": [],
+        "forbidden_libraries": [],
+        "requirements": ["Viết hàm fit và predict"],
+        "criteria": [
+            {
+                "id": "c1",
+                "criterion": "Hàm fit",
+                "description": "Huấn luyện mô hình",
+                "weight": 5.0,
+            },
+            {
+                "id": "c2",
+                "criterion": "Hàm predict",
+                "description": "Dự đoán",
+                "weight": 5.0,
+            },
+        ],
+    }
+
+    mock_response.json.return_value = {
+        "choices": [
+            {
+                "message": {
+                    "content": f"```json\n{json.dumps(rubric_payload)}\n```"
+                }
+            }
+        ]
+    }
+    mock_client.post = AsyncMock(return_value=mock_response)
+
+    llm_client = OpenAILLMClient(
+        api_url="https://llm2.dutai.site/v1",
+        model="ggml-org/gemma-4-e4b-it-GGUF:Q4_0",
+        http_client=mock_client,
+    )
+    engine = HomeworkGradingEngine(llm_client=llm_client)
+
+    rubric = await engine.create_rubric(
+        HomeworkGradingRecord(
+            id=uuid4(),
+            title="Linear Regression",
+            description="Cài đặt hồi quy",
+        ),
+        "Đề bài chi tiết...",
+    )
+
+    assert rubric.title == "Bài 1: Linear Regression"
+    assert len(rubric.criteria) == 2
+    assert sum(c.weight for c in rubric.criteria) == 10.0
+
+    # Test grading
+    grade_payload = {
+        "evaluations": [
+            {
+                "id": "c1",
+                "status": True,
+                "description": "Đã cài đặt hàm fit chính xác",
+            },
+            {
+                "id": "c2",
+                "status": True,
+                "description": "Đã cài đặt hàm predict chính xác",
+            },
+        ]
+    }
+    mock_response.json.return_value = {
+        "choices": [
+            {
+                "message": {
+                    "content": json.dumps(grade_payload)
+                }
+            }
+        ]
+    }
+
+    grade_result = await engine.grade(
+        rubric,
+        [SourceFile(name="main.py", content="def fit(): pass\ndef predict(): pass")],
+    )
+
+    assert grade_result.is_pass is True
+    assert grade_result.score == 10.0
+    assert len(grade_result.score_details) == 2

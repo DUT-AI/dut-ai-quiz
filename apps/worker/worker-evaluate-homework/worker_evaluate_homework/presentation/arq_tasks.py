@@ -16,7 +16,9 @@ from worker_evaluate_homework.application.use_cases import (
 )
 from worker_evaluate_homework.domain import InvalidArtifactError
 from worker_evaluate_homework.infrastructure import (
-    GeminiHomeworkGradingEngine,
+    GeminiLLMClient,
+    HomeworkGradingEngine,
+    OpenAILLMClient,
     PostgresHomeworkGradingRepository,
     S3HomeworkArtifactReader,
 )
@@ -30,7 +32,11 @@ async def startup(ctx):
         http_client,
         MinioClient(),
     )
-    grading_engine = GeminiHomeworkGradingEngine()
+    if settings.homework_llm_provider == "gemini":
+        llm_client = GeminiLLMClient()
+    else:
+        llm_client = OpenAILLMClient(http_client=http_client)
+    grading_engine = HomeworkGradingEngine(llm_client=llm_client)
     register_use_case = RegisterHomeworkUseCase(
         repository,
         artifact_reader,

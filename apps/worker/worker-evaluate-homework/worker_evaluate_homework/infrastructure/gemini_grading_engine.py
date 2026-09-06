@@ -5,19 +5,22 @@ from pathlib import PurePath, PurePosixPath
 from typing import Any
 
 from app.config import settings
-from google import genai
-from google.genai import types as genai_types
 
 from worker_evaluate_homework.domain import (
     CriterionEvaluation,
     GradeResult,
     HomeworkGradingRecord,
     HomeworkRubric,
+    ILLMClient,
     SourceFile,
 )
 from worker_evaluate_homework.domain.models import (
     ChecklistEvaluation,
     GradingCriterion,
+)
+from worker_evaluate_homework.infrastructure.llm_clients import (
+    GeminiLLMClient,
+    OpenAILLMClient,
 )
 
 _LIBRARY_IMPORT_MAP: dict[str, set[str]] = {
@@ -41,12 +44,16 @@ Evaluate only from the supplied evidence and return only the requested schema.
 """.strip()
 
 
-class GeminiHomeworkGradingEngine:
-    def __init__(self) -> None:
-        if not settings.gemini_api_key:
-            raise RuntimeError("Thiếu GEMINI_API_KEY; worker chưa thể chấm bài tự động")
-        self._client = genai.Client(api_key=settings.gemini_api_key)
-        self._model = "gemma-4-31b-it"
+class HomeworkGradingEngine:
+    """Homework grading engine using injected ILLMClient (OpenAI or Gemini)."""
+
+    def __init__(self, llm_client: ILLMClient | None = None) -> None:
+        if llm_client is not None:
+            self._llm = llm_client
+        elif settings.homework_llm_provider == "gemini":
+            self._llm = GeminiLLMClient()
+        else:
+            self._llm = OpenAILLMClient()
 
     async def create_rubric(
         self,
@@ -55,7 +62,7 @@ class GeminiHomeworkGradingEngine:
     ) -> HomeworkRubric:
         prompt = f"""
 Bạn là người thiết kế rubric cho bài tập lập trình Python.
-Hãy phân tích đề bài và trả về rubric có cấu trúc.
+Hãy phân tích đề bài và trả về rubric có cấu trúc dưới định dạng JSON.
 
 TIÊU ĐỀ:
 {homework.title}
@@ -67,14 +74,35 @@ NỘI DUNG TRÍCH TỪ FILE ĐỀ:
 {attachment_text}
 
 Quy tắc:
-- required_files chỉ chứa tên file code bắt buộc, ví dụ "1.py" hoặc "bai1.ipynb".
-- Không tự bịa tên file nếu đề không yêu cầu rõ.
-- requirements phải là các yêu cầu có thể đối chiếu với nội dung bài nộp.
-- allowed_libraries và forbidden_libraries để rỗng nếu đề không quy định.
-- criteria phải có từ 3 đến 10 tiêu chí riêng cho đúng bài tập này.
-- Mỗi criteria.id là snake_case duy nhất, criteria.weight dương và tổng các weight là 10.
+- required_files: Danh sách các tên file code bắt buộc (ví dụ: ["main.py"] hoặc ["bai1.ipynb"]). Không tự bịa nếu đề không yêu cầu rõ.
+- requirements: Danh sách các yêu cầu có thể đối chiếu với nội dung bài nộp (mỗi phần tử là một string).
+- allowed_libraries và forbidden_libraries: Danh sách tên thư viện (để rỗng [] nếu đề không quy định).
+- criteria: Danh sách từ 3 đến 10 tiêu chí riêng cho đúng bài tập này.
+- Mỗi criteria có:
+  + id: snake_case duy nhất (ví dụ: "data_preprocessing", "model_training").
+  + criterion: Tên ngắn gọn của tiêu chí.
+  + description: Mô tả chi tiết cách kiểm tra.
+  + weight: Số thực dương, tổng trọng số của tất cả các tiêu chí phải bằng 10.
 - Tiêu chí phải chấm được từ code, Markdown hoặc output notebook; ưu tiên yêu cầu cụ thể trong đề.
 - Nếu đề có quy định thư viện, phải có tiêu chí id="library_policy".
+
+BẮT BUỘC TRẢ VỀ JSON theo cấu trúc mẫu sau (chỉ trả về JSON, không kèm văn bản giải thích nào khác):
+{{
+  "title": "{homework.title}",
+  "description": "Mô tả bài tập",
+  "required_files": ["..."],
+  "allowed_libraries": [],
+  "forbidden_libraries": [],
+  "requirements": ["..."],
+  "criteria": [
+    {{
+      "id": "criteria_id",
+      "criterion": "Tên tiêu chí",
+      "description": "Mô tả tiêu chí",
+      "weight": 2.5
+    }}
+  ]
+}}
 """.strip()
         rubric = await self._generate_structured(prompt, HomeworkRubric)
         return _normalize_rubric(rubric)
@@ -116,6 +144,17 @@ mô tả ngắn nêu bằng chứng cụ thể. Không thêm hoặc bỏ bất k
 
 CHECKLIST:
 {checklist}
+
+BẮT BUỘC TRẢ VỀ JSON theo cấu trúc sau:
+{{
+  "evaluations": [
+    {{
+      "id": "criteria_id",
+      "status": true,
+      "description": "Mô tả bằng chứng đánh giá"
+    }}
+  ]
+}}
 """.strip()
         evaluated = await self._generate_structured(
             prompt,
@@ -125,7 +164,7 @@ CHECKLIST:
         actual_ids = {item.id for item in evaluated.evaluations}
         if actual_ids != expected_ids:
             raise RuntimeError(
-                "Gemini trả về sai bộ tiêu chí chấm: "
+                "LLM trả về sai bộ tiêu chí chấm: "
                 f"thiếu={sorted(expected_ids - actual_ids)}, "
                 f"thừa={sorted(actual_ids - expected_ids)}"
             )
@@ -162,21 +201,15 @@ CHECKLIST:
         )
 
     async def _generate_structured(self, prompt: str, schema):
-        schema_dict = _clean_schema(schema.model_json_schema())
-        response = await self._client.aio.models.generate_content(
-            model=self._model,
-            contents=prompt,
-            config=genai_types.GenerateContentConfig(
-                system_instruction=_SYSTEM_INSTRUCTION,
-                response_mime_type="application/json",
-                response_schema=schema_dict,
-                temperature=0.1,
-                max_output_tokens=8192,
-            ),
+        return await self._llm.generate_structured(
+            prompt=prompt,
+            schema=schema,
+            system_instruction=_SYSTEM_INSTRUCTION,
         )
-        if not response.text:
-            raise RuntimeError("Gemini không trả về nội dung")
-        return schema.model_validate_json(_strip_code_fence(response.text))
+
+
+# Alias for backward compatibility
+GeminiHomeworkGradingEngine = HomeworkGradingEngine
 
 
 def _analyze_sources(

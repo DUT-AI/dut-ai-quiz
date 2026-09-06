@@ -1,5 +1,7 @@
-from typing import Any, Protocol
+from typing import Any, Protocol, TypeVar
 from uuid import UUID
+
+from pydantic import BaseModel
 
 from .models import (
     GradeResult,
@@ -9,6 +11,17 @@ from .models import (
     StoredFingerprint,
     SubmissionGradingRecord,
 )
+
+T = TypeVar("T", bound=BaseModel)
+
+
+class ILLMClient(Protocol):
+    async def generate_structured(
+        self,
+        prompt: str,
+        schema: type[T],
+        system_instruction: str = "",
+    ) -> T: ...
 
 
 class IHomeworkArtifactReader(Protocol):

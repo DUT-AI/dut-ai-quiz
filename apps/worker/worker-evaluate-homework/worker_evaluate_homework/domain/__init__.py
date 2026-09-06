@@ -3,6 +3,7 @@ from .interfaces import (
     IHomeworkArtifactReader,
     IHomeworkGradingEngine,
     IHomeworkGradingRepository,
+    ILLMClient,
 )
 from .models import (
     CriterionEvaluation,

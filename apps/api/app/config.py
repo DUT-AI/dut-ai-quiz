@@ -122,6 +122,30 @@ class Settings(BaseSettings):
     max_script_size_bytes: int = 10 * 1024 * 1024  # 10 MB
     max_model_size_bytes: int = 1024 * 1024 * 1024  # 1 GB
 
+    # ================= HOMEWORK LLM EVALUATION CONFIG ============
+    homework_llm_provider: str = Field(
+        default="openai",
+        validation_alias=AliasChoices("HOMEWORK_LLM_PROVIDER", "LLM_PROVIDER"),
+    )
+    homework_llm_api_url: str = Field(
+        default="",
+        validation_alias=AliasChoices(
+            "HOMEWORK_LLM_API_URL", "LLM_API_URL", "OPENAI_API_BASE"
+        ),
+    )
+    homework_llm_api_key: str = Field(
+        default="",
+        validation_alias=AliasChoices(
+            "HOMEWORK_LLM_API_KEY", "LLM_API_KEY", "OPENAI_API_KEY"
+        ),
+    )
+    homework_llm_model: str = Field(
+        default="ggml-org/gemma-4-e4b-it-GGUF:Q4_0",
+        validation_alias=AliasChoices("HOMEWORK_LLM_MODEL", "LLM_MODEL"),
+    )
+    homework_llm_temperature: float = 0.1
+    homework_llm_timeout_seconds: float = 120.0
+
     # ================= GOOGLE GENAI / GEMMA API KEY =============
     gemini_api_key: str = Field(
         default="",
