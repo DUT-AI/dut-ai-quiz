@@ -80,6 +80,14 @@ class Settings(BaseSettings):
         default=True,
         validation_alias=AliasChoices("S3_SECURE", "MINIO_SECURE"),
     )
+    s3_public_endpoint: str = Field(
+        default="",
+        validation_alias=AliasChoices("S3_PUBLIC_ENDPOINT", "MINIO_PUBLIC_ENDPOINT"),
+    )
+    s3_public_secure: bool = Field(
+        default=True,
+        validation_alias=AliasChoices("S3_PUBLIC_SECURE", "MINIO_PUBLIC_SECURE"),
+    )
     presigned_url_expire_seconds: int = 3600
 
     # Homework submission and external evaluation services.
@@ -169,7 +177,7 @@ class Settings(BaseSettings):
             return value.replace("postgresql://", "postgresql+asyncpg://", 1)
         return value
 
-    @field_validator("s3_endpoint")
+    @field_validator("s3_endpoint", "s3_public_endpoint")
     @classmethod
     def normalize_s3_endpoint(cls, value: str) -> str:
         return value.strip().rstrip("/")
@@ -182,6 +190,15 @@ class Settings(BaseSettings):
             return self.s3_endpoint
         scheme = "https" if self.s3_secure else "http"
         return f"{scheme}://{self.s3_endpoint}"
+
+    @property
+    def s3_public_endpoint_url(self) -> str:
+        if not self.s3_public_endpoint:
+            return self.s3_endpoint_url
+        if "://" in self.s3_public_endpoint:
+            return self.s3_public_endpoint
+        scheme = "https" if self.s3_public_secure else "http"
+        return f"{scheme}://{self.s3_public_endpoint}"
 
     @property
     def s3_is_configured(self) -> bool:

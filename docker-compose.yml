@@ -51,6 +51,9 @@ services:
             - REDIS_PORT=6379
         ports:
             - "8076:8076"
+        networks:
+            - default
+            - shared
         depends_on:
             postgres:
                 condition: service_healthy
@@ -120,6 +123,9 @@ services:
             - POSTGRES_PORT=5432
             - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
             - REDIS_URL=redis://redis:6379/${REDIS_DB:-0}
+        networks:
+            - default
+            - shared
         depends_on:
             postgres:
                 condition: service_healthy
@@ -144,6 +150,9 @@ services:
             - REDIS_URL=redis://redis:6379/${REDIS_DB:-0}
             - REDIS_HOST=redis
             - REDIS_PORT=6379
+        networks:
+            - default
+            - shared
         depends_on:
             postgres:
                 condition: service_healthy
@@ -172,3 +181,9 @@ services:
 
 volumes:
     pgdata:
+
+networks:
+    default:
+    shared:
+        name: dut-ai-shared
+        external: true

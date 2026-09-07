@@ -120,8 +120,9 @@ Dưới đây là sơ đồ so sánh:
     assert f"uploads/lessons/{lesson.id}/hardware_tradeoff.png" in uploaded_keys
 
     # Check replaced URLs in Markdown
-    expected_url1 = f"http://fake-s3/lms-dev/uploads/lessons/{lesson.id}/image-1.png"
-    expected_url2 = f"http://fake-s3/lms-dev/uploads/lessons/{lesson.id}/hardware_tradeoff.png"
+    from app.config import settings
+    expected_url1 = f"http://fake-s3/{settings.s3_bucket_name}/uploads/lessons/{lesson.id}/image-1.png"
+    expected_url2 = f"http://fake-s3/{settings.s3_bucket_name}/uploads/lessons/{lesson.id}/hardware_tradeoff.png"
 
     assert f"![Hình minh họa 1]({expected_url1})" in lesson.content_md
     assert f'src="{expected_url2}"' in lesson.content_md

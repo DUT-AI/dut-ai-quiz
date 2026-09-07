@@ -93,6 +93,7 @@ from app.application.use_cases.homeworks import (
     ListHomeworkSubmissionsUseCase,
     ListHomeworksUseCase,
     ListMyHomeworksUseCase,
+    PresignHomeworkSubmissionUseCase,
     RetryHomeworkSubmissionUseCase,
     SubmitHomeworkUseCase,
     UpdateHomeworkUseCase,
@@ -258,6 +259,10 @@ class UseCaseProvider(Provider):
     )
     submit_homework_use_case = provide(
         SubmitHomeworkUseCase,
+        scope=Scope.REQUEST,
+    )
+    presign_homework_submission_use_case = provide(
+        PresignHomeworkSubmissionUseCase,
         scope=Scope.REQUEST,
     )
     retry_homework_submission_use_case = provide(

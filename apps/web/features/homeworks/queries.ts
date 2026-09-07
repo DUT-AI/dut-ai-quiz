@@ -3,10 +3,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 
-import { apiFetch, apiGet } from "@/lib/api";
+import { apiClient, apiFetch, apiGet, apiPost } from "@/lib/api";
 import {
   HomeworkFormValues,
   HomeworkSchema,
+  HomeworkSubmission,
   HomeworkSubmissionSchema,
 } from "./types";
 
@@ -142,12 +143,47 @@ export function useSubmitHomework() {
       homeworkId: string;
       file: File;
     }) => {
-      const form = new FormData();
-      form.append("file", file);
-      return formRequest(
+      // 1. Request presigned upload URL from backend
+      const presignRes = await apiPost<{
+        data: {
+          upload_url: string;
+          object_key: string;
+          original_filename: string;
+        };
+        is_success: boolean;
+      }>(
+        `/api/v1/homeworks/${homeworkId}/submissions/presign`,
+        {
+          filename: file.name,
+          content_type: file.type || "application/octet-stream",
+        },
+        z.object({
+          data: z.object({
+            upload_url: z.string(),
+            object_key: z.string(),
+            original_filename: z.string(),
+          }),
+          is_success: z.boolean(),
+        }),
+      );
+
+      // 2. Upload file directly to S3 / MinIO (non-blocking, client-to-storage)
+      await apiClient.put(presignRes.data.upload_url, file, {
+        headers: { "Content-Type": file.type || "application/octet-stream" },
+        withCredentials: false,
+        baseURL: "",
+      });
+
+      // 3. Commit submission to backend API
+      return apiPost<{
+        data: HomeworkSubmission;
+        is_success: boolean;
+      }>(
         `/api/v1/homeworks/${homeworkId}/submissions`,
-        "POST",
-        form,
+        {
+          object_key: presignRes.data.object_key,
+          original_filename: presignRes.data.original_filename,
+        },
         z.object({
           data: HomeworkSubmissionSchema,
           is_success: z.boolean(),

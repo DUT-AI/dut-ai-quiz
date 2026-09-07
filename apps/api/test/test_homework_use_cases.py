@@ -297,3 +297,76 @@ def test_student_submission_response_hides_plagiarism_identity() -> None:
     assert student_result.plagiarized_from_user_id is None
     assert manager_result.plagiarism_info == submission.plagiarism_info
     assert manager_result.plagiarized_from_user_id == 7
+
+
+@pytest.mark.asyncio
+async def test_submit_homework_with_presigned_object_key(
+    homework: HomeworkEntity,
+) -> None:
+    repository = HomeworkRepositoryStub(homework)
+    queue = AsyncMock()
+    use_case = SubmitHomeworkUseCase(repository, AsyncMock(), queue)
+
+    result = await use_case.execute(
+        SubmitHomeworkDTO(
+            homework_id=homework.id,
+            user_id=99,
+            object_key=f"homeworks/{homework.id}/submissions/99/20260908_test.zip",
+            original_filename="my_test.zip",
+        )
+    )
+
+    assert result.user_id == 99
+    assert result.original_filename == "my_test.zip"
+    assert result.attempt_number == 1
+    queue.enqueue_evaluation.assert_awaited_once_with(result.id)
+
+
+@pytest.mark.asyncio
+async def test_submit_homework_with_invalid_key_prefix_fails(
+    homework: HomeworkEntity,
+) -> None:
+    repository = HomeworkRepositoryStub(homework)
+    queue = AsyncMock()
+    use_case = SubmitHomeworkUseCase(repository, AsyncMock(), queue)
+
+    with pytest.raises(ValueError, match="không hợp lệ"):
+        await use_case.execute(
+            SubmitHomeworkDTO(
+                homework_id=homework.id,
+                user_id=99,
+                object_key="homeworks/other-hw/submissions/100/hack.zip",
+            )
+        )
+
+
+@pytest.mark.asyncio
+async def test_presign_homework_submission_use_case(
+    homework: HomeworkEntity,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from app.application.use_cases.homeworks import PresignHomeworkSubmissionUseCase
+    from app.config import settings
+
+    monkeypatch.setattr(settings, "s3_endpoint", "dut-ai-minio:9000")
+    monkeypatch.setattr(settings, "s3_access_key", "key")
+    monkeypatch.setattr(settings, "s3_secret_key", "secret")
+    monkeypatch.setattr(settings, "s3_bucket_name", "test-bucket")
+
+    repository = HomeworkRepositoryStub(homework)
+    from unittest.mock import MagicMock
+    storage = MagicMock()
+    storage.generate_presigned_upload_url.return_value = "https://minio.dutai.site/presigned-put-url"
+
+    use_case = PresignHomeworkSubmissionUseCase(repository, storage)
+    res = await use_case.execute(
+        homework_id=homework.id,
+        user_id=99,
+        filename="my_solution.zip",
+        content_type="application/zip",
+    )
+
+    assert res["upload_url"] == "https://minio.dutai.site/presigned-put-url"
+    assert res["original_filename"] == "my_solution.zip"
+    assert res["object_key"].startswith(f"homeworks/{homework.id}/submissions/99/")
+

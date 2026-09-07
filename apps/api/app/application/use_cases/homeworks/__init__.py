@@ -9,6 +9,7 @@ from .list_completed_homework_members_uc import ListCompletedHomeworkMembersUseC
 from .list_homework_submissions_uc import ListHomeworkSubmissionsUseCase
 from .list_homeworks_uc import ListHomeworksUseCase
 from .list_my_homeworks_uc import ListMyHomeworksUseCase
+from .presign_submission_uc import PresignHomeworkSubmissionUseCase
 from .retry_homework_submission_uc import RetryHomeworkSubmissionUseCase
 from .submit_homework_uc import SubmitHomeworkUseCase
 from .update_homework_uc import UpdateHomeworkUseCase
@@ -23,6 +24,7 @@ __all__ = [
     "ListHomeworkSubmissionsUseCase",
     "ListHomeworksUseCase",
     "ListMyHomeworksUseCase",
+    "PresignHomeworkSubmissionUseCase",
     "RetryHomeworkSubmissionUseCase",
     "SubmitHomeworkUseCase",
     "UpdateHomeworkUseCase",

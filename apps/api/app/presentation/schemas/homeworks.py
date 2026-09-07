@@ -40,5 +40,26 @@ class DownloadUrlResponse(BaseModel):
     is_success: bool = True
 
 
+class PresignSubmissionRequest(BaseModel):
+    filename: str
+    content_type: str | None = None
+
+
+class PresignSubmissionData(BaseModel):
+    upload_url: str
+    object_key: str
+    original_filename: str
+
+
+class PresignSubmissionResponse(BaseModel):
+    data: PresignSubmissionData
+    is_success: bool = True
+
+
+class SubmitHomeworkBody(BaseModel):
+    object_key: str
+    original_filename: str | None = None
+
+
 class SuccessResponse(BaseModel):
     is_success: bool = True

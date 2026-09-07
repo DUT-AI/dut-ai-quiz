@@ -2,7 +2,7 @@ from typing import Annotated
 from uuid import UUID
 
 from dishka.integrations.fastapi import FromDishka, inject
-from fastapi import APIRouter, File, Form, UploadFile
+from fastapi import APIRouter, File, Form, Request, UploadFile
 
 from app.application.dtos.homework import (
     CreateHomeworkDTO,
@@ -20,12 +20,14 @@ from app.application.use_cases.homeworks import (
     ListHomeworkSubmissionsUseCase,
     ListHomeworksUseCase,
     ListMyHomeworksUseCase,
+    PresignHomeworkSubmissionUseCase,
     RetryHomeworkSubmissionUseCase,
     SubmitHomeworkUseCase,
     UpdateHomeworkUseCase,
 )
 from app.config import settings
 from app.domain.entities.auth_enums import SystemPermission
+from app.domain.exceptions.exceptions import AppException
 from app.presentation.api.deps import CurrentUser, EducatorUser
 from app.presentation.schemas.homeworks import (
     CompletedHomeworkMembersResponse,
@@ -33,8 +35,12 @@ from app.presentation.schemas.homeworks import (
     DownloadUrlResponse,
     HomeworkListResponse,
     HomeworkResponse,
+    PresignSubmissionData,
+    PresignSubmissionRequest,
+    PresignSubmissionResponse,
     SubmissionListResponse,
     SubmissionResponse,
+    SubmitHomeworkBody,
     SuccessResponse,
 )
 
@@ -135,6 +141,28 @@ async def archive_homework(
 
 
 @router.post(
+    "/{homework_id}/submissions/presign",
+    response_model=PresignSubmissionResponse,
+)
+@inject
+async def presign_homework_submission(
+    homework_id: UUID,
+    user: CurrentUser,
+    body: PresignSubmissionRequest,
+    use_case: FromDishka[PresignHomeworkSubmissionUseCase],
+) -> PresignSubmissionResponse:
+    res = await use_case.execute(
+        homework_id=homework_id,
+        user_id=user.id,
+        filename=body.filename,
+        content_type=body.content_type,
+    )
+    return PresignSubmissionResponse(
+        data=PresignSubmissionData(**res)
+    )
+
+
+@router.post(
     "/{homework_id}/submissions",
     response_model=SubmissionResponse,
 )
@@ -143,16 +171,30 @@ async def submit_homework(
     homework_id: UUID,
     user: CurrentUser,
     use_case: FromDishka[SubmitHomeworkUseCase],
-    file: Annotated[UploadFile, File()],
+    request: Request,
 ) -> SubmissionResponse:
-    return SubmissionResponse(
-        data=await use_case.execute(
-            SubmitHomeworkDTO(
-                homework_id=homework_id,
-                user_id=user.id,
-                file=await _file_dto(file),
-            )
+    content_type = request.headers.get("content-type", "")
+    if "application/json" in content_type:
+        raw_body = await request.json()
+        body = SubmitHomeworkBody(**raw_body)
+        dto = SubmitHomeworkDTO(
+            homework_id=homework_id,
+            user_id=user.id,
+            object_key=body.object_key,
+            original_filename=body.original_filename,
         )
+    else:
+        form = await request.form()
+        uploaded = form.get("file")
+        if not uploaded or not isinstance(uploaded, UploadFile):
+            raise AppException("File nộp bài là bắt buộc", 400)
+        dto = SubmitHomeworkDTO(
+            homework_id=homework_id,
+            user_id=user.id,
+            file=await _file_dto(uploaded),
+        )
+    return SubmissionResponse(
+        data=await use_case.execute(dto)
     )
 
 

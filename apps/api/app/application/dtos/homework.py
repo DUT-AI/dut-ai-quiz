@@ -34,7 +34,9 @@ class UpdateHomeworkDTO(BaseModel):
 class SubmitHomeworkDTO(BaseModel):
     homework_id: UUID
     user_id: int
-    file: HomeworkFileDTO
+    file: HomeworkFileDTO | None = None
+    object_key: str | None = None
+    original_filename: str | None = None
 
 
 class CompletedHomeworkMemberOutDTO(BaseModel):
