@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.application.dtos.homework import CompletedHomeworkMemberOutDTO
 from app.core.datetime_utils import now_ict
+
 from app.domain.entities.homework import (
     HomeworkEntity,
     HomeworkSubmissionEntity,
@@ -208,6 +209,7 @@ class HomeworkRepository(IHomeworkRepository):
             .where(
                 Homework.lesson_id == lesson_id,
                 Homework.archived_at.is_(None),
+                HomeworkSubmission.status == HomeworkSubmissionStatus.GRADED.value,
             )
             .group_by(HomeworkSubmission.user_id)
             .order_by(HomeworkSubmission.user_id)
@@ -221,7 +223,6 @@ class HomeworkRepository(IHomeworkRepository):
             )
             for row in rows
         ]
-
     async def count_submitters(self, homework_id: UUID) -> int:
         return int(
             await self._session.scalar(

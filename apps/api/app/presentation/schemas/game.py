@@ -44,4 +44,8 @@ class GameLeaderboardRowOut(BaseModel):
     gold: int
     total_time_response: float
     attempt_count: int
+    is_completed: bool = False
+    total_questions: int = 0
+    answered_questions: int = 0
+
 

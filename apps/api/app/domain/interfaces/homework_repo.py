@@ -2,7 +2,11 @@ from abc import ABC, abstractmethod
 from typing import Any
 from uuid import UUID
 
+from app.application.dtos.homework import (
+    CompletedHomeworkMemberOutDTO,
+)
 from app.domain.entities.homework import HomeworkEntity, HomeworkSubmissionEntity
+
 
 
 class IHomeworkRepository(ABC):
@@ -79,3 +83,4 @@ class IHomeworkRepository(ABC):
     @abstractmethod
     async def count_submitters(self, homework_id: UUID) -> int:
         raise NotImplementedError
+
