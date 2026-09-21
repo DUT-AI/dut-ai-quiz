@@ -1,7 +1,9 @@
 import asyncio
-from httpx import AsyncClient
+
 from app.main import app
-from app.presentation.api.deps import get_current_user, UserContext
+from app.presentation.api.deps import UserContext, get_current_user
+from httpx import AsyncClient
+
 
 async def test():
     # Bypass auth by overriding get_current_user dependency
@@ -9,7 +11,7 @@ async def test():
         id=17,
         roles=["student"]
     )
-    
+
     import httpx
     transport = httpx.ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:

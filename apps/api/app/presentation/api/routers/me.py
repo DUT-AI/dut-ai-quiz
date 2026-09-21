@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Request, HTTPException
 from dishka.integrations.fastapi import FromDishka, inject
+from fastapi import APIRouter, Request
 
-from app.application.use_cases.me.me_use_case import GetProfileUseCase
 from app.application.use_cases.attempts.attempt_use_case import ListUserAttemptsUseCase
+from app.application.use_cases.me.me_use_case import GetProfileUseCase
 from app.presentation.api.deps import CurrentUser
 from app.presentation.schemas.attempts import AttemptOut
 
@@ -12,8 +12,13 @@ router = APIRouter(prefix="/me", tags=["me"])
 @router.get("")
 @inject
 async def me(request: Request, use_case: FromDishka[GetProfileUseCase]):
-    # Try to get access_token from cookie
-    access_token = request.cookies.get("access_token")
+    # Try to get access_token from Authorization Header first, then Cookie
+    access_token = None
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.strip().startswith("Bearer "):
+        access_token = auth_header.strip().split(" ", 1)[1].strip()
+    if not access_token:
+        access_token = request.cookies.get("access_token")
 
     data = await use_case.execute(access_token)
 

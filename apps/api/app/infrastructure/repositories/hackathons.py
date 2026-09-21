@@ -1,14 +1,14 @@
 import hashlib
 from uuid import UUID
 
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities.hackathon import (
     HackathonEntity,
+    HackathonRegistrationEntity,
     HackathonTaskEntity,
     HackathonTeamEntity,
-    HackathonRegistrationEntity,
     RegistrationStatus,
 )
 from app.domain.entities.submission import (
@@ -16,18 +16,18 @@ from app.domain.entities.submission import (
     SubmissionStatus,
 )
 from app.domain.interfaces.hackathon_repo import (
+    IHackathonRegistrationRepository,
     IHackathonRepository,
+    IHackathonSubmissionRepository,
     IHackathonTaskRepository,
     IHackathonTeamRepository,
-    IHackathonRegistrationRepository,
-    IHackathonSubmissionRepository,
 )
 from app.infrastructure.persistence.models import (
     Hackathon,
-    HackathonTask,
-    HackathonTeam,
     HackathonRegistration,
     HackathonSubmission,
+    HackathonTask,
+    HackathonTeam,
 )
 
 
@@ -397,7 +397,7 @@ class HackathonSubmissionRepository(IHackathonSubmissionRepository):
         self, task_id: UUID, user_id: int | None = None, team_id: UUID | None = None
     ) -> None:
         participant = f"team:{team_id}" if team_id else f"user:{user_id}"
-        digest = hashlib.sha256(f"{task_id}:{participant}".encode("utf-8")).digest()
+        digest = hashlib.sha256(f"{task_id}:{participant}".encode()).digest()
         lock_id = int.from_bytes(digest[:8], "big", signed=False) % (2**63 - 1)
         await self._s.execute(select(func.pg_advisory_xact_lock(lock_id)))
 

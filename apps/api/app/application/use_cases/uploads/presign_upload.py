@@ -1,8 +1,8 @@
 from uuid import uuid4
-from fastapi import HTTPException
 
 from app.config import settings
 from app.domain.interfaces.s3_client import IS3Client
+from fastapi import HTTPException
 
 
 class PresignUploadUseCase:

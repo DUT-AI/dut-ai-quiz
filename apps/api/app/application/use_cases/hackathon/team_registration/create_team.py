@@ -5,13 +5,13 @@ from uuid import UUID, uuid4
 
 from app.application.dtos import HackathonTeamOutDTO
 from app.application.services.user_service import UserService
-from app.domain.exceptions.exceptions import AppException
 from app.domain.entities.hackathon import (
     HackathonRegistrationEntity,
     HackathonTeamEntity,
     ParticipationMode,
     RegistrationStatus,
 )
+from app.domain.exceptions.exceptions import AppException
 from app.domain.interfaces import (
     IHackathonRegistrationRepository,
     IHackathonRepository,

@@ -1,18 +1,18 @@
 import asyncio
 import os
 import sys
-from uuid import uuid4, UUID
+from uuid import uuid4
 
 # Add current directory to path
 sys.path.append(os.getcwd())
 
-from app.infrastructure.database import AsyncSessionLocal
-from app.infrastructure.repositories.attempts import AttemptRepository
-from app.infrastructure.persistence.models import Attempt
-from app.domain.value_objects import AttemptStatus
-from app.core.datetime_utils import now_ict
-
 import pytest
+from app.core.datetime_utils import now_ict
+from app.domain.value_objects import AttemptStatus
+from app.infrastructure.database import AsyncSessionLocal
+from app.infrastructure.persistence.models import Attempt
+from app.infrastructure.repositories.attempts import AttemptRepository
+
 
 @pytest.mark.asyncio
 async def test_patch():
@@ -48,7 +48,7 @@ async def test_patch():
         q_id = uuid4()
         ans = await repo.upsert_answer(att_id, q_id, "option_a")
         print(f"Upserted answer: {ans}")
-        
+
         await s.commit()
         print("Committed transaction")
 

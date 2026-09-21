@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ThumbsUp, ThumbsDown, MessageSquare, Trash2, Shield, Calendar } from "lucide-react";
+import { ThumbsUp, ThumbsDown, MessageSquare, Trash2, Shield, Calendar, FileText, Download } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -114,7 +114,7 @@ export function CommentItem({
 
   const getRoleBadge = (role?: string | null) => {
     if (!role) return null;
-    const isStaff = role.toLowerCase() === "admin" || role.toLowerCase() === "mentor";
+    const isStaff = role.toLowerCase() === "admin" || role.toLowerCase() === "educator";
     if (!isStaff) return null;
 
     return (
@@ -135,7 +135,7 @@ export function CommentItem({
   };
 
   const isAuthor = user?.id === comment.user_id;
-  const isStaff = user?.quiz_role === "admin" || user?.quiz_role === "MENTOR";
+  const isStaff = user?.quiz_role?.toLowerCase() === "admin" || user?.quiz_role?.toUpperCase() === "EDUCATOR";
   const canDelete = isAuthor || isStaff;
 
   // Max depth is 3, replies can only go down to level 3
@@ -201,30 +201,65 @@ export function CommentItem({
       <div className="pl-0 sm:pl-10 text-sm text-dark-blue dark:text-zinc-100 font-sans leading-relaxed break-words markdown-styles">
         <Markdown content={comment.content} />
 
-        {/* Attached images */}
+        {/* Attached images and files */}
         {comment.image_urls && comment.image_urls.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-3">
-            {comment.image_urls.map((url, idx) => (
-              <div
-                key={idx}
-                className="relative rounded-2xl border border-gray-100 dark:border-white/10 overflow-hidden max-w-xs max-h-48 group shadow-sm bg-black/5"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={url}
-                  alt={`comment-img-${idx}`}
-                  className="max-w-full max-h-48 object-contain rounded-2xl hover:scale-[1.02] transition-transform duration-300 cursor-zoom-in"
-                  onClick={() => {
-                    // Open image in fullscreen overlay (handled by Markdown helper zoom triggers)
-                    if (typeof window !== "undefined") {
-                      const imgClick = document.createElement("img");
-                      imgClick.src = url;
-                      imgClick.click();
-                    }
-                  }}
-                />
-              </div>
-            ))}
+            {comment.image_urls.map((url, idx) => {
+              const cleanUrl = url.split("?")[0].toLowerCase();
+              const isImage =
+                cleanUrl.endsWith(".jpg") ||
+                cleanUrl.endsWith(".jpeg") ||
+                cleanUrl.endsWith(".png") ||
+                cleanUrl.endsWith(".gif") ||
+                cleanUrl.endsWith(".webp") ||
+                cleanUrl.endsWith(".svg");
+
+              if (isImage) {
+                return (
+                  <div
+                    key={idx}
+                    className="relative rounded-2xl border border-gray-100 dark:border-white/10 overflow-hidden max-w-xs max-h-48 group shadow-sm bg-black/5"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={url}
+                      alt={`comment-img-${idx}`}
+                      className="max-w-full max-h-48 object-contain rounded-2xl hover:scale-[1.02] transition-transform duration-300 cursor-zoom-in"
+                      onClick={() => {
+                        if (typeof window !== "undefined") {
+                          const imgClick = document.createElement("img");
+                          imgClick.src = url;
+                          imgClick.click();
+                        }
+                      }}
+                    />
+                  </div>
+                );
+              }
+
+              // Non-image file attachment card
+              let fileName = "Tệp đính kèm";
+              try {
+                const pathParts = new URL(url).pathname.split("/");
+                fileName = decodeURIComponent(pathParts.pop() || "Tệp đính kèm");
+              } catch {
+                /* fallback */
+              }
+
+              return (
+                <a
+                  key={idx}
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50/80 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 transition-all text-xs font-medium text-dark-blue dark:text-light-blue shadow-xs group"
+                >
+                  <FileText className="size-4 text-primary shrink-0" />
+                  <span className="max-w-[200px] truncate">{fileName}</span>
+                  <Download className="size-3.5 opacity-60 group-hover:opacity-100 transition-opacity shrink-0 ml-1" />
+                </a>
+              );
+            })}
           </div>
         )}
 

@@ -5,10 +5,9 @@ Revises: b2c3d4e5f6a7, f78a22cf302a
 Create Date: 2026-07-28
 """
 
-from typing import Sequence
+from collections.abc import Sequence
 
 from alembic import op
-
 
 revision: str = "c81f2a9d4e73"
 down_revision: tuple[str, str] = ("b2c3d4e5f6a7", "f78a22cf302a")

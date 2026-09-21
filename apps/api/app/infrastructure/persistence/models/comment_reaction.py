@@ -2,13 +2,14 @@ from datetime import datetime
 from uuid import UUID
 
 from sqlalchemy import ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.schema import UniqueConstraint
+from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql.sqltypes import Enum
 
 from app.core.datetime_utils import now_ict
 from app.domain.entities.comment import CommentReactionEntity, ReactionType
+
 from .base import Base
+
 
 class CommentReaction(Base):
     __tablename__ = "comment_reactions"

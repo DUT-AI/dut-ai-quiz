@@ -2,16 +2,20 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID, uuid4
 
-from pgvector.sqlalchemy import Vector
 import sqlalchemy
-from sqlalchemy import Boolean, ForeignKey, Index, String
+from pgvector.sqlalchemy import Vector
+from sqlalchemy import ForeignKey, Index, String
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.dialects.postgresql import UUID as pgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.datetime_utils import now_ict
-from app.core.datetime_utils import now_ict
-from app.domain.entities.question import QuestionEntity, QuestionOptionEntity, QuestionStatus, DuplicateStatus
+from app.domain.entities.question import (
+    DuplicateStatus,
+    QuestionEntity,
+    QuestionOptionEntity,
+    QuestionStatus,
+)
 from app.domain.value_objects import Difficulty, PoolType
 
 from .base import Base
@@ -56,14 +60,14 @@ class Question(Base):
         String(64), nullable=True
     )
     status: Mapped[QuestionStatus] = mapped_column(
-        sqlalchemy.Enum(QuestionStatus, native_enum=False, length=50), 
-        default=QuestionStatus.PUBLIC, 
+        sqlalchemy.Enum(QuestionStatus, native_enum=False, length=50),
+        default=QuestionStatus.PUBLIC,
         server_default=QuestionStatus.PUBLIC.value,
         index=True
     )
     duplicate_status: Mapped[DuplicateStatus] = mapped_column(
-        sqlalchemy.Enum(DuplicateStatus, native_enum=False, length=50), 
-        default=DuplicateStatus.NONE, 
+        sqlalchemy.Enum(DuplicateStatus, native_enum=False, length=50),
+        default=DuplicateStatus.NONE,
         server_default=DuplicateStatus.NONE.value
     )
     duplicate_of_question_id: Mapped[UUID | None] = mapped_column(pgUUID(as_uuid=True), ForeignKey("questions.id"), nullable=True)

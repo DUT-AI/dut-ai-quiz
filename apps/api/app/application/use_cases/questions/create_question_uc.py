@@ -1,7 +1,7 @@
 from uuid import uuid4
 
-from app.core.datetime_utils import now_ict
 from app.application.services.question_embedding import QuestionEmbeddingService
+from app.core.datetime_utils import now_ict
 from app.domain.entities.question import QuestionEntity, QuestionOptionEntity
 from app.domain.entities.tag import TagEntity
 from app.domain.interfaces import IQuestionRepository, ITagRepository

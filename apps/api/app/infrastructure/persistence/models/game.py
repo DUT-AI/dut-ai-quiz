@@ -1,15 +1,15 @@
-from app.domain.value_objects import GameSessionStatus
 from datetime import datetime
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import String, Enum
+from sqlalchemy import Enum, String
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.dialects.postgresql import UUID as pgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.datetime_utils import now_ict
 from app.domain.entities.game import GameSessionEntity
+from app.domain.value_objects import GameSessionStatus
 
 from .base import Base
 

@@ -1,20 +1,23 @@
 from datetime import datetime
 from uuid import UUID, uuid4
-from sqlalchemy import Enum as SAEnum, ForeignKey, Text, Integer
-from sqlalchemy.dialects.postgresql import UUID as pgUUID, ARRAY
+
+from sqlalchemy import Enum as SAEnum
+from sqlalchemy import ForeignKey, Integer, Text
+from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.dialects.postgresql import UUID as pgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.domain.entities.hackathon import (
     HackathonEntity,
-    HackathonTaskEntity,
-    MetricType,
-    HackathonTeamEntity,
     HackathonRegistrationEntity,
+    HackathonTaskEntity,
+    HackathonTeamEntity,
+    MetricType,
     RegistrationStatus,
 )
 from app.domain.entities.submission import (
-    SubmissionStatus,
     HackathonSubmissionEntity,
+    SubmissionStatus,
 )
 
 from .base import Base

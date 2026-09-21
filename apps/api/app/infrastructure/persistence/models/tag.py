@@ -6,6 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.datetime_utils import now_ict
 from app.domain.entities.tag import TagEntity
+
 from .base import Base
 
 

@@ -1,8 +1,7 @@
 from uuid import UUID
 
-from sqlalchemy.exc import IntegrityError
-
 from app.domain.interfaces import ILessonRepository
+from sqlalchemy.exc import IntegrityError
 
 
 class DeleteLessonUseCase:

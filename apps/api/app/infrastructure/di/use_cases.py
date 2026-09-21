@@ -93,6 +93,7 @@ from app.application.use_cases.homeworks import (
     ListHomeworkSubmissionsUseCase,
     ListHomeworksUseCase,
     ListMyHomeworksUseCase,
+    PresignHomeworkSubmissionUseCase,
     RetryHomeworkSubmissionUseCase,
     SubmitHomeworkUseCase,
     UpdateHomeworkUseCase,
@@ -258,6 +259,10 @@ class UseCaseProvider(Provider):
     )
     submit_homework_use_case = provide(
         SubmitHomeworkUseCase,
+        scope=Scope.REQUEST,
+    )
+    presign_homework_submission_use_case = provide(
+        PresignHomeworkSubmissionUseCase,
         scope=Scope.REQUEST,
     )
     retry_homework_submission_use_case = provide(
@@ -447,13 +452,11 @@ class UseCaseProvider(Provider):
     @provide(scope=Scope.REQUEST)
     def start_import_use_case(
         self,
-        session: AsyncSession,
         import_session_repo: IImportSessionRepository,
         question_repo: IQuestionRepository,
         ai_parser: PDFAIParserService,
     ) -> StartImportUseCase:
         return StartImportUseCase(
-            session=session,
             import_session_repo=import_session_repo,
             question_repo=question_repo,
             ai_parser=ai_parser,

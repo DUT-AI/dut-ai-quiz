@@ -1,9 +1,11 @@
 import os
 from uuid import UUID
-from google import genai
+
 from app.config import settings
-from app.domain.interfaces.question_repo import IQuestionRepository
 from app.domain.entities.question import QuestionEntity
+from app.domain.interfaces.question_repo import IQuestionRepository
+from google import genai
+
 
 class AiRegenerateSolutionUseCase:
     def __init__(self, question_repo: IQuestionRepository):
@@ -30,9 +32,9 @@ class AiRegenerateSolutionUseCase:
             model="gemma-4-31b-it",
             contents=prompt
         )
-        
+
         q.solution = response.text
         q.is_solution_ai_generated = True
-        
+
         await self.question_repo.update(q)
         return q

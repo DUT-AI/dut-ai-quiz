@@ -1,6 +1,7 @@
 import dataclasses
 from datetime import datetime
 
+
 @dataclasses.dataclass(slots=True)
 class ManageUserEntity:
     user_id: int

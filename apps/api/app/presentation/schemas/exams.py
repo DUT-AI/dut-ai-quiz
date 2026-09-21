@@ -3,6 +3,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+
 class ExamCreate(BaseModel):
     title: str
     description: str = ""

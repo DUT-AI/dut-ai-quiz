@@ -1,11 +1,11 @@
 import dataclasses
 from datetime import datetime
+from enum import Enum
 from typing import Any
 from uuid import UUID
 
-from enum import Enum
-
 from app.domain.value_objects import Difficulty, PoolType
+
 
 class QuestionStatus(str, Enum):
     DRAFT = "DRAFT"

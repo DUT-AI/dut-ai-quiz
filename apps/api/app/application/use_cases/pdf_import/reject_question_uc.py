@@ -12,15 +12,13 @@ from __future__ import annotations
 import re
 from uuid import UUID
 
-from redis.asyncio import Redis
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.config import settings
 from app.domain.interfaces.s3_client import IS3Client
 from app.infrastructure.persistence.models import Question
 from loguru import logger
-
+from redis.asyncio import Redis
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 # Pattern to find MinIO image URLs embedded in question content
 MINIO_URL_PATTERN = re.compile(

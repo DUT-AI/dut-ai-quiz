@@ -1,28 +1,26 @@
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
+from app.domain.entities.comment import CommentEntity, ReactionType, TargetType
 from pydantic import BaseModel, Field
 
-from app.domain.entities.comment import CommentEntity, ReactionType, TargetType
-from app.domain.interfaces.comment_repository import SortMode
 
 class CommentCreate(BaseModel):
     target_type: TargetType
-    target_id: Optional[UUID] = None
-    parent_id: Optional[UUID] = None
+    target_id: UUID | None = None
+    parent_id: UUID | None = None
     content: str = Field(..., max_length=5000)
-    image_urls: Optional[list[str]] = Field(default=[], max_items=3)
+    image_urls: list[str] | None = Field(default=[], max_items=3)
 
 class CommentResponse(BaseModel):
     id: UUID
     target_type: TargetType
-    target_id: Optional[UUID] = None
-    parent_id: Optional[UUID] = None
+    target_id: UUID | None = None
+    parent_id: UUID | None = None
     user_id: int
-    user_name: Optional[str] = None
-    user_avatar: Optional[str] = None
-    user_role: Optional[str] = None
+    user_name: str | None = None
+    user_avatar: str | None = None
+    user_role: str | None = None
     content: str
     image_urls: list[str] = []
     like_count: int

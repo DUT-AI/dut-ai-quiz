@@ -1,8 +1,8 @@
 """GetImportStatusUseCase — Poll import session status."""
 
-from app.domain.exceptions.exceptions import AppException
 from uuid import UUID
 
+from app.domain.exceptions.exceptions import AppException
 from app.domain.interfaces.import_session_repo import IImportSessionRepository
 
 

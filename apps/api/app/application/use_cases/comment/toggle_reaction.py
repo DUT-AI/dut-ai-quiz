@@ -1,9 +1,10 @@
 from uuid import UUID
 
-from app.domain.entities.comment import CommentReactionEntity, ReactionType
-from app.domain.interfaces import ICommentReactionRepository, ICommentRepository
-from app.domain.exceptions.exceptions import AppException
 from app.application.services.user_service import UserService
+from app.domain.entities.comment import CommentReactionEntity, ReactionType
+from app.domain.exceptions.exceptions import AppException
+from app.domain.interfaces import ICommentReactionRepository, ICommentRepository
+
 
 class ToggleReactionUseCase:
     def __init__(self, comment_reaction_repo: ICommentReactionRepository, comment_repo: ICommentRepository, user_service: UserService):
@@ -18,7 +19,7 @@ class ToggleReactionUseCase:
             raise AppException(status_code=404, message="Bình luận không tồn tại.")
 
         existing = await self._comment_reaction_repo.get_reaction(comment_id, user_id)
-        
+
         if not existing:
             new_reaction = CommentReactionEntity(
                 comment_id=comment_id,

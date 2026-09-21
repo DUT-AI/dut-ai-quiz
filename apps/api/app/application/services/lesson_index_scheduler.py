@@ -1,8 +1,7 @@
-from loguru import logger
-
 from app.domain.entities.lesson import LessonEntity
 from app.domain.entities.lesson_chunk import lesson_source_hash
 from app.domain.interfaces import IEmbeddingService, ILessonIndexQueue
+from loguru import logger
 
 
 class LessonIndexScheduler:

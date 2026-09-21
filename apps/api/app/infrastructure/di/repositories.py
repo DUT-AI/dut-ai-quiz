@@ -2,51 +2,51 @@ from dishka import Provider, Scope, provide
 
 from app.domain.interfaces import (
     IAttemptRepository,
+    ICommentReactionRepository,
+    ICommentRepository,
     IExamQuestionRepository,
     IExamRepository,
     IFocusEventRepository,
-    ILessonRepository,
-    ILessonChunkRepository,
-    IModuleRepository,
     IGameSessionRepository,
+    IHomeworkRepository,
+    IImportSessionRepository,
+    ILessonChunkRepository,
+    ILessonRepository,
+    IModuleRepository,
     IQuestionRepository,
     ITagRepository,
     IUserRepository,
-    ICommentRepository,
-    ICommentReactionRepository,
-    IImportSessionRepository,
-    IHomeworkRepository,
 )
-from app.domain.interfaces.import_session_repo import IImportSessionRepository
 from app.domain.interfaces.hackathon_repo import (
+    IHackathonRegistrationRepository,
     IHackathonRepository,
+    IHackathonSubmissionRepository,
     IHackathonTaskRepository,
     IHackathonTeamRepository,
-    IHackathonRegistrationRepository,
-    IHackathonSubmissionRepository,
 )
+from app.domain.interfaces.import_session_repo import IImportSessionRepository
 from app.infrastructure.repositories.attempts import AttemptRepository
+from app.infrastructure.repositories.comment_reactions import CommentReactionRepository
+from app.infrastructure.repositories.comments import CommentRepository
 from app.infrastructure.repositories.exam_questions import ExamQuestionRepository
 from app.infrastructure.repositories.exams import ExamRepository
 from app.infrastructure.repositories.focus_events import FocusEventRepository
-from app.infrastructure.repositories.lessons import LessonRepository
-from app.infrastructure.repositories.lesson_chunks import LessonChunkRepository
-from app.infrastructure.repositories.modules import ModuleRepository
 from app.infrastructure.repositories.game_sessions import GameSessionRepository
+from app.infrastructure.repositories.hackathons import (
+    HackathonRegistrationRepository,
+    HackathonRepository,
+    HackathonSubmissionRepository,
+    HackathonTaskRepository,
+    HackathonTeamRepository,
+)
+from app.infrastructure.repositories.homeworks import HomeworkRepository
+from app.infrastructure.repositories.import_sessions import ImportSessionRepository
+from app.infrastructure.repositories.lesson_chunks import LessonChunkRepository
+from app.infrastructure.repositories.lessons import LessonRepository
+from app.infrastructure.repositories.modules import ModuleRepository
 from app.infrastructure.repositories.questions import QuestionRepository
 from app.infrastructure.repositories.tags import TagRepository
 from app.infrastructure.repositories.users import UserRepository
-from app.infrastructure.repositories.hackathons import (
-    HackathonRepository,
-    HackathonTaskRepository,
-    HackathonTeamRepository,
-    HackathonRegistrationRepository,
-    HackathonSubmissionRepository,
-)
-from app.infrastructure.repositories.comments import CommentRepository
-from app.infrastructure.repositories.comment_reactions import CommentReactionRepository
-from app.infrastructure.repositories.import_sessions import ImportSessionRepository
-from app.infrastructure.repositories.homeworks import HomeworkRepository
 
 
 class RepositoryProvider(Provider):

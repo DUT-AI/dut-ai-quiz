@@ -2,9 +2,8 @@ import math
 import re
 from dataclasses import dataclass, field
 
-from markdown_it import MarkdownIt
-
 from app.domain.value_objects import LessonChunkDraft
+from markdown_it import MarkdownIt
 
 
 @dataclass(slots=True)

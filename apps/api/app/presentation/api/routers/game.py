@@ -1,27 +1,27 @@
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException
 from dishka.integrations.fastapi import FromDishka, inject
+from fastapi import APIRouter, HTTPException
 
 from app.application.use_cases.game import (
-    GetGameSessionUseCase,
-    GetActiveGameSessionUseCase,
     FinishGameSessionUseCase,
-    ListGameHistoryUseCase,
+    GetActiveGameSessionUseCase,
     GetGameHistorySummaryUseCase,
     GetGameLeaderboardUseCase,
-    StartGameSessionUseCase,
+    GetGameSessionUseCase,
+    ListGameHistoryUseCase,
     PatchGameAnswerUseCase,
+    StartGameSessionUseCase,
     UseItemGameUseCase,
 )
 from app.presentation.api.deps import CurrentUser, ManageService
 from app.presentation.schemas.game import (
-    GamificationStartIn,
-    GamificationAnswerPatchIn,
-    GamificationUseItemIn,
-    GamificationAnswerResultOut,
-    GameLessonSummaryOut,
     GameLeaderboardRowOut,
+    GameLessonSummaryOut,
+    GamificationAnswerPatchIn,
+    GamificationAnswerResultOut,
+    GamificationStartIn,
+    GamificationUseItemIn,
 )
 
 router = APIRouter(prefix="/game", tags=["game"])
@@ -71,8 +71,8 @@ async def get_active_game(
 @router.get("/sessions/{session_id}")
 @inject
 async def get_game(
-    user: CurrentUser, 
-    session_id: UUID, 
+    user: CurrentUser,
+    session_id: UUID,
     use_case: FromDishka[GetGameSessionUseCase]
 ):
     row = await use_case.execute(session_id, user.id)
@@ -112,8 +112,8 @@ async def use_item_game(
 @router.post("/sessions/{session_id}/finish")
 @inject
 async def finish_game(
-    user: CurrentUser, 
-    session_id: UUID, 
+    user: CurrentUser,
+    session_id: UUID,
     use_case: FromDishka[FinishGameSessionUseCase]
 ):
     row = await use_case.execute(session_id, user.id)
@@ -128,7 +128,7 @@ async def finish_game(
 @router.get("/history")
 @inject
 async def game_history(
-    user: CurrentUser, 
+    user: CurrentUser,
     use_case: FromDishka[ListGameHistoryUseCase]
 ):
     rows = await use_case.execute(user.id)

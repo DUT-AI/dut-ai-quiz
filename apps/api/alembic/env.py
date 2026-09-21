@@ -5,10 +5,10 @@ from __future__ import annotations
 import asyncio
 from logging.config import fileConfig
 
+import app.infrastructure.persistence.models  # noqa: F401
 from alembic import context
 from app.config import settings
 from app.infrastructure.persistence.models.base import Base
-import app.infrastructure.persistence.models  # noqa: F401
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import create_async_engine

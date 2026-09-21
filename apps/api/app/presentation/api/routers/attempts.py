@@ -1,28 +1,28 @@
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException
 from dishka.integrations.fastapi import FromDishka, inject
+from fastapi import APIRouter, HTTPException
 
 from app.application.use_cases.attempts import (
-    StartAttemptUseCase,
-    SubmitAttemptUseCase,
-    GetAttemptUseCase,
     GetAttemptDetailUseCase,
+    GetAttemptUseCase,
     ListExamAttemptsUseCase,
     PatchAttemptAnswersUseCase,
     RecordFocusEventUseCase,
     ReviewAttemptUseCase,
+    StartAttemptUseCase,
+    SubmitAttemptUseCase,
 )
 from app.application.use_cases.exams.exam_use_case import GetExamUseCase
-from app.presentation.api.deps import AdminOrMentorUser, CurrentUser
+from app.presentation.api.deps import CurrentUser, EducatorUser
 from app.presentation.schemas.attempts import (
+    AttemptAnswerOut,
     AttemptAnswersPatch,
     AttemptOut,
     StartAttemptOut,
-    AttemptAnswerOut,
 )
-from app.presentation.schemas.questions import QuestionOut
 from app.presentation.schemas.common import FocusEventIn
+from app.presentation.schemas.questions import QuestionOut
 
 router = APIRouter(tags=["attempts"])
 
@@ -116,7 +116,7 @@ async def focus_events_route(
 @router.get("/exams/{exam_id}/attempts")
 @inject
 async def list_attempts_teacher(
-    user: AdminOrMentorUser,
+    user: EducatorUser,
     exam_id: UUID,
     get_exam: FromDishka[GetExamUseCase],
     use_case: FromDishka[ListExamAttemptsUseCase],
@@ -131,7 +131,7 @@ async def list_attempts_teacher(
 @router.get("/attempts/{attempt_id}/detail")
 @inject
 async def attempt_detail_teacher(
-    user: AdminOrMentorUser,
+    user: EducatorUser,
     attempt_id: UUID,
     get_exam: FromDishka[GetExamUseCase],
     use_case: FromDishka[GetAttemptDetailUseCase],

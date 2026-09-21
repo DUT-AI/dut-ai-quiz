@@ -1,8 +1,8 @@
 from uuid import UUID
 
 from app.core.datetime_utils import now_ict
-from app.domain.value_objects import AttemptStatus
 from app.domain.interfaces import IAttemptRepository, IExamQuestionRepository
+from app.domain.value_objects import AttemptStatus
 
 
 class SubmitAttemptUseCase:

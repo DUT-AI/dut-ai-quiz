@@ -1,5 +1,7 @@
 from typing import Protocol
+
 from app.domain.entities.manage_service import ManageTeamEntity, ManageUserEntity
+
 
 class IDUTAIManageCache(Protocol):
     """Interface protocol for caching external DUT AI Manage Service responses."""

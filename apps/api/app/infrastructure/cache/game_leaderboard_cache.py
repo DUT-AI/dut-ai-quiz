@@ -2,6 +2,7 @@ import json
 
 from redis.asyncio import Redis
 
+
 class GameLeaderboardCache:
     def __init__(self, redis: Redis, ttl: int = 600) -> None:
         self._redis = redis

@@ -1,4 +1,3 @@
-from app.domain.value_objects import AttemptStatus
 from datetime import datetime
 from typing import Any
 from uuid import UUID, uuid4
@@ -14,7 +13,7 @@ from app.domain.entities.attempt import (
     AttemptEntity,
     FocusEventEntity,
 )
-from app.domain.value_objects import ShuffledSnapshot
+from app.domain.value_objects import AttemptStatus, ShuffledSnapshot
 
 from .base import Base
 

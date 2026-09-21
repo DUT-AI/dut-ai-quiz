@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class GamificationItem(str, Enum):
     MICROSCOPE = "microscope"
     DOUBLE_POINTS = "double_points"

@@ -5,6 +5,7 @@ from app.domain.entities.attempt import FocusEventEntity
 from app.domain.interfaces import IFocusEventRepository
 from app.infrastructure.persistence.models import FocusEvent
 
+
 class FocusEventRepository(IFocusEventRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._s = session

@@ -3,6 +3,7 @@ from typing import Any
 
 from redis.asyncio import Redis
 
+
 class ProfileCache:
     def __init__(self, redis: Redis, ttl: int = 600) -> None:
         self._redis = redis

@@ -288,6 +288,55 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
     }, 10);
   };
 
+  const handleInsertLink = (field: "content" | "solution" | string) => {
+    const id = field === "content" ? "editor-content" : field === "solution" ? "editor-solution" : `editor-option-${field}`;
+    const textarea = document.getElementById(id) as HTMLTextAreaElement | null;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = textarea.value;
+    const selected = text.substring(start, end).trim();
+
+    let replacement = "";
+    
+    if (selected.startsWith("http://") || selected.startsWith("https://")) {
+      const title = prompt("Nhập tiêu đề hiển thị cho liên kết này (hoặc để trống):");
+      if (title === null) return;
+      
+      const displayTitle = title.trim() || selected;
+      replacement = `[${displayTitle}](${selected})`;
+    } else {
+      const url = prompt(
+        selected ? `Nhập địa chỉ URL cho liên kết '${selected}':` : "Nhập địa chỉ URL của liên kết:",
+        "https://"
+      );
+      if (url === null) return;
+      
+      const finalUrl = url.trim() || "url";
+      const displayTitle = selected || "Link";
+      replacement = `[${displayTitle}](${finalUrl})`;
+    }
+
+    const newValue = text.substring(0, start) + replacement + text.substring(end);
+
+    if (field === "content") {
+      setValue("content", newValue, { shouldDirty: true, shouldValidate: true });
+    } else if (field === "solution") {
+      setValue("solution", newValue, { shouldDirty: true, shouldValidate: true });
+    } else {
+      const idx = fields.findIndex((f) => f.id === field);
+      if (idx !== -1) {
+        update(idx, { ...fields[idx], text: newValue });
+      }
+    }
+
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start, start + replacement.length);
+    }, 10);
+  };
+
   const handleNextStep = async (e?: React.MouseEvent) => {
     if (e) {
       e.preventDefault();
@@ -522,6 +571,7 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
                 {currentStep === 1 && (
                   <EditorStep1
                     insertFormat={insertFormat}
+                    onInsertLink={handleInsertLink}
                     uploading={uploading}
                     onUploadFile={handleUpload}
                   />
@@ -538,6 +588,7 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
                 {currentStep === 3 && (
                   <EditorStep3
                     insertFormat={insertFormat}
+                    onInsertLink={handleInsertLink}
                     uploading={uploading}
                     onUploadFile={handleUpload}
                   />

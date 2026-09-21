@@ -1,6 +1,6 @@
+from app.application.services.user_service import UserService
 from app.domain.interfaces import IGameSessionRepository
 from app.infrastructure.cache.game_leaderboard_cache import GameLeaderboardCache
-from app.application.services.user_service import UserService
 
 
 class GetGameLeaderboardUseCase:
@@ -20,7 +20,7 @@ class GetGameLeaderboardUseCase:
             return cached
 
         leaderboard = await self._ps_repo.get_leaderboard_by_lesson(lesson_slug, limit)
-        
+
         if self._user_service:
             for row in leaderboard:
                 if not row.get("username"):
@@ -30,6 +30,6 @@ class GetGameLeaderboardUseCase:
                         row["avatar_url"] = user_info.avatar_url
                     except Exception:
                         pass
-                        
+
         await self._cache.set(lesson_slug, leaderboard)
         return leaderboard

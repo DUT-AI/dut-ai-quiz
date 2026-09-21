@@ -29,6 +29,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
           onError: (error: any) => {
             if (error?.status === 401) return;
             const message = error?.message || "Yêu cầu thực hiện thất bại";
+            // Ignore inline PDF password errors
+            if (
+              message.includes("PDF_LOCKED") ||
+              message.includes("INVALID_PASSWORD") ||
+              message.includes("Mật khẩu PDF không đúng")
+            ) {
+              return;
+            }
             toast.error(message);
           },
         }),

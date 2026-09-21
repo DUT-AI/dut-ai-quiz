@@ -1,12 +1,12 @@
 from uuid import UUID
 
-from app.domain.exceptions.exceptions import AppException
 from app.domain.interfaces.hackathon_repo import (
     IHackathonSubmissionRepository,
     IHackathonTaskRepository,
 )
 from app.domain.services.hackathon_leaderboard import HackathonLeaderboardDomainService
 from app.domain.value_objects.hackathon_leaderboard import HackathonLeaderboardRow
+
 
 class HackathonLeaderboardAppService:
     def __init__(
@@ -27,7 +27,7 @@ class HackathonLeaderboardAppService:
             return []
 
         submissions = await self._sub_repo.list_for_hackathon(hackathon_id)
-        
+
         return self._domain_service.calculate_leaderboard(
             tasks=tasks,
             submissions=submissions,

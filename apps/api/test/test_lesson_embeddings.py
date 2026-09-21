@@ -4,7 +4,6 @@ from uuid import uuid4
 
 import httpx
 import pytest
-
 from app.application.services.lesson_chunker import LessonChunker
 from app.application.services.question_embedding import (
     QuestionEmbeddingService,

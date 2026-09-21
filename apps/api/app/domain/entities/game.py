@@ -2,7 +2,9 @@ import dataclasses
 from datetime import datetime
 from typing import Any
 from uuid import UUID
+
 from app.domain.value_objects import GameSessionStatus
+
 
 @dataclasses.dataclass
 class GameSessionEntity:

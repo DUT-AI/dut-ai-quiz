@@ -141,6 +141,51 @@ export function LessonEditorPage({ initialData }: LessonEditorPageProps) {
     }, 10);
   };
 
+  const handleInsertLink = () => {
+    const textarea = document.getElementById("lesson-editor-content") as HTMLTextAreaElement | null;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = textarea.value;
+    const selected = text.substring(start, end).trim();
+
+    let replacement = "";
+    
+    if (selected.startsWith("http://") || selected.startsWith("https://")) {
+      const title = prompt("Nhập tiêu đề hiển thị cho liên kết này (hoặc để trống):");
+      if (title === null) return;
+      
+      const displayTitle = title.trim() || selected;
+      replacement = `[${displayTitle}](${selected})`;
+    } else {
+      const url = prompt(
+        selected ? `Nhập địa chỉ URL cho liên kết '${selected}':` : "Nhập địa chỉ URL của liên kết:",
+        "https://"
+      );
+      if (url === null) return;
+      
+      const finalUrl = url.trim() || "url";
+      const displayTitle = selected || "Link";
+      replacement = `[${displayTitle}](${finalUrl})`;
+    }
+
+    const newValue = text.substring(0, start) + replacement + text.substring(end);
+    setValue("content_md", newValue, { shouldDirty: true, shouldValidate: true });
+
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start, start + replacement.length);
+    }, 10);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+      e.preventDefault();
+      handleInsertLink();
+    }
+  };
+
   // Upload image to cursor position
   const handleUploadFile = useCallback(
     async (file: File) => {
@@ -229,6 +274,11 @@ export function LessonEditorPage({ initialData }: LessonEditorPageProps) {
     const currentModuleId = getValues("module_id");
     if (currentModuleId) {
       formData.append("module_id", currentModuleId);
+    }
+
+    // Pass lesson_id if editing an existing lesson
+    if (isEdit && initialData?.id) {
+      formData.append("lesson_id", initialData.id);
     }
     
     // Autofill Swagger placeholders
@@ -573,12 +623,13 @@ export function LessonEditorPage({ initialData }: LessonEditorPageProps) {
                 </label>
 
                 <div className="flex-1 flex flex-col min-h-0 rounded-3xl overflow-hidden border border-gray-200 dark:border-white/10 focus-within:border-primary/50 transition-all bg-gray-50 dark:bg-white/5">
-                  <EditorToolbar onInsert={insertFormat} />
+                  <EditorToolbar onInsert={insertFormat} onInsertLink={handleInsertLink} />
                   <div className="relative flex-1 min-h-0 group">
                     <textarea
                       id="lesson-editor-content"
                       {...register("content_md")}
                       onPaste={(e) => handlePasteImage(e, handleUploadFile)}
+                      onKeyDown={handleKeyDown}
                       placeholder="Nhập nội dung lý thuyết chi tiết của bài học bằng Markdown..."
                       className="w-full h-full p-6 bg-transparent border-0 outline-none transition-all font-mono text-base leading-relaxed resize-none overflow-y-auto custom-scrollbar text-dark-blue dark:text-white focus:bg-white dark:focus:bg-navy-blue"
                     />

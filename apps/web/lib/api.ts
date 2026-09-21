@@ -29,6 +29,14 @@ function validateData<T>(data: unknown, schema: z.ZodType<T, any, any>, path: st
   return result.data;
 }
 
+function parseErrorDetail(body: any): string | undefined {
+  if (!body?.detail) return undefined;
+  if (typeof body.detail === "object" && body.detail !== null) {
+    return body.detail.error || JSON.stringify(body.detail);
+  }
+  return String(body.detail);
+}
+
 export async function apiFetch(
   path: string,
   init?: RequestInit
@@ -50,12 +58,14 @@ export async function apiJson<T>(
     let detail = res.statusText;
     try {
       const body = await res.json();
-      if (body?.detail) detail = String(body.detail);
+      const parsedDetail = parseErrorDetail(body);
+      if (parsedDetail) detail = parsedDetail;
     } catch {
       /* ignore */
     }
     const error = new Error(detail || `HTTP ${res.status}`);
     (error as any).status = res.status;
+    (error as any).detail = detail;
     throw error;
   }
 
@@ -142,11 +152,15 @@ export const apiClient = {
       let detail = res.statusText;
       try {
         const body = await res.json();
-        if (body?.detail) detail = String(body.detail);
+        const parsedDetail = parseErrorDetail(body);
+        if (parsedDetail) detail = parsedDetail;
       } catch {
         /* ignore */
       }
-      throw new Error(detail || `HTTP ${res.status}`);
+      const error = new Error(detail || `HTTP ${res.status}`);
+      (error as any).status = res.status;
+      (error as any).detail = detail;
+      throw error;
     }
     let data;
     try {
@@ -195,11 +209,15 @@ export const apiClient = {
       let detail = res.statusText;
       try {
         const rspBody = await res.json();
-        if (rspBody?.detail) detail = String(rspBody.detail);
+        const parsedDetail = parseErrorDetail(rspBody);
+        if (parsedDetail) detail = parsedDetail;
       } catch {
         /* ignore */
       }
-      throw new Error(detail || `HTTP ${res.status}`);
+      const error = new Error(detail || `HTTP ${res.status}`);
+      (error as any).status = res.status;
+      (error as any).detail = detail;
+      throw error;
     }
 
     let data;
@@ -246,11 +264,15 @@ export const apiClient = {
       let detail = res.statusText;
       try {
         const rspBody = await res.json();
-        if (rspBody?.detail) detail = String(rspBody.detail);
+        const parsedDetail = parseErrorDetail(rspBody);
+        if (parsedDetail) detail = parsedDetail;
       } catch {
         /* ignore */
       }
-      throw new Error(detail || `HTTP ${res.status}`);
+      const error = new Error(detail || `HTTP ${res.status}`);
+      (error as any).status = res.status;
+      (error as any).detail = detail;
+      throw error;
     }
 
     let data;

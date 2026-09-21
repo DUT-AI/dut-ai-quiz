@@ -1,10 +1,10 @@
 from datetime import datetime
 from uuid import UUID, uuid4
 
+from app.core.datetime_utils import utc_to_ict
 from app.domain.entities.exam import ExamEntity
 from app.domain.interfaces import IExamQuestionRepository, IExamRepository
 from app.presentation.schemas.exams import ExamCreate, ExamUpdate
-from app.core.datetime_utils import utc_to_ict
 
 
 class CreateExamUseCase:

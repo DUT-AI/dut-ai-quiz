@@ -2,7 +2,6 @@ from datetime import datetime
 from uuid import uuid4
 
 import pytest
-
 from app.application.services.question_embedding import question_embedding_hash
 from app.application.use_cases.questions.related_questions_uc import (
     FindRelatedQuestionsUseCase,

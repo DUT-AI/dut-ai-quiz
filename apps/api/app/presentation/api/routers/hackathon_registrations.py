@@ -13,7 +13,7 @@ from app.application.use_cases.hackathon import (
     RegisterIndividualUseCase,
     ReviewRegistrationUseCase,
 )
-from app.presentation.api.deps import AdminOrMentorUser, CurrentUser
+from app.presentation.api.deps import CurrentUser, ProjectDevUser
 from app.presentation.schemas.hackathons import (
     HackathonRegistrationOut,
     HackathonTeamCreate,
@@ -98,11 +98,11 @@ async def get_registration_status_route(
 )
 @inject
 async def list_registrations_route(
-    user: AdminOrMentorUser,
+    user: ProjectDevUser,
     hackathon_id: UUID,
     use_case: FromDishka[ListRegistrationsUseCase],
 ):
-    return await use_case(hackathon_id, user.id)
+    return await use_case(hackathon_id, user.id, is_admin=user.is_admin())
 
 
 @router.post(
@@ -111,10 +111,16 @@ async def list_registrations_route(
 )
 @inject
 async def review_registration_route(
-    user: AdminOrMentorUser,
+    user: ProjectDevUser,
     hackathon_id: UUID,
     reg_id: UUID,
     body: ReviewRegistrationInput,
     use_case: FromDishka[ReviewRegistrationUseCase],
 ):
-    return await use_case(reg_id, body.status, user.id, body.rejection_reason)
+    return await use_case(
+        reg_id,
+        body.status,
+        user.id,
+        body.rejection_reason,
+        is_admin=user.is_admin(),
+    )

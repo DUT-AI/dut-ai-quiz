@@ -1,7 +1,5 @@
 from uuid import UUID
 
-from fastapi import HTTPException
-
 from app.domain.interfaces import (
     IGameSessionRepository,
     IQuestionRepository,
@@ -13,6 +11,7 @@ from app.presentation.schemas.game import (
     GamificationAnswerPatchIn,
     GamificationAnswerResultOut,
 )
+from fastapi import HTTPException
 
 
 class PatchGameAnswerUseCase:

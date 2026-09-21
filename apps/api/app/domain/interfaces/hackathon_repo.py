@@ -3,9 +3,9 @@ from uuid import UUID
 
 from app.domain.entities.hackathon import (
     HackathonEntity,
+    HackathonRegistrationEntity,
     HackathonTaskEntity,
     HackathonTeamEntity,
-    HackathonRegistrationEntity,
 )
 from app.domain.entities.submission import HackathonSubmissionEntity
 

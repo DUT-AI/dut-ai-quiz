@@ -1,7 +1,7 @@
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException
 from dishka.integrations.fastapi import FromDishka, inject
+from fastapi import APIRouter, HTTPException
 
 from app.application.services.auth_roles import quiz_role_from_manage
 from app.application.use_cases.exams.exam_use_case import (
@@ -14,16 +14,17 @@ from app.application.use_cases.exams.exam_use_case import (
     UpdateExamUseCase,
 )
 from app.application.use_cases.exams.stats_use_case import GetExamStatsUseCase
-from app.presentation.api.deps import CurrentUser, TeacherUser
 from app.core.datetime_utils import now_ict
+from app.domain.entities.auth_enums import SystemPermission
+from app.presentation.api.deps import CurrentUser, TeacherUser
 from app.presentation.schemas.exams import (
     ExamCreate,
     ExamOut,
     ExamQuestionsPut,
     ExamUpdate,
 )
-from app.presentation.schemas.stats import ExamStatsOut
 from app.presentation.schemas.questions import QuestionOut
+from app.presentation.schemas.stats import ExamStatsOut
 
 router = APIRouter(prefix="/exams", tags=["exams"])
 
@@ -33,7 +34,7 @@ router = APIRouter(prefix="/exams", tags=["exams"])
 async def list_exams_route(
     user: CurrentUser, use_case: FromDishka[ListExamsUseCase]
 ):
-    if user.has_any_role("admin", "MENTOR"):
+    if user.has_permission(SystemPermission.MANAGE_EXAM):
         return await use_case.execute_for_teacher(user.id)
     return await use_case.execute_for_student(user.id, now_ict())
 
@@ -54,7 +55,7 @@ async def get_exam_route(
     ex = await use_case.execute(exam_id, user_id=user.id, role=quiz_role_from_manage(user.roles))
     if not ex:
         raise HTTPException(status_code=404, detail="Not found")
-    if not user.has_any_role("admin", "MENTOR"):
+    if not user.has_permission(SystemPermission.MANAGE_EXAM):
         if not ex.is_published:
             raise HTTPException(status_code=404, detail="Not found")
     return ex

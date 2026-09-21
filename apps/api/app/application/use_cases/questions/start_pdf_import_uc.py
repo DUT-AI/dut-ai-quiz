@@ -1,16 +1,16 @@
-import uuid
 import hashlib
-from datetime import datetime
-import fitz  
-from redis.asyncio import Redis
 import os
+import uuid
+from datetime import datetime
 
+import fitz
 from app.domain.entities.import_session import ImportSessionEntity, ImportSessionStatus
 from app.domain.interfaces.import_session_repo import IImportSessionRepository
 from app.domain.interfaces.pdf_import_queue import IPdfImportQueue
 from app.presentation.schemas.pdf_import import StartPdfImportResponse
+from redis.asyncio import Redis
 
-import tempfile
+
 class StartPdfImportUseCase:
     def __init__(
         self,
@@ -26,10 +26,10 @@ class StartPdfImportUseCase:
         self,
         user_id: int,
         pdf_bytes: bytes,
-        file_name: str | None,
-        lesson_id: str | None,
-        target_scope: str,
-        password: str | None,
+        file_name: str | None = None,
+        lesson_id: str | None = None,
+        target_scope: str = "LESSON",
+        password: str | None = None,
     ) -> StartPdfImportResponse:
         # 1. Validation & Password checking
         if len(pdf_bytes) > 20 * 1024 * 1024:
@@ -49,16 +49,25 @@ class StartPdfImportUseCase:
 
         if len(doc) < 1:
             raise ValueError("PDF must not be empty")
-            
+
         doc.close()
+
+        # 2. Redis Lock for Duplicate Upload prevention (TTL: 60s)
+        file_hash = hashlib.md5(pdf_bytes).hexdigest()
+        lock_key = f"pdf_import_lock:{user_id}:{file_hash}"
+        acquired = await self.redis.setnx(lock_key, "locked")
+        if not acquired:
+            raise ValueError("Duplicate upload detected. Please wait.")
+        await self.redis.expire(lock_key, 60)
+
         await self.pdf_import_queue.check_job_existing(pdf_bytes, user_id)
 
         # 3. Save decoded file to temp_dir/pdf_uploads/{job_id}.pdf
         job_id = uuid.uuid4()
-        upload_dir = os.path.join(tempfile.gettempdir(), "pdf_uploads")
+        upload_dir = "/tmp/pdf_uploads"
         os.makedirs(upload_dir, exist_ok=True)
         file_path = os.path.join(upload_dir, f"{job_id}.pdf")
-        
+
         with open(file_path, "wb") as f:
             f.write(pdf_bytes)
 

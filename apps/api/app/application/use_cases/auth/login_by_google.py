@@ -1,9 +1,8 @@
-from app.domain.exceptions.exceptions import AppException
-from app.domain.entities.manage_service import ManageUserProfile
 from app.application.dtos import AuthTokens
-from app.application.services.auth_roles import quiz_role_from_manage
 from app.core.jwt import create_access_token
+from app.domain.entities.manage_service import ManageUserProfile
 from app.domain.entities.user import UserEntity
+from app.domain.exceptions.exceptions import AppException
 from app.domain.interfaces import IManageService, IUserRepository
 from app.infrastructure.clients import GoogleOAuthClient
 from loguru import logger
@@ -97,7 +96,7 @@ class GoogleAuthUseCase:
             # 3. Check if email exists in Manage Service (for Account Linking)
             logger.info(f"Checking email {email} on Manage Service")
             user_profiles = await self._manage_client.find_user_by_email(email)
-            
+
             matched_profile = None
             if user_profiles:
                 for u in user_profiles:

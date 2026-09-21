@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Any
 from uuid import UUID
 
 from app.application.dtos.homework import (
@@ -73,10 +74,10 @@ class IHomeworkRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def list_completed_members(
-        self, homework_id: UUID
-    ) -> list[CompletedHomeworkMemberOutDTO]:
-        """List completed homework member details including email, submission count, max score."""
+    async def list_completed_members_by_lesson(
+        self, lesson_id: UUID
+    ) -> list[Any]:
+        """List member completion stats for homeworks in the given lesson."""
         raise NotImplementedError
 
     @abstractmethod

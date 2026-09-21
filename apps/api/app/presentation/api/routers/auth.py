@@ -23,7 +23,7 @@ def _set_auth_cookies(response: Response, access_token: str, refresh_token: str)
         key="access_token",
         value=access_token,
         httponly=True,
-        secure=True,
+        secure=is_prod,
         samesite="lax",
         domain=domain,
         max_age=3600 * 24,  # 1 day
@@ -33,7 +33,7 @@ def _set_auth_cookies(response: Response, access_token: str, refresh_token: str)
         key="refresh_token",
         value=refresh_token,
         httponly=True,
-        secure=True,
+        secure=is_prod,
         samesite="lax",
         domain=domain,
         max_age=3600 * 24 * 7,  # 7 days
@@ -52,7 +52,11 @@ async def login(
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     _set_auth_cookies(response, tokens.access_token, tokens.refresh_token)
-    return {"is_success": True}
+    return {
+        "is_success": True,
+        "access_token": tokens.access_token,
+        "refresh_token": tokens.refresh_token,
+    }
 
 
 @router.get("/google/login")

@@ -1,12 +1,11 @@
 import re
+
 import fitz
+from app.domain.interfaces.pdf_parser_strategy import IPdfParserStrategy
 from app.presentation.schemas.pdf_import import (
     ParsedQuestionPreview,
-    PDFParseResponse,
     PDFImportRequest,
 )
-
-from app.domain.interfaces.pdf_parser_strategy import IPdfParserStrategy
 
 
 class RegexPdfParserStrategy(IPdfParserStrategy):
@@ -14,7 +13,7 @@ class RegexPdfParserStrategy(IPdfParserStrategy):
         self, pdf_bytes: bytes, password: str | None = None, **kwargs
     ) -> list[ParsedQuestionPreview]:
         request = kwargs.get("request", PDFImportRequest())
-        
+
         doc = fitz.open(stream=pdf_bytes, filetype="pdf")
         if doc.is_encrypted and password:
             doc.authenticate(password)
