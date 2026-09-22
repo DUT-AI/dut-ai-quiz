@@ -1,4 +1,3 @@
-
 from app.application.dtos.homework import CompletedHomeworkMemberOutDTO
 from app.domain.exceptions.exceptions import AppException
 from app.domain.interfaces.homework_repo import IHomeworkRepository

@@ -27,9 +27,7 @@ class HomeworkRubric(BaseModel):
     allowed_libraries: list[str] = Field(default_factory=list)
     forbidden_libraries: list[str] = Field(default_factory=list)
     notes: list[str] = Field(default_factory=list)
-    criteria: list[GradingCriterion] = Field(
-        default_factory=list, min_length=3, max_length=10
-    )
+    criteria: list[GradingCriterion] = Field(default_factory=list, min_length=3, max_length=10)
 
     @model_validator(mode="after")
     def validate_criteria(self) -> "HomeworkRubric":
@@ -59,9 +57,7 @@ class ChecklistEvaluation(BaseModel):
         return next(item for item in self.evaluations if item.id == criterion_id)
 
     def replace(self, value: CriterionEvaluation) -> None:
-        self.evaluations = [
-            value if item.id == value.id else item for item in self.evaluations
-        ]
+        self.evaluations = [value if item.id == value.id else item for item in self.evaluations]
 
 
 @dataclass(frozen=True, slots=True)
@@ -102,4 +98,3 @@ class GradeResult:
     score: float
     feedback: str
     score_details: list[dict[str, Any]]
-

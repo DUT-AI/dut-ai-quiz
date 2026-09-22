@@ -8,7 +8,6 @@ from app.application.dtos.homework import (
 from app.domain.entities.homework import HomeworkEntity, HomeworkSubmissionEntity
 
 
-
 class IHomeworkRepository(ABC):
     @abstractmethod
     async def list_homeworks(
@@ -44,9 +43,7 @@ class IHomeworkRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def get_submission(
-        self, submission_id: UUID
-    ) -> HomeworkSubmissionEntity | None:
+    async def get_submission(self, submission_id: UUID) -> HomeworkSubmissionEntity | None:
         raise NotImplementedError
 
     @abstractmethod
@@ -56,16 +53,12 @@ class IHomeworkRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def retry_failed_submission(
-        self, submission_id: UUID
-    ) -> HomeworkSubmissionEntity | None:
+    async def retry_failed_submission(self, submission_id: UUID) -> HomeworkSubmissionEntity | None:
         """Atomically move a failed submission back to grading."""
         raise NotImplementedError
 
     @abstractmethod
-    async def list_submissions(
-        self, homework_id: UUID
-    ) -> list[HomeworkSubmissionEntity]:
+    async def list_submissions(self, homework_id: UUID) -> list[HomeworkSubmissionEntity]:
         raise NotImplementedError
 
     @abstractmethod
@@ -74,13 +67,10 @@ class IHomeworkRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def list_completed_members_by_lesson(
-        self, lesson_id: UUID
-    ) -> list[Any]:
+    async def list_completed_members_by_lesson(self, lesson_id: UUID) -> list[Any]:
         """List member completion stats for homeworks in the given lesson."""
         raise NotImplementedError
 
     @abstractmethod
     async def count_submitters(self, homework_id: UUID) -> int:
         raise NotImplementedError
-

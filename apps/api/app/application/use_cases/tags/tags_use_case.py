@@ -39,4 +39,3 @@ class DeleteTagUseCase:
 
     async def execute(self, tag_id: UUID) -> None:
         await self._tag_repo.delete(tag_id)
-

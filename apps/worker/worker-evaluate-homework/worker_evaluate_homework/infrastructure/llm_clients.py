@@ -51,9 +51,7 @@ class OpenAILLMClient(ILLMClient):
         self._temperature = (
             temperature if temperature is not None else settings.homework_llm_temperature
         )
-        self._timeout = (
-            timeout if timeout is not None else settings.homework_llm_timeout_seconds
-        )
+        self._timeout = timeout if timeout is not None else settings.homework_llm_timeout_seconds
         self._client = http_client
 
     async def _get_client(self) -> httpx.AsyncClient:

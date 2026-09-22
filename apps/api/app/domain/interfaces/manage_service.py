@@ -25,9 +25,7 @@ class IManageService(ABC):
         pass
 
     @abstractmethod
-    async def get_own_profile(
-        self, dut_ai_user_access_token: str
-    ) -> ManageUserProfile | None:
+    async def get_own_profile(self, dut_ai_user_access_token: str) -> ManageUserProfile | None:
         """Lấy thông tin profile cá nhân bằng access token."""
         pass
 

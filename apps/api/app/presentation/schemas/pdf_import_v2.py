@@ -1,4 +1,5 @@
 """Pydantic schemas for PDF Import v2 API."""
+
 from __future__ import annotations
 
 from uuid import UUID
@@ -8,6 +9,7 @@ from pydantic import BaseModel, Field
 
 class PDFUploadResponse(BaseModel):
     """Response for successful PDF upload (202 Accepted pattern)."""
+
     ok: bool
     job_id: str | None = None
     status: str | None = None
@@ -17,6 +19,7 @@ class PDFUploadResponse(BaseModel):
 
 class ImportSessionStatusResponse(BaseModel):
     """Status poll response."""
+
     job_id: str
     status: str  # PROCESSING | COMPLETED | FAILED
     total_questions: int
@@ -35,6 +38,7 @@ class DraftQuestionOptionOut(BaseModel):
 
 class DraftQuestionOut(BaseModel):
     """DRAFT question as shown in review UI."""
+
     id: str
     content: str
     options: list[DraftQuestionOptionOut]
@@ -58,6 +62,7 @@ class DraftQuestionsListResponse(BaseModel):
 
 class ApproveQuestionRequest(BaseModel):
     """Optional inline edits when approving."""
+
     content: str | None = None
     solution: str | None = None
     difficulty: str | None = None

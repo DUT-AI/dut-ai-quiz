@@ -26,9 +26,7 @@ from app.presentation.schemas.hackathons import (
 router = APIRouter(prefix="/hackathons", tags=["hackathons"])
 
 
-@router.post(
-    "/{hackathon_id}/register/individual", response_model=HackathonRegistrationOut
-)
+@router.post("/{hackathon_id}/register/individual", response_model=HackathonRegistrationOut)
 @inject
 async def register_individual_route(
     user: CurrentUser,
@@ -93,9 +91,7 @@ async def get_registration_status_route(
     return await use_case(hackathon_id, user.id)
 
 
-@router.get(
-    "/{hackathon_id}/registrations", response_model=list[HackathonRegistrationOut]
-)
+@router.get("/{hackathon_id}/registrations", response_model=list[HackathonRegistrationOut])
 @inject
 async def list_registrations_route(
     user: ProjectDevUser,

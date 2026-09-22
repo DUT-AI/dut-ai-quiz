@@ -49,7 +49,6 @@ class LessonDetailOut(LessonOut):
     has_game_questions: bool = False
 
 
-
 class LessonReorderItem(BaseModel):
     id: UUID
     order: int

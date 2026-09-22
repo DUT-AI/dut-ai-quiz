@@ -42,9 +42,7 @@ class PatchGameAnswerUseCase:
         questions = session.snapshot.get("questions", [])
         current_idx = session.snapshot["gamification"].get("last_question_index", 0)
         if current_idx >= len(questions):
-            raise HTTPException(
-                status_code=400, detail="All questions already answered"
-            )
+            raise HTTPException(status_code=400, detail="All questions already answered")
 
         current_q = questions[current_idx]
         if current_q["id"] != str(payload.question_id):
@@ -71,9 +69,7 @@ class PatchGameAnswerUseCase:
 
         from app.core.datetime_utils import now_ict
 
-        started_at_str = session.snapshot["gamification"].get(
-            "current_question_started_at"
-        )
+        started_at_str = session.snapshot["gamification"].get("current_question_started_at")
         if started_at_str:
             started_at = datetime.fromisoformat(started_at_str)
             elapsed = (now_ict() - started_at).total_seconds()
@@ -106,9 +102,7 @@ class PatchGameAnswerUseCase:
 
         gold = session.snapshot["gamification"].get("gold", 0)
         if gold < cost:
-            raise HTTPException(
-                status_code=400, detail="Not enough gold to activate items"
-            )
+            raise HTTPException(status_code=400, detail="Not enough gold to activate items")
 
         # Deduct item costs
         gold -= cost
@@ -116,9 +110,7 @@ class PatchGameAnswerUseCase:
 
         # Record item usages
         if payload.activate_shield:
-            session.snapshot["gamification"]["shield_used_in_tier"][
-                str(current_tier)
-            ] = True
+            session.snapshot["gamification"]["shield_used_in_tier"][str(current_tier)] = True
 
         # Calculate Points & Gold rewards
         points_gained = 0
@@ -161,18 +153,14 @@ class PatchGameAnswerUseCase:
             else:
                 lives_lost = 2 if is_boss else 1
                 current_lives = session.snapshot["gamification"].get("lives", 3)
-                session.snapshot["gamification"]["lives"] = max(
-                    0, current_lives - lives_lost
-                )
+                session.snapshot["gamification"]["lives"] = max(0, current_lives - lives_lost)
 
         # Record answer and time response
         session.snapshot["answers"][str(payload.question_id)] = str(payload.option_id)
         current_q["time_response"] = payload.time_response
 
         # Tự động cộng dồn tổng thời gian làm bài của toàn bộ session
-        current_total_time = session.snapshot["gamification"].get(
-            "total_time_response", 0.0
-        )
+        current_total_time = session.snapshot["gamification"].get("total_time_response", 0.0)
         session.snapshot["gamification"]["total_time_response"] = (
             current_total_time + payload.time_response
         )
@@ -186,13 +174,9 @@ class PatchGameAnswerUseCase:
             if next_q["tier"] > current_tier:
                 current_lives = session.snapshot["gamification"].get("lives", 0)
                 if current_lives > 0:
-                    session.snapshot["gamification"]["lives"] = min(
-                        5, current_lives + 2
-                    )
+                    session.snapshot["gamification"]["lives"] = min(5, current_lives + 2)
                     session.snapshot["gamification"]["current_tier"] = next_q["tier"]
-            session.snapshot["gamification"]["boss_hp"] = (
-                1 if next_q.get("is_boss", False) else 0
-            )
+            session.snapshot["gamification"]["boss_hp"] = 1 if next_q.get("is_boss", False) else 0
         else:
             session.snapshot["gamification"]["boss_hp"] = 0
 
@@ -211,9 +195,7 @@ class PatchGameAnswerUseCase:
             lesson_slug = session.snapshot.get("lesson_slug") or (
                 session.tags_filter[0] if session.tags_filter else "unknown"
             )
-            count_completed = await self._ps_repo.count_completed_by_lesson(
-                user_id, lesson_slug
-            )
+            count_completed = await self._ps_repo.count_completed_by_lesson(user_id, lesson_slug)
             decay = max(0.2, 1.0 - (count_completed * 0.2))
             base_points = session.snapshot["gamification"].get("points", 0)
             session.snapshot["gamification"]["final_score"] = base_points * decay
@@ -223,9 +205,7 @@ class PatchGameAnswerUseCase:
                 await self._cache.invalidate(lesson_slug)
 
         # Set started_at for next question
-        session.snapshot["gamification"]["current_question_started_at"] = (
-            now_ict().isoformat()
-        )
+        session.snapshot["gamification"]["current_question_started_at"] = now_ict().isoformat()
 
         await self._ps_repo.save(session)
 

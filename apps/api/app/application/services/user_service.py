@@ -9,7 +9,9 @@ from redis.asyncio import Redis
 
 
 class UserService:
-    def __init__(self, user_repo: IUserRepository, manage_client: IManageService, redis: Redis = None):
+    def __init__(
+        self, user_repo: IUserRepository, manage_client: IManageService, redis: Redis = None
+    ):
         self.user_repo = user_repo
         self.manage_client = manage_client
         self._redis = redis
@@ -78,7 +80,7 @@ class UserService:
             return {
                 "name": u.name or u.email,
                 "avatar_url": u.avatar_url,
-                "role": u.role or "guest"
+                "role": u.role or "guest",
             }
 
         # 2. Check Redis cache
@@ -88,6 +90,7 @@ class UserService:
                 cached_data = await self._redis.get(cache_key)
                 if cached_data:
                     import json
+
                     return json.loads(cached_data)
             except Exception as e:
                 logger.warning(f"Error reading user profile cache: {e}")
@@ -97,22 +100,20 @@ class UserService:
             profile = await self.manage_client.get_profile(user_id)
             if profile:
                 from app.application.services.auth_roles import quiz_role_from_manage
+
                 quiz_role = "guest"
                 try:
                     quiz_role = quiz_role_from_manage(profile.role_names)
                 except Exception:
                     pass
 
-                data = {
-                    "name": profile.name,
-                    "avatar_url": profile.avatar_url,
-                    "role": quiz_role
-                }
+                data = {"name": profile.name, "avatar_url": profile.avatar_url, "role": quiz_role}
 
                 # Cache resolved profile in Redis for 10 minutes (600s)
                 if self._redis:
                     try:
                         import json
+
                         await self._redis.set(cache_key, json.dumps(data), ex=600)
                     except Exception as e:
                         logger.warning(f"Error writing user profile cache: {e}")
@@ -121,11 +122,7 @@ class UserService:
             logger.warning(f"Error fetching profile from Manage Service for user {user_id}: {e}")
 
         if settings.auth_dev_bypass:
-            return {
-                "name": f"User #{user_id}",
-                "avatar_url": None,
-                "role": "guest"
-            }
+            return {"name": f"User #{user_id}", "avatar_url": None, "role": "guest"}
 
         return None
 
@@ -136,6 +133,7 @@ class UserService:
 
         # Thu thập tất cả user_id duy nhất
         user_ids = set()
+
         def collect_ids(c):
             user_ids.add(c.user_id)
             if c.replies:
@@ -147,6 +145,7 @@ class UserService:
 
         # Phân giải thông tin user song song
         import asyncio
+
         async def resolve_one(uid: int):
             try:
                 return uid, await self.get_user_profile(uid)
@@ -173,4 +172,3 @@ class UserService:
 
         for c in comments:
             populate(c)
-

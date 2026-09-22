@@ -20,9 +20,7 @@ class Settings(BaseSettings):
         populate_by_name=True,
     )
 
-    database_url: str = (
-        "postgresql+asyncpg://dutai_dev:dutai_dev@127.0.0.1:6070/quizdb_dev"
-    )
+    database_url: str = "postgresql+asyncpg://dutai_dev:dutai_dev@127.0.0.1:6070/quizdb_dev"
 
     manage_base_url: str = ""
     manage_api_key: str = ""
@@ -137,15 +135,11 @@ class Settings(BaseSettings):
     )
     homework_llm_api_url: str = Field(
         default="",
-        validation_alias=AliasChoices(
-            "HOMEWORK_LLM_API_URL", "LLM_API_URL", "OPENAI_API_BASE"
-        ),
+        validation_alias=AliasChoices("HOMEWORK_LLM_API_URL", "LLM_API_URL", "OPENAI_API_BASE"),
     )
     homework_llm_api_key: str = Field(
         default="",
-        validation_alias=AliasChoices(
-            "HOMEWORK_LLM_API_KEY", "LLM_API_KEY", "OPENAI_API_KEY"
-        ),
+        validation_alias=AliasChoices("HOMEWORK_LLM_API_KEY", "LLM_API_KEY", "OPENAI_API_KEY"),
     )
     homework_llm_model: str = Field(
         default="ggml-org/gemma-4-e4b-it-GGUF:Q4_0",
@@ -163,7 +157,7 @@ class Settings(BaseSettings):
     # ================= PDF IMPORT CONFIG ========================
     pdf_max_size_mb: int = 20
     pdf_max_pages: int = 5
-    pdf_image_min_px: int = 80          # Ignore images smaller than 80x80px
+    pdf_image_min_px: int = 80  # Ignore images smaller than 80x80px
     pdf_duplicate_threshold: float = 0.85
     review_lock_ttl_seconds: int = 60
     review_lock_heartbeat_seconds: int = 30
@@ -212,9 +206,7 @@ class Settings(BaseSettings):
     @property
     def cors_origin_list(self) -> list[str]:
         return [
-            origin.strip().rstrip("/")
-            for origin in self.cors_origins.split(",")
-            if origin.strip()
+            origin.strip().rstrip("/") for origin in self.cors_origins.split(",") if origin.strip()
         ]
 
     @property

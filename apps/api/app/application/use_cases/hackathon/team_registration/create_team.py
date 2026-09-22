@@ -56,16 +56,12 @@ class CreateTeamUseCase:
         # Kiểm tra xem user đã ở đội khác chưa
         user_team = await self._team_repo.get_user_team(hackathon_id, user_id)
         if user_team:
-            raise AppException(
-                "Bạn đã tham gia một đội thi khác trong hackathon này", 400
-            )
+            raise AppException("Bạn đã tham gia một đội thi khác trong hackathon này", 400)
 
         # Kiểm tra xem user đã đăng ký cá nhân chưa
         existing_reg = await self._reg_repo.get_user_registration(hackathon_id, user_id)
         if existing_reg:
-            raise AppException(
-                "Bạn đã đăng ký tham gia hackathon này với tư cách cá nhân", 400
-            )
+            raise AppException("Bạn đã đăng ký tham gia hackathon này với tư cách cá nhân", 400)
 
         # Sinh mã đội duy nhất dạng DUT-XXXX
         chars = string.ascii_uppercase + string.digits

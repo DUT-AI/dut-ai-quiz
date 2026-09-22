@@ -11,23 +11,17 @@ from worker_hackathon.domain.interfaces.submission_repository import ISubmission
 
 
 class PostgresSubmissionRepository(ISubmissionRepository):
-    async def get_submission(
-        self, submission_id: UUID
-    ) -> HackathonSubmissionEntity | None:
+    async def get_submission(self, submission_id: UUID) -> HackathonSubmissionEntity | None:
         async with AsyncSessionLocal() as session:
             result = await session.execute(
-                select(HackathonSubmission).where(
-                    HackathonSubmission.id == submission_id
-                )
+                select(HackathonSubmission).where(HackathonSubmission.id == submission_id)
             )
             model = result.scalar_one_or_none()
             return model.to_entity() if model else None
 
     async def get_task(self, task_id: UUID) -> HackathonTaskEntity | None:
         async with AsyncSessionLocal() as session:
-            result = await session.execute(
-                select(HackathonTask).where(HackathonTask.id == task_id)
-            )
+            result = await session.execute(select(HackathonTask).where(HackathonTask.id == task_id))
             model = result.scalar_one_or_none()
             return model.to_entity() if model else None
 
@@ -36,9 +30,7 @@ class PostgresSubmissionRepository(ISubmissionRepository):
     ) -> HackathonSubmissionEntity:
         async with AsyncSessionLocal() as session:
             result = await session.execute(
-                select(HackathonSubmission).where(
-                    HackathonSubmission.id == submission.id
-                )
+                select(HackathonSubmission).where(HackathonSubmission.id == submission.id)
             )
             model = result.scalar_one_or_none()
             if not model:

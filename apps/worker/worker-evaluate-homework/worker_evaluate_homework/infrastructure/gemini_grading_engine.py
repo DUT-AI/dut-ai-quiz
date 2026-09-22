@@ -117,10 +117,7 @@ BẮT BUỘC TRẢ VỀ JSON theo cấu trúc mẫu sau (chỉ trả về JSON, 
             return _blocking_result(rubric.criteria, static["blocking_errors"])
 
         checklist = "\n".join(
-            (
-                f"{item.id}. [{item.weight:.4g} điểm] "
-                f"{item.criterion}: {item.description}"
-            )
+            (f"{item.id}. [{item.weight:.4g} điểm] {item.criterion}: {item.description}")
             for item in rubric.criteria
         )
         source_text = _pack_sources(sources)
@@ -187,9 +184,7 @@ BẮT BUỘC TRẢ VỀ JSON theo cấu trúc sau:
                 }
             )
             mark = "✅" if evaluation.status else "❌"
-            feedback_lines.append(
-                f"- {mark} **{item.criterion}**: {evaluation.description}"
-            )
+            feedback_lines.append(f"- {mark} **{item.criterion}**: {evaluation.description}")
 
         score = round(min(score, 10.0), 2)
         feedback_lines.extend(["", f"**Tổng điểm: {score}/10**"])
@@ -219,9 +214,7 @@ def _analyze_sources(
     source_names = {PurePath(source.name).name.casefold() for source in sources}
     local_modules = _local_module_names(sources)
     missing = [
-        name
-        for name in rubric.required_files
-        if PurePath(name).name.casefold() not in source_names
+        name for name in rubric.required_files if PurePath(name).name.casefold() not in source_names
     ]
     syntax_errors: list[str] = []
     imported_modules: set[str] = set()
@@ -241,9 +234,7 @@ def _analyze_sources(
             elif isinstance(node, ast.ClassDef):
                 class_count += 1
             elif isinstance(node, ast.Import):
-                imported_modules.update(
-                    alias.name.split(".")[0].casefold() for alias in node.names
-                )
+                imported_modules.update(alias.name.split(".")[0].casefold() for alias in node.names)
             elif isinstance(node, ast.ImportFrom) and node.module:
                 imported_modules.add(node.module.split(".")[0].casefold())
 
@@ -251,9 +242,7 @@ def _analyze_sources(
     allowed = _expand_library_names(rubric.allowed_libraries)
     forbidden_imports = sorted(imported_modules & forbidden)
     unauthorized_imports = (
-        sorted(
-            imported_modules - allowed - local_modules - set(sys.stdlib_module_names)
-        )
+        sorted(imported_modules - allowed - local_modules - set(sys.stdlib_module_names))
         if allowed
         else []
     )

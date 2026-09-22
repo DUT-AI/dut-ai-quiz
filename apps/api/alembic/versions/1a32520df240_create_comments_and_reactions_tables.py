@@ -5,11 +5,12 @@ Revises: ed8412cf32e4
 Create Date: 2026-07-17 11:14:36.196385
 
 """
+
 from collections.abc import Sequence
 
 # revision identifiers, used by Alembic.
-revision: str = '1a32520df240'
-down_revision: str | None = 'ed8412cf32e4'
+revision: str = "1a32520df240"
+down_revision: str | None = "ed8412cf32e4"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

@@ -25,9 +25,7 @@ class RegisterIndividualUseCase:
         self._team_repo = team_repo
         self._reg_repo = reg_repo
 
-    async def __call__(
-        self, hackathon_id: UUID, user_id: int
-    ) -> HackathonRegistrationEntity:
+    async def __call__(self, hackathon_id: UUID, user_id: int) -> HackathonRegistrationEntity:
         hackathon = await self._hackathon_repo.get(hackathon_id)
         if not hackathon:
             raise AppException("Hackathon không tồn tại", 404)

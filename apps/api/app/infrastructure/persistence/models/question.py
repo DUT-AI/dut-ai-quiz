@@ -32,9 +32,7 @@ class Question(Base):
         ),
     )
 
-    id: Mapped[UUID] = mapped_column(
-        pgUUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(pgUUID(as_uuid=True), primary_key=True, default=uuid4)
     pool_type: Mapped[PoolType] = mapped_column(index=True)
     difficulty: Mapped[Difficulty] = mapped_column(
         default=Difficulty.EASY,
@@ -42,9 +40,7 @@ class Question(Base):
         index=True,
     )
     content: Mapped[str] = mapped_column(default="", server_default="")
-    options: Mapped[list[dict[str, Any]]] = mapped_column(
-        JSONB, nullable=False, default=list
-    )
+    options: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, nullable=False, default=list)
     solution: Mapped[str | None] = mapped_column(nullable=True)
     tags: Mapped[list[UUID]] = mapped_column(
         ARRAY(pgUUID(as_uuid=True)), nullable=False, default=list
@@ -56,21 +52,21 @@ class Question(Base):
     created_at: Mapped[datetime] = mapped_column(default=now_ict)
     embedding: Mapped[list[float] | None] = mapped_column(Vector(768), nullable=True)
     embedding_model: Mapped[str | None] = mapped_column(String(200), nullable=True)
-    embedding_source_hash: Mapped[str | None] = mapped_column(
-        String(64), nullable=True
-    )
+    embedding_source_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
     status: Mapped[QuestionStatus] = mapped_column(
         sqlalchemy.Enum(QuestionStatus, native_enum=False, length=50),
         default=QuestionStatus.PUBLIC,
         server_default=QuestionStatus.PUBLIC.value,
-        index=True
+        index=True,
     )
     duplicate_status: Mapped[DuplicateStatus] = mapped_column(
         sqlalchemy.Enum(DuplicateStatus, native_enum=False, length=50),
         default=DuplicateStatus.NONE,
-        server_default=DuplicateStatus.NONE.value
+        server_default=DuplicateStatus.NONE.value,
     )
-    duplicate_of_question_id: Mapped[UUID | None] = mapped_column(pgUUID(as_uuid=True), ForeignKey("questions.id"), nullable=True)
+    duplicate_of_question_id: Mapped[UUID | None] = mapped_column(
+        pgUUID(as_uuid=True), ForeignKey("questions.id"), nullable=True
+    )
     is_difficulty_ai_suggested: Mapped[bool] = mapped_column(default=False, server_default="false")
     is_answer_ai_generated: Mapped[bool] = mapped_column(default=False, server_default="false")
     is_solution_ai_generated: Mapped[bool] = mapped_column(default=False, server_default="false")

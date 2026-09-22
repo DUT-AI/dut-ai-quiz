@@ -12,6 +12,7 @@ class CommentCreate(BaseModel):
     content: str = Field(..., max_length=5000)
     image_urls: list[str] | None = Field(default=[], max_items=3)
 
+
 class CommentResponse(BaseModel):
     id: UUID
     target_type: TargetType
@@ -46,11 +47,13 @@ class CommentResponse(BaseModel):
             dislike_count=entity.dislike_count,
             created_at=entity.created_at,
             updated_at=entity.updated_at,
-            replies=[cls.from_entity(r) for r in entity.replies]
+            replies=[cls.from_entity(r) for r in entity.replies],
         )
+
 
 class ToggleReactionRequest(BaseModel):
     reaction_type: ReactionType
+
 
 class PaginatedCommentsResponse(BaseModel):
     data: list[CommentResponse]

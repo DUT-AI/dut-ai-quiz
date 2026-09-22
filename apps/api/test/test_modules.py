@@ -160,7 +160,9 @@ async def test_modules_flow():
 
     # Test update to duplicate name fails
     with pytest.raises(BadRequestException):
-        await update_uc.execute(str(another_module.id), ModuleUpdate(name="intro to machine learning"))
+        await update_uc.execute(
+            str(another_module.id), ModuleUpdate(name="intro to machine learning")
+        )
 
     # 4d. Test autocomplete suggest search
     suggestions = await list_uc.execute(q="adva", include_lessons=False)

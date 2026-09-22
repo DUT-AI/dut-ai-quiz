@@ -100,10 +100,7 @@ Dưới đây là sơ đồ so sánh:
 
     # 3. Execute
     module_id = uuid4()
-    lesson = await use_case.execute(
-        zip_bytes=zip_bytes,
-        module_id=module_id
-    )
+    lesson = await use_case.execute(zip_bytes=zip_bytes, module_id=module_id)
 
     # 4. Assertions
     assert lesson.id is not None
@@ -121,7 +118,10 @@ Dưới đây là sơ đồ so sánh:
 
     # Check replaced URLs in Markdown
     from app.config import settings
-    expected_url1 = f"http://fake-s3/{settings.s3_bucket_name}/uploads/lessons/{lesson.id}/image-1.png"
+
+    expected_url1 = (
+        f"http://fake-s3/{settings.s3_bucket_name}/uploads/lessons/{lesson.id}/image-1.png"
+    )
     expected_url2 = f"http://fake-s3/{settings.s3_bucket_name}/uploads/lessons/{lesson.id}/hardware_tradeoff.png"
 
     assert f"![Hình minh họa 1]({expected_url1})" in lesson.content_md
@@ -172,7 +172,7 @@ async def test_import_notion_lesson_update():
         order=5,
         slug="mask-rcnn",
         module_id=None,
-        created_at=now_ict()
+        created_at=now_ict(),
     )
     repo = MockLessonRepository()
     repo.lessons.append(existing_lesson)
@@ -181,14 +181,13 @@ async def test_import_notion_lesson_update():
     use_case = ImportNotionLessonUseCase(repo, storage, scheduler)
 
     # 3. Execute update by passing lesson_id
-    updated_lesson = await use_case.execute(
-        zip_bytes=zip_bytes,
-        lesson_id=existing_id
-    )
+    updated_lesson = await use_case.execute(zip_bytes=zip_bytes, lesson_id=existing_id)
 
     # 4. Assertions
     assert updated_lesson.id == existing_id
     assert updated_lesson.name == "Mask RCNN"
-    assert updated_lesson.slug == "mask-rcnn"  # It shouldn't conflict with itself and change to mask-rcnn-1
+    assert (
+        updated_lesson.slug == "mask-rcnn"
+    )  # It shouldn't conflict with itself and change to mask-rcnn-1
     assert updated_lesson.content_md == "# Mask RCNN\nHọc máy và xử lý ngôn ngữ tự nhiên.\n"
     assert len(repo.lessons) == 1  # No duplicate lesson created

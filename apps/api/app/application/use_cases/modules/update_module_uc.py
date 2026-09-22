@@ -12,9 +12,7 @@ class UpdateModuleUseCase:
     def __init__(self, repo: IModuleRepository) -> None:
         self._repo = repo
 
-    async def execute(
-        self, module_id: str, payload: ModuleUpdate
-    ) -> ModuleEntity | None:
+    async def execute(self, module_id: str, payload: ModuleUpdate) -> ModuleEntity | None:
         """Execute the use case to update the module."""
         entity = await self._repo.get(UUID(module_id))
         if not entity:

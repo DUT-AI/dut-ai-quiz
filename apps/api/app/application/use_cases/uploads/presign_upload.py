@@ -23,8 +23,6 @@ class PresignUploadUseCase:
             content_type=content_type,
             expires_in=3600,
         )
-        public_url = self._s3_client.get_object_url(
-            settings.s3_bucket_name, safe_key
-        )
+        public_url = self._s3_client.get_object_url(settings.s3_bucket_name, safe_key)
 
         return {"presigned_url": url, "key": safe_key, "public_url": public_url}

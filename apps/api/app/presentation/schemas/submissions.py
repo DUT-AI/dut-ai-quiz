@@ -42,5 +42,3 @@ class PresignSubmitOut(BaseModel):
 
 class SubmitTaskIn(BaseModel):
     submission_id: UUID
-
-

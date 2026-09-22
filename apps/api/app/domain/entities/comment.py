@@ -8,9 +8,11 @@ class TargetType(str, Enum):
     system_feedback = "system_feedback"
     lesson_qna = "lesson_qna"
 
+
 class ReactionType(str, Enum):
     like = "like"
     dislike = "dislike"
+
 
 @dataclass
 class CommentEntity:
@@ -39,6 +41,7 @@ class CommentEntity:
             self.image_urls = []
         if self.replies is None:
             self.replies = []
+
 
 @dataclass
 class CommentReactionEntity:

@@ -21,11 +21,7 @@ class MinioArtifactStore(IArtifactStore):
             aws_secret_access_key=settings.s3_secret_key,
             config=Config(
                 signature_version="s3v4",
-                s3={
-                    "addressing_style": (
-                        "path" if settings.s3_force_path_style else "virtual"
-                    )
-                },
+                s3={"addressing_style": ("path" if settings.s3_force_path_style else "virtual")},
                 retries={"max_attempts": 5, "mode": "standard"},
                 connect_timeout=10,
                 read_timeout=60,
@@ -40,9 +36,7 @@ class MinioArtifactStore(IArtifactStore):
         value = key_or_url.strip()
         parsed = urlparse(value)
         if parsed.scheme in {"http", "https", "s3"}:
-            path_parts = [
-                unquote(part) for part in parsed.path.split("/") if part.strip()
-            ]
+            path_parts = [unquote(part) for part in parsed.path.split("/") if part.strip()]
             if not path_parts:
                 raise ValueError(f"Cannot resolve object key from URL: {value}")
             if path_parts[0] == self._bucket_name:
@@ -62,17 +56,14 @@ class MinioArtifactStore(IArtifactStore):
             parsed = urlparse(key_or_url)
             configured_endpoint = urlparse(self._endpoint_url)
             is_configured_s3_url = (
-                parsed.scheme in {"http", "https"}
-                and parsed.netloc == configured_endpoint.netloc
+                parsed.scheme in {"http", "https"} and parsed.netloc == configured_endpoint.netloc
             )
             if parsed.scheme not in {"http", "https"} or is_configured_s3_url:
                 raise
 
         urlretrieve(key_or_url, destination_path)
 
-    def upload_file(
-        self, source_path: str, key: str, content_type: str | None = None
-    ) -> str:
+    def upload_file(self, source_path: str, key: str, content_type: str | None = None) -> str:
         extra_args = {"ContentType": content_type} if content_type else None
         upload_kwargs = {
             "Filename": source_path,

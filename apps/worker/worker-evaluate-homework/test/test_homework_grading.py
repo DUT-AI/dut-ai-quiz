@@ -250,9 +250,7 @@ async def test_invalid_submission_marks_arq_job_as_failed() -> None:
 
 
 def test_identical_python_sources_are_detected() -> None:
-    current = build_fingerprint(
-        SourceFile(name="main.py", content="def add(a, b): return a + b")
-    )
+    current = build_fingerprint(SourceFile(name="main.py", content="def add(a, b): return a + b"))
     previous = [
         type(
             "Stored",
@@ -272,9 +270,7 @@ def test_identical_python_sources_are_detected() -> None:
 
 
 def test_plagiarism_score_covers_the_whole_multifile_submission() -> None:
-    copied = build_fingerprint(
-        SourceFile(name="main.py", content="print('shared bootstrap')")
-    )
+    copied = build_fingerprint(SourceFile(name="main.py", content="print('shared bootstrap')"))
     original = build_fingerprint(
         SourceFile(
             name="model.py",
@@ -633,13 +629,7 @@ async def test_openai_llm_client_and_grading_engine() -> None:
     }
 
     mock_response.json.return_value = {
-        "choices": [
-            {
-                "message": {
-                    "content": f"```json\n{json.dumps(rubric_payload)}\n```"
-                }
-            }
-        ]
+        "choices": [{"message": {"content": f"```json\n{json.dumps(rubric_payload)}\n```"}}]
     }
     mock_client.post = AsyncMock(return_value=mock_response)
 
@@ -679,13 +669,7 @@ async def test_openai_llm_client_and_grading_engine() -> None:
         ]
     }
     mock_response.json.return_value = {
-        "choices": [
-            {
-                "message": {
-                    "content": json.dumps(grade_payload)
-                }
-            }
-        ]
+        "choices": [{"message": {"content": json.dumps(grade_payload)}}]
     }
 
     grade_result = await engine.grade(

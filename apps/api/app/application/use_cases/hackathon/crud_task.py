@@ -85,7 +85,11 @@ class ListHackathonTasksUseCase:
         hackathon = await self._hackathon_repo.get(hackathon_id)
         if not hackathon:
             return None
-        if not is_admin and quiz_role in ["PROJECT_DEVELOPER", "SUB_ADMIN", "admin"] and hackathon.created_by != user_id:
+        if (
+            not is_admin
+            and quiz_role in ["PROJECT_DEVELOPER", "SUB_ADMIN", "admin"]
+            and hackathon.created_by != user_id
+        ):
             return None
         return await self._task_repo.list_for_hackathon(hackathon_id)
 
@@ -110,7 +114,11 @@ class GetHackathonTaskUseCase:
         hackathon = await self._hackathon_repo.get(hackathon_id)
         if not hackathon:
             return None
-        if not is_admin and quiz_role in ["PROJECT_DEVELOPER", "SUB_ADMIN", "admin"] and hackathon.created_by != user_id:
+        if (
+            not is_admin
+            and quiz_role in ["PROJECT_DEVELOPER", "SUB_ADMIN", "admin"]
+            and hackathon.created_by != user_id
+        ):
             return None
 
         task = await self._task_repo.get(task_id)
@@ -151,10 +159,7 @@ class UpdateHackathonTaskUseCase:
             data["name"] = data["name"].strip()
             if not data["name"]:
                 raise ValueError("name must not be empty")
-        if (
-            "problem_description_md" in data
-            and data["problem_description_md"] is not None
-        ):
+        if "problem_description_md" in data and data["problem_description_md"] is not None:
             data["problem_description_md"] = data["problem_description_md"].strip()
             if not data["problem_description_md"]:
                 raise ValueError("problem_description_md must not be empty")

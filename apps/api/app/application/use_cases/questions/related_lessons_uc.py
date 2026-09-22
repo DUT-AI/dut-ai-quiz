@@ -22,9 +22,7 @@ class GetRelatedLessonsUseCase:
         self._chunk_repo = chunk_repo
         self._embedding_service = embedding_service
 
-    async def execute(
-        self, question_id: UUID, limit: int, min_score: float
-    ) -> list[dict] | None:
+    async def execute(self, question_id: UUID, limit: int, min_score: float) -> list[dict] | None:
         question = await self._question_repo.get(question_id)
         if question is None:
             return None

@@ -20,6 +20,8 @@ class ICommentReactionRepository(ABC):
         pass
 
     @abstractmethod
-    async def switch_reaction(self, reaction: CommentReactionEntity, old_type: ReactionType) -> None:
+    async def switch_reaction(
+        self, reaction: CommentReactionEntity, old_type: ReactionType
+    ) -> None:
         """Switches a reaction type and updates both comment counts in a transaction."""
         pass

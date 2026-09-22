@@ -103,7 +103,13 @@ class ImportNotionLessonUseCase:
             # Extrapolate description from the first paragraph of markdown (max 200 chars)
             # Strip titles and find first text line
             lines = [line.strip() for line in md_content.splitlines() if line.strip()]
-            text_lines = [line for line in lines if not line.startswith("#") and not line.startswith("![") and not line.startswith("<")]
+            text_lines = [
+                line
+                for line in lines
+                if not line.startswith("#")
+                and not line.startswith("![")
+                and not line.startswith("<")
+            ]
             if text_lines:
                 lesson_description = text_lines[0][:200]
                 if len(text_lines[0]) > 200:
@@ -118,7 +124,9 @@ class ImportNotionLessonUseCase:
         uploaded_urls: dict[str, str] = {}
         for img_name, img_bytes in images_data.items():
             # Only upload unique original names (skip basenames to avoid double upload if full path is also mapped)
-            if img_name in uploaded_urls or ("/" not in img_name and os.path.basename(img_name) != img_name):
+            if img_name in uploaded_urls or (
+                "/" not in img_name and os.path.basename(img_name) != img_name
+            ):
                 continue
 
             # Sanitize image filename
@@ -127,11 +135,7 @@ class ImportNotionLessonUseCase:
             s3_key = f"uploads/lessons/{lesson_id}/{safe_basename}{ext}"
 
             # Upload
-            self._storage.upload_fileobj(
-                io.BytesIO(img_bytes),
-                settings.s3_bucket_name,
-                s3_key
-            )
+            self._storage.upload_fileobj(io.BytesIO(img_bytes), settings.s3_bucket_name, s3_key)
             public_url = self._storage.get_object_url(settings.s3_bucket_name, s3_key)
 
             # Map both full name and basename to this URL
@@ -168,7 +172,9 @@ class ImportNotionLessonUseCase:
                     return full_tag.replace(url, uploaded_urls[basename])
             return full_tag
 
-        content_md = re.sub(r"<img\s+[^>]*src=[\"']([^\"']+)[\"'][^>]*>", html_img_replacer, content_md)
+        content_md = re.sub(
+            r"<img\s+[^>]*src=[\"']([^\"']+)[\"'][^>]*>", html_img_replacer, content_md
+        )
 
         # 7. Generate unique slug (allow same slug if updating the same lesson)
         base_slug = slugify_vietnamese(lesson_name)
@@ -200,7 +206,7 @@ class ImportNotionLessonUseCase:
                 name=lesson_name,
                 description=lesson_description,
                 content_md=content_md,
-                order=0, # Defaults to 0, can be updated later
+                order=0,  # Defaults to 0, can be updated later
                 slug=slug,
                 module_id=module_id,
                 created_at=now_ict(),

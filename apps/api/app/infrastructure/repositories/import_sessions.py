@@ -60,9 +60,7 @@ class ImportSessionRepository(IImportSessionRepository):
         if error_message is not None:
             values["error_message"] = error_message
         await self.session.execute(
-            update(ImportSession)
-            .where(ImportSession.id == session_id)
-            .values(**values)
+            update(ImportSession).where(ImportSession.id == session_id).values(**values)
         )
 
     async def update_progress(

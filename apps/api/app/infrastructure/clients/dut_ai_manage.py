@@ -27,13 +27,9 @@ class DUTAIManageService(IManageService):
         try:
             login_url = f"{self._base_url}/api/v1/auth/login"
             logger.info(f"Proxying login request to: {login_url}")
-            response = await self._client.post(
-                login_url, json=payload_dict, timeout=15.0
-            )
+            response = await self._client.post(login_url, json=payload_dict, timeout=15.0)
             if response.status_code != 200:
-                logger.warning(
-                    f"Manage API returned {response.status_code}: {response.text}"
-                )
+                logger.warning(f"Manage API returned {response.status_code}: {response.text}")
                 return None
             res_json = response.json()
             if not res_json or not res_json.get("is_success"):
@@ -49,17 +45,13 @@ class DUTAIManageService(IManageService):
             logger.error(f"Error during proxy login to Manage Service: {e}")
             return None
 
-    async def get_own_profile(
-        self, dut_ai_user_access_token: str
-    ) -> ManageUserProfile | None:
+    async def get_own_profile(self, dut_ai_user_access_token: str) -> ManageUserProfile | None:
         headers = {"Authorization": f"Bearer {dut_ai_user_access_token}"}
         try:
             me_url = f"{self._base_url}/api/v1/auth/me"
             response = await self._client.get(me_url, headers=headers, timeout=15.0)
             if response.status_code != 200:
-                logger.error(
-                    f"Failed to fetch own profile from Manage Service: {response.text}"
-                )
+                logger.error(f"Failed to fetch own profile from Manage Service: {response.text}")
                 return None
             res_json = response.json()
             if not res_json or not res_json.get("is_success"):
@@ -113,9 +105,7 @@ class DUTAIManageService(IManageService):
                 self._users_url, headers=headers, params=params, timeout=15.0
             )
             if response.status_code != 200:
-                logger.warning(
-                    f"Failed to find user by email on Manage Service: {response.text}"
-                )
+                logger.warning(f"Failed to find user by email on Manage Service: {response.text}")
                 return []
             res_json = response.json()
             if not res_json or not res_json.get("is_success"):
@@ -223,18 +213,14 @@ class DUTAIManageService(IManageService):
             response.raise_for_status()
 
             res_json = response.json()
-            users_data = (
-                res_json.get("data") if isinstance(res_json, dict) else res_json
-            )
+            users_data = res_json.get("data") if isinstance(res_json, dict) else res_json
             if not isinstance(users_data, list):
                 users_data = []
 
             entities = []
             for u in users_data:
                 user_id = u.get("user_id") or u.get("id")
-                user_name = (
-                    u.get("user_name") or u.get("name") or u.get("full_name") or ""
-                )
+                user_name = u.get("user_name") or u.get("name") or u.get("full_name") or ""
                 email = u.get("email") or ""
                 entities.append(
                     ManageUserEntity(

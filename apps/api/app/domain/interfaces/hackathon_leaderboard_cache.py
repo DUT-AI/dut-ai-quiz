@@ -7,7 +7,9 @@ class IHackathonLeaderboardCache(Protocol):
         """Lấy bảng xếp hạng từ cache."""
         ...
 
-    async def set(self, hackathon_id: UUID, leaderboard: list[dict], is_private: bool = False) -> None:
+    async def set(
+        self, hackathon_id: UUID, leaderboard: list[dict], is_private: bool = False
+    ) -> None:
         """Lưu bảng xếp hạng vào cache."""
         ...
 

@@ -34,9 +34,7 @@ async def startup(ctx):
     import_session_repo = ImportSessionRepository(async_session)
     question_repo = QuestionRepository(async_session)
     pdf_parser = AIPdfParserStrategy()
-    process_pdf_uc = ProcessPdfImportUseCase(
-        import_session_repo, question_repo, pdf_parser
-    )
+    process_pdf_uc = ProcessPdfImportUseCase(import_session_repo, question_repo, pdf_parser)
     ctx["process_pdf_import_use_case"] = process_pdf_uc
     ctx["async_session"] = async_session
 
@@ -72,9 +70,7 @@ async def parse_pdf_job(
         import_session_repo = ImportSessionRepository(session)
         question_repo = QuestionRepository(session)
         pdf_parser = AIPdfParserStrategy()
-        use_case = ProcessPdfImportUseCase(
-            import_session_repo, question_repo, pdf_parser
-        )
+        use_case = ProcessPdfImportUseCase(import_session_repo, question_repo, pdf_parser)
 
         try:
             await use_case.execute(

@@ -9,9 +9,7 @@ from worker_hackathon.domain.interfaces.event_publisher import ISubmissionEventP
 
 
 class RedisSubmissionEventPublisher(ISubmissionEventPublisher):
-    def __init__(
-        self, redis: Redis, channel: str = "hackathon:submission-events"
-    ) -> None:
+    def __init__(self, redis: Redis, channel: str = "hackathon:submission-events") -> None:
         self._redis = redis
         self._channel = channel
 

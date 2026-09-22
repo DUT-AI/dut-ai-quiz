@@ -57,9 +57,7 @@ async def startup(ctx):
     )
     ctx["evaluate_use_case"] = evaluate_use_case
     logger.info("Clean Architecture components successfully initialized.")
-    recovered = await evaluate_use_case.recover_stale_extracting_submissions(
-        stale_seconds=300
-    )
+    recovered = await evaluate_use_case.recover_stale_extracting_submissions(stale_seconds=300)
     if recovered:
         logger.info("Recovered {} stale extracting submissions on startup.", recovered)
 
@@ -85,9 +83,7 @@ async def evaluate_submission_job(
         if score is None:
             logger.info(f"Job finished without score for Submission {submission_id}")
         else:
-            logger.info(
-                f"Job completed successfully. Submission {submission_id} scored: {score}"
-            )
+            logger.info(f"Job completed successfully. Submission {submission_id} scored: {score}")
         return score
     except Exception as e:
         logger.error(f"Job failed for Submission {submission_id}: {e}")
@@ -96,9 +92,7 @@ async def evaluate_submission_job(
 
 async def sweep_stale_submissions_job(ctx):
     use_case: EvaluateSubmissionUseCase = ctx["evaluate_use_case"]
-    recovered = await use_case.recover_stale_extracting_submissions(
-        stale_seconds=300
-    )
+    recovered = await use_case.recover_stale_extracting_submissions(stale_seconds=300)
     failed = await use_case.sweep_stale_submissions(
         uploading_timeout_seconds=settings.presigned_url_expire_seconds + 300,
         processing_timeout_seconds=settings.sandbox_timeout_seconds + 300,

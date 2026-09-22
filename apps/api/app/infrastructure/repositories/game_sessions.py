@@ -46,8 +46,11 @@ class GameSessionRepository(IGameSessionRepository):
             return model.to_entity()
         raise ValueError("Game session not found")
 
-    async def get_active_by_lesson(self, user_id: int, lesson_slug: str) -> GameSessionEntity | None:
+    async def get_active_by_lesson(
+        self, user_id: int, lesson_slug: str
+    ) -> GameSessionEntity | None:
         from app.domain.value_objects import GameSessionStatus
+
         r = await self._s.execute(
             select(GameSession)
             .where(GameSession.user_id == user_id)
@@ -61,6 +64,7 @@ class GameSessionRepository(IGameSessionRepository):
 
     async def count_completed_by_lesson(self, user_id: int, lesson_slug: str) -> int:
         from app.domain.value_objects import GameSessionStatus
+
         r = await self._s.execute(
             select(func.count(GameSession.id))
             .where(GameSession.user_id == user_id)
@@ -82,19 +86,24 @@ class GameSessionRepository(IGameSessionRepository):
             .distinct(GameSession.user_id)
             .order_by(
                 GameSession.user_id,
-                cast(GameSession.snapshot['gamification']['final_score'].astext, Float).desc().nulls_last(),
-                cast(GameSession.snapshot['gamification']['gold'].astext, Integer).desc().nulls_last(),
-                cast(GameSession.snapshot['gamification']['total_time_response'].astext, Float).asc().nulls_last(),
-                cast(GameSession.snapshot['gamification']['attempt_count'].astext, Integer).asc().nulls_last(),
+                cast(GameSession.snapshot["gamification"]["final_score"].astext, Float)
+                .desc()
+                .nulls_last(),
+                cast(GameSession.snapshot["gamification"]["gold"].astext, Integer)
+                .desc()
+                .nulls_last(),
+                cast(GameSession.snapshot["gamification"]["total_time_response"].astext, Float)
+                .asc()
+                .nulls_last(),
+                cast(GameSession.snapshot["gamification"]["attempt_count"].astext, Integer)
+                .asc()
+                .nulls_last(),
             )
         ).subquery()
 
         # Count total completed attempts for each user
         count_subq = (
-            select(
-                GameSession.user_id,
-                func.count(GameSession.id).label("total_attempts")
-            )
+            select(GameSession.user_id, func.count(GameSession.id).label("total_attempts"))
             .where(GameSession.status == GameSessionStatus.COMPLETED)
             .where(GameSession.tags_filter.contains([lesson_slug]))
             .where(GameSession.question_limit > 0)
@@ -107,10 +116,18 @@ class GameSessionRepository(IGameSessionRepository):
             .join(subq, GameSession.id == subq.c.id)
             .outerjoin(count_subq, GameSession.user_id == count_subq.c.user_id)
             .order_by(
-                cast(GameSession.snapshot['gamification']['final_score'].astext, Float).desc().nulls_last(),
-                cast(GameSession.snapshot['gamification']['gold'].astext, Integer).desc().nulls_last(),
-                cast(GameSession.snapshot['gamification']['total_time_response'].astext, Float).asc().nulls_last(),
-                cast(GameSession.snapshot['gamification']['attempt_count'].astext, Integer).asc().nulls_last(),
+                cast(GameSession.snapshot["gamification"]["final_score"].astext, Float)
+                .desc()
+                .nulls_last(),
+                cast(GameSession.snapshot["gamification"]["gold"].astext, Integer)
+                .desc()
+                .nulls_last(),
+                cast(GameSession.snapshot["gamification"]["total_time_response"].astext, Float)
+                .asc()
+                .nulls_last(),
+                cast(GameSession.snapshot["gamification"]["attempt_count"].astext, Integer)
+                .asc()
+                .nulls_last(),
             )
             .limit(limit)
         )
@@ -121,9 +138,9 @@ class GameSessionRepository(IGameSessionRepository):
         result = []
         for row in rows:
             snapshot = row.GameSession.snapshot or {}
-            ps = snapshot.get('gamification', {})
-            questions = snapshot.get('questions', [])
-            answers = snapshot.get('answers', {})
+            ps = snapshot.get("gamification", {})
+            questions = snapshot.get("questions", [])
+            answers = snapshot.get("answers", {})
 
             total_questions = len(questions) if questions else (row.GameSession.question_limit or 0)
             answered_questions = len(answers) if isinstance(answers, dict) else 0
@@ -133,17 +150,21 @@ class GameSessionRepository(IGameSessionRepository):
                 and answered_questions >= total_questions
             )
 
-            result.append({
-                "user_id": row.User.id if row.User else row.GameSession.user_id,
-                "username": row.User.name if row.User else None,
-                "avatar_url": row.User.avatar_url if row.User else None,
-                "final_score": float(ps.get('final_score', 0)),
-                "gold": int(ps.get('gold', 0)),
-                "total_time_response": float(ps.get('total_time_response', 0)),
-                "attempt_count": int(row.total_attempts) if row.total_attempts is not None else int(ps.get('attempt_count', 0)),
-                "is_completed": is_completed,
-                "total_questions": total_questions,
-                "answered_questions": answered_questions,
-            })
+            result.append(
+                {
+                    "user_id": row.User.id if row.User else row.GameSession.user_id,
+                    "username": row.User.name if row.User else None,
+                    "avatar_url": row.User.avatar_url if row.User else None,
+                    "final_score": float(ps.get("final_score", 0)),
+                    "gold": int(ps.get("gold", 0)),
+                    "total_time_response": float(ps.get("total_time_response", 0)),
+                    "attempt_count": int(row.total_attempts)
+                    if row.total_attempts is not None
+                    else int(ps.get("attempt_count", 0)),
+                    "is_completed": is_completed,
+                    "total_questions": total_questions,
+                    "answered_questions": answered_questions,
+                }
+            )
 
         return result

@@ -29,4 +29,3 @@ class HackathonLeaderboardRow:
             if self.latest_submission_time
             else None,
         }
-

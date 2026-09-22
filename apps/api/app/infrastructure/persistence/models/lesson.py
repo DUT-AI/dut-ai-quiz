@@ -16,18 +16,12 @@ class Lesson(Base):
 
     __tablename__ = "lessons"
 
-    id: Mapped[UUID] = mapped_column(
-        pgUUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(pgUUID(as_uuid=True), primary_key=True, default=uuid4)
     name: Mapped[str] = mapped_column()
     description: Mapped[str] = mapped_column(default="", server_default="")
-    content_md: Mapped[str] = mapped_column(
-        Text, nullable=False, default="", server_default=""
-    )
+    content_md: Mapped[str] = mapped_column(Text, nullable=False, default="", server_default="")
     order: Mapped[int] = mapped_column(default=0, server_default="0")
-    slug: Mapped[str | None] = mapped_column(
-        default=None, nullable=True, unique=True, index=True
-    )
+    slug: Mapped[str | None] = mapped_column(default=None, nullable=True, unique=True, index=True)
     module_id: Mapped[UUID | None] = mapped_column(
         pgUUID(as_uuid=True),
         ForeignKey("modules.id", ondelete="SET NULL"),

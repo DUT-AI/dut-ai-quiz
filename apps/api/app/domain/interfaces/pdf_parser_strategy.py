@@ -12,10 +12,7 @@ class IPdfParserStrategy(abc.ABC):
 
     @abc.abstractmethod
     async def parse(
-        self,
-        pdf_bytes: bytes,
-        password: str | None = None,
-        **kwargs
+        self, pdf_bytes: bytes, password: str | None = None, **kwargs
     ) -> list[ParsedQuestionPreview]:
         """
         Parses a PDF file and returns a list of question previews.

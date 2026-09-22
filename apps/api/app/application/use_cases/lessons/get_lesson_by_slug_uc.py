@@ -6,9 +6,7 @@ from app.domain.value_objects import PoolType
 class GetLessonBySlugUseCase:
     """Read a lesson and its locally managed Markdown content by slug."""
 
-    def __init__(
-        self, lesson_repo: ILessonRepository, question_repo: IQuestionRepository
-    ) -> None:
+    def __init__(self, lesson_repo: ILessonRepository, question_repo: IQuestionRepository) -> None:
         self._lesson_repo = lesson_repo
         self._question_repo = question_repo
 
@@ -36,4 +34,3 @@ class GetLessonBySlugUseCase:
             "has_game_questions": has_game_questions,
             "questions": [],
         }
-

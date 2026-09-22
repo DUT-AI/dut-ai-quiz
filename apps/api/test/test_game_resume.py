@@ -25,7 +25,7 @@ async def test_get_active_session_found():
         status=GameSessionStatus.IN_PROGRESS,
         snapshot={"lesson_slug": lesson_slug},
         tags_filter=[lesson_slug],
-        question_limit=10
+        question_limit=10,
     )
 
     ps_repo.get_active_by_lesson.return_value = mock_session
@@ -38,6 +38,7 @@ async def test_get_active_session_found():
     assert result.status == GameSessionStatus.IN_PROGRESS
     assert result.tags_filter == [lesson_slug]
     ps_repo.get_active_by_lesson.assert_called_once_with(user_id, lesson_slug)
+
 
 @pytest.mark.asyncio
 async def test_get_active_session_not_found():
@@ -55,6 +56,7 @@ async def test_get_active_session_not_found():
     assert result is None
     ps_repo.get_active_by_lesson.assert_called_once_with(user_id, lesson_slug)
 
+
 @pytest.mark.asyncio
 async def test_finish_practice_session_success():
     """Test case: Hoàn thành session (Restart/Abandon) sẽ đổi trạng thái sang COMPLETED."""
@@ -71,7 +73,7 @@ async def test_finish_practice_session_success():
         status=GameSessionStatus.IN_PROGRESS,
         snapshot={"lesson_slug": "test-lesson"},
         tags_filter=["test-lesson"],
-        question_limit=10
+        question_limit=10,
     )
 
     ps_repo.get.return_value = mock_session
@@ -87,6 +89,7 @@ async def test_finish_practice_session_success():
     assert result.completed_at is not None
     ps_repo.get.assert_called_once_with(session_id)
     ps_repo.save.assert_called_once()
+
 
 @pytest.mark.asyncio
 async def test_finish_practice_session_not_found():
@@ -105,6 +108,7 @@ async def test_finish_practice_session_not_found():
     ps_repo.get.assert_called_once_with(session_id)
     ps_repo.save.assert_not_called()
 
+
 @pytest.mark.asyncio
 async def test_finish_practice_session_already_completed():
     """Test case: Session đã COMPLETED từ trước thì không thay đổi gì và không save lại."""
@@ -122,7 +126,7 @@ async def test_finish_practice_session_already_completed():
         status=GameSessionStatus.COMPLETED,
         snapshot={"lesson_slug": "test-lesson"},
         tags_filter=["test-lesson"],
-        question_limit=10
+        question_limit=10,
     )
 
     ps_repo.get.return_value = mock_session

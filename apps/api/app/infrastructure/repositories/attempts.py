@@ -105,18 +105,13 @@ class AttemptRepository(IAttemptRepository):
         self, exam_id: UUID, offset: int = 0, limit: int = 100
     ) -> list[AttemptEntity]:
         r = await self._s.execute(
-            select(Attempt)
-            .where(Attempt.exam_id == exam_id)
-            .offset(offset)
-            .limit(limit)
+            select(Attempt).where(Attempt.exam_id == exam_id).offset(offset).limit(limit)
         )
         return [m.to_entity() for m in r.scalars().all()]
 
     async def list_all_for_exam(self, exam_id: UUID) -> list[AttemptEntity]:
         r = await self._s.execute(
-            select(Attempt)
-            .where(Attempt.exam_id == exam_id)
-            .order_by(Attempt.started_at)
+            select(Attempt).where(Attempt.exam_id == exam_id).order_by(Attempt.started_at)
         )
         return [m.to_entity() for m in r.scalars().all()]
 
@@ -158,15 +153,11 @@ class AttemptRepository(IAttemptRepository):
         )
         return [UUID(str(row)) for row in r.scalars().all()]
 
-    async def list_all_answers_for_exam(
-        self, exam_id: UUID
-    ) -> list[AttemptAnswerEntity]:
+    async def list_all_answers_for_exam(self, exam_id: UUID) -> list[AttemptAnswerEntity]:
         r = await self._s.execute(
             select(AttemptAnswer)
             .join(Attempt, Attempt.id == AttemptAnswer.attempt_id)
-            .where(
-                Attempt.exam_id == exam_id, Attempt.status == AttemptStatus.COMPLETED
-            )
+            .where(Attempt.exam_id == exam_id, Attempt.status == AttemptStatus.COMPLETED)
         )
         return [m.to_entity() for m in r.scalars().all()]
 

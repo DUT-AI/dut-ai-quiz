@@ -95,6 +95,7 @@ class QuestionToStudent(BaseModel):
     def hide_solution(cls, v: Any) -> None:
         return None
 
+
 class QuestionOut(BaseModel):
     id: UUID
     pool_type: PoolType
@@ -175,9 +176,7 @@ class RelatedQuestionsIn(BaseModel):
     def normalize_content(cls, value: str) -> str:
         value = value.strip()
         if len(value) < 3:
-            raise ValueError(
-                "content must contain at least 3 non-whitespace characters"
-            )
+            raise ValueError("content must contain at least 3 non-whitespace characters")
         return value
 
 

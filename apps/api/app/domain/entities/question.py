@@ -11,12 +11,12 @@ class QuestionStatus(str, Enum):
     DRAFT = "DRAFT"
     PUBLIC = "PUBLIC"
 
+
 class DuplicateStatus(str, Enum):
     UNIQUE = "UNIQUE"
     NONE = "NONE"
     POSSIBLE_DUPLICATE = "POSSIBLE_DUPLICATE"
     EXACT_DUPLICATE = "EXACT_DUPLICATE"
-
 
 
 @dataclasses.dataclass

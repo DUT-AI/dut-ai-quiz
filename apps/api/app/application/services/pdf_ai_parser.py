@@ -1,6 +1,7 @@
 """
 PDF AI Parser Service — Vision LLM OCR với Gemini Flash (Structured JSON Mode).
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -23,9 +24,10 @@ from pydantic import BaseModel, Field
 # Data Transfer Objects (internal)
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class ParsedOption:
-    id: str          # "A", "B", "C", "D"
+    id: str  # "A", "B", "C", "D"
     text: str
     is_correct: bool
     fixed: bool = False
@@ -47,11 +49,13 @@ class ParsedQuestion:
 # Data Transfer Objects (Pydantic Models cho Gemini Structured Output)
 # ---------------------------------------------------------------------------
 
+
 class GeminiParsedOption(BaseModel):
     id: str = Field(description='"A", "B", "C", "D"')
     text: str = Field(description="Nội dung đáp án")
     is_correct: bool = Field(description="True nếu là đáp án đúng")
     fixed: bool = False
+
 
 class GeminiParsedQuestion(BaseModel):
     content: str = Field(description="Nội dung câu hỏi (không bao gồm 'Câu X')")
@@ -62,15 +66,16 @@ class GeminiParsedQuestion(BaseModel):
     is_solution_ai_generated: bool = False
     is_difficulty_ai_suggested: bool = True
 
+
 class ExtractionResponse(BaseModel):
     questions: list[GeminiParsedQuestion]
+
 
 @dataclass
 class PDFValidationResult:
     ok: bool
     error: str | None = None
     is_encrypted: bool = False
-
 
 
 # ---------------------------------------------------------------------------
@@ -134,6 +139,7 @@ Trả về chỉ nội dung lời giải.
 # Service
 # ---------------------------------------------------------------------------
 
+
 class PDFAIParserService:
     """
     Core service thực hiện pipeline Vision LLM OCR để import PDF câu hỏi.
@@ -192,9 +198,7 @@ class PDFAIParserService:
         pix = page.get_pixmap(matrix=mat, alpha=False)
         return pix.tobytes("png")
 
-    def _crop_inline_images(
-        self, page: fitz.Page, job_id: str
-    ) -> list[tuple[str, bytes]]:
+    def _crop_inline_images(self, page: fitz.Page, job_id: str) -> list[tuple[str, bytes]]:
         results: list[tuple[str, bytes]] = []
         min_px = settings.pdf_image_min_px
 
@@ -214,9 +218,7 @@ class PDFAIParserService:
 
         return results
 
-    def _upload_image_to_minio(
-        self, job_id: str, anchor_id: str, img_bytes: bytes
-    ) -> str:
+    def _upload_image_to_minio(self, job_id: str, anchor_id: str, img_bytes: bytes) -> str:
         key = f"{settings.pdf_images_prefix}/{job_id}/{anchor_id}.png"
         self._s3.upload_fileobj(
             io.BytesIO(img_bytes),
@@ -238,17 +240,13 @@ class PDFAIParserService:
     ) -> list[dict[str, Any]]:
         prompt = EXTRACTION_PROMPT
         if context_images:
-            anchors = "\n".join(
-                f"- [[{aid}]] → {url}" for aid, url in context_images
-            )
+            anchors = "\n".join(f"- [[{aid}]] → {url}" for aid, url in context_images)
             prompt += f"\n\nCHÚ Ý: Các trang này có hình ảnh đính kèm:\n{anchors}"
 
         parts: list[Any] = []
         for i, img_bytes in enumerate(batch_page_images):
             parts.append(f"=== Trang {batch_page_nums[i] + 1} ===")
-            parts.append(
-                genai_types.Part.from_bytes(data=img_bytes, mime_type="image/png")
-            )
+            parts.append(genai_types.Part.from_bytes(data=img_bytes, mime_type="image/png"))
         parts.append(prompt)
 
         max_retries = 4
@@ -263,7 +261,7 @@ class PDFAIParserService:
                         config=genai_types.GenerateContentConfig(
                             temperature=0.1,
                             max_output_tokens=8192,
-                            response_mime_type="application/json", # Ép Gemini trả về Structured JSON
+                            response_mime_type="application/json",  # Ép Gemini trả về Structured JSON
                             response_schema=ExtractionResponse,
                         ),
                     )
@@ -274,7 +272,9 @@ class PDFAIParserService:
                 raw_text = re.sub(r"\s*```$", "", raw_text, flags=re.MULTILINE)
 
                 if not raw_text:
-                    logger.warning(f"Gemini returned empty text for pages {[p+1 for p in batch_page_nums]}")
+                    logger.warning(
+                        f"Gemini returned empty text for pages {[p + 1 for p in batch_page_nums]}"
+                    )
                     return []
 
                 data = json.loads(raw_text)
@@ -285,15 +285,12 @@ class PDFAIParserService:
                     raw_questions = data
                 elif isinstance(data, dict):
                     raw_questions = (
-                        data.get("questions")
-                        or data.get("items")
-                        or data.get("data")
-                        or []
+                        data.get("questions") or data.get("items") or data.get("data") or []
                     )
 
                 if not raw_questions:
                     logger.warning(
-                        f"[Debug Gemini Output] Pages {[p+1 for p in batch_page_nums]} "
+                        f"[Debug Gemini Output] Pages {[p + 1 for p in batch_page_nums]} "
                         f"returned 0 questions. Raw text excerpt: {raw_text[:300]}"
                     )
 
@@ -307,11 +304,11 @@ class PDFAIParserService:
                 if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str:
                     if attempt < max_retries - 1:
                         m = re.search(r"retry in (\d+(?:\.\d+)?)s", err_str)
-                        wait = float(m.group(1)) if m else base_delay * (2 ** attempt)
+                        wait = float(m.group(1)) if m else base_delay * (2**attempt)
                         wait = min(wait, 120)
                         logger.warning(
-                            f"Gemini 429 Rate Limit — pages={[p+1 for p in batch_page_nums]}, "
-                            f"retry {attempt+1}/{max_retries-1} sau {wait:.0f}s"
+                            f"Gemini 429 Rate Limit — pages={[p + 1 for p in batch_page_nums]}, "
+                            f"retry {attempt + 1}/{max_retries - 1} sau {wait:.0f}s"
                         )
                         await asyncio.sleep(wait)
                         continue
@@ -366,8 +363,7 @@ class PDFAIParserService:
         doc.close()
 
         batches: list[list[tuple[int, bytes, list[tuple[str, str]]]]] = [
-            rendered[i : i + batch_size]
-            for i in range(0, total_pages, batch_size)
+            rendered[i : i + batch_size] for i in range(0, total_pages, batch_size)
         ]
         logger.info(f"[PDF Import job={job_id}] {len(batches)} batches to process")
 
@@ -403,7 +399,8 @@ class PDFAIParserService:
                         is_correct=bool(opt.get("is_correct", False)),
                         fixed=bool(opt.get("fixed", False)),
                     )
-                    for opt in q.get("options", []) if isinstance(opt, dict)
+                    for opt in q.get("options", [])
+                    if isinstance(opt, dict)
                 ]
 
                 pq = ParsedQuestion(
@@ -420,8 +417,6 @@ class PDFAIParserService:
                 if pq.content:
                     batch_questions.append(pq)
             return batch_questions
-
-
 
         results = []
         for idx, batch in enumerate(batches):
@@ -451,17 +446,11 @@ class PDFAIParserService:
         options: list[dict[str, Any]],
         admin_hint: str = "",
     ) -> str:
-        correct_opt = next(
-            (o for o in options if o.get("is_correct")), None
-        )
+        correct_opt = next((o for o in options if o.get("is_correct")), None)
         correct_text = (
-            f"{correct_opt['id']}. {correct_opt['text']}"
-            if correct_opt
-            else "Chưa xác định"
+            f"{correct_opt['id']}. {correct_opt['text']}" if correct_opt else "Chưa xác định"
         )
-        options_text = "\n".join(
-            f"{o['id']}. {o['text']}" for o in options
-        )
+        options_text = "\n".join(f"{o['id']}. {o['text']}" for o in options)
         hint_block = f"\nGợi ý từ admin: {admin_hint}" if admin_hint else ""
 
         prompt = REGENERATE_SOLUTION_PROMPT.format(

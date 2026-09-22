@@ -51,9 +51,7 @@ class GoogleAuthUseCase:
             refresh_token="",
         )
 
-    def handle_login_by_manage_email(
-        self, profile: ManageUserProfile
-    ) -> AuthTokens:
+    def handle_login_by_manage_email(self, profile: ManageUserProfile) -> AuthTokens:
         service_a_user_id = int(profile.id)
         role_names = profile.role_names
 
@@ -78,9 +76,7 @@ class GoogleAuthUseCase:
             # 1. Exchange OAuth code for Google Access Token
             google_access_token = await self._google_client.exchange_code(code)
             if not google_access_token:
-                raise AppException(
-                    "Không thể lấy Google Access Token từ OAuth code", 400
-                )
+                raise AppException("Không thể lấy Google Access Token từ OAuth code", 400)
 
             # 2. Get User Info from Google
             google_user = await self._google_client.get_user_info(google_access_token)

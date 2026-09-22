@@ -101,10 +101,10 @@ async def test_finish_session_computes_decay_and_invalidates_cache(mock_repo, mo
             "gamification": {
                 "points": 100,
                 "gold": 50,
-            }
+            },
         },
         tags_filter=[lesson_slug],
-        question_limit=10
+        question_limit=10,
     )
 
     mock_repo.get.return_value = mock_session
@@ -151,10 +151,10 @@ async def test_finish_session_decay_minimum_limit(mock_repo, mock_cache):
             "lesson_slug": lesson_slug,
             "gamification": {
                 "points": 100,
-            }
+            },
         },
         tags_filter=[lesson_slug],
-        question_limit=10
+        question_limit=10,
     )
 
     mock_repo.get.return_value = mock_session
@@ -245,4 +245,3 @@ def test_leaderboard_row_completion_logic():
         and answered_questions >= total_questions
     )
     assert is_completed_in_progress is False
-

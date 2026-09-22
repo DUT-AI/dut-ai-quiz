@@ -10,10 +10,12 @@ def mock_import_session_repo():
     repo = AsyncMock()
     return repo
 
+
 @pytest.fixture
 def mock_pdf_import_queue():
     queue = AsyncMock()
     return queue
+
 
 @pytest.fixture
 def mock_redis():
@@ -22,31 +24,34 @@ def mock_redis():
     redis.expire.return_value = True
     return redis
 
+
 @pytest.fixture
 def use_case(mock_import_session_repo, mock_pdf_import_queue, mock_redis):
     return StartPdfImportUseCase(
         import_session_repo=mock_import_session_repo,
         pdf_import_queue=mock_pdf_import_queue,
-        redis=mock_redis
+        redis=mock_redis,
     )
+
 
 @patch("app.application.use_cases.questions.start_pdf_import_uc.fitz.open")
 @pytest.mark.asyncio
-async def test_successful_pdf_import(mock_fitz_open, use_case, mock_pdf_import_queue, mock_import_session_repo, mock_redis):
+async def test_successful_pdf_import(
+    mock_fitz_open, use_case, mock_pdf_import_queue, mock_import_session_repo, mock_redis
+):
     # Mock valid PDF document
     mock_doc = MagicMock()
     mock_doc.is_encrypted = False
-    mock_doc.__len__.return_value = 10 # 10 pages
+    mock_doc.__len__.return_value = 10  # 10 pages
     mock_fitz_open.return_value = mock_doc
 
     pdf_bytes = b"dummy_pdf_content"
 
-    with patch("app.application.use_cases.questions.start_pdf_import_uc.open", new_callable=MagicMock):
+    with patch(
+        "app.application.use_cases.questions.start_pdf_import_uc.open", new_callable=MagicMock
+    ):
         response = await use_case.execute(
-            user_id=1,
-            pdf_bytes=pdf_bytes,
-            target_scope=None,
-            password=None
+            user_id=1, pdf_bytes=pdf_bytes, target_scope=None, password=None
         )
 
     assert response.status == "ACCEPTED"
@@ -60,6 +65,7 @@ async def test_successful_pdf_import(mock_fitz_open, use_case, mock_pdf_import_q
         password=None,
     )
 
+
 @pytest.mark.asyncio
 async def test_pdf_size_exceeds_limit(use_case):
     # Create mock bytes > 20MB
@@ -67,11 +73,9 @@ async def test_pdf_size_exceeds_limit(use_case):
 
     with pytest.raises(ValueError, match="PDF size must be <= 20MB"):
         await use_case.execute(
-            user_id=1,
-            pdf_bytes=large_pdf_bytes,
-            target_scope=None,
-            password=None
+            user_id=1, pdf_bytes=large_pdf_bytes, target_scope=None, password=None
         )
+
 
 @patch("app.application.use_cases.questions.start_pdf_import_uc.fitz.open")
 @pytest.mark.asyncio
@@ -84,11 +88,9 @@ async def test_pdf_empty(mock_fitz_open, use_case):
 
     with pytest.raises(ValueError, match="PDF must not be empty"):
         await use_case.execute(
-            user_id=1,
-            pdf_bytes=b"dummy_empty",
-            target_scope=None,
-            password=None
+            user_id=1, pdf_bytes=b"dummy_empty", target_scope=None, password=None
         )
+
 
 @pytest.mark.asyncio
 @patch("app.application.use_cases.questions.start_pdf_import_uc.fitz.open")
@@ -98,11 +100,9 @@ async def test_invalid_pdf_format(mock_fitz_open, use_case):
 
     with pytest.raises(ValueError, match="Invalid PDF format"):
         await use_case.execute(
-            user_id=1,
-            pdf_bytes=b"invalid_data",
-            target_scope=None,
-            password=None
+            user_id=1, pdf_bytes=b"invalid_data", target_scope=None, password=None
         )
+
 
 @pytest.mark.asyncio
 @patch("app.application.use_cases.questions.start_pdf_import_uc.fitz.open")
@@ -112,12 +112,8 @@ async def test_pdf_locked_without_password(mock_fitz_open, use_case):
     mock_fitz_open.return_value = mock_doc
 
     with pytest.raises(ValueError, match="PDF_LOCKED"):
-        await use_case.execute(
-            user_id=1,
-            pdf_bytes=b"locked_pdf",
-            target_scope=None,
-            password=None
-        )
+        await use_case.execute(user_id=1, pdf_bytes=b"locked_pdf", target_scope=None, password=None)
+
 
 @pytest.mark.asyncio
 @patch("app.application.use_cases.questions.start_pdf_import_uc.fitz.open")
@@ -129,11 +125,9 @@ async def test_pdf_invalid_password(mock_fitz_open, use_case):
 
     with pytest.raises(ValueError, match="INVALID_PASSWORD"):
         await use_case.execute(
-            user_id=1,
-            pdf_bytes=b"locked_pdf",
-            target_scope=None,
-            password="wrong_password"
+            user_id=1, pdf_bytes=b"locked_pdf", target_scope=None, password="wrong_password"
         )
+
 
 @pytest.mark.asyncio
 @patch("app.application.use_cases.questions.start_pdf_import_uc.fitz.open")
@@ -148,8 +142,5 @@ async def test_duplicate_upload(mock_fitz_open, use_case, mock_redis):
 
     with pytest.raises(ValueError, match="Duplicate upload detected. Please wait."):
         await use_case.execute(
-            user_id=1,
-            pdf_bytes=b"same_content",
-            target_scope=None,
-            password=None
+            user_id=1, pdf_bytes=b"same_content", target_scope=None, password=None
         )

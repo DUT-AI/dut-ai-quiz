@@ -7,7 +7,12 @@ from app.domain.interfaces import ICommentReactionRepository, ICommentRepository
 
 
 class ToggleReactionUseCase:
-    def __init__(self, comment_reaction_repo: ICommentReactionRepository, comment_repo: ICommentRepository, user_service: UserService):
+    def __init__(
+        self,
+        comment_reaction_repo: ICommentReactionRepository,
+        comment_repo: ICommentRepository,
+        user_service: UserService,
+    ):
         self._comment_reaction_repo = comment_reaction_repo
         self._comment_repo = comment_repo
         self._user_service = user_service
@@ -37,4 +42,6 @@ class ToggleReactionUseCase:
                 user_id=user_id,
                 reaction_type=reaction_type,
             )
-            await self._comment_reaction_repo.switch_reaction(new_reaction, old_type=existing.reaction_type)
+            await self._comment_reaction_repo.switch_reaction(
+                new_reaction, old_type=existing.reaction_type
+            )

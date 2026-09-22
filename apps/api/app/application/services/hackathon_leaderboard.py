@@ -34,4 +34,3 @@ class HackathonLeaderboardAppService:
             is_private=is_private,
             limit=limit,
         )
-

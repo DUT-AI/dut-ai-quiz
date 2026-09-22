@@ -67,9 +67,7 @@ async def list_my_homeworks(
     use_case: FromDishka[ListMyHomeworksUseCase],
     lesson_id: UUID | None = None,
 ) -> HomeworkListResponse:
-    return HomeworkListResponse(
-        data=await use_case.execute(user.id, lesson_id=lesson_id)
-    )
+    return HomeworkListResponse(data=await use_case.execute(user.id, lesson_id=lesson_id))
 
 
 @router.get("", response_model=HomeworkListResponse)
@@ -157,9 +155,7 @@ async def presign_homework_submission(
         filename=body.filename,
         content_type=body.content_type,
     )
-    return PresignSubmissionResponse(
-        data=PresignSubmissionData(**res)
-    )
+    return PresignSubmissionResponse(data=PresignSubmissionData(**res))
 
 
 @router.post(
@@ -193,9 +189,7 @@ async def submit_homework(
             user_id=user.id,
             file=await _file_dto(uploaded),
         )
-    return SubmissionResponse(
-        data=await use_case.execute(dto)
-    )
+    return SubmissionResponse(data=await use_case.execute(dto))
 
 
 @router.post(
@@ -208,9 +202,7 @@ async def retry_homework_submission(
     user: CurrentUser,
     use_case: FromDishka[RetryHomeworkSubmissionUseCase],
 ) -> SubmissionResponse:
-    return SubmissionResponse(
-        data=await use_case.execute(submission_id, user.id)
-    )
+    return SubmissionResponse(data=await use_case.execute(submission_id, user.id))
 
 
 @router.get(
@@ -248,9 +240,7 @@ async def list_completed_members_for_manage(
     lesson_slug: str,
     use_case: FromDishka[ListCompletedHomeworkMembersUseCase],
 ) -> CompletedHomeworkMembersResponse:
-    return CompletedHomeworkMembersResponse(
-        data=await use_case.execute(lesson_slug)
-    )
+    return CompletedHomeworkMembersResponse(data=await use_case.execute(lesson_slug))
 
 
 @router.get(
@@ -263,9 +253,7 @@ async def homework_attachment_url(
     user: CurrentUser,
     use_case: FromDishka[GetHomeworkAttachmentUrlUseCase],
 ) -> DownloadUrlResponse:
-    return DownloadUrlResponse(
-        data=DownloadUrlData(url=await use_case.execute(homework_id))
-    )
+    return DownloadUrlResponse(data=DownloadUrlData(url=await use_case.execute(homework_id)))
 
 
 @router.get(

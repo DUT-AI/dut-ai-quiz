@@ -130,9 +130,11 @@ class MockSubmissionQueue(ISubmissionQueue):
         self,
         submission_id: UUID,
     ) -> None:
-        self.enqueued.append({
-            "submission_id": submission_id,
-        })
+        self.enqueued.append(
+            {
+                "submission_id": submission_id,
+            }
+        )
 
 
 @pytest.mark.asyncio
@@ -190,10 +192,7 @@ async def test_presign_submit_success():
     )
 
     res = await use_case(
-        task_id=task.id,
-        user_id=1,
-        script_filename="predict.py",
-        model_filename="weights.pth"
+        task_id=task.id, user_id=1, script_filename="predict.py", model_filename="weights.pth"
     )
 
     assert res is not None

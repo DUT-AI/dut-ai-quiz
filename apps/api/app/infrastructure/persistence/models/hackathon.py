@@ -26,20 +26,14 @@ from .base import Base
 class Hackathon(Base):
     __tablename__ = "hackathons"
 
-    id: Mapped[UUID] = mapped_column(
-        pgUUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(pgUUID(as_uuid=True), primary_key=True, default=uuid4)
     name: Mapped[str] = mapped_column()
     description: Mapped[str] = mapped_column(default="", server_default="")
     rules: Mapped[str] = mapped_column(default="", server_default="")
     start_time: Mapped[datetime | None] = mapped_column(nullable=True)
     end_time: Mapped[datetime | None] = mapped_column(nullable=True)
-    participation_mode: Mapped[str] = mapped_column(
-        default="both", server_default="both"
-    )
-    max_team_members: Mapped[int] = mapped_column(
-        Integer, default=5, server_default="5"
-    )
+    participation_mode: Mapped[str] = mapped_column(default="both", server_default="both")
+    max_team_members: Mapped[int] = mapped_column(Integer, default=5, server_default="5")
     created_by: Mapped[int] = mapped_column(index=True)
     created_at: Mapped[datetime] = mapped_column(nullable=False)
     updated_at: Mapped[datetime | None] = mapped_column(nullable=True)
@@ -79,9 +73,7 @@ class Hackathon(Base):
 class HackathonTask(Base):
     __tablename__ = "hackathon_tasks"
 
-    id: Mapped[UUID] = mapped_column(
-        pgUUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(pgUUID(as_uuid=True), primary_key=True, default=uuid4)
     hackathon_id: Mapped[UUID] = mapped_column(
         pgUUID(as_uuid=True),
         ForeignKey("hackathons.id", ondelete="CASCADE"),
@@ -135,9 +127,7 @@ class HackathonTask(Base):
 class HackathonTeam(Base):
     __tablename__ = "hackathon_teams"
 
-    id: Mapped[UUID] = mapped_column(
-        pgUUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(pgUUID(as_uuid=True), primary_key=True, default=uuid4)
     hackathon_id: Mapped[UUID] = mapped_column(
         pgUUID(as_uuid=True),
         ForeignKey("hackathons.id", ondelete="CASCADE"),
@@ -146,9 +136,7 @@ class HackathonTeam(Base):
     name: Mapped[str] = mapped_column(nullable=False)
     code: Mapped[str] = mapped_column(unique=True, index=True, nullable=False)
     leader_id: Mapped[int] = mapped_column(nullable=False)
-    member_ids: Mapped[list[int]] = mapped_column(
-        ARRAY(Integer()), nullable=False, default=list
-    )
+    member_ids: Mapped[list[int]] = mapped_column(ARRAY(Integer()), nullable=False, default=list)
     created_at: Mapped[datetime] = mapped_column(nullable=False)
 
     def to_entity(self) -> HackathonTeamEntity:
@@ -178,9 +166,7 @@ class HackathonTeam(Base):
 class HackathonRegistration(Base):
     __tablename__ = "hackathon_registrations"
 
-    id: Mapped[UUID] = mapped_column(
-        pgUUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(pgUUID(as_uuid=True), primary_key=True, default=uuid4)
     hackathon_id: Mapped[UUID] = mapped_column(
         pgUUID(as_uuid=True),
         ForeignKey("hackathons.id", ondelete="CASCADE"),
@@ -219,9 +205,7 @@ class HackathonRegistration(Base):
         )
 
     @classmethod
-    def from_entity(
-        cls, entity: HackathonRegistrationEntity
-    ) -> "HackathonRegistration":
+    def from_entity(cls, entity: HackathonRegistrationEntity) -> "HackathonRegistration":
         return cls(
             id=entity.id,
             hackathon_id=entity.hackathon_id,
@@ -237,9 +221,7 @@ class HackathonRegistration(Base):
 class HackathonSubmission(Base):
     __tablename__ = "hackathon_submissions"
 
-    id: Mapped[UUID] = mapped_column(
-        pgUUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(pgUUID(as_uuid=True), primary_key=True, default=uuid4)
     task_id: Mapped[UUID] = mapped_column(
         pgUUID(as_uuid=True),
         ForeignKey("hackathon_tasks.id", ondelete="CASCADE"),
@@ -307,4 +289,3 @@ class HackathonSubmission(Base):
             created_at=entity.created_at,
             updated_at=entity.updated_at,
         )
-

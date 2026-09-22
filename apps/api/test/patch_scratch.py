@@ -19,13 +19,14 @@ async def test_patch():
     async with AsyncSessionLocal() as s:
         # 1. Create a dummy exam to satisfy foreign key constraint
         from app.infrastructure.persistence.models.exam import Exam
+
         exam_id = uuid4()
         dummy_exam = Exam(
             id=exam_id,
             title="Dummy Exam",
             description="Dummy Description",
             created_by=999,
-            participant_ids=[999]
+            participant_ids=[999],
         )
         s.add(dummy_exam)
         await s.flush()
@@ -37,7 +38,7 @@ async def test_patch():
             user_id=999,
             started_at=now_ict(),
             expires_at=now_ict(),
-            status=AttemptStatus.IN_PROGRESS
+            status=AttemptStatus.IN_PROGRESS,
         )
         s.add(att)
         await s.flush()
@@ -59,6 +60,7 @@ async def test_patch():
         print(f"Found {len(answers)} answers for attempt {att_id}")
         if answers:
             print(f"  First answer: {answers[0]}")
+
 
 if __name__ == "__main__":
     asyncio.run(test_patch())

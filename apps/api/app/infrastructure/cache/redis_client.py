@@ -13,6 +13,7 @@ class ProfileCache:
         # We use a hash of the token if it's too long, but for simplicity here we prefix it.
         # In production, consider hashing the token to avoid storing raw tokens in Redis keys if they are sensitive.
         import hashlib
+
         token_hash = hashlib.sha256(token.encode()).hexdigest()
         return f"auth:profile:{token_hash}"
 

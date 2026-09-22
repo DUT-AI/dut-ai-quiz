@@ -16,6 +16,7 @@ class CommentRepository(ICommentRepository):
         import uuid
 
         from app.core.datetime_utils import now_ict
+
         m = Comment(
             id=comment.id or uuid.uuid4(),
             target_type=comment.target_type.value,
@@ -29,7 +30,6 @@ class CommentRepository(ICommentRepository):
         )
         self._session.add(m)
         await self._session.flush()
-
 
         # Load comment for the response
         stmt = select(Comment).where(Comment.id == m.id)
@@ -53,18 +53,22 @@ class CommentRepository(ICommentRepository):
             stmt = stmt.order_by(Comment.dislike_count.desc(), Comment.created_at.desc())
         elif sort_by == SortMode.OLD:
             stmt = stmt.order_by(Comment.created_at.asc())
-        else: # NEW or default
+        else:  # NEW or default
             stmt = stmt.order_by(Comment.created_at.desc())
         return stmt
 
     async def get_root_comments(
-        self, target_type: TargetType, target_id: UUID | None, sort_by: str, limit: int = 20, offset: int = 0
+        self,
+        target_type: TargetType,
+        target_id: UUID | None,
+        sort_by: str,
+        limit: int = 20,
+        offset: int = 0,
     ) -> tuple[list[CommentEntity], int]:
 
         # Count total
         count_stmt = select(func.count(Comment.id)).where(
-            Comment.target_type == target_type.value,
-            Comment.parent_id.is_(None)
+            Comment.target_type == target_type.value, Comment.parent_id.is_(None)
         )
         if target_type == TargetType.lesson_qna and target_id:
             count_stmt = count_stmt.where(Comment.target_id == target_id)
@@ -73,8 +77,7 @@ class CommentRepository(ICommentRepository):
 
         # Get items
         stmt = select(Comment).where(
-            Comment.target_type == target_type.value,
-            Comment.parent_id.is_(None)
+            Comment.target_type == target_type.value, Comment.parent_id.is_(None)
         )
 
         if target_type == TargetType.lesson_qna and target_id:
@@ -87,7 +90,9 @@ class CommentRepository(ICommentRepository):
         comments = result.scalars().all()
         return [c.to_entity() for c in comments], total_count
 
-    async def get_replies(self, parent_id: UUID, sort_by: str, limit: int = 20, offset: int = 0) -> tuple[list[CommentEntity], int]:
+    async def get_replies(
+        self, parent_id: UUID, sort_by: str, limit: int = 20, offset: int = 0
+    ) -> tuple[list[CommentEntity], int]:
         count_stmt = select(func.count(Comment.id)).where(Comment.parent_id == parent_id)
         total_count = (await self._session.execute(count_stmt)).scalar_one()
 
@@ -99,9 +104,18 @@ class CommentRepository(ICommentRepository):
         comments = result.scalars().all()
         return [c.to_entity() for c in comments], total_count
 
-    async def get_comments_tree(self, target_type: TargetType, target_id: UUID | None, sort_by: str, limit: int = 20, offset: int = 0) -> tuple[list[CommentEntity], int]:
+    async def get_comments_tree(
+        self,
+        target_type: TargetType,
+        target_id: UUID | None,
+        sort_by: str,
+        limit: int = 20,
+        offset: int = 0,
+    ) -> tuple[list[CommentEntity], int]:
         # Fetch root comments
-        root_entities, total = await self.get_root_comments(target_type, target_id, sort_by, limit, offset)
+        root_entities, total = await self.get_root_comments(
+            target_type, target_id, sort_by, limit, offset
+        )
         if not root_entities:
             return [], total
 
@@ -142,11 +156,12 @@ class CommentRepository(ICommentRepository):
         return root_entities, total
 
     async def update(self, comment: CommentEntity) -> CommentEntity:
-        stmt = update(Comment).where(Comment.id == comment.id).values(
-            content=comment.content,
-            image_urls=comment.image_urls,
-            updated_at=func.now()
-        ).returning(Comment)
+        stmt = (
+            update(Comment)
+            .where(Comment.id == comment.id)
+            .values(content=comment.content, image_urls=comment.image_urls, updated_at=func.now())
+            .returning(Comment)
+        )
 
         result = await self._session.execute(stmt)
         await self._session.flush()

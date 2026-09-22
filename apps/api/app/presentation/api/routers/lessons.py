@@ -102,6 +102,7 @@ async def get_lesson(
         raise HTTPException(status_code=404, detail="Lesson not found")
     if not is_teacher:
         import copy
+
         res = copy.deepcopy(res)
         res["questions"] = [QuestionToStudent.model_validate(q) for q in res.get("questions", [])]
     return res
@@ -122,7 +123,9 @@ async def create_lesson(
 async def import_notion_lesson(
     user: EducatorUser,
     use_case: FromDishka[ImportNotionLessonUseCase],
-    file: UploadFile = File(..., description="ZIP file exported from Notion containing markdown and images"),
+    file: UploadFile = File(
+        ..., description="ZIP file exported from Notion containing markdown and images"
+    ),
     module_id: str | None = Form(None),
     name: str | None = Form(None),
     description: str | None = Form(None),
@@ -136,7 +139,11 @@ async def import_notion_lesson(
         raise HTTPException(status_code=400, detail="Only ZIP files (.zip) are supported")
 
     mid = None
-    if module_id and module_id.strip() and module_id.strip().lower() not in ("null", "undefined", "none", "string"):
+    if (
+        module_id
+        and module_id.strip()
+        and module_id.strip().lower() not in ("null", "undefined", "none", "string")
+    ):
         try:
             mid = UUID(module_id.strip())
         except ValueError as e:
@@ -146,7 +153,11 @@ async def import_notion_lesson(
             ) from e
 
     lid = None
-    if lesson_id and lesson_id.strip() and lesson_id.strip().lower() not in ("null", "undefined", "none", "string"):
+    if (
+        lesson_id
+        and lesson_id.strip()
+        and lesson_id.strip().lower() not in ("null", "undefined", "none", "string")
+    ):
         try:
             lid = UUID(lesson_id.strip())
         except ValueError as e:
@@ -168,10 +179,7 @@ async def import_notion_lesson(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to import lesson: {str(e)}"
-        ) from e
-
+        raise HTTPException(status_code=500, detail=f"Failed to import lesson: {str(e)}") from e
 
 
 @router.post("/reorder")
@@ -200,9 +208,7 @@ async def update_lesson(
     return res
 
 
-@router.post(
-    "/{lesson_id}/embeddings/reindex", response_model=LessonIndexOut
-)
+@router.post("/{lesson_id}/embeddings/reindex", response_model=LessonIndexOut)
 @inject
 async def reindex_lesson(
     user: EducatorUser,

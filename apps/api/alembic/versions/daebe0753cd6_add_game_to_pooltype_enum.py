@@ -5,13 +5,14 @@ Revises: e144ea5f00bf
 Create Date: 2026-07-06 16:58:24.656936
 
 """
+
 from collections.abc import Sequence
 
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = 'daebe0753cd6'
-down_revision: str | None = 'e144ea5f00bf'
+revision: str = "daebe0753cd6"
+down_revision: str | None = "e144ea5f00bf"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

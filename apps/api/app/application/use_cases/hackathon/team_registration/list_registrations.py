@@ -48,8 +48,7 @@ class ListRegistrationsUseCase:
                 t = await self._team_repo.get(r.team_id)
                 if t:
                     team_members = [
-                        await self._user_service.get_user_info(m_id)
-                        for m_id in t.member_ids
+                        await self._user_service.get_user_info(m_id) for m_id in t.member_ids
                     ]
                     team_dto = HackathonTeamOutDTO(
                         id=t.id,

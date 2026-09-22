@@ -13,8 +13,7 @@ def build_fingerprint(source: SourceFile, k: int = 5) -> dict:
         fingerprints = {_digest(normalized)} if normalized else set()
     else:
         fingerprints = {
-            _digest(" ".join(tokens[index : index + k]))
-            for index in range(len(tokens) - k + 1)
+            _digest(" ".join(tokens[index : index + k])) for index in range(len(tokens) - k + 1)
         }
     return {
         "file_name": source.name,
@@ -32,9 +31,7 @@ def find_plagiarism(
     candidate_weighted_scores = {user_id: 0.0 for user_id in candidate_user_ids}
     previous_by_file: dict[str, list[StoredFingerprint]] = {}
     for candidate in previous:
-        previous_by_file.setdefault(candidate.file_name.casefold(), []).append(
-            candidate
-        )
+        previous_by_file.setdefault(candidate.file_name.casefold(), []).append(candidate)
     total_weight = sum(len(set(item["fingerprints"])) for item in current)
 
     for item in current:
@@ -45,9 +42,7 @@ def find_plagiarism(
         for candidate in previous_by_file.get(item["file_name"].casefold(), []):
             candidate_set = set(candidate.fingerprints)
             denominator = min(len(current_set), len(candidate_set))
-            score = (
-                len(current_set & candidate_set) / denominator if denominator else 0.0
-            )
+            score = len(current_set & candidate_set) / denominator if denominator else 0.0
             file_scores[candidate.user_id] = max(
                 file_scores.get(candidate.user_id, 0.0),
                 score,

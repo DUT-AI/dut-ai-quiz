@@ -5,6 +5,7 @@ StartImportUseCase — Step 1+2:
 - Chạy AI parse pipeline (FastAPI BackgroundTasks)
 - Trả về job_id ngay lập tức (202 Accepted)
 """
+
 from __future__ import annotations
 
 import uuid
@@ -181,14 +182,13 @@ class StartImportUseCase:
                 processed_questions=len(parsed_questions),
             )
             await self._import_repo.update_status(job_id, "COMPLETED")
-            logger.info(f"[Import {job_str}] Completed — {len(parsed_questions)} DRAFT questions saved")
+            logger.info(
+                f"[Import {job_str}] Completed — {len(parsed_questions)} DRAFT questions saved"
+            )
 
         except Exception as exc:
             logger.exception(f"[Import {job_str}] Pipeline failed: {exc}")
             try:
-                await self._import_repo.update_status(
-                    job_id, "FAILED", error_message=str(exc)
-                )
+                await self._import_repo.update_status(job_id, "FAILED", error_message=str(exc))
             except Exception:
                 pass
-

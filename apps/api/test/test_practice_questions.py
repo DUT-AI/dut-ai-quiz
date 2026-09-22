@@ -28,18 +28,13 @@ async def test_list_practice_questions_use_case():
         lesson_id=lesson_id,
         tags=["ML", "DeepLearning"],
         created_by=1,
-        created_at=datetime.utcnow()
+        created_at=datetime.utcnow(),
     )
 
     question_repo.list_all.return_value = [question]
 
     use_case = ListQuestionsUseCase(question_repo)
-    query = QuestionListQuery(
-        pool_type=PoolType.PRACTICE,
-        lesson_id=lesson_id,
-        offset=0,
-        limit=50
-    )
+    query = QuestionListQuery(pool_type=PoolType.PRACTICE, lesson_id=lesson_id, offset=0, limit=50)
 
     result = await use_case.execute(query)
 
@@ -53,7 +48,7 @@ async def test_list_practice_questions_use_case():
         status=None,
         related_questions=None,
         offset=0,
-        limit=50
+        limit=50,
     )
 
     # Assert result content
@@ -71,7 +66,9 @@ def test_question_output_schema_serialization():
     question_id = uuid4()
 
     opt_out_1 = QuestionOptionOut(id="opt-1", text="Correct Choice", is_correct=True, fixed=False)
-    opt_out_2 = QuestionOptionOut(id="opt-2", text="Incorrect Choice", is_correct=False, fixed=False)
+    opt_out_2 = QuestionOptionOut(
+        id="opt-2", text="Incorrect Choice", is_correct=False, fixed=False
+    )
 
     question_out = QuestionOut(
         id=question_id,
@@ -83,7 +80,7 @@ def test_question_output_schema_serialization():
         lesson_id=lesson_id,
         tags=["Generalization"],
         created_by=1,
-        created_at=datetime.utcnow()
+        created_at=datetime.utcnow(),
     )
 
     data = question_out.model_dump()
@@ -117,12 +114,13 @@ async def test_answer_question_use_case():
         lesson_id=lesson_id,
         tags=["ML"],
         created_by=1,
-        created_at=datetime.utcnow()
+        created_at=datetime.utcnow(),
     )
 
     question_repo.get.return_value = question
 
     from app.application.use_cases.questions.answer_question_uc import AnswerQuestionUseCase
+
     use_case = AnswerQuestionUseCase(question_repo)
 
     # Test correct option selection
@@ -159,7 +157,7 @@ def test_sanitize_questions_for_student():
         lesson_id=uuid4(),
         tags=["ML"],
         created_by=1,
-        created_at=datetime.utcnow()
+        created_at=datetime.utcnow(),
     )
 
     sanitized = sanitize_questions_for_student([question])
@@ -186,7 +184,7 @@ def test_question_to_student_schema_directly():
         lesson_id=uuid4(),
         tags=["ML", "AI"],
         created_by=1,
-        created_at=datetime.utcnow()
+        created_at=datetime.utcnow(),
     )
 
     student_q = QuestionToStudent.model_validate(question)
@@ -194,4 +192,3 @@ def test_question_to_student_schema_directly():
     assert student_q.options[0].is_correct is None
     assert student_q.options[1].is_correct is None
     assert student_q.tags == ["ML", "AI"]
-

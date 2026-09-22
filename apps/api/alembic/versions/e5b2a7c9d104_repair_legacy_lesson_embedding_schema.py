@@ -19,17 +19,11 @@ depends_on: str | Sequence[str] | None = None
 
 
 def _column_names(table_name: str) -> set[str]:
-    return {
-        column["name"]
-        for column in sa.inspect(op.get_bind()).get_columns(table_name)
-    }
+    return {column["name"] for column in sa.inspect(op.get_bind()).get_columns(table_name)}
 
 
 def _index_names(table_name: str) -> set[str]:
-    return {
-        index["name"]
-        for index in sa.inspect(op.get_bind()).get_indexes(table_name)
-    }
+    return {index["name"] for index in sa.inspect(op.get_bind()).get_indexes(table_name)}
 
 
 def upgrade() -> None:
@@ -62,9 +56,7 @@ def upgrade() -> None:
                 """
             )
             backup_count = bind.execute(
-                sa.text(
-                    "SELECT count(*) FROM lesson_chunks_legacy_1536_backup"
-                )
+                sa.text("SELECT count(*) FROM lesson_chunks_legacy_1536_backup")
             ).scalar_one()
             if backup_count == 0:
                 op.execute(
@@ -123,9 +115,7 @@ def upgrade() -> None:
                 ),
             )
 
-        if "ix_lesson_chunks_embedding_hnsw" not in _index_names(
-            "lesson_chunks"
-        ):
+        if "ix_lesson_chunks_embedding_hnsw" not in _index_names("lesson_chunks"):
             op.create_index(
                 "ix_lesson_chunks_embedding_hnsw",
                 "lesson_chunks",
@@ -154,9 +144,7 @@ def upgrade() -> None:
         if "embedding_model" not in columns:
             op.add_column(
                 "questions",
-                sa.Column(
-                    "embedding_model", sa.String(length=200), nullable=True
-                ),
+                sa.Column("embedding_model", sa.String(length=200), nullable=True),
             )
         if "embedding_source_hash" not in columns:
             op.add_column(

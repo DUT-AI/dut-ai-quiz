@@ -50,9 +50,7 @@ Mỗi patch được ánh xạ sang một vector riêng.
     chunks = chunker.split(content)
 
     patch_chunks = [chunk for chunk in chunks if chunk.heading_path[-1] == "Patch Extraction"]
-    projection_chunks = [
-        chunk for chunk in chunks if chunk.heading_path[-1] == "Linear Projection"
-    ]
+    projection_chunks = [chunk for chunk in chunks if chunk.heading_path[-1] == "Linear Projection"]
     assert patch_chunks
     assert projection_chunks
     assert all("Linear Projection" not in chunk.content for chunk in patch_chunks)
@@ -70,10 +68,7 @@ Mỗi patch được ánh xạ sang một vector riêng.
 
 def test_chunker_only_splits_oversized_paragraph_at_sentence_boundaries() -> None:
     chunker = LessonChunker(target_tokens=100, max_tokens=120)
-    paragraph = " ".join(
-        f"Đây là câu số {index} chứa kiến thức quan trọng."
-        for index in range(80)
-    )
+    paragraph = " ".join(f"Đây là câu số {index} chứa kiến thức quan trọng." for index in range(80))
 
     chunks = chunker.split(f"## Một section\n\n{paragraph}")
 
@@ -114,9 +109,7 @@ async def test_dutai_embedding_uses_model_id_and_validates_dimensions() -> None:
             200,
             json={
                 "object": "list",
-                "data": [
-                    {"object": "embedding", "embedding": [0.1, 0.2, 0.3], "index": 0}
-                ],
+                "data": [{"object": "embedding", "embedding": [0.1, 0.2, 0.3], "index": 0}],
                 "model": "keepitreal/vietnamese-sbert",
             },
         )
@@ -188,9 +181,7 @@ async def test_related_lessons_uses_cached_question_embedding() -> None:
     assert question.embedding_source_hash == question_embedding_hash(question)
 
     fresh_content = "# Batch normalization\nNội dung hiện tại"
-    fresh_hash = lesson_source_hash(
-        "Batch normalization", "Chuẩn hóa activation", fresh_content
-    )
+    fresh_hash = lesson_source_hash("Batch normalization", "Chuẩn hóa activation", fresh_content)
     lesson_id = uuid4()
     matches = [
         LessonChunkMatch(

@@ -37,7 +37,5 @@ class CacheProvider(Provider):
         return GameLeaderboardCache(redis, ttl=600)
 
     @provide(scope=Scope.APP)
-    def hackathon_leaderboard_cache(
-        self, redis: Redis
-    ) -> IHackathonLeaderboardCache:
+    def hackathon_leaderboard_cache(self, redis: Redis) -> IHackathonLeaderboardCache:
         return RedisHackathonLeaderboardCache(redis, ttl=5)

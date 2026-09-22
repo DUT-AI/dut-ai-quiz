@@ -40,9 +40,7 @@ class GetExamStatsUseCase:
 
         # 4. Summary & Distribution
         completed_attempts = [
-            a
-            for a in attempts
-            if a.status == AttemptStatus.COMPLETED and a.score is not None
+            a for a in attempts if a.status == AttemptStatus.COMPLETED and a.score is not None
         ]
         scores = [a.score for a in completed_attempts]
 
@@ -57,10 +55,7 @@ class GetExamStatsUseCase:
         # Best score per user for distribution
         user_best_scores = {}
         for a in completed_attempts:
-            if (
-                a.user_id not in user_best_scores
-                or a.score > user_best_scores[a.user_id]
-            ):
+            if a.user_id not in user_best_scores or a.score > user_best_scores[a.user_id]:
                 user_best_scores[a.user_id] = a.score
 
         for sc in user_best_scores.values():
@@ -75,9 +70,7 @@ class GetExamStatsUseCase:
             else:
                 dist["8-10"] += 1
 
-        score_distribution = [
-            ScoreDistributionItem(range=k, count=v) for k, v in dist.items()
-        ]
+        score_distribution = [ScoreDistributionItem(range=k, count=v) for k, v in dist.items()]
 
         # 5. Participants Stat
         user_stats = {}
@@ -86,9 +79,7 @@ class GetExamStatsUseCase:
             if uid not in user_stats:
                 user_stats[uid] = {
                     "user_id": uid,
-                    "best_score": a.score
-                    if a.status == AttemptStatus.COMPLETED
-                    else None,
+                    "best_score": a.score if a.status == AttemptStatus.COMPLETED else None,
                     "attempts_count": 0,
                     "last_status": a.status,
                     "max_tab_out": a.tab_out_count,
@@ -129,8 +120,7 @@ class GetExamStatsUseCase:
                 question_stats.append(
                     QuestionStat(
                         question_id=q.id,
-                        content=q.content[:100]
-                        + ("..." if len(q.content) > 100 else ""),
+                        content=q.content[:100] + ("..." if len(q.content) > 100 else ""),
                         correct_rate=round(correct_count / len(completed_attempts), 2),
                     )
                 )

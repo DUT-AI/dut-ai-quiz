@@ -36,8 +36,7 @@ class HomeworkRepository(IHomeworkRepository):
 
     async def lesson_exists(self, lesson_id: UUID) -> bool:
         return (
-            await self._session.scalar(select(Lesson.id).where(Lesson.id == lesson_id))
-            is not None
+            await self._session.scalar(select(Lesson.id).where(Lesson.id == lesson_id)) is not None
         )
 
     async def get_homework(self, homework_id: UUID) -> HomeworkEntity | None:
@@ -125,9 +124,7 @@ class HomeworkRepository(IHomeworkRepository):
         await self._session.refresh(model)
         return model.to_entity()
 
-    async def get_submission(
-        self, submission_id: UUID
-    ) -> HomeworkSubmissionEntity | None:
+    async def get_submission(self, submission_id: UUID) -> HomeworkSubmissionEntity | None:
         model = await self._session.get(HomeworkSubmission, submission_id)
         return model.to_entity() if model else None
 
@@ -145,9 +142,7 @@ class HomeworkRepository(IHomeworkRepository):
         )
         return model.to_entity() if model else None
 
-    async def retry_failed_submission(
-        self, submission_id: UUID
-    ) -> HomeworkSubmissionEntity | None:
+    async def retry_failed_submission(self, submission_id: UUID) -> HomeworkSubmissionEntity | None:
         model = await self._session.scalar(
             update(HomeworkSubmission)
             .where(
@@ -172,9 +167,7 @@ class HomeworkRepository(IHomeworkRepository):
         await self._session.flush()
         return model.to_entity()
 
-    async def list_submissions(
-        self, homework_id: UUID
-    ) -> list[HomeworkSubmissionEntity]:
+    async def list_submissions(self, homework_id: UUID) -> list[HomeworkSubmissionEntity]:
         models = (
             await self._session.scalars(
                 select(HomeworkSubmission)
@@ -223,6 +216,7 @@ class HomeworkRepository(IHomeworkRepository):
             )
             for row in rows
         ]
+
     async def count_submitters(self, homework_id: UUID) -> int:
         return int(
             await self._session.scalar(

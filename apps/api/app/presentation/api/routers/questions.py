@@ -42,6 +42,7 @@ from app.presentation.schemas.questions import (
 class AiRegenerateRequest(BaseModel):
     custom_prompt: str | None = None
 
+
 router = APIRouter(prefix="/questions", tags=["questions"])
 
 
@@ -115,9 +116,7 @@ async def find_related_questions_route(
             content=body.content,
             limit=body.limit,
             min_score=(
-                settings.related_question_min_score
-                if body.min_score is None
-                else body.min_score
+                settings.related_question_min_score if body.min_score is None else body.min_score
             ),
             pool_type=pool_type,
         )
@@ -192,9 +191,7 @@ async def answer_question_route(
     return result
 
 
-@router.get(
-    "/{question_id}/related-lessons", response_model=list[RelatedLessonOut]
-)
+@router.get("/{question_id}/related-lessons", response_model=list[RelatedLessonOut])
 @inject
 async def get_related_lessons_route(
     user: CurrentUser,
@@ -207,11 +204,7 @@ async def get_related_lessons_route(
         result = await use_case.execute(
             question_id,
             limit=limit,
-            min_score=(
-                settings.related_lesson_min_score
-                if min_score is None
-                else min_score
-            ),
+            min_score=(settings.related_lesson_min_score if min_score is None else min_score),
         )
     except EmbeddingServiceError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
@@ -231,7 +224,9 @@ async def heartbeat_question_route(
 ):
     ok = await use_case.execute(question_id, user.id)
     if not ok:
-        raise HTTPException(status_code=409, detail="Could not acquire lock or question not found/not draft.")
+        raise HTTPException(
+            status_code=409, detail="Could not acquire lock or question not found/not draft."
+        )
     return {"ok": True}
 
 

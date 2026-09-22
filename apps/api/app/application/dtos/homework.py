@@ -89,9 +89,7 @@ class HomeworkSubmissionOutDTO(BaseModel):
             score=entity.score,
             feedback=entity.feedback,
             score_details=entity.score_details,
-            plagiarism_info=(
-                entity.plagiarism_info if include_plagiarism_identity else None
-            ),
+            plagiarism_info=(entity.plagiarism_info if include_plagiarism_identity else None),
             is_plagiarized=entity.is_plagiarized,
             plagiarized_from_user_id=(
                 entity.plagiarized_from_user_id if include_plagiarism_identity else None

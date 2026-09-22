@@ -53,8 +53,7 @@ class UserContext(BaseModel):
         if self.is_admin():
             return True
         check_perms = {
-            p.value if isinstance(p, SystemPermission) else str(p)
-            for p in required_permissions
+            p.value if isinstance(p, SystemPermission) else str(p) for p in required_permissions
         }
         return bool(self.permissions & check_perms)
 
@@ -107,9 +106,7 @@ def extract_auth_context_from_request(
     roles = payload.get("roles")
 
     if uid is None or roles is None or not isinstance(roles, list):
-        raise HTTPException(
-            status_code=401, detail="Unauthorized: Invalid token payload"
-        )
+        raise HTTPException(status_code=401, detail="Unauthorized: Invalid token payload")
 
     return UserContext(
         id=int(uid),
@@ -124,7 +121,9 @@ async def get_current_user(
 ) -> UserContext:
     user = extract_auth_context_from_request(request, credentials)
     if not user:
-        raise HTTPException(status_code=401, detail="Unauthorized: No access token or API key provided")
+        raise HTTPException(
+            status_code=401, detail="Unauthorized: No access token or API key provided"
+        )
     return user
 
 
@@ -147,8 +146,7 @@ def RequirePermissions(
     - require_all: True to require all permissions, False (default) to require at least one.
     """
     req_list = [
-        p.value if isinstance(p, SystemPermission) else str(p)
-        for p in required_permissions
+        p.value if isinstance(p, SystemPermission) else str(p) for p in required_permissions
     ]
 
     async def dependency(
@@ -173,9 +171,7 @@ def RequirePermissions(
 
 
 def require_roles(*allowed_roles: str | UserRole):
-    allowed_list = [
-        r.value if isinstance(r, UserRole) else str(r) for r in allowed_roles
-    ]
+    allowed_list = [r.value if isinstance(r, UserRole) else str(r) for r in allowed_roles]
 
     async def dependency(
         user: Annotated[UserContext, Depends(get_current_user)],
@@ -216,11 +212,7 @@ CurrentUser = Annotated[UserContext, Depends(get_current_user)]
 AdminUser = Annotated[UserContext, Depends(require_roles(UserRole.ADMIN, "admin"))]
 EducatorUser = Annotated[
     UserContext,
-    Depends(
-        require_roles(
-            UserRole.ADMIN, UserRole.EDUCATOR, "admin", "EDUCATOR", "educator"
-        )
-    ),
+    Depends(require_roles(UserRole.ADMIN, UserRole.EDUCATOR, "admin", "EDUCATOR", "educator")),
 ]
 AdminOrEducatorUser = EducatorUser
 TeacherUser = EducatorUser

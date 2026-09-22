@@ -13,9 +13,7 @@ from fastapi import HTTPException
 
 
 class UseItemGameUseCase:
-    def __init__(
-        self, ps_repo: IGameSessionRepository, question_repo: IQuestionRepository
-    ):
+    def __init__(self, ps_repo: IGameSessionRepository, question_repo: IQuestionRepository):
         self._ps_repo = ps_repo
         self._question_repo = question_repo
 
@@ -36,9 +34,7 @@ class UseItemGameUseCase:
         questions = session.snapshot.get("questions", [])
         current_idx = session.snapshot["gamification"].get("last_question_index", 0)
         if current_idx >= len(questions):
-            raise HTTPException(
-                status_code=400, detail="All questions already answered"
-            )
+            raise HTTPException(status_code=400, detail="All questions already answered")
 
         current_q = questions[current_idx]
         if current_q["id"] != str(payload.question_id):
@@ -50,9 +46,7 @@ class UseItemGameUseCase:
         try:
             item = GamificationItem(payload.item_name.lower())
         except ValueError:
-            raise HTTPException(
-                status_code=400, detail=f"Invalid item: {payload.item_name}"
-            )
+            raise HTTPException(status_code=400, detail=f"Invalid item: {payload.item_name}")
 
         is_boss = current_q.get("is_boss", False)
         price_multiplier = 2 if is_boss else 1
@@ -60,9 +54,7 @@ class UseItemGameUseCase:
 
         gold = session.snapshot["gamification"].get("gold", 0)
         if gold < price:
-            raise HTTPException(
-                status_code=400, detail="Not enough gold to use this item"
-            )
+            raise HTTPException(status_code=400, detail="Not enough gold to use this item")
 
         # Process item
         result = {}
@@ -90,9 +82,7 @@ class UseItemGameUseCase:
 
             from datetime import datetime, timedelta
 
-            started_at_str = session.snapshot["gamification"].get(
-                "current_question_started_at"
-            )
+            started_at_str = session.snapshot["gamification"].get("current_question_started_at")
             if started_at_str:
                 started_at = datetime.fromisoformat(started_at_str)
                 # Dời thời điểm bắt đầu lên 30s -> người dùng có thêm 30s để trả lời

@@ -53,13 +53,17 @@ class QuestionRepository(IQuestionRepository):
 
         PublicQuestion = aliased(Question)
         distance = Question.embedding.cosine_distance(PublicQuestion.embedding)
-        has_dup_exists = select(1).where(
-            PublicQuestion.status == "PUBLIC",
-            PublicQuestion.id != Question.id,
-            PublicQuestion.embedding.is_not(None),
-            PublicQuestion.embedding_model == Question.embedding_model,
-            (1 - distance) >= 0.85
-        ).exists()
+        has_dup_exists = (
+            select(1)
+            .where(
+                PublicQuestion.status == "PUBLIC",
+                PublicQuestion.id != Question.id,
+                PublicQuestion.embedding.is_not(None),
+                PublicQuestion.embedding_model == Question.embedding_model,
+                (1 - distance) >= 0.85,
+            )
+            .exists()
+        )
 
         stmt = select(Question, has_dup_exists.label("has_duplicate"))
         if related_questions:
@@ -79,6 +83,7 @@ class QuestionRepository(IQuestionRepository):
             # tag can be name (string) or UUID string
             tag_uuid = None
             from uuid import UUID as pyUUID
+
             try:
                 tag_uuid = pyUUID(tag)
             except ValueError:
@@ -92,6 +97,7 @@ class QuestionRepository(IQuestionRepository):
             else:
                 # tag not found, force empty result
                 from uuid import uuid4
+
                 stmt = stmt.where(func.array_position(Question.tags, uuid4()).isnot(None))
 
         stmt = (
@@ -111,12 +117,14 @@ class QuestionRepository(IQuestionRepository):
             ent.tags = [tag_map[tid] for tid in model.tags if tid in tag_map]
             if has_duplicate:
                 from app.domain.entities.question import DuplicateStatus
+
                 ent.duplicate_status = DuplicateStatus.POSSIBLE_DUPLICATE
             entities.append(ent)
         return entities
 
     async def add(self, entity: QuestionEntity) -> QuestionEntity:
         from uuid import UUID as pyUUID
+
         tag_uuids = []
         for t in entity.tags:
             if isinstance(t, str):
@@ -140,6 +148,7 @@ class QuestionRepository(IQuestionRepository):
 
     async def add_bulk(self, entities: list[QuestionEntity]) -> list[QuestionEntity]:
         from uuid import UUID as pyUUID
+
         models = []
         for e in entities:
             tag_uuids = []
@@ -189,6 +198,7 @@ class QuestionRepository(IQuestionRepository):
             model.embedding_source_hash = entity.embedding_source_hash
 
             from uuid import UUID as pyUUID
+
             tag_uuids = []
             for t in entity.tags:
                 if isinstance(t, str):
@@ -240,10 +250,6 @@ class QuestionRepository(IQuestionRepository):
         matches: list[QuestionSimilarityMatch] = []
         for model, score in rows:
             question = model.to_entity()
-            question.tags = [
-                tag_map[tag_id] for tag_id in model.tags if tag_id in tag_map
-            ]
-            matches.append(
-                QuestionSimilarityMatch(question=question, score=float(score))
-            )
+            question.tags = [tag_map[tag_id] for tag_id in model.tags if tag_id in tag_map]
+            matches.append(QuestionSimilarityMatch(question=question, score=float(score)))
         return matches

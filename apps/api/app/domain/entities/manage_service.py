@@ -9,6 +9,7 @@ class ManageUserEntity:
     email: str
     user_avatar_url: str | None = None
 
+
 @dataclasses.dataclass(slots=True)
 class ManageTeamEntity:
     id: int

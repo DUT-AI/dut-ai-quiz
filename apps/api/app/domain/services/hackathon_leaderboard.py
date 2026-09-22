@@ -34,9 +34,7 @@ class HackathonLeaderboardDomainService:
                 continue
 
             participant_id = (
-                f"team:{submission.team_id}"
-                if submission.team_id
-                else f"user:{submission.user_id}"
+                f"team:{submission.team_id}" if submission.team_id else f"user:{submission.user_id}"
             )
 
             if participant_id not in best_by_participant:
@@ -46,9 +44,7 @@ class HackathonLeaderboardDomainService:
             if current is None:
                 best_by_participant[participant_id][task_id] = submission
             else:
-                current_score = (
-                    current.private_score if is_private else current.public_score
-                )
+                current_score = current.private_score if is_private else current.public_score
                 lower_is_better = task_metrics[task_id]
                 if current_score is not None and self._is_better(
                     score, current_score, lower_is_better
@@ -143,9 +139,7 @@ class HackathonLeaderboardDomainService:
             key=lambda x: (
                 -x["total_score"],
                 x["total_inference_time"],
-                x["latest_submission_time"].timestamp()
-                if x["latest_submission_time"]
-                else 0,
+                x["latest_submission_time"].timestamp() if x["latest_submission_time"] else 0,
             )
         )
 

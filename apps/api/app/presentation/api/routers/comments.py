@@ -47,7 +47,9 @@ async def get_comments(
     use_case: Inject[GetCommentsUseCase],
     target_type: TargetType = Query(...),
     target_id: UUID | None = Query(None),
-    sort_by: str = Query(SortMode.BEST, description="Sort mode: best, top_likes, top_dislikes, new, old"),
+    sort_by: str = Query(
+        SortMode.BEST, description="Sort mode: best, top_likes, top_dislikes, new, old"
+    ),
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
 ) -> PaginatedCommentsResponse:

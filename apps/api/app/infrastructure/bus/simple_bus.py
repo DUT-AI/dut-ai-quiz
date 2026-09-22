@@ -11,6 +11,7 @@ class SimpleEventBus(EventBus):
 
     async def publish(self, event: DomainEvent) -> None:
         import asyncio
+
         event_type = type(event)
         if event_type in self._handlers:
             for handler in self._handlers[event_type]:

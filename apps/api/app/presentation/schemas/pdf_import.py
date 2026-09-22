@@ -9,22 +9,26 @@ class ParsedQuestionPreview(BaseModel):
     content: str
     options: list[QuestionOptionIn] = Field(default_factory=list)
     solution: str | None = None
-    confidence: float = 1.0 # Static for now since not using AI
+    confidence: float = 1.0  # Static for now since not using AI
+
 
 class PDFParseResponse(BaseModel):
     questions: list[ParsedQuestionPreview]
     total_pages: int
     warnings: list[str] = Field(default_factory=list)
 
+
 class PDFImportRequest(BaseModel):
     question_delimiter: str = r"Câu \d+[:.]"
     option_prefixes: str = "A,B,C,D"
-    correct_answer_marker: str = "" # e.g. "*" or "Đáp án: "
+    correct_answer_marker: str = ""  # e.g. "*" or "Đáp án: "
+
 
 class StartPdfImportResponse(BaseModel):
     job_id: UUID
     status: str
     message: str
+
 
 class ImportSessionStatusResponse(BaseModel):
     id: UUID

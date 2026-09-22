@@ -45,4 +45,3 @@ async def delete_tag_route(
     """Delete a tag by its ID. Educator or Admin only."""
     await use_case.execute(tag_id)
     return {"status": "ok"}
-

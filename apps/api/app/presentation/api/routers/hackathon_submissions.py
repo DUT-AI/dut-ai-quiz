@@ -84,7 +84,9 @@ async def list_submissions_route(
     user: CurrentUser,
     use_case: FromDishka[ListSubmissionsUseCase],
 ):
-    return await use_case(task_id=task_id, user_id=user.id, quiz_role=quiz_role_from_manage(user.roles))
+    return await use_case(
+        task_id=task_id, user_id=user.id, quiz_role=quiz_role_from_manage(user.roles)
+    )
 
 
 @router.get("/{hackathon_id}/leaderboard")

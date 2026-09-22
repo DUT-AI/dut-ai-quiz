@@ -43,4 +43,3 @@ class ModuleReorder(BaseModel):
     """Schema for reordering modules."""
 
     module_ids: list[UUID]
-

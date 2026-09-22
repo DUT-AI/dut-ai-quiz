@@ -32,9 +32,7 @@ class User(Base):
 
     def to_entity(self) -> UserEntity:
         role_names = (
-            [r.name for r in self.roles]
-            if self.roles
-            else ([self.role] if self.role else [])
+            [r.name for r in self.roles] if self.roles else ([self.role] if self.role else [])
         )
         return UserEntity(
             id=self.id,
@@ -58,4 +56,3 @@ class User(Base):
             google_id=entity.google_id,
             created_at=entity.created_at or now_ict(),
         )
-

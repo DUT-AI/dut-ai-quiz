@@ -27,7 +27,9 @@ class ViewHackathonLeaderboardUseCase:
         if cached is not None:
             return cached
 
-        rows = await self._leaderboard_service.get_leaderboard(hackathon_id, is_private=is_private, limit=limit)
+        rows = await self._leaderboard_service.get_leaderboard(
+            hackathon_id, is_private=is_private, limit=limit
+        )
         data = [row.to_dict() for row in rows]
 
         await self._cache.set(hackathon_id, data, is_private=is_private)

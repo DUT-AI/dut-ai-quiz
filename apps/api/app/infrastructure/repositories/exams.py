@@ -26,9 +26,7 @@ class ExamRepository(IExamRepository):
         r = await self._s.execute(stmt.order_by(Exam.title))
         return [m.to_entity() for m in r.scalars().all()]
 
-    async def list_published_for_student(
-        self, user_id: int, now: datetime
-    ) -> list[ExamEntity]:
+    async def list_published_for_student(self, user_id: int, now: datetime) -> list[ExamEntity]:
         # Condition for exams where the user is a participant
         participant_cond = (
             (Exam.is_published.is_(True))

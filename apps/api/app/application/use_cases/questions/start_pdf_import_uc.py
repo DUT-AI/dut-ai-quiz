@@ -80,7 +80,7 @@ class StartPdfImportUseCase:
             lesson_id=lid,
             status=ImportSessionStatus.PROCESSING,
             file_name=file_name,
-            created_at=datetime.utcnow()
+            created_at=datetime.utcnow(),
         )
         await self.import_session_repo.create(session)
 
@@ -91,11 +91,11 @@ class StartPdfImportUseCase:
             user_id=user_id,
             lesson_id=lesson_id,
             target_scope=target_scope,
-            password=password
+            password=password,
         )
 
         return StartPdfImportResponse(
             job_id=job_id,
             status="ACCEPTED",
-            message="PDF upload accepted. Processing started in background."
+            message="PDF upload accepted. Processing started in background.",
         )

@@ -16,4 +16,3 @@ __all__ = [
     "PresignSubmitUseCase",
     "ViewHackathonLeaderboardUseCase",
 ]
-

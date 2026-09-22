@@ -5,9 +5,7 @@ from app.domain.interfaces.module_repo import IModuleRepository
 class ListModulesUseCase:
     """List modules along with optional lessons and query filters."""
 
-    def __init__(
-        self, module_repo: IModuleRepository, lesson_repo: ILessonRepository
-    ) -> None:
+    def __init__(self, module_repo: IModuleRepository, lesson_repo: ILessonRepository) -> None:
         self._module_repo = module_repo
         self._lesson_repo = lesson_repo
 

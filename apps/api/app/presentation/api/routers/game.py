@@ -27,11 +27,11 @@ from app.presentation.schemas.game import (
 router = APIRouter(prefix="/game", tags=["game"])
 
 
-
 def sanitize_game_snapshot(snapshot: dict | None) -> dict | None:
     if not snapshot:
         return snapshot
     import copy
+
     snap_copy = copy.deepcopy(snapshot)
     questions = snap_copy.get("questions", [])
     last_idx = snap_copy.get("gamification", {}).get("last_question_index", 0)
@@ -45,9 +45,7 @@ def sanitize_game_snapshot(snapshot: dict | None) -> dict | None:
 @router.post("/sessions")
 @inject
 async def start_game(
-    user: CurrentUser,
-    body: GamificationStartIn,
-    use_case: FromDishka[StartGameSessionUseCase]
+    user: CurrentUser, body: GamificationStartIn, use_case: FromDishka[StartGameSessionUseCase]
 ):
     row = await use_case.execute(user.id, body)
     if not row:
@@ -58,9 +56,7 @@ async def start_game(
 @router.get("/sessions/active")
 @inject
 async def get_active_game(
-    user: CurrentUser,
-    lesson_slug: str,
-    use_case: FromDishka[GetActiveGameSessionUseCase]
+    user: CurrentUser, lesson_slug: str, use_case: FromDishka[GetActiveGameSessionUseCase]
 ):
     row = await use_case.execute(user.id, lesson_slug)
     if not row:
@@ -71,14 +67,13 @@ async def get_active_game(
 @router.get("/sessions/{session_id}")
 @inject
 async def get_game(
-    user: CurrentUser,
-    session_id: UUID,
-    use_case: FromDishka[GetGameSessionUseCase]
+    user: CurrentUser, session_id: UUID, use_case: FromDishka[GetGameSessionUseCase]
 ):
     row = await use_case.execute(session_id, user.id)
     if not row:
         raise HTTPException(status_code=404, detail="Not found")
     import copy
+
     row_copy = copy.copy(row)
     row_copy.snapshot = sanitize_game_snapshot(row.snapshot)
     return row_copy
@@ -90,7 +85,7 @@ async def patch_game_answers(
     user: CurrentUser,
     session_id: UUID,
     body: GamificationAnswerPatchIn,
-    use_case: FromDishka[PatchGameAnswerUseCase]
+    use_case: FromDishka[PatchGameAnswerUseCase],
 ):
     return await use_case.execute(session_id, user.id, body)
 
@@ -101,7 +96,7 @@ async def use_item_game(
     user: CurrentUser,
     session_id: UUID,
     body: GamificationUseItemIn,
-    use_case: FromDishka[UseItemGameUseCase]
+    use_case: FromDishka[UseItemGameUseCase],
 ):
     result = await use_case.execute(session_id, user.id, body)
     if result is None:
@@ -112,14 +107,13 @@ async def use_item_game(
 @router.post("/sessions/{session_id}/finish")
 @inject
 async def finish_game(
-    user: CurrentUser,
-    session_id: UUID,
-    use_case: FromDishka[FinishGameSessionUseCase]
+    user: CurrentUser, session_id: UUID, use_case: FromDishka[FinishGameSessionUseCase]
 ):
     row = await use_case.execute(session_id, user.id)
     if not row:
         raise HTTPException(status_code=404, detail="Not found")
     import copy
+
     row_copy = copy.copy(row)
     row_copy.snapshot = sanitize_game_snapshot(row.snapshot)
     return row_copy
@@ -127,12 +121,10 @@ async def finish_game(
 
 @router.get("/history")
 @inject
-async def game_history(
-    user: CurrentUser,
-    use_case: FromDishka[ListGameHistoryUseCase]
-):
+async def game_history(user: CurrentUser, use_case: FromDishka[ListGameHistoryUseCase]):
     rows = await use_case.execute(user.id)
     import copy
+
     sanitized_rows = []
     for row in rows:
         row_copy = copy.copy(row)
@@ -144,8 +136,7 @@ async def game_history(
 @router.get("/history/summary", response_model=list[GameLessonSummaryOut])
 @inject
 async def game_history_summary(
-    user: CurrentUser,
-    use_case: FromDishka[GetGameHistorySummaryUseCase]
+    user: CurrentUser, use_case: FromDishka[GetGameHistorySummaryUseCase]
 ):
     return await use_case.execute(user.id)
 
@@ -153,9 +144,7 @@ async def game_history_summary(
 @router.get("/users/{user_id}/summary", response_model=list[GameLessonSummaryOut])
 @inject
 async def get_user_game_summary_for_manage(
-    user_id: int,
-    _service: ManageService,
-    use_case: FromDishka[GetGameHistorySummaryUseCase]
+    user_id: int, _service: ManageService, use_case: FromDishka[GetGameHistorySummaryUseCase]
 ):
     """Lấy tóm tắt lịch sử game của 1 học viên dành cho Manage Service"""
     return await use_case.execute(user_id)
@@ -163,9 +152,5 @@ async def get_user_game_summary_for_manage(
 
 @router.get("/{lesson_slug}/leaderboard", response_model=list[GameLeaderboardRowOut])
 @inject
-async def get_game_leaderboard(
-    lesson_slug: str,
-    use_case: FromDishka[GetGameLeaderboardUseCase]
-):
+async def get_game_leaderboard(lesson_slug: str, use_case: FromDishka[GetGameLeaderboardUseCase]):
     return await use_case.execute(lesson_slug)
-

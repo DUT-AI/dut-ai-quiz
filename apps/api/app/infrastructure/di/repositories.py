@@ -54,29 +54,19 @@ class RepositoryProvider(Provider):
 
     # Đăng ký kèm theo tham số provides để map concrete class với interface của nó
     lesson_repo = provide(LessonRepository, provides=ILessonRepository)
-    lesson_chunk_repo = provide(
-        LessonChunkRepository, provides=ILessonChunkRepository
-    )
+    lesson_chunk_repo = provide(LessonChunkRepository, provides=ILessonChunkRepository)
     module_repo = provide(ModuleRepository, provides=IModuleRepository)
     user_repo = provide(UserRepository, provides=IUserRepository)
     exam_repo = provide(ExamRepository, provides=IExamRepository)
-    exam_question_repo = provide(
-        ExamQuestionRepository, provides=IExamQuestionRepository
-    )
+    exam_question_repo = provide(ExamQuestionRepository, provides=IExamQuestionRepository)
     question_repo = provide(QuestionRepository, provides=IQuestionRepository)
     tag_repo = provide(TagRepository, provides=ITagRepository)
     focus_event_repo = provide(FocusEventRepository, provides=IFocusEventRepository)
-    game_session_repo = provide(
-        GameSessionRepository, provides=IGameSessionRepository
-    )
+    game_session_repo = provide(GameSessionRepository, provides=IGameSessionRepository)
     attempt_repo = provide(AttemptRepository, provides=IAttemptRepository)
     hackathon_repo = provide(HackathonRepository, provides=IHackathonRepository)
-    hackathon_task_repo = provide(
-        HackathonTaskRepository, provides=IHackathonTaskRepository
-    )
-    hackathon_team_repo = provide(
-        HackathonTeamRepository, provides=IHackathonTeamRepository
-    )
+    hackathon_task_repo = provide(HackathonTaskRepository, provides=IHackathonTaskRepository)
+    hackathon_team_repo = provide(HackathonTeamRepository, provides=IHackathonTeamRepository)
     hackathon_registration_repo = provide(
         HackathonRegistrationRepository, provides=IHackathonRegistrationRepository
     )

@@ -355,8 +355,11 @@ async def test_presign_homework_submission_use_case(
 
     repository = HomeworkRepositoryStub(homework)
     from unittest.mock import MagicMock
+
     storage = MagicMock()
-    storage.generate_presigned_upload_url.return_value = "https://minio.dutai.site/presigned-put-url"
+    storage.generate_presigned_upload_url.return_value = (
+        "https://minio.dutai.site/presigned-put-url"
+    )
 
     use_case = PresignHomeworkSubmissionUseCase(repository, storage)
     res = await use_case.execute(
@@ -369,4 +372,3 @@ async def test_presign_homework_submission_use_case(
     assert res["upload_url"] == "https://minio.dutai.site/presigned-put-url"
     assert res["original_filename"] == "my_solution.zip"
     assert res["object_key"].startswith(f"homeworks/{homework.id}/submissions/99/")
-

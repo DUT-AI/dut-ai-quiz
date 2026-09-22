@@ -8,11 +8,13 @@ def test_user_context_roles_defaults():
     user = UserContext(id=1)
     assert user.roles == []
 
+
 def test_user_context_has_any_role():
     user = UserContext(id=1, roles=["teammate", "MENTOR"])
     assert user.has_any_role("admin", "MENTOR") is True
     assert user.has_any_role("admin") is False
     assert user.has_any_role("teammate") is True
+
 
 @pytest.mark.asyncio
 async def test_require_roles_success():
@@ -23,6 +25,7 @@ async def test_require_roles_success():
     dependency = require_roles("admin", "MENTOR")
     res = await dependency(user)
     assert res == user
+
 
 @pytest.mark.asyncio
 async def test_require_roles_denied():

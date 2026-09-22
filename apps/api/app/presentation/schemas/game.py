@@ -15,9 +15,11 @@ class GamificationAnswerPatchIn(BaseModel):
     activate_shield: bool = False
     activate_double_points: bool = False
 
+
 class GamificationUseItemIn(BaseModel):
     item_name: str
     question_id: UUID
+
 
 class GamificationAnswerResultOut(BaseModel):
     is_correct: bool
@@ -26,6 +28,7 @@ class GamificationAnswerResultOut(BaseModel):
     updated_gamification: dict[str, Any]
     is_game_over: bool
     correct_option_id: str | None = None
+
 
 class GameLessonSummaryOut(BaseModel):
     lesson_slug: str
@@ -47,5 +50,3 @@ class GameLeaderboardRowOut(BaseModel):
     is_completed: bool = False
     total_questions: int = 0
     answered_questions: int = 0
-
-

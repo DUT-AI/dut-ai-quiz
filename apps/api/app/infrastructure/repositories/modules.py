@@ -26,7 +26,9 @@ class ModuleRepository(IModuleRepository):
         if name is not None and name.strip():
             stmt = stmt.where(func.lower(Module.name) == func.lower(name.strip()))
         if description is not None and description.strip():
-            stmt = stmt.where(func.lower(Module.description).contains(func.lower(description.strip())))
+            stmt = stmt.where(
+                func.lower(Module.description).contains(func.lower(description.strip()))
+            )
         if order is not None:
             stmt = stmt.where(Module.order == order)
 

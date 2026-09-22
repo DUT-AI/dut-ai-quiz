@@ -126,8 +126,6 @@ def test_role_normalization_variations():
     assert SystemPermission.MANAGE_EXAM.value in resolved_subadmin
 
 
-
-
 # ============================================================================
 # 2. RBAC FASTAPI DEPENDENCY TESTS (RequirePermissions & Admin Override)
 # ============================================================================
@@ -291,9 +289,7 @@ async def test_delete_hackathon_abac_logic():
     assert ok is True
 
     # Admin succeeds
-    ok_admin = await use_case.execute(
-        hackathon_id=hackathon_id, user_id=99, is_admin=True
-    )
+    ok_admin = await use_case.execute(hackathon_id=hackathon_id, user_id=99, is_admin=True)
     assert ok_admin is True
 
 
@@ -549,5 +545,3 @@ async def test_review_registration_admin_can_review_any():
     )
     assert updated.status == RegistrationStatus.APPROVED
     assert updated.reviewed_by == 999
-
-

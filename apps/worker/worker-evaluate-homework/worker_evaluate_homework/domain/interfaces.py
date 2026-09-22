@@ -102,4 +102,3 @@ class IHomeworkGradingRepository(Protocol):
         submission: SubmissionGradingRecord,
         values: list[dict[str, Any]],
     ) -> None: ...
-

@@ -51,9 +51,7 @@ def test_s3_client_uses_region_path_style_and_encoded_object_url() -> None:
 
     with (
         patch.object(s3_client_module, "settings", config),
-        patch.object(
-            s3_client_module.boto3, "client", return_value=boto_client
-        ) as factory,
+        patch.object(s3_client_module.boto3, "client", return_value=boto_client) as factory,
     ):
         client = s3_client_module.MinioClient()
 
@@ -85,7 +83,9 @@ def test_s3_dual_endpoint_settings_and_client() -> None:
 
     internal_boto = Mock()
     public_boto = Mock()
-    public_boto.generate_presigned_url.return_value = "https://minio.dutai.site/lms-prod/test.zip?signed=1"
+    public_boto.generate_presigned_url.return_value = (
+        "https://minio.dutai.site/lms-prod/test.zip?signed=1"
+    )
 
     def mock_boto_factory(*args, **kwargs):
         if kwargs.get("endpoint_url") == "https://minio.dutai.site":
@@ -101,7 +101,10 @@ def test_s3_dual_endpoint_settings_and_client() -> None:
         assert factory.call_count == 2
 
         # Direct object URL uses public endpoint
-        assert client.get_object_url("lms-prod", "homeworks/file.zip") == "https://minio.dutai.site/lms-prod/homeworks/file.zip"
+        assert (
+            client.get_object_url("lms-prod", "homeworks/file.zip")
+            == "https://minio.dutai.site/lms-prod/homeworks/file.zip"
+        )
 
         # Presigned download URL uses public client
         download_url = client.generate_presigned_download_url("lms-prod", "homeworks/file.zip")
@@ -116,5 +119,6 @@ def test_s3_dual_endpoint_settings_and_client() -> None:
         # Upload fileobj uses internal client
         file_obj = Mock()
         client.upload_fileobj(file_obj, "lms-prod", "homeworks/file.zip")
-        internal_boto.upload_fileobj.assert_called_once_with(file_obj, "lms-prod", "homeworks/file.zip")
-
+        internal_boto.upload_fileobj.assert_called_once_with(
+            file_obj, "lms-prod", "homeworks/file.zip"
+        )

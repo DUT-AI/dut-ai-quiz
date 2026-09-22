@@ -108,4 +108,3 @@ def downgrade() -> None:
     op.drop_column("homeworks", "grading_error")
     op.drop_column("homeworks", "grading_status")
     op.drop_column("homeworks", "grading_rubric")
-

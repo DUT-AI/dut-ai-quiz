@@ -52,8 +52,7 @@ def upgrade() -> None:
     # Chunks are derived data and will be rebuilt by the lesson indexing worker.
     op.execute("DELETE FROM lesson_chunks")
     op.execute(
-        "ALTER TABLE lesson_chunks "
-        "ALTER COLUMN embedding TYPE vector(768) USING embedding::vector"
+        "ALTER TABLE lesson_chunks ALTER COLUMN embedding TYPE vector(768) USING embedding::vector"
     )
     op.create_index(
         "ix_lesson_chunks_embedding_hnsw",
@@ -72,15 +71,9 @@ def upgrade() -> None:
         ),
     )
 
-    op.add_column(
-        "questions", sa.Column("embedding", Vector(768), nullable=True)
-    )
-    op.add_column(
-        "questions", sa.Column("embedding_model", sa.String(200), nullable=True)
-    )
-    op.add_column(
-        "questions", sa.Column("embedding_source_hash", sa.String(64), nullable=True)
-    )
+    op.add_column("questions", sa.Column("embedding", Vector(768), nullable=True))
+    op.add_column("questions", sa.Column("embedding_model", sa.String(200), nullable=True))
+    op.add_column("questions", sa.Column("embedding_source_hash", sa.String(64), nullable=True))
 
 
 def downgrade() -> None:

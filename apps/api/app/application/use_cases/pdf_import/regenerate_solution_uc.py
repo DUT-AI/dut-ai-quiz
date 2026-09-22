@@ -1,4 +1,5 @@
 """RegenerateSolutionUseCase — AI sinh lại lời giải cho một câu hỏi."""
+
 from uuid import UUID
 
 from app.application.services.pdf_ai_parser import PDFAIParserService
@@ -18,9 +19,7 @@ class RegenerateSolutionUseCase:
         admin_hint: str = "",
     ) -> dict:
         """Call Gemini to regenerate solution for a specific question."""
-        r = await self._s.execute(
-            select(Question).where(Question.id == question_id)
-        )
+        r = await self._s.execute(select(Question).where(Question.id == question_id))
         model = r.scalar_one_or_none()
         if not model:
             return {"ok": False, "error": "Câu hỏi không tồn tại"}

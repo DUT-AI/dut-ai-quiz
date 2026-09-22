@@ -16,9 +16,7 @@ class FinishGameSessionUseCase:
         self._ps_repo = ps_repo
         self._cache = cache
 
-    async def execute(
-        self, session_id: UUID, user_id: int
-    ) -> GameSessionEntity | None:
+    async def execute(self, session_id: UUID, user_id: int) -> GameSessionEntity | None:
         session = await self._ps_repo.get(session_id)
         if not session or session.user_id != user_id:
             return None
@@ -32,9 +30,7 @@ class FinishGameSessionUseCase:
         lesson_slug = session.snapshot.get("lesson_slug") or (
             session.tags_filter[0] if session.tags_filter else "unknown"
         )
-        count_completed = await self._ps_repo.count_completed_by_lesson(
-            user_id, lesson_slug
-        )
+        count_completed = await self._ps_repo.count_completed_by_lesson(user_id, lesson_slug)
         decay = max(0.2, 1.0 - (count_completed * 0.2))
 
         if "gamification" in session.snapshot:

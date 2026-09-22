@@ -62,9 +62,7 @@ class ClientProvider(Provider):
         return MinioClient()
 
     @provide(scope=Scope.APP)
-    def get_hackathon_submission_store(
-        self, s3_client: IS3Client
-    ) -> IHackathonSubmissionStore:
+    def get_hackathon_submission_store(self, s3_client: IS3Client) -> IHackathonSubmissionStore:
         """Provide MinIO Hackathon Submission Store."""
         return MinIOHackathonSubmissionStore(s3_client)
 
@@ -82,15 +80,11 @@ class ClientProvider(Provider):
         return ArqPdfImportQueue(redis)
 
     @provide(scope=Scope.APP)
-    def get_arq_homework_queue(
-        self, redis: Redis
-    ) -> IHomeworkEvaluationQueue:
+    def get_arq_homework_queue(self, redis: Redis) -> IHomeworkEvaluationQueue:
         return ArqHomeworkEvaluationQueue(redis)
 
     @provide(scope=Scope.APP)
-    def get_embedding_service(
-        self, client: httpx.AsyncClient
-    ) -> IEmbeddingService:
+    def get_embedding_service(self, client: httpx.AsyncClient) -> IEmbeddingService:
         if settings.embedding_provider.casefold() == "local":
             return LocalHashingEmbeddingService(settings)
         if settings.embedding_provider.casefold() == "dutai":

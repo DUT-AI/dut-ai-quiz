@@ -31,9 +31,7 @@ router = APIRouter(prefix="/exams", tags=["exams"])
 
 @router.get("", response_model=list[ExamOut])
 @inject
-async def list_exams_route(
-    user: CurrentUser, use_case: FromDishka[ListExamsUseCase]
-):
+async def list_exams_route(user: CurrentUser, use_case: FromDishka[ListExamsUseCase]):
     if user.has_permission(SystemPermission.MANAGE_EXAM):
         return await use_case.execute_for_teacher(user.id)
     return await use_case.execute_for_student(user.id, now_ict())
@@ -49,9 +47,7 @@ async def create_exam_route(
 
 @router.get("/{exam_id}", response_model=ExamOut)
 @inject
-async def get_exam_route(
-    user: CurrentUser, exam_id: UUID, use_case: FromDishka[GetExamUseCase]
-):
+async def get_exam_route(user: CurrentUser, exam_id: UUID, use_case: FromDishka[GetExamUseCase]):
     ex = await use_case.execute(exam_id, user_id=user.id, role=quiz_role_from_manage(user.roles))
     if not ex:
         raise HTTPException(status_code=404, detail="Not found")

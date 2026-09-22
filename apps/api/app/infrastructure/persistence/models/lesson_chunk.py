@@ -29,9 +29,7 @@ class LessonChunk(Base):
         ),
     )
 
-    id: Mapped[UUID] = mapped_column(
-        pgUUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(pgUUID(as_uuid=True), primary_key=True, default=uuid4)
     lesson_id: Mapped[UUID] = mapped_column(
         pgUUID(as_uuid=True),
         ForeignKey("lessons.id", ondelete="CASCADE"),
@@ -56,6 +54,4 @@ class LessonChunk(Base):
         ),
     )
     embedding: Mapped[list[float]] = mapped_column(Vector(768), nullable=False)
-    embedding_model: Mapped[str] = mapped_column(
-        String(200), nullable=False, index=True
-    )
+    embedding_model: Mapped[str] = mapped_column(String(200), nullable=False, index=True)

@@ -34,9 +34,7 @@ class FindRelatedQuestionsUseCase:
             raise EmbeddingServiceError("Question embedding is not enabled")
 
         query_embedding = (
-            await self._embedding_service.embed(
-                [question_query_embedding_text(normalized_content)]
-            )
+            await self._embedding_service.embed([question_query_embedding_text(normalized_content)])
         )[0]
         candidates = await self._question_repo.search_similar(
             embedding=query_embedding,

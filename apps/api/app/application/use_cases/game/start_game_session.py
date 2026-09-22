@@ -27,18 +27,21 @@ class StartGameSessionUseCase:
         self._lesson_repo = lesson_repo
         self._cache = cache
 
-
-    async def execute(
-        self, user_id: int, payload: GamificationStartIn
-    ) -> GameSessionEntity:
+    async def execute(self, user_id: int, payload: GamificationStartIn) -> GameSessionEntity:
         # Auto-finish any existing IN_PROGRESS session for this lesson+user
         # so that the client never needs to call finishSession separately.
         existing = await self._ps_repo.get_active_by_lesson(user_id, payload.lesson_slug)
         if existing and existing.status == GameSessionStatus.IN_PROGRESS:
             existing.status = GameSessionStatus.COMPLETED
             existing.completed_at = now_ict()
-            lesson_slug_for_decay = existing.snapshot.get("lesson_slug", payload.lesson_slug) if existing.snapshot else payload.lesson_slug
-            count_completed = await self._ps_repo.count_completed_by_lesson(user_id, lesson_slug_for_decay)
+            lesson_slug_for_decay = (
+                existing.snapshot.get("lesson_slug", payload.lesson_slug)
+                if existing.snapshot
+                else payload.lesson_slug
+            )
+            count_completed = await self._ps_repo.count_completed_by_lesson(
+                user_id, lesson_slug_for_decay
+            )
             decay = max(0.2, 1.0 - (count_completed * 0.2))
             if existing.snapshot and "gamification" in existing.snapshot:
                 base_points = existing.snapshot["gamification"].get("points", 0)
@@ -76,7 +79,7 @@ class StartGameSessionUseCase:
         if not questions:
             raise HTTPException(
                 status_code=400,
-                detail="Bài học này chưa có câu hỏi luyện tập thi đấu nào dưới database."
+                detail="Bài học này chưa có câu hỏi luyện tập thi đấu nào dưới database.",
             )
 
         # Check user's history to prioritize unseen questions

@@ -206,9 +206,7 @@ async def list_draft_questions(
 # ---------------------------------------------------------------------------
 
 
-@router.patch(
-    "/questions/{question_id}/approve", response_model=ApproveQuestionResponse
-)
+@router.patch("/questions/{question_id}/approve", response_model=ApproveQuestionResponse)
 @inject
 async def approve_question(
     question_id: UUID,
