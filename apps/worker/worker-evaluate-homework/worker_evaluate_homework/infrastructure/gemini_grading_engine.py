@@ -51,7 +51,7 @@ class HomeworkGradingEngine:
         if llm_client is not None:
             self._llm = llm_client
         elif settings.homework_llm_provider == "gemini":
-            self._llm = GeminiLLMClient()
+            self._llm = GeminiLLMClient(model=settings.homework_grading_model)
         else:
             self._llm = OpenAILLMClient()
 

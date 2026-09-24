@@ -32,7 +32,7 @@ async def startup(ctx):
         MinioClient(),
     )
     if settings.homework_llm_provider == "gemini":
-        llm_client = GeminiLLMClient()
+        llm_client = GeminiLLMClient(model=settings.homework_grading_model)
     else:
         llm_client = OpenAILLMClient(http_client=http_client)
     grading_engine = HomeworkGradingEngine(llm_client=llm_client)

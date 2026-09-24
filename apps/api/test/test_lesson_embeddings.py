@@ -221,3 +221,61 @@ async def test_related_lessons_rejects_stale_question_embedding() -> None:
 
     with pytest.raises(Exception, match="Question embedding is not ready"):
         await use_case.execute(question.id, limit=3, min_score=0.25)
+
+
+@pytest.mark.asyncio
+async def test_relative_documents_groups_current_chunks_by_lesson() -> None:
+    question = make_question()
+    embedding_service = FakeEmbeddingService()
+    await QuestionEmbeddingService(embedding_service).prepare(question)
+
+    first_id, second_id = uuid4(), uuid4()
+    first_md = "# First lesson\n\nRelevant paragraph.\n\nAnother paragraph."
+    second_md = "# Second lesson\n\nRelated content."
+
+    def match(lesson_id, title, full_md, chunk, score, stale=False):
+        return LessonChunkMatch(
+            lesson_id=lesson_id,
+            lesson_name=title,
+            lesson_description="",
+            lesson_slug=None,
+            lesson_content_md=full_md,
+            chunk_content=chunk,
+            heading_path=(title,),
+            source_hash=(
+                "stale" if stale else lesson_source_hash(title, "", full_md)
+            ),
+            score=score,
+        )
+
+    matches = [
+        match(first_id, "First lesson", first_md, "Relevant paragraph.", 0.92),
+        match(second_id, "Second lesson", second_md, "Related content.", 0.85),
+        match(first_id, "First lesson", first_md, "Another paragraph.", 0.79),
+        match(first_id, "First lesson", first_md, "Relevant paragraph.", 0.78),
+        match(second_id, "Second lesson", second_md, "Outdated", 0.75, stale=True),
+        match(second_id, "Second lesson", second_md, "Below threshold", 0.1),
+    ]
+    use_case = GetRelatedLessonsUseCase(
+        FakeQuestionRepository(question),
+        FakeChunkRepository(matches),
+        embedding_service,
+    )
+
+    result = await use_case.get_relative_document(
+        question.id, limit=2, min_score=0.25
+    )
+
+    assert result == [
+        {
+            "document_title": "First lesson",
+            "full_md": first_md,
+            "relative_chunk": ["Relevant paragraph.", "Another paragraph."],
+        },
+        {
+            "document_title": "Second lesson",
+            "full_md": second_md,
+            "relative_chunk": ["Related content."],
+        },
+    ]
+    assert embedding_service.calls == 1

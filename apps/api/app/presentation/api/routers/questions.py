@@ -24,7 +24,7 @@ from app.domain.entities.question import QuestionStatus
 from app.domain.interfaces import EmbeddingServiceError
 from app.domain.value_objects import Difficulty, PoolType
 from app.presentation.api.deps import CurrentUser, EducatorUser
-from app.presentation.schemas.lessons import RelatedLessonOut
+from app.presentation.schemas.lessons import RelatedLessonOut, RelativeDocumentOut
 from app.presentation.schemas.questions import (
     QuestionAnswerIn,
     QuestionAnswerOut,
@@ -205,6 +205,36 @@ async def get_related_lessons_route(
             question_id,
             limit=limit,
             min_score=(settings.related_lesson_min_score if min_score is None else min_score),
+        )
+    except EmbeddingServiceError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    if result is None:
+        raise HTTPException(status_code=404, detail="Question not found")
+    return result
+
+
+@router.get(
+    "/{question_id}/relative-documents", response_model=list[RelativeDocumentOut]
+)
+@inject
+async def get_relative_document(
+    user: CurrentUser,
+    question_id: UUID,
+    use_case: FromDishka[GetRelatedLessonsUseCase],
+    limit: int = Query(3, ge=1, le=10),
+    min_score: float | None = Query(None, ge=-1, le=1),
+):
+    try:
+        result = await use_case.get_relative_document(
+            question_id,
+            limit=limit,
+            min_score=(
+                settings.related_lesson_min_score
+                if min_score is None
+                else min_score
+            ),
         )
     except EmbeddingServiceError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
