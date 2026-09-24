@@ -14,6 +14,61 @@ import { CodeBlock } from "@/features/lessons/components/code-block";
 interface MarkdownProps {
   content: string;
   className?: string;
+  highlightChunks?: string[];
+}
+
+type HighlightRange = { start: number; end: number };
+const EMPTY_HIGHLIGHTS: string[] = [];
+
+function normalizeWithOffsets(value: string) {
+  let text = "";
+  const offsets: number[] = [];
+  for (let index = 0; index < value.length; index++) {
+    const char = value[index];
+    if (/\s/.test(char)) {
+      if (text && !text.endsWith(" ")) {
+        text += " ";
+        offsets.push(index);
+      }
+    } else {
+      text += char;
+      offsets.push(index);
+    }
+  }
+  if (text.endsWith(" ")) {
+    text = text.slice(0, -1);
+    offsets.pop();
+  }
+  return { text, offsets };
+}
+
+function findHighlightRanges(content: string, chunks: string[]): HighlightRange[] {
+  const source = normalizeWithOffsets(content);
+  const ranges: HighlightRange[] = [];
+
+  for (const chunk of chunks) {
+    const normalized = normalizeWithOffsets(preprocessMath(chunk)).text;
+    if (!normalized) continue;
+
+    // Chunks normally occur verbatim; individual blocks cover Markdown spacing
+    // changes and paragraphs that were split at sentence boundaries.
+    const parts = source.text.includes(normalized)
+      ? [normalized]
+      : preprocessMath(chunk)
+          .split(/\n\s*\n/)
+          .map((part) => normalizeWithOffsets(part).text)
+          .filter(Boolean);
+
+    for (const part of parts) {
+      const index = source.text.indexOf(part);
+      if (index < 0) continue;
+      ranges.push({
+        start: source.offsets[index],
+        end: source.offsets[index + part.length - 1] + 1,
+      });
+    }
+  }
+  return ranges;
 }
 
 export const markdownComponents = {
@@ -171,20 +226,51 @@ const preprocessMath = (text: string) => {
   });
 };
 
-export const Markdown = React.memo(function Markdown({ content, className = "" }: MarkdownProps) {
+export const Markdown = React.memo(function Markdown({ content, className = "", highlightChunks = EMPTY_HIGHLIGHTS }: MarkdownProps) {
   const [activeImg, setActiveImg] = React.useState<string | null>(null);
+  const preparedContent = React.useMemo(() => preprocessMath(content), [content]);
+  const highlightRanges = React.useMemo(
+    () => findHighlightRanges(preparedContent, highlightChunks),
+    [preparedContent, highlightChunks]
+  );
 
-  const customComponents = React.useMemo(() => ({
-    ...markdownComponents,
-    img: ({ src, alt }: any) => (
-      <img
-        src={src}
-        alt={alt}
-        onClick={() => setActiveImg(src)}
-        className="mx-auto rounded-2xl border border-slate-200/80 dark:border-zinc-800 shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer my-4 max-w-full h-auto"
-      />
-    ),
-  }), []);
+  const customComponents = React.useMemo(() => {
+    const components: Record<string, any> = {
+      ...markdownComponents,
+      img: ({ src, alt }: any) => (
+        <img
+          src={src}
+          alt={alt}
+          onClick={() => setActiveImg(src)}
+          className="mx-auto rounded-2xl border border-slate-200/80 dark:border-zinc-800 shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer my-4 max-w-full h-auto"
+        />
+      ),
+    };
+
+    if (highlightRanges.length) {
+      for (const tag of ["p", "ul", "ol", "blockquote", "table", "pre"]) {
+        const Original = components[tag];
+        components[tag] = ({ node, ...props }: any) => {
+          const element = Original
+            ? Original({ node, ...props })
+            : React.createElement(tag, props);
+          const start = node?.position?.start?.offset;
+          const end = node?.position?.end?.offset;
+          const marked = typeof start === "number" && typeof end === "number" &&
+            highlightRanges.some((range) => start < range.end && end > range.start);
+          return marked ? (
+            <div
+              data-reference-highlight
+              className="rounded-xl border-l-4 border-amber-400 bg-amber-100/70 px-3 py-1 dark:bg-amber-400/15"
+            >
+              {element}
+            </div>
+          ) : element;
+        };
+      }
+    }
+    return components;
+  }, [highlightRanges]);
 
   return (
     <div className={`theory-markdown-content ${className}`}>
@@ -230,7 +316,7 @@ export const Markdown = React.memo(function Markdown({ content, className = "" }
         rehypePlugins={[rehypeRaw, rehypeKatex, rehypeHeadingIds]}
         components={customComponents}
       >
-        {preprocessMath(content)}
+        {preparedContent}
       </ReactMarkdown>
 
       <AnimatePresence>
