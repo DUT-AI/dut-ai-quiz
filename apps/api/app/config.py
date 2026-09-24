@@ -85,17 +85,20 @@ class Settings(BaseSettings):
     # Homework submission and external evaluation services.
     homework_checker_api_url: str = ""
     submission_checker_api_url: str = ""
-    homework_grading_enabled: bool = True
-    homework_grading_pass_score: float = 7.0
-    homework_grading_max_attachment_bytes: int = 20 * 1024 * 1024
-    homework_grading_max_source_bytes: int = 5 * 1024 * 1024
-    homework_grading_max_source_chars: int = 200_000
-    homework_grading_max_files: int = 50
-    homework_grading_max_archive_entries: int = 500
-    homework_plagiarism_threshold: float = 0.8
-    # This limit is application policy, not deployment-specific configuration.
+
+    # Homework grading policy is fixed in code rather than deployment config.
+    homework_grading_enabled: ClassVar[bool] = True
+    homework_grading_model: ClassVar[str] = "gemma-4-31b-it"
+    homework_grading_pass_score: ClassVar[float] = 7.0
+    homework_grading_max_attachment_bytes: ClassVar[int] = 20 * 1024 * 1024
+    homework_grading_max_source_bytes: ClassVar[int] = 5 * 1024 * 1024
+    homework_grading_max_source_chars: ClassVar[int] = 200_000
+    homework_grading_max_files: ClassVar[int] = 50
+    homework_grading_max_archive_entries: ClassVar[int] = 500
+    homework_plagiarism_threshold: ClassVar[float] = 0.8
     homework_max_file_size_bytes: ClassVar[int] = 20 * 1024 * 1024
-    homework_grading_timeout_seconds: float = 300.0
+    homework_grading_timeout_seconds: ClassVar[float] = 300.0
+
     # Lesson semantic search. DUT-AI's Vietnamese SBERT service is the default;
     # local hashing and OpenAI-compatible providers remain available for dev.
     embedding_enabled: bool = True
@@ -131,7 +134,7 @@ class Settings(BaseSettings):
     # ================= PDF IMPORT CONFIG ========================
     pdf_max_size_mb: int = 20
     pdf_max_pages: int = 5
-    pdf_image_min_px: int = 80          # Ignore images smaller than 80x80px
+    pdf_image_min_px: int = 80  # Ignore images smaller than 80x80px
     pdf_duplicate_threshold: float = 0.85
     review_lock_ttl_seconds: int = 60
     review_lock_heartbeat_seconds: int = 30

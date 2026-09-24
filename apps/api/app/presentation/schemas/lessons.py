@@ -70,6 +70,12 @@ class RelatedLessonOut(BaseModel):
     matched_chunk: str
 
 
+class RelativeDocumentOut(BaseModel):
+    document_title: str
+    full_md: str
+    relative_chunk: list[str]
+
+
 class LessonIndexOut(BaseModel):
     lesson_id: UUID
     status: str

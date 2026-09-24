@@ -8,7 +8,7 @@ from app.domain.interfaces import (
     ILessonChunkRepository,
     IQuestionRepository,
 )
-from app.domain.value_objects import PoolType
+from app.domain.value_objects import LessonChunkMatch, PoolType
 
 
 class GetRelatedLessonsUseCase:
@@ -22,9 +22,9 @@ class GetRelatedLessonsUseCase:
         self._chunk_repo = chunk_repo
         self._embedding_service = embedding_service
 
-    async def execute(
-        self, question_id: UUID, limit: int, min_score: float
-    ) -> list[dict] | None:
+    async def _search_matches(
+        self, question_id: UUID, candidate_limit: int
+    ) -> list[LessonChunkMatch] | None:
         question = await self._question_repo.get(question_id)
         if question is None:
             return None
@@ -41,23 +41,31 @@ class GetRelatedLessonsUseCase:
                 "Question embedding is not ready; save the question again to index it"
             )
 
-        candidates = await self._chunk_repo.search(
+        return await self._chunk_repo.search(
             question.embedding,
             question.embedding_model,
-            candidate_limit=max(limit * 12, 30),
+            candidate_limit=candidate_limit,
         )
+
+    @staticmethod
+    def _is_current(match: LessonChunkMatch, min_score: float) -> bool:
+        return match.score >= min_score and match.source_hash == lesson_source_hash(
+            match.lesson_name,
+            match.lesson_description,
+            match.lesson_content_md,
+        )
+
+    async def execute(
+        self, question_id: UUID, limit: int, min_score: float
+    ) -> list[dict] | None:
+        candidates = await self._search_matches(question_id, max(limit * 12, 30))
+        if candidates is None:
+            return None
 
         results: list[dict] = []
         seen: set[UUID] = set()
         for match in candidates:
-            current_hash = lesson_source_hash(
-                match.lesson_name,
-                match.lesson_description,
-                match.lesson_content_md,
-            )
-            if match.source_hash != current_hash:
-                continue
-            if match.lesson_id in seen or match.score < min_score:
+            if match.lesson_id in seen or not self._is_current(match, min_score):
                 continue
             seen.add(match.lesson_id)
             results.append(
@@ -73,3 +81,27 @@ class GetRelatedLessonsUseCase:
             if len(results) >= limit:
                 break
         return results
+
+    async def get_relative_document(
+        self, question_id: UUID, limit: int, min_score: float
+    ) -> list[dict] | None:
+        candidates = await self._search_matches(question_id, max(limit * 30, 100))
+        if candidates is None:
+            return None
+
+        documents: dict[UUID, dict] = {}
+        for match in candidates:
+            if not match.lesson_content_md or not self._is_current(match, min_score):
+                continue
+            if match.lesson_id not in documents:
+                if len(documents) >= limit:
+                    continue
+                documents[match.lesson_id] = {
+                    "document_title": match.lesson_name,
+                    "full_md": match.lesson_content_md,
+                    "relative_chunk": [],
+                }
+            chunks = documents[match.lesson_id]["relative_chunk"]
+            if match.chunk_content and match.chunk_content not in chunks:
+                chunks.append(match.chunk_content)
+        return list(documents.values())
