@@ -1,9 +1,8 @@
-from app.domain.exceptions.exceptions import AppException
-from app.domain.entities.manage_service import ManageUserProfile
 from app.application.dtos import AuthTokens
-from app.application.services.auth_roles import quiz_role_from_manage
 from app.core.jwt import create_access_token
+from app.domain.entities.manage_service import ManageUserProfile
 from app.domain.entities.user import UserEntity
+from app.domain.exceptions.exceptions import AppException
 from app.domain.interfaces import IManageService, IUserRepository
 from app.infrastructure.clients import GoogleOAuthClient
 from loguru import logger
@@ -52,9 +51,7 @@ class GoogleAuthUseCase:
             refresh_token="",
         )
 
-    def handle_login_by_manage_email(
-        self, profile: ManageUserProfile
-    ) -> AuthTokens:
+    def handle_login_by_manage_email(self, profile: ManageUserProfile) -> AuthTokens:
         service_a_user_id = int(profile.id)
         role_names = profile.role_names
 
@@ -79,9 +76,7 @@ class GoogleAuthUseCase:
             # 1. Exchange OAuth code for Google Access Token
             google_access_token = await self._google_client.exchange_code(code)
             if not google_access_token:
-                raise AppException(
-                    "Không thể lấy Google Access Token từ OAuth code", 400
-                )
+                raise AppException("Không thể lấy Google Access Token từ OAuth code", 400)
 
             # 2. Get User Info from Google
             google_user = await self._google_client.get_user_info(google_access_token)
@@ -97,7 +92,7 @@ class GoogleAuthUseCase:
             # 3. Check if email exists in Manage Service (for Account Linking)
             logger.info(f"Checking email {email} on Manage Service")
             user_profiles = await self._manage_client.find_user_by_email(email)
-            
+
             matched_profile = None
             if user_profiles:
                 for u in user_profiles:

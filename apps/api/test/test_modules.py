@@ -1,14 +1,12 @@
-from datetime import datetime
 from uuid import UUID, uuid4
 
 import pytest
-
 from app.application.use_cases.modules import (
     CreateModuleUseCase,
     DeleteModuleUseCase,
     ListModulesUseCase,
-    UpdateModuleUseCase,
     ReorderModulesUseCase,
+    UpdateModuleUseCase,
 )
 from app.core.datetime_utils import now_ict
 from app.domain.entities.lesson import LessonEntity
@@ -16,7 +14,7 @@ from app.domain.entities.module import ModuleEntity
 from app.domain.exceptions.exceptions import BadRequestException
 from app.domain.interfaces import ILessonRepository
 from app.domain.interfaces.module_repo import IModuleRepository
-from app.presentation.schemas.modules import ModuleCreate, ModuleUpdate, ModuleReorder
+from app.presentation.schemas.modules import ModuleCreate, ModuleReorder, ModuleUpdate
 
 
 class MockModuleRepository(IModuleRepository):
@@ -162,7 +160,9 @@ async def test_modules_flow():
 
     # Test update to duplicate name fails
     with pytest.raises(BadRequestException):
-        await update_uc.execute(str(another_module.id), ModuleUpdate(name="intro to machine learning"))
+        await update_uc.execute(
+            str(another_module.id), ModuleUpdate(name="intro to machine learning")
+        )
 
     # 4d. Test autocomplete suggest search
     suggestions = await list_uc.execute(q="adva", include_lessons=False)

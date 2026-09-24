@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID, uuid4
-import sqlalchemy
 
+import sqlalchemy
 from sqlalchemy.dialects.postgresql import UUID as pgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -14,21 +14,17 @@ from .base import Base
 class ImportSession(Base):
     __tablename__ = "import_sessions"
 
-    id: Mapped[UUID] = mapped_column(
-        pgUUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(pgUUID(as_uuid=True), primary_key=True, default=uuid4)
     user_id: Mapped[int] = mapped_column(index=True)
     file_name: Mapped[str | None] = mapped_column(default=None, nullable=True)
     total_questions: Mapped[int] = mapped_column(default=0)
     processed_questions: Mapped[int] = mapped_column(default=0)
     status: Mapped[ImportSessionStatus] = mapped_column(
-        sqlalchemy.Enum(ImportSessionStatus, native_enum=False, length=50), 
-        default=ImportSessionStatus.PROCESSING
+        sqlalchemy.Enum(ImportSessionStatus, native_enum=False, length=50),
+        default=ImportSessionStatus.PROCESSING,
     )
     error_message: Mapped[str | None] = mapped_column(nullable=True)
-    lesson_id: Mapped[UUID | None] = mapped_column(
-        pgUUID(as_uuid=True), nullable=True
-    )
+    lesson_id: Mapped[UUID | None] = mapped_column(pgUUID(as_uuid=True), nullable=True)
     target_scope: Mapped[str] = mapped_column(default="LESSON")
     created_at: Mapped[datetime] = mapped_column(default=now_ict)
     updated_at: Mapped[datetime | None] = mapped_column(nullable=True, onupdate=now_ict)

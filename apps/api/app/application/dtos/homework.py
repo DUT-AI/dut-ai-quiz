@@ -34,11 +34,15 @@ class UpdateHomeworkDTO(BaseModel):
 class SubmitHomeworkDTO(BaseModel):
     homework_id: UUID
     user_id: int
-    file: HomeworkFileDTO
+    file: HomeworkFileDTO | None = None
+    object_key: str | None = None
+    original_filename: str | None = None
 
 
 class CompletedHomeworkMemberOutDTO(BaseModel):
     user_id: int
+    submission_count: int = 1
+    max_score: float | None = None
 
 
 class HomeworkSubmissionOutDTO(BaseModel):
@@ -85,9 +89,7 @@ class HomeworkSubmissionOutDTO(BaseModel):
             score=entity.score,
             feedback=entity.feedback,
             score_details=entity.score_details,
-            plagiarism_info=(
-                entity.plagiarism_info if include_plagiarism_identity else None
-            ),
+            plagiarism_info=(entity.plagiarism_info if include_plagiarism_identity else None),
             is_plagiarized=entity.is_plagiarized,
             plagiarized_from_user_id=(
                 entity.plagiarized_from_user_id if include_plagiarism_identity else None

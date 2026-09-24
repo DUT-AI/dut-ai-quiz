@@ -1,7 +1,8 @@
 from datetime import datetime
 from uuid import UUID
-from pydantic import BaseModel
+
 from app.domain.entities.submission import SubmissionStatus
+from pydantic import BaseModel
 
 
 class SubmissionOut(BaseModel):
@@ -41,5 +42,3 @@ class PresignSubmitOut(BaseModel):
 
 class SubmitTaskIn(BaseModel):
     submission_id: UUID
-
-

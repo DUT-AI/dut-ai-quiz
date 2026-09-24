@@ -80,6 +80,18 @@ class HomeworkRepositoryStub:
     async def list_completed_user_ids(self, homework_id):
         return self.completed_user_ids
 
+    async def list_completed_members_by_lesson(self, lesson_id):
+        from app.application.dtos.homework import CompletedHomeworkMemberOutDTO
+
+        return [
+            CompletedHomeworkMemberOutDTO(
+                user_id=uid,
+                submission_count=2,
+                max_score=9.5,
+            )
+            for uid in self.completed_user_ids
+        ]
+
 
 @pytest.fixture
 def homework() -> HomeworkEntity:
@@ -218,13 +230,27 @@ async def test_homework_files_are_zip_only_and_limit_is_20_mb() -> None:
 async def test_completed_members_returns_manage_user_ids(
     homework: HomeworkEntity,
 ) -> None:
+    from app.domain.entities.lesson import LessonEntity
+
     repository = HomeworkRepositoryStub(homework)
     repository.completed_user_ids = [7, 99]
-    use_case = ListCompletedHomeworkMembersUseCase(repository)
+    lesson_repo = AsyncMock()
+    lesson = LessonEntity(
+        id=homework.lesson_id,
+        name="Lesson 1",
+        slug="lesson-1",
+        description="",
+        order=1,
+        created_at=now_ict(),
+    )
+    lesson_repo.get_by_slug.return_value = lesson
+    use_case = ListCompletedHomeworkMembersUseCase(repository, lesson_repo)
 
-    result = await use_case.execute(homework.id)
+    result = await use_case.execute("lesson-1")
 
     assert [member.user_id for member in result] == [7, 99]
+    assert [member.submission_count for member in result] == [2, 2]
+    assert [member.max_score for member in result] == [9.5, 9.5]
 
 
 @pytest.mark.asyncio
@@ -271,3 +297,78 @@ def test_student_submission_response_hides_plagiarism_identity() -> None:
     assert student_result.plagiarized_from_user_id is None
     assert manager_result.plagiarism_info == submission.plagiarism_info
     assert manager_result.plagiarized_from_user_id == 7
+
+
+@pytest.mark.asyncio
+async def test_submit_homework_with_presigned_object_key(
+    homework: HomeworkEntity,
+) -> None:
+    repository = HomeworkRepositoryStub(homework)
+    queue = AsyncMock()
+    use_case = SubmitHomeworkUseCase(repository, AsyncMock(), queue)
+
+    result = await use_case.execute(
+        SubmitHomeworkDTO(
+            homework_id=homework.id,
+            user_id=99,
+            object_key=f"homeworks/{homework.id}/submissions/99/20260908_test.zip",
+            original_filename="my_test.zip",
+        )
+    )
+
+    assert result.user_id == 99
+    assert result.original_filename == "my_test.zip"
+    assert result.attempt_number == 1
+    queue.enqueue_evaluation.assert_awaited_once_with(result.id)
+
+
+@pytest.mark.asyncio
+async def test_submit_homework_with_invalid_key_prefix_fails(
+    homework: HomeworkEntity,
+) -> None:
+    repository = HomeworkRepositoryStub(homework)
+    queue = AsyncMock()
+    use_case = SubmitHomeworkUseCase(repository, AsyncMock(), queue)
+
+    with pytest.raises(ValueError, match="không hợp lệ"):
+        await use_case.execute(
+            SubmitHomeworkDTO(
+                homework_id=homework.id,
+                user_id=99,
+                object_key="homeworks/other-hw/submissions/100/hack.zip",
+            )
+        )
+
+
+@pytest.mark.asyncio
+async def test_presign_homework_submission_use_case(
+    homework: HomeworkEntity,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from app.application.use_cases.homeworks import PresignHomeworkSubmissionUseCase
+    from app.config import settings
+
+    monkeypatch.setattr(settings, "s3_endpoint", "dut-ai-minio:9000")
+    monkeypatch.setattr(settings, "s3_access_key", "key")
+    monkeypatch.setattr(settings, "s3_secret_key", "secret")
+    monkeypatch.setattr(settings, "s3_bucket_name", "test-bucket")
+
+    repository = HomeworkRepositoryStub(homework)
+    from unittest.mock import MagicMock
+
+    storage = MagicMock()
+    storage.generate_presigned_upload_url.return_value = (
+        "https://minio.dutai.site/presigned-put-url"
+    )
+
+    use_case = PresignHomeworkSubmissionUseCase(repository, storage)
+    res = await use_case.execute(
+        homework_id=homework.id,
+        user_id=99,
+        filename="my_solution.zip",
+        content_type="application/zip",
+    )
+
+    assert res["upload_url"] == "https://minio.dutai.site/presigned-put-url"
+    assert res["original_filename"] == "my_solution.zip"
+    assert res["object_key"].startswith(f"homeworks/{homework.id}/submissions/99/")

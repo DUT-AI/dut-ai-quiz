@@ -3,17 +3,16 @@ from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
-from fastapi import HTTPException
-
 from app.application.use_cases.hackathon.crud_hackathon import (
     DeleteHackathonUseCase,
     UpdateHackathonUseCase,
 )
+from app.config import settings
+from app.core.jwt import create_access_token
 from app.domain.entities.auth_enums import (
     ROLE_DEFAULT_PERMISSIONS,
     SystemPermission,
     UserRole,
-    normalize_role,
     resolve_permissions_for_roles,
 )
 from app.domain.entities.hackathon import HackathonEntity
@@ -25,17 +24,14 @@ from app.infrastructure.persistence.models.auth_rbac import (
 )
 from app.infrastructure.persistence.models.user import User
 from app.presentation.api.abac import is_resource_owner, verify_resource_ownership
-from app.core.jwt import create_access_token
-from app.config import settings
 from app.presentation.api.deps import (
     RequirePermissions,
     UserContext,
-    extract_auth_context_from_request,
     get_current_user,
     get_optional_current_user,
 )
 from app.presentation.schemas.hackathons import HackathonUpdate
-
+from fastapi import HTTPException
 
 # ============================================================================
 # 1. ENUMS & MULTI-ROLE ADDITIVE PERMISSION TESTS
@@ -115,6 +111,21 @@ def test_admin_role_resolves_all_permissions():
         assert p.value in resolved
 
 
+def test_role_normalization_variations():
+    # Role with spaces and mixed case
+    resolved = resolve_permissions_for_roles(["teammate", "Project Developer"])
+    assert SystemPermission.MANAGE_HACKATHON.value in resolved
+    assert SystemPermission.READ_LESSON.value in resolved
+
+    # Role with hyphens
+    resolved_hyphen = resolve_permissions_for_roles(["project-developer"])
+    assert SystemPermission.MANAGE_HACKATHON.value in resolved_hyphen
+
+    # Sub-admin with spaces
+    resolved_subadmin = resolve_permissions_for_roles(["sub admin"])
+    assert SystemPermission.MANAGE_EXAM.value in resolved_subadmin
+
+
 # ============================================================================
 # 2. RBAC FASTAPI DEPENDENCY TESTS (RequirePermissions & Admin Override)
 # ============================================================================
@@ -142,6 +153,17 @@ async def test_require_permissions_denied():
     # Teammate trying to manage hackathon
     user = UserContext(id=1, roles=["TEAMMATE"])
     dep = RequirePermissions([SystemPermission.MANAGE_HACKATHON])
+    with pytest.raises(HTTPException) as exc_info:
+        await dep(user)
+    assert exc_info.value.status_code == 403
+    assert "Forbidden: Insufficient permissions" in exc_info.value.detail
+
+
+@pytest.mark.asyncio
+async def test_mentor_denied_educator_dependency():
+    # Mentor role trying to create lesson or manage LMS
+    user = UserContext(id=10, roles=["MENTOR"])
+    dep = RequirePermissions([SystemPermission.CREATE_LESSON])
     with pytest.raises(HTTPException) as exc_info:
         await dep(user)
     assert exc_info.value.status_code == 403
@@ -267,9 +289,7 @@ async def test_delete_hackathon_abac_logic():
     assert ok is True
 
     # Admin succeeds
-    ok_admin = await use_case.execute(
-        hackathon_id=hackathon_id, user_id=99, is_admin=True
-    )
+    ok_admin = await use_case.execute(hackathon_id=hackathon_id, user_id=99, is_admin=True)
     assert ok_admin is True
 
 
@@ -361,3 +381,167 @@ async def test_get_current_user_unauthenticated_raises_401(monkeypatch):
         await get_current_user(req)
     assert exc.value.status_code == 401
 
+
+# ============================================================================
+# 8. HACKATHON REGISTRATIONS & TASKS ABAC TESTS (Admin all, Project Dev own)
+# ============================================================================
+
+
+@pytest.mark.asyncio
+async def test_list_registrations_admin_can_view_any_hackathon():
+    from app.application.use_cases.hackathon.team_registration.list_registrations import (
+        ListRegistrationsUseCase,
+    )
+    from app.domain.entities.hackathon import HackathonEntity, ParticipationMode
+
+    mock_hackathon_repo = AsyncMock()
+    mock_reg_repo = AsyncMock()
+    mock_team_repo = AsyncMock()
+    mock_user_service = AsyncMock()
+
+    # Hackathon created by user 100
+    h_id = uuid4()
+    mock_hackathon_repo.get.return_value = HackathonEntity(
+        id=h_id,
+        name="AI Hackathon",
+        description="",
+        rules="",
+        start_time=None,
+        end_time=None,
+        participation_mode=ParticipationMode.BOTH,
+        created_by=100,
+        created_at=datetime.now(),
+    )
+    mock_reg_repo.list_for_hackathon.return_value = []
+
+    use_case = ListRegistrationsUseCase(
+        mock_hackathon_repo, mock_reg_repo, mock_team_repo, mock_user_service
+    )
+
+    # Admin (user_id=999, is_admin=True) can view even though not creator
+    res = await use_case(hackathon_id=h_id, user_id=999, is_admin=True)
+    assert res == []
+
+
+@pytest.mark.asyncio
+async def test_list_registrations_non_owner_raises_403():
+    from app.application.use_cases.hackathon.team_registration.list_registrations import (
+        ListRegistrationsUseCase,
+    )
+    from app.domain.entities.hackathon import HackathonEntity, ParticipationMode
+    from app.domain.exceptions.exceptions import AppException
+
+    mock_hackathon_repo = AsyncMock()
+    mock_reg_repo = AsyncMock()
+    mock_team_repo = AsyncMock()
+    mock_user_service = AsyncMock()
+
+    h_id = uuid4()
+    mock_hackathon_repo.get.return_value = HackathonEntity(
+        id=h_id,
+        name="AI Hackathon",
+        description="",
+        rules="",
+        start_time=None,
+        end_time=None,
+        participation_mode=ParticipationMode.BOTH,
+        created_by=100,
+        created_at=datetime.now(),
+    )
+
+    use_case = ListRegistrationsUseCase(
+        mock_hackathon_repo, mock_reg_repo, mock_team_repo, mock_user_service
+    )
+
+    # Project Dev (user_id=200, is_admin=False) cannot view other's hackathon
+    with pytest.raises(AppException) as exc:
+        await use_case(hackathon_id=h_id, user_id=200, is_admin=False)
+    assert exc.value.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_list_registrations_owner_project_dev_success():
+    from app.application.use_cases.hackathon.team_registration.list_registrations import (
+        ListRegistrationsUseCase,
+    )
+    from app.domain.entities.hackathon import HackathonEntity, ParticipationMode
+
+    mock_hackathon_repo = AsyncMock()
+    mock_reg_repo = AsyncMock()
+    mock_team_repo = AsyncMock()
+    mock_user_service = AsyncMock()
+
+    h_id = uuid4()
+    mock_hackathon_repo.get.return_value = HackathonEntity(
+        id=h_id,
+        name="AI Hackathon",
+        description="",
+        rules="",
+        start_time=None,
+        end_time=None,
+        participation_mode=ParticipationMode.BOTH,
+        created_by=100,
+        created_at=datetime.now(),
+    )
+    mock_reg_repo.list_for_hackathon.return_value = []
+
+    use_case = ListRegistrationsUseCase(
+        mock_hackathon_repo, mock_reg_repo, mock_team_repo, mock_user_service
+    )
+
+    # Project Dev owner (user_id=100, is_admin=False) can view own hackathon
+    res = await use_case(hackathon_id=h_id, user_id=100, is_admin=False)
+    assert res == []
+
+
+@pytest.mark.asyncio
+async def test_review_registration_admin_can_review_any():
+    from app.application.use_cases.hackathon.team_registration.review_registration import (
+        ReviewRegistrationUseCase,
+    )
+    from app.domain.entities.hackathon import (
+        HackathonEntity,
+        HackathonRegistrationEntity,
+        ParticipationMode,
+        RegistrationStatus,
+    )
+
+    mock_hackathon_repo = AsyncMock()
+    mock_reg_repo = AsyncMock()
+
+    h_id = uuid4()
+    reg_id = uuid4()
+    mock_reg_repo.get.return_value = HackathonRegistrationEntity(
+        id=reg_id,
+        hackathon_id=h_id,
+        user_id=50,
+        team_id=None,
+        status=RegistrationStatus.PENDING,
+        registered_at=datetime.now(),
+        reviewed_by=None,
+        rejection_reason=None,
+    )
+    mock_hackathon_repo.get.return_value = HackathonEntity(
+        id=h_id,
+        name="AI Hackathon",
+        description="",
+        rules="",
+        start_time=None,
+        end_time=None,
+        participation_mode=ParticipationMode.BOTH,
+        created_by=100,
+        created_at=datetime.now(),
+    )
+    mock_reg_repo.update.side_effect = lambda entity: entity
+
+    use_case = ReviewRegistrationUseCase(mock_hackathon_repo, mock_reg_repo)
+
+    # Admin (user_id=999, is_admin=True) reviews registration
+    updated = await use_case(
+        registration_id=reg_id,
+        status=RegistrationStatus.APPROVED,
+        reviewer_id=999,
+        is_admin=True,
+    )
+    assert updated.status == RegistrationStatus.APPROVED
+    assert updated.reviewed_by == 999

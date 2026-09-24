@@ -34,7 +34,7 @@ interface Props {
 }
 
 export function SortableModule({ module, lessons, onEditModule, onDeleteModule, onEditLesson, onDeleteLesson }: Props) {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [showDescription, setShowDescription] = useState(false);
 
 

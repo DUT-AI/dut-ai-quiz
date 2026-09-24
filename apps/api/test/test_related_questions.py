@@ -2,7 +2,6 @@ from datetime import datetime
 from uuid import uuid4
 
 import pytest
-
 from app.application.services.question_embedding import question_embedding_hash
 from app.application.use_cases.questions.related_questions_uc import (
     FindRelatedQuestionsUseCase,
@@ -116,9 +115,7 @@ async def test_related_questions_embeds_input_and_returns_safe_ranked_results() 
 async def test_related_questions_rejects_disabled_embedding() -> None:
     embedding_service = FakeEmbeddingService()
     embedding_service.enabled = False
-    use_case = FindRelatedQuestionsUseCase(
-        FakeQuestionRepository([]), embedding_service
-    )
+    use_case = FindRelatedQuestionsUseCase(FakeQuestionRepository([]), embedding_service)
 
     with pytest.raises(EmbeddingServiceError, match="not enabled"):
         await use_case.execute(

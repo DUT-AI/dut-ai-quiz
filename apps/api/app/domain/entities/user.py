@@ -12,4 +12,3 @@ class UserEntity:
     avatar_url: str | None = None
     created_at: datetime | None = None
     roles: list[str] = field(default_factory=list)
-

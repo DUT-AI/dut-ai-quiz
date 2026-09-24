@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Protocol
 from uuid import UUID
 
-from app.domain.entities.question import QuestionEntity
+from app.domain.entities.question import QuestionEntity, QuestionStatus
 from app.domain.value_objects import Difficulty, PoolType
 
 
@@ -25,7 +25,10 @@ class IQuestionRepository(Protocol):
         pool_type: PoolType | None = None,
         difficulty: Difficulty | None = None,
         lesson_id: UUID | None = None,
+        import_session_id: UUID | None = None,
         tag: str | None = None,
+        status: QuestionStatus | None = None,
+        related_questions: bool | None = None,
         offset: int = 0,
         limit: int = 50,
     ) -> list[QuestionEntity]:

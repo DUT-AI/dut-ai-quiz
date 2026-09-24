@@ -20,9 +20,7 @@ class Settings(BaseSettings):
         populate_by_name=True,
     )
 
-    database_url: str = (
-        "postgresql+asyncpg://dutai_dev:dutai_dev@127.0.0.1:6070/quizdb_dev"
-    )
+    database_url: str = "postgresql+asyncpg://dutai_dev:dutai_dev@127.0.0.1:6070/quizdb_dev"
 
     manage_base_url: str = ""
     manage_api_key: str = ""
@@ -80,6 +78,14 @@ class Settings(BaseSettings):
         default=True,
         validation_alias=AliasChoices("S3_SECURE", "MINIO_SECURE"),
     )
+    s3_public_endpoint: str = Field(
+        default="",
+        validation_alias=AliasChoices("S3_PUBLIC_ENDPOINT", "MINIO_PUBLIC_ENDPOINT"),
+    )
+    s3_public_secure: bool = Field(
+        default=True,
+        validation_alias=AliasChoices("S3_PUBLIC_SECURE", "MINIO_PUBLIC_SECURE"),
+    )
     presigned_url_expire_seconds: int = 3600
 
     # Homework submission and external evaluation services.
@@ -125,6 +131,26 @@ class Settings(BaseSettings):
     max_script_size_bytes: int = 10 * 1024 * 1024  # 10 MB
     max_model_size_bytes: int = 1024 * 1024 * 1024  # 1 GB
 
+    # ================= HOMEWORK LLM EVALUATION CONFIG ============
+    homework_llm_provider: str = Field(
+        default="openai",
+        validation_alias=AliasChoices("HOMEWORK_LLM_PROVIDER", "LLM_PROVIDER"),
+    )
+    homework_llm_api_url: str = Field(
+        default="",
+        validation_alias=AliasChoices("HOMEWORK_LLM_API_URL", "LLM_API_URL", "OPENAI_API_BASE"),
+    )
+    homework_llm_api_key: str = Field(
+        default="",
+        validation_alias=AliasChoices("HOMEWORK_LLM_API_KEY", "LLM_API_KEY", "OPENAI_API_KEY"),
+    )
+    homework_llm_model: str = Field(
+        default="ggml-org/gemma-4-e4b-it-GGUF:Q4_0",
+        validation_alias=AliasChoices("HOMEWORK_LLM_MODEL", "LLM_MODEL"),
+    )
+    homework_llm_temperature: float = 0.1
+    homework_llm_timeout_seconds: float = 120.0
+
     # ================= GOOGLE GENAI / GEMMA API KEY =============
     gemini_api_key: str = Field(
         default="",
@@ -148,7 +174,7 @@ class Settings(BaseSettings):
             return value.replace("postgresql://", "postgresql+asyncpg://", 1)
         return value
 
-    @field_validator("s3_endpoint")
+    @field_validator("s3_endpoint", "s3_public_endpoint")
     @classmethod
     def normalize_s3_endpoint(cls, value: str) -> str:
         return value.strip().rstrip("/")
@@ -163,6 +189,15 @@ class Settings(BaseSettings):
         return f"{scheme}://{self.s3_endpoint}"
 
     @property
+    def s3_public_endpoint_url(self) -> str:
+        if not self.s3_public_endpoint:
+            return self.s3_endpoint_url
+        if "://" in self.s3_public_endpoint:
+            return self.s3_public_endpoint
+        scheme = "https" if self.s3_public_secure else "http"
+        return f"{scheme}://{self.s3_public_endpoint}"
+
+    @property
     def s3_is_configured(self) -> bool:
         return bool(
             self.s3_endpoint_url
@@ -174,9 +209,7 @@ class Settings(BaseSettings):
     @property
     def cors_origin_list(self) -> list[str]:
         return [
-            origin.strip().rstrip("/")
-            for origin in self.cors_origins.split(",")
-            if origin.strip()
+            origin.strip().rstrip("/") for origin in self.cors_origins.split(",") if origin.strip()
         ]
 
     @property

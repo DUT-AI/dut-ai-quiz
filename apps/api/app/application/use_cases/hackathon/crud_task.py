@@ -23,9 +23,12 @@ class CreateHackathonTaskUseCase:
         hackathon_id: UUID,
         payload: HackathonTaskCreate,
         admin_user_id: int,
+        is_admin: bool = False,
     ) -> HackathonTaskEntity | None:
         hackathon = await self._hackathon_repo.get(hackathon_id)
-        if not hackathon or hackathon.created_by != admin_user_id:
+        if not hackathon:
+            return None
+        if not is_admin and hackathon.created_by != admin_user_id:
             return None
         now = datetime.now()
         if hackathon.start_time and hackathon.start_time <= now:
@@ -77,11 +80,16 @@ class ListHackathonTasksUseCase:
         hackathon_id: UUID,
         user_id: int,
         quiz_role: str,
+        is_admin: bool = False,
     ) -> list[HackathonTaskEntity] | None:
         hackathon = await self._hackathon_repo.get(hackathon_id)
         if not hackathon:
             return None
-        if quiz_role in ["admin", "MENTOR"] and hackathon.created_by != user_id:
+        if (
+            not is_admin
+            and quiz_role in ["PROJECT_DEVELOPER", "SUB_ADMIN", "admin"]
+            and hackathon.created_by != user_id
+        ):
             return None
         return await self._task_repo.list_for_hackathon(hackathon_id)
 
@@ -101,11 +109,16 @@ class GetHackathonTaskUseCase:
         task_id: UUID,
         user_id: int,
         quiz_role: str,
+        is_admin: bool = False,
     ) -> HackathonTaskEntity | None:
         hackathon = await self._hackathon_repo.get(hackathon_id)
         if not hackathon:
             return None
-        if quiz_role in ["admin", "MENTOR"] and hackathon.created_by != user_id:
+        if (
+            not is_admin
+            and quiz_role in ["PROJECT_DEVELOPER", "SUB_ADMIN", "admin"]
+            and hackathon.created_by != user_id
+        ):
             return None
 
         task = await self._task_repo.get(task_id)
@@ -129,9 +142,12 @@ class UpdateHackathonTaskUseCase:
         task_id: UUID,
         payload: HackathonTaskUpdate,
         admin_user_id: int,
+        is_admin: bool = False,
     ) -> HackathonTaskEntity | None:
         hackathon = await self._hackathon_repo.get(hackathon_id)
-        if not hackathon or hackathon.created_by != admin_user_id:
+        if not hackathon:
+            return None
+        if not is_admin and hackathon.created_by != admin_user_id:
             return None
 
         task = await self._task_repo.get(task_id)
@@ -143,10 +159,7 @@ class UpdateHackathonTaskUseCase:
             data["name"] = data["name"].strip()
             if not data["name"]:
                 raise ValueError("name must not be empty")
-        if (
-            "problem_description_md" in data
-            and data["problem_description_md"] is not None
-        ):
+        if "problem_description_md" in data and data["problem_description_md"] is not None:
             data["problem_description_md"] = data["problem_description_md"].strip()
             if not data["problem_description_md"]:
                 raise ValueError("problem_description_md must not be empty")
@@ -179,9 +192,12 @@ class DeleteHackathonTaskUseCase:
         hackathon_id: UUID,
         task_id: UUID,
         admin_user_id: int,
+        is_admin: bool = False,
     ) -> bool:
         hackathon = await self._hackathon_repo.get(hackathon_id)
-        if not hackathon or hackathon.created_by != admin_user_id:
+        if not hackathon:
+            return False
+        if not is_admin and hackathon.created_by != admin_user_id:
             return False
 
         task = await self._task_repo.get(task_id)

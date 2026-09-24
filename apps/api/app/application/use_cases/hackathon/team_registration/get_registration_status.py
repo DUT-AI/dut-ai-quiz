@@ -23,9 +23,7 @@ class GetRegistrationStatusUseCase:
         self._team_repo = team_repo
         self._user_service = user_service
 
-    async def __call__(
-        self, hackathon_id: UUID, user_id: int
-    ) -> HackathonRegistrationStatusOutDTO:
+    async def __call__(self, hackathon_id: UUID, user_id: int) -> HackathonRegistrationStatusOutDTO:
         reg = await self._reg_repo.get_user_registration(hackathon_id, user_id)
         team = await self._team_repo.get_user_team(hackathon_id, user_id)
 
@@ -34,9 +32,7 @@ class GetRegistrationStatusUseCase:
 
         team_dto = None
         if team:
-            members_info = [
-                await self._user_service.get_user_info(mid) for mid in team.member_ids
-            ]
+            members_info = [await self._user_service.get_user_info(mid) for mid in team.member_ids]
             team_dto = HackathonTeamOutDTO(
                 id=team.id,
                 hackathon_id=team.hackathon_id,
@@ -62,8 +58,7 @@ class GetRegistrationStatusUseCase:
                     t = await self._team_repo.get(reg.team_id)
                     if t:
                         team_members = [
-                            await self._user_service.get_user_info(mid)
-                            for mid in t.member_ids
+                            await self._user_service.get_user_info(mid) for mid in t.member_ids
                         ]
                         team_dto_for_reg = HackathonTeamOutDTO(
                             id=t.id,

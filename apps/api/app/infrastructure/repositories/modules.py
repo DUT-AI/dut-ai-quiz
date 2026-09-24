@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import delete, select, func
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities.module import ModuleEntity
@@ -26,10 +26,12 @@ class ModuleRepository(IModuleRepository):
         if name is not None and name.strip():
             stmt = stmt.where(func.lower(Module.name) == func.lower(name.strip()))
         if description is not None and description.strip():
-            stmt = stmt.where(func.lower(Module.description).contains(func.lower(description.strip())))
+            stmt = stmt.where(
+                func.lower(Module.description).contains(func.lower(description.strip()))
+            )
         if order is not None:
             stmt = stmt.where(Module.order == order)
-        
+
         stmt = stmt.order_by(Module.order.asc(), Module.created_at.asc())
         result = await self._session.execute(stmt)
         return [m.to_entity() for m in result.scalars().all()]

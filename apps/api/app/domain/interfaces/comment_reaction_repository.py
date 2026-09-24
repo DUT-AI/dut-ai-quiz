@@ -1,12 +1,12 @@
 from abc import ABC, abstractmethod
-from typing import Optional
 from uuid import UUID
 
 from app.domain.entities.comment import CommentReactionEntity, ReactionType
 
+
 class ICommentReactionRepository(ABC):
     @abstractmethod
-    async def get_reaction(self, comment_id: UUID, user_id: int) -> Optional[CommentReactionEntity]:
+    async def get_reaction(self, comment_id: UUID, user_id: int) -> CommentReactionEntity | None:
         pass
 
     @abstractmethod
@@ -20,6 +20,8 @@ class ICommentReactionRepository(ABC):
         pass
 
     @abstractmethod
-    async def switch_reaction(self, reaction: CommentReactionEntity, old_type: ReactionType) -> None:
+    async def switch_reaction(
+        self, reaction: CommentReactionEntity, old_type: ReactionType
+    ) -> None:
         """Switches a reaction type and updates both comment counts in a transaction."""
         pass

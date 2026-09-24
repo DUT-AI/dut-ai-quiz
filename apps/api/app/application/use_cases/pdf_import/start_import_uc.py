@@ -5,34 +5,30 @@ StartImportUseCase — Step 1+2:
 - Chạy AI parse pipeline (FastAPI BackgroundTasks)
 - Trả về job_id ngay lập tức (202 Accepted)
 """
+
 from __future__ import annotations
 
 import uuid
 from uuid import UUID
 
-from fastapi import BackgroundTasks
-from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.application.services.pdf_ai_parser import PDFAIParserService, PDFValidationResult
-from app.config import settings
+from app.application.services.pdf_ai_parser import PDFAIParserService
+from app.core.datetime_utils import now_ict
 from app.domain.entities.import_session import ImportSessionEntity
 from app.domain.entities.question import QuestionEntity, QuestionOptionEntity
 from app.domain.interfaces.import_session_repo import IImportSessionRepository
 from app.domain.interfaces.question_repo import IQuestionRepository
 from app.domain.value_objects import Difficulty, PoolType
-from app.core.datetime_utils import now_ict
+from fastapi import BackgroundTasks
+from loguru import logger
 
 
 class StartImportUseCase:
     def __init__(
         self,
-        session: AsyncSession,
         import_session_repo: IImportSessionRepository,
         question_repo: IQuestionRepository,
         ai_parser: PDFAIParserService,
     ) -> None:
-        self._db_session = session
         self._import_repo = import_session_repo
         self._question_repo = question_repo
         self._ai_parser = ai_parser
@@ -70,7 +66,6 @@ class StartImportUseCase:
             target_scope=target_scope,
         )
         await self._import_repo.create(entity)
-        await self._db_session.commit()
 
         # Enqueue background processing
         background_tasks.add_task(
@@ -120,7 +115,7 @@ class StartImportUseCase:
     ) -> None:
         """
         Chạy pipeline AI trong background:
-        Step 3-6: Render → Gemini OCR → Save DRAFT questions
+        Step 3-6: Render → Gemini OCR → Save DRAFT questions (Bulk Insert)
         """
         job_str = str(job_id)
         logger.info(f"[Import {job_str}] Starting AI pipeline")
@@ -137,8 +132,15 @@ class StartImportUseCase:
                 processed_questions=0,
             )
 
-            # Save each question as DRAFT
-            for idx, pq in enumerate(parsed_questions):
+            # Map AI parsed questions into QuestionEntity list in memory
+            diff_map = {
+                "EASY": Difficulty.EASY,
+                "MEDIUM": Difficulty.MEDIUM,
+                "HARD": Difficulty.HARD,
+            }
+
+            question_entities: list[QuestionEntity] = []
+            for pq in parsed_questions:
                 options = [
                     QuestionOptionEntity(
                         id=opt.id,
@@ -148,13 +150,6 @@ class StartImportUseCase:
                     )
                     for opt in pq.options
                 ]
-
-                # Map AI difficulty string to domain enum
-                diff_map = {
-                    "EASY": Difficulty.EASY,
-                    "MEDIUM": Difficulty.MEDIUM,
-                    "HARD": Difficulty.HARD,
-                }
                 difficulty = diff_map.get(pq.difficulty.upper(), Difficulty.MEDIUM)
 
                 entity = QuestionEntity(
@@ -175,24 +170,25 @@ class StartImportUseCase:
                     is_difficulty_ai_suggested=pq.is_difficulty_ai_suggested,
                     duplicate_status="UNIQUE",
                 )
+                question_entities.append(entity)
 
-                await self._question_repo.add(entity)
-                await self._import_repo.update_progress(
-                    job_id,
-                    total_questions=len(parsed_questions),
-                    processed_questions=idx + 1,
-                )
+            # Bulk insert all questions at once
+            if question_entities:
+                await self._question_repo.add_bulk(question_entities)
 
+            await self._import_repo.update_progress(
+                job_id,
+                total_questions=len(parsed_questions),
+                processed_questions=len(parsed_questions),
+            )
             await self._import_repo.update_status(job_id, "COMPLETED")
-            await self._db_session.commit()
-            logger.info(f"[Import {job_str}] Completed — {len(parsed_questions)} DRAFT questions saved")
+            logger.info(
+                f"[Import {job_str}] Completed — {len(parsed_questions)} DRAFT questions saved"
+            )
 
         except Exception as exc:
             logger.exception(f"[Import {job_str}] Pipeline failed: {exc}")
             try:
-                await self._import_repo.update_status(
-                    job_id, "FAILED", error_message=str(exc)
-                )
-                await self._db_session.commit()
+                await self._import_repo.update_status(job_id, "FAILED", error_message=str(exc))
             except Exception:
                 pass

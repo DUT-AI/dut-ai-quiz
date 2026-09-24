@@ -1,8 +1,8 @@
 from datetime import datetime
 from uuid import UUID
 
-from app.domain.exceptions.exceptions import AppException
 from app.domain.entities.hackathon import RegistrationStatus
+from app.domain.exceptions.exceptions import AppException
 from app.domain.interfaces import (
     IHackathonRegistrationRepository,
     IHackathonRepository,

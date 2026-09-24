@@ -41,18 +41,13 @@ class LocalHashingEmbeddingService(IEmbeddingService):
         normalized = unicodedata.normalize("NFKC", text).casefold()
         words = self._word_pattern.findall(normalized)
 
-        features: list[tuple[str, float]] = [
-            (f"word:{word}", 1.0) for word in words
-        ]
-        features.extend(
-            (f"bigram:{left}:{right}", 1.35)
-            for left, right in zip(words, words[1:])
-        )
+        features: list[tuple[str, float]] = [(f"word:{word}", 1.0) for word in words]
+        features.extend((f"bigram:{left}:{right}", 1.35) for left, right in zip(words, words[1:]))
 
         compact = " ".join(words)
         for size in (3, 4, 5):
             features.extend(
-                (f"char{size}:{compact[index:index + size]}", 0.2)
+                (f"char{size}:{compact[index : index + size]}", 0.2)
                 for index in range(max(0, len(compact) - size + 1))
             )
 
@@ -111,20 +106,15 @@ class DutAiEmbeddingService(IEmbeddingService):
                 payload = response.json()
                 if payload["model"] != self.model_name:
                     raise ValueError(
-                        "Embedding service returned a different model: "
-                        f"{payload['model']}"
+                        f"Embedding service returned a different model: {payload['model']}"
                     )
                 data = sorted(payload["data"], key=lambda item: item["index"])
                 result.extend(item["embedding"] for item in data)
         except (httpx.HTTPError, KeyError, TypeError, ValueError) as exc:
-            raise EmbeddingServiceError(
-                f"DUT-AI embedding service failed: {exc}"
-            ) from exc
+            raise EmbeddingServiceError(f"DUT-AI embedding service failed: {exc}") from exc
 
         expected = self._settings.embedding_dimensions
-        if len(result) != len(texts) or any(
-            len(vector) != expected for vector in result
-        ):
+        if len(result) != len(texts) or any(len(vector) != expected for vector in result):
             raise EmbeddingServiceError(
                 "DUT-AI embedding service returned an unexpected vector shape; "
                 f"expected {expected} dimensions"

@@ -1,9 +1,11 @@
 from uuid import UUID
 
-from sqlalchemy import and_, func, select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.application.dtos.homework import CompletedHomeworkMemberOutDTO
 from app.core.datetime_utils import now_ict
+
 from app.domain.entities.homework import (
     HomeworkEntity,
     HomeworkSubmissionEntity,
@@ -34,8 +36,7 @@ class HomeworkRepository(IHomeworkRepository):
 
     async def lesson_exists(self, lesson_id: UUID) -> bool:
         return (
-            await self._session.scalar(select(Lesson.id).where(Lesson.id == lesson_id))
-            is not None
+            await self._session.scalar(select(Lesson.id).where(Lesson.id == lesson_id)) is not None
         )
 
     async def get_homework(self, homework_id: UUID) -> HomeworkEntity | None:
@@ -123,9 +124,7 @@ class HomeworkRepository(IHomeworkRepository):
         await self._session.refresh(model)
         return model.to_entity()
 
-    async def get_submission(
-        self, submission_id: UUID
-    ) -> HomeworkSubmissionEntity | None:
+    async def get_submission(self, submission_id: UUID) -> HomeworkSubmissionEntity | None:
         model = await self._session.get(HomeworkSubmission, submission_id)
         return model.to_entity() if model else None
 
@@ -143,9 +142,7 @@ class HomeworkRepository(IHomeworkRepository):
         )
         return model.to_entity() if model else None
 
-    async def retry_failed_submission(
-        self, submission_id: UUID
-    ) -> HomeworkSubmissionEntity | None:
+    async def retry_failed_submission(self, submission_id: UUID) -> HomeworkSubmissionEntity | None:
         model = await self._session.scalar(
             update(HomeworkSubmission)
             .where(
@@ -170,9 +167,7 @@ class HomeworkRepository(IHomeworkRepository):
         await self._session.flush()
         return model.to_entity()
 
-    async def list_submissions(
-        self, homework_id: UUID
-    ) -> list[HomeworkSubmissionEntity]:
+    async def list_submissions(self, homework_id: UUID) -> list[HomeworkSubmissionEntity]:
         models = (
             await self._session.scalars(
                 select(HomeworkSubmission)
@@ -186,32 +181,41 @@ class HomeworkRepository(IHomeworkRepository):
         return [model.to_entity() for model in models]
 
     async def list_completed_user_ids(self, homework_id: UUID) -> list[int]:
-        latest_attempts = (
-            select(
-                HomeworkSubmission.user_id,
-                func.max(HomeworkSubmission.attempt_number).label("attempt_number"),
-            )
-            .where(HomeworkSubmission.homework_id == homework_id)
-            .group_by(HomeworkSubmission.user_id)
-            .subquery()
-        )
         stmt = (
             select(HomeworkSubmission.user_id)
-            .join(
-                latest_attempts,
-                and_(
-                    HomeworkSubmission.user_id == latest_attempts.c.user_id,
-                    HomeworkSubmission.attempt_number
-                    == latest_attempts.c.attempt_number,
-                ),
-            )
-            .where(
-                HomeworkSubmission.homework_id == homework_id,
-                HomeworkSubmission.status == HomeworkSubmissionStatus.GRADED.value,
-            )
+            .distinct()
+            .where(HomeworkSubmission.homework_id == homework_id)
             .order_by(HomeworkSubmission.user_id)
         )
         return [int(user_id) for user_id in (await self._session.scalars(stmt)).all()]
+
+    async def list_completed_members_by_lesson(
+        self, lesson_id: UUID
+    ) -> list[CompletedHomeworkMemberOutDTO]:
+        stmt = (
+            select(
+                HomeworkSubmission.user_id,
+                func.count(HomeworkSubmission.id).label("submission_count"),
+                func.max(HomeworkSubmission.score).label("max_score"),
+            )
+            .join(Homework, Homework.id == HomeworkSubmission.homework_id)
+            .where(
+                Homework.lesson_id == lesson_id,
+                Homework.archived_at.is_(None),
+                HomeworkSubmission.status == HomeworkSubmissionStatus.GRADED.value,
+            )
+            .group_by(HomeworkSubmission.user_id)
+            .order_by(HomeworkSubmission.user_id)
+        )
+        rows = (await self._session.execute(stmt)).all()
+        return [
+            CompletedHomeworkMemberOutDTO(
+                user_id=row.user_id,
+                submission_count=int(row.submission_count or 0),
+                max_score=float(row.max_score) if row.max_score is not None else None,
+            )
+            for row in rows
+        ]
 
     async def count_submitters(self, homework_id: UUID) -> int:
         return int(

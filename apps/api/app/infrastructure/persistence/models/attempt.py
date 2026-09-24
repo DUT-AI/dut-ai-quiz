@@ -1,4 +1,3 @@
-from app.domain.value_objects import AttemptStatus
 from datetime import datetime
 from typing import Any
 from uuid import UUID, uuid4
@@ -14,7 +13,7 @@ from app.domain.entities.attempt import (
     AttemptEntity,
     FocusEventEntity,
 )
-from app.domain.value_objects import ShuffledSnapshot
+from app.domain.value_objects import AttemptStatus, ShuffledSnapshot
 
 from .base import Base
 
@@ -22,23 +21,17 @@ from .base import Base
 class Attempt(Base):
     __tablename__ = "attempts"
 
-    id: Mapped[UUID] = mapped_column(
-        pgUUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(pgUUID(as_uuid=True), primary_key=True, default=uuid4)
     exam_id: Mapped[UUID] = mapped_column(ForeignKey("exams.id"), index=True)
     user_id: Mapped[int] = mapped_column(index=True)
     started_at: Mapped[datetime] = mapped_column(default=now_ict)
     completed_at: Mapped[datetime | None] = mapped_column(nullable=True)
     expires_at: Mapped[datetime] = mapped_column()
     score: Mapped[float | None] = mapped_column(nullable=True)
-    status: Mapped[AttemptStatus] = mapped_column(
-        default=AttemptStatus.IN_PROGRESS, index=True
-    )
+    status: Mapped[AttemptStatus] = mapped_column(default=AttemptStatus.IN_PROGRESS, index=True)
     tab_out_count: Mapped[int] = mapped_column(default=0, server_default="0")
     shuffle_seed: Mapped[int | None] = mapped_column(nullable=True)
-    shuffle_snapshot: Mapped[dict[str, Any] | None] = mapped_column(
-        JSONB, nullable=True
-    )
+    shuffle_snapshot: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
 
     def to_entity(self) -> AttemptEntity:
         return AttemptEntity(
@@ -53,9 +46,7 @@ class Attempt(Base):
             tab_out_count=self.tab_out_count,
             shuffle_seed=self.shuffle_seed,
             shuffle_snapshot=(
-                ShuffledSnapshot.from_dict(self.shuffle_snapshot)
-                if self.shuffle_snapshot
-                else None
+                ShuffledSnapshot.from_dict(self.shuffle_snapshot) if self.shuffle_snapshot else None
             ),
         )
 
@@ -81,9 +72,7 @@ class Attempt(Base):
 class AttemptAnswer(Base):
     __tablename__ = "attempt_answers"
 
-    id: Mapped[UUID] = mapped_column(
-        pgUUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(pgUUID(as_uuid=True), primary_key=True, default=uuid4)
     attempt_id: Mapped[UUID] = mapped_column(ForeignKey("attempts.id"), index=True)
     question_id: Mapped[UUID] = mapped_column(ForeignKey("questions.id"), index=True)
     selected_option_id: Mapped[str | None] = mapped_column(nullable=True)
@@ -109,13 +98,9 @@ class AttemptAnswer(Base):
 
 class FocusEvent(Base):
     __tablename__ = "focus_events"
-    __table_args__ = (
-        UniqueConstraint("attempt_id", "client_event_id", name="uq_focus_client"),
-    )
+    __table_args__ = (UniqueConstraint("attempt_id", "client_event_id", name="uq_focus_client"),)
 
-    id: Mapped[UUID] = mapped_column(
-        pgUUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(pgUUID(as_uuid=True), primary_key=True, default=uuid4)
     attempt_id: Mapped[UUID] = mapped_column(ForeignKey("attempts.id"), index=True)
     client_event_id: Mapped[str] = mapped_column()
     event: Mapped[str] = mapped_column(default="", server_default="")

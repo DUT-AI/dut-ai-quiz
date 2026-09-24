@@ -14,9 +14,7 @@ from .base import Base
 class Exam(Base):
     __tablename__ = "exams"
 
-    id: Mapped[UUID] = mapped_column(
-        pgUUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(pgUUID(as_uuid=True), primary_key=True, default=uuid4)
     title: Mapped[str] = mapped_column()
     description: Mapped[str] = mapped_column(default="", server_default="")
     start_time: Mapped[datetime | None] = mapped_column(nullable=True)
@@ -64,13 +62,9 @@ class Exam(Base):
 
 class ExamQuestion(Base):
     __tablename__ = "exam_questions"
-    __table_args__ = (
-        UniqueConstraint("exam_id", "question_id", name="uq_exam_question"),
-    )
+    __table_args__ = (UniqueConstraint("exam_id", "question_id", name="uq_exam_question"),)
 
-    id: Mapped[UUID] = mapped_column(
-        pgUUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(pgUUID(as_uuid=True), primary_key=True, default=uuid4)
     exam_id: Mapped[UUID] = mapped_column(ForeignKey("exams.id"), index=True)
     question_id: Mapped[UUID] = mapped_column(ForeignKey("questions.id"), index=True)
     position: Mapped[int] = mapped_column(default=0, server_default="0")

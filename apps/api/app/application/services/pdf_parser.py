@@ -1,12 +1,11 @@
 import re
+
 import fitz
+from app.domain.interfaces.pdf_parser_strategy import IPdfParserStrategy
 from app.presentation.schemas.pdf_import import (
     ParsedQuestionPreview,
-    PDFParseResponse,
     PDFImportRequest,
 )
-
-from app.domain.interfaces.pdf_parser_strategy import IPdfParserStrategy
 
 
 class RegexPdfParserStrategy(IPdfParserStrategy):
@@ -14,7 +13,7 @@ class RegexPdfParserStrategy(IPdfParserStrategy):
         self, pdf_bytes: bytes, password: str | None = None, **kwargs
     ) -> list[ParsedQuestionPreview]:
         request = kwargs.get("request", PDFImportRequest())
-        
+
         doc = fitz.open(stream=pdf_bytes, filetype="pdf")
         if doc.is_encrypted and password:
             doc.authenticate(password)
@@ -46,9 +45,7 @@ class RegexPdfParserStrategy(IPdfParserStrategy):
                             if span["flags"] & 4:
                                 is_underline = True
 
-                        all_lines.append(
-                            {"text": line_text, "is_marked": is_red or is_underline}
-                        )
+                        all_lines.append({"text": line_text, "is_marked": is_red or is_underline})
         doc.close()
 
         # Rule: Questions start with "Câu" or "Question"
@@ -56,9 +53,7 @@ class RegexPdfParserStrategy(IPdfParserStrategy):
         # Rule: Options A. B. C. D. or #A. #B. ...
         option_prefixes = [p.strip() for p in request.option_prefixes.split(",")]
         prefixes_regex = "|".join(re.escape(p) for p in option_prefixes)
-        opt_pattern = re.compile(
-            rf"^\s*(#)?({prefixes_regex})[.:)]\s*(.*)$", re.IGNORECASE
-        )
+        opt_pattern = re.compile(rf"^\s*(#)?({prefixes_regex})[.:)]\s*(.*)$", re.IGNORECASE)
 
         questions_raw = []
         current_q = None
@@ -114,9 +109,7 @@ class RegexPdfParserStrategy(IPdfParserStrategy):
 
             if content:
                 parsed_questions.append(
-                    ParsedQuestionPreview(
-                        content=content, options=options, solution=None
-                    )
+                    ParsedQuestionPreview(content=content, options=options, solution=None)
                 )
 
         return parsed_questions

@@ -23,7 +23,9 @@ class IGameSessionRepository(Protocol):
         """Save/update an existing game session entity in the store."""
         ...
 
-    async def get_active_by_lesson(self, user_id: int, lesson_slug: str) -> GameSessionEntity | None:
+    async def get_active_by_lesson(
+        self, user_id: int, lesson_slug: str
+    ) -> GameSessionEntity | None:
         """Get an active game session for a specific user and lesson slug."""
         ...
 

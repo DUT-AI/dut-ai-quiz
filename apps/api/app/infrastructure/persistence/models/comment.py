@@ -1,24 +1,30 @@
+import uuid
 from datetime import datetime
 from uuid import UUID
-import uuid
 
-from sqlalchemy import ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import ForeignKey, Integer, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql.sqltypes import Enum
 
 from app.core.datetime_utils import now_ict
 from app.domain.entities.comment import CommentEntity, TargetType
+
 from .base import Base
+
 
 class Comment(Base):
     __tablename__ = "comments"
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
-    target_type: Mapped[str] = mapped_column(Enum(TargetType, native_enum=False, length=50), index=True)
+    target_type: Mapped[str] = mapped_column(
+        Enum(TargetType, native_enum=False, length=50), index=True
+    )
     target_id: Mapped[UUID | None] = mapped_column(index=True, nullable=True)
     user_id: Mapped[int] = mapped_column(index=True)
-    parent_id: Mapped[UUID | None] = mapped_column(ForeignKey("comments.id", ondelete="CASCADE"), index=True, nullable=True)
+    parent_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("comments.id", ondelete="CASCADE"), index=True, nullable=True
+    )
     content: Mapped[str] = mapped_column(Text)
     image_urls: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
     like_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
@@ -43,5 +49,5 @@ class Comment(Base):
             updated_at=self.updated_at,
             user_role="guest",
             user_name=None,
-            user_avatar=None
+            user_avatar=None,
         )

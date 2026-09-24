@@ -7,31 +7,26 @@ Khi admin xóa câu hỏi DRAFT:
 3. Xóa bản ghi câu hỏi khỏi DB
 4. Xóa Redis lock nếu còn
 """
+
 from __future__ import annotations
 
 import re
 from uuid import UUID
 
-from redis.asyncio import Redis
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.config import settings
 from app.domain.interfaces.s3_client import IS3Client
 from app.infrastructure.persistence.models import Question
 from loguru import logger
-
+from redis.asyncio import Redis
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 # Pattern to find MinIO image URLs embedded in question content
-MINIO_URL_PATTERN = re.compile(
-    r"https?://[^\s\"']+/uploads/pdf-images/[^\s\"']+"
-)
+MINIO_URL_PATTERN = re.compile(r"https?://[^\s\"']+/uploads/pdf-images/[^\s\"']+")
 
 
 class RejectQuestionUseCase:
-    def __init__(
-        self, session: AsyncSession, redis: Redis, s3_client: IS3Client
-    ) -> None:
+    def __init__(self, session: AsyncSession, redis: Redis, s3_client: IS3Client) -> None:
         self._s = session
         self._redis = redis
         self._s3 = s3_client
@@ -54,9 +49,7 @@ class RejectQuestionUseCase:
             try:
                 key = self._extract_s3_key(url)
                 if key:
-                    self._s3._client.delete_object(
-                        Bucket=settings.pdf_upload_bucket, Key=key
-                    )
+                    self._s3._client.delete_object(Bucket=settings.pdf_upload_bucket, Key=key)
                     logger.info(f"Deleted MinIO object: {key}")
             except Exception as exc:
                 logger.warning(f"Failed to delete MinIO image {url}: {exc}")
@@ -79,6 +72,6 @@ class RejectQuestionUseCase:
             idx = url.find(marker)
             if idx == -1:
                 return None
-            return url[idx + len(marker):]
+            return url[idx + len(marker) :]
         except Exception:
             return None

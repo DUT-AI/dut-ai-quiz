@@ -32,9 +32,7 @@ class LessonEmbeddingIndexer:
             f"[DESCRIPTION] {lesson.description}\n"
             f"[SLUG] {lesson.slug or ''}\n\n"
         )
-        embedding_inputs = [
-            f"{document_context}{draft.contextual_content}" for draft in drafts
-        ]
+        embedding_inputs = [f"{document_context}{draft.contextual_content}" for draft in drafts]
         vectors = await self._embedding_service.embed(embedding_inputs)
         source_hash = lesson_source_hash(lesson.name, lesson.description, content)
         entities = [

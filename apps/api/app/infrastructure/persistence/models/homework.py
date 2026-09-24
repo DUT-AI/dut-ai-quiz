@@ -20,9 +20,7 @@ from .base import Base
 class Homework(Base):
     __tablename__ = "homeworks"
 
-    id: Mapped[UUID] = mapped_column(
-        pgUUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(pgUUID(as_uuid=True), primary_key=True, default=uuid4)
     lesson_id: Mapped[UUID | None] = mapped_column(
         pgUUID(as_uuid=True),
         ForeignKey("lessons.id", ondelete="RESTRICT"),
@@ -73,9 +71,7 @@ class HomeworkSubmission(Base):
         ),
     )
 
-    id: Mapped[UUID] = mapped_column(
-        pgUUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(pgUUID(as_uuid=True), primary_key=True, default=uuid4)
     homework_id: Mapped[UUID] = mapped_column(
         pgUUID(as_uuid=True),
         ForeignKey("homeworks.id", ondelete="CASCADE"),
@@ -96,12 +92,8 @@ class HomeworkSubmission(Base):
     is_pass: Mapped[bool | None] = mapped_column(nullable=True)
     score: Mapped[float | None] = mapped_column(nullable=True)
     feedback: Mapped[str | None] = mapped_column(Text, nullable=True)
-    score_details: Mapped[list[dict[str, Any]] | None] = mapped_column(
-        JSONB, nullable=True
-    )
-    plagiarism_info: Mapped[list[dict[str, Any]] | None] = mapped_column(
-        JSONB, nullable=True
-    )
+    score_details: Mapped[list[dict[str, Any]] | None] = mapped_column(JSONB, nullable=True)
+    plagiarism_info: Mapped[list[dict[str, Any]] | None] = mapped_column(JSONB, nullable=True)
     is_plagiarized: Mapped[bool] = mapped_column(default=False, server_default="false")
     plagiarized_from_user_id: Mapped[int | None] = mapped_column(nullable=True)
     grading_error: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -144,9 +136,7 @@ class HomeworkSubmissionFingerprint(Base):
         ),
     )
 
-    id: Mapped[UUID] = mapped_column(
-        pgUUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(pgUUID(as_uuid=True), primary_key=True, default=uuid4)
     submission_id: Mapped[UUID] = mapped_column(
         pgUUID(as_uuid=True),
         ForeignKey("homework_submissions.id", ondelete="CASCADE"),

@@ -43,7 +43,7 @@ Or start all services with `docker compose up`.
 - `POST /api/v1/homeworks/submissions/{submission_id}/retry`
 - `GET /api/v1/homeworks/{homework_id}/submission/me`
 - `GET /api/v1/homeworks/{homework_id}/submissions`
-- `GET /api/v1/homeworks/{homework_id}/completed-members`
+- `GET /api/v1/homeworks/{lesson_slug}/completed-members`
 - Download endpoints return short-lived presigned URLs.
 
 The completed-members endpoint is intended for the Manage service. It requires
@@ -51,13 +51,23 @@ The completed-members endpoint is intended for the Manage service. It requires
 
 ```json
 {
-  "data": [{"user_id": 7}, {"user_id": 99}],
+  "data": [
+    {
+      "user_id": 7,
+      "submission_count": 2,
+      "max_score": 10.0
+    },
+    {
+      "user_id": 99,
+      "submission_count": 1,
+      "max_score": 8.5
+    }
+  ],
   "is_success": true
 }
 ```
 
-A member is complete when their latest submission has status `GRADED`. Users
-whose latest attempt is still uploaded, grading, or failed are not included.
+A member is included when they have submitted an attempt for homework in that lesson.
 
 Student homework is displayed inside the **Bài tập coding** tab on
 `/lessons/{slug}`. The standalone `/homeworks` page redirects to `/lessons`.

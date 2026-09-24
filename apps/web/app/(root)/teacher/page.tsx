@@ -6,15 +6,20 @@ import { useAuth } from "@/context/auth-context";
 
 export default function TeacherRoot() {
   const router = useRouter();
-  const { isProjectDeveloper, canManageLessons } = useAuth();
+  const { canManageLessons, canManageExams, canManageHackathons } = useAuth();
 
   useEffect(() => {
-    if (isProjectDeveloper && !canManageLessons) {
+    if (canManageLessons) {
+      router.replace("/teacher/lessons");
+    } else if (canManageExams) {
+      router.replace("/teacher/exams");
+    } else if (canManageHackathons) {
       router.replace("/teacher/hackathons");
     } else {
-      router.replace("/teacher/lessons");
+      router.replace("/dashboard");
     }
-  }, [isProjectDeveloper, canManageLessons, router]);
+  }, [canManageLessons, canManageExams, canManageHackathons, router]);
 
   return null;
 }
+

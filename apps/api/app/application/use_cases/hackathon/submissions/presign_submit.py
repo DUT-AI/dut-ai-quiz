@@ -77,9 +77,7 @@ class PresignSubmitUseCase:
         if team:
             reg = await self._reg_repo.get_team_registration(hackathon.id, team.id)
             if not reg or reg.status != RegistrationStatus.APPROVED:
-                raise AppException(
-                    "Đội thi của bạn chưa được duyệt đăng ký tham gia", 400
-                )
+                raise AppException("Đội thi của bạn chưa được duyệt đăng ký tham gia", 400)
             sender_name = team.name
             team_id = team.id
         else:
@@ -109,9 +107,7 @@ class PresignSubmitUseCase:
         hackathon_slug = slugify(hackathon.name)
         sender_slug = slugify(sender_name)
 
-        script_s3_key = (
-            f"hackathons/{hackathon_slug}/{sender_slug}/{submission_id}/predict.py"
-        )
+        script_s3_key = f"hackathons/{hackathon_slug}/{sender_slug}/{submission_id}/predict.py"
 
         # 8. Tạo Presigned PUT URL cho Script
         script_upload_url = self._s3_client.generate_presigned_upload_url(
@@ -120,9 +116,7 @@ class PresignSubmitUseCase:
             content_type="application/octet-stream",
             expires_in=settings.presigned_url_expire_seconds,
         )
-        script_download_url = self._s3_client.get_object_url(
-            settings.s3_bucket_name, script_s3_key
-        )
+        script_download_url = self._s3_client.get_object_url(settings.s3_bucket_name, script_s3_key)
 
         script_info = PresignURLInfo(
             upload_url=script_upload_url,
@@ -134,10 +128,10 @@ class PresignSubmitUseCase:
         model_download_url = None
         model_info = None
         if model_filename:
-            model_ext = (
-                model_filename.split(".")[-1] if "." in model_filename else "bin"
+            model_ext = model_filename.split(".")[-1] if "." in model_filename else "bin"
+            model_s3_key = (
+                f"hackathons/{hackathon_slug}/{sender_slug}/{submission_id}/model.{model_ext}"
             )
-            model_s3_key = f"hackathons/{hackathon_slug}/{sender_slug}/{submission_id}/model.{model_ext}"
             model_upload_url = self._s3_client.generate_presigned_upload_url(
                 bucket=settings.s3_bucket_name,
                 key=model_s3_key,

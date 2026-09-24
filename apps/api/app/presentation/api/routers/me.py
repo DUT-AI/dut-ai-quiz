@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Request, HTTPException
 from dishka.integrations.fastapi import FromDishka, inject
+from fastapi import APIRouter, Request
 
-from app.application.use_cases.me.me_use_case import GetProfileUseCase
 from app.application.use_cases.attempts.attempt_use_case import ListUserAttemptsUseCase
+from app.application.use_cases.me.me_use_case import GetProfileUseCase
 from app.presentation.api.deps import CurrentUser
 from app.presentation.schemas.attempts import AttemptOut
 

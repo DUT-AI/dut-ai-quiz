@@ -27,13 +27,13 @@ class ListRegistrationsUseCase:
         self._user_service = user_service
 
     async def __call__(
-        self, hackathon_id: UUID, user_id: int
+        self, hackathon_id: UUID, user_id: int, is_admin: bool = False
     ) -> list[HackathonRegistrationOutDTO]:
         hackathon = await self._hackathon_repo.get(hackathon_id)
         if not hackathon:
             raise AppException("Hackathon không tồn tại", 404)
 
-        if hackathon.created_by != user_id:
+        if not is_admin and hackathon.created_by != user_id:
             raise AppException("Bạn không có quyền quản lý giải đấu này", 403)
 
         regs = await self._reg_repo.list_for_hackathon(hackathon_id)
@@ -48,8 +48,7 @@ class ListRegistrationsUseCase:
                 t = await self._team_repo.get(r.team_id)
                 if t:
                     team_members = [
-                        await self._user_service.get_user_info(m_id)
-                        for m_id in t.member_ids
+                        await self._user_service.get_user_info(m_id) for m_id in t.member_ids
                     ]
                     team_dto = HackathonTeamOutDTO(
                         id=t.id,

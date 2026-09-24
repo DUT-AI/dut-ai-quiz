@@ -2,7 +2,7 @@ from typing import Annotated
 from uuid import UUID
 
 from dishka.integrations.fastapi import FromDishka, inject
-from fastapi import APIRouter, File, Form, UploadFile
+from fastapi import APIRouter, File, Form, Request, UploadFile
 
 from app.application.dtos.homework import (
     CreateHomeworkDTO,
@@ -20,20 +20,27 @@ from app.application.use_cases.homeworks import (
     ListHomeworkSubmissionsUseCase,
     ListHomeworksUseCase,
     ListMyHomeworksUseCase,
+    PresignHomeworkSubmissionUseCase,
     RetryHomeworkSubmissionUseCase,
     SubmitHomeworkUseCase,
     UpdateHomeworkUseCase,
 )
 from app.config import settings
-from app.presentation.api.deps import AdminOrMentorUser, CurrentUser, ManageService
+from app.domain.entities.auth_enums import SystemPermission
+from app.domain.exceptions.exceptions import AppException
+from app.presentation.api.deps import CurrentUser, EducatorUser
 from app.presentation.schemas.homeworks import (
     CompletedHomeworkMembersResponse,
     DownloadUrlData,
     DownloadUrlResponse,
     HomeworkListResponse,
     HomeworkResponse,
+    PresignSubmissionData,
+    PresignSubmissionRequest,
+    PresignSubmissionResponse,
     SubmissionListResponse,
     SubmissionResponse,
+    SubmitHomeworkBody,
     SuccessResponse,
 )
 
@@ -60,15 +67,13 @@ async def list_my_homeworks(
     use_case: FromDishka[ListMyHomeworksUseCase],
     lesson_id: UUID | None = None,
 ) -> HomeworkListResponse:
-    return HomeworkListResponse(
-        data=await use_case.execute(user.id, lesson_id=lesson_id)
-    )
+    return HomeworkListResponse(data=await use_case.execute(user.id, lesson_id=lesson_id))
 
 
 @router.get("", response_model=HomeworkListResponse)
 @inject
 async def list_homeworks(
-    user: AdminOrMentorUser,
+    user: EducatorUser,
     use_case: FromDishka[ListHomeworksUseCase],
     lesson_id: UUID | None = None,
 ) -> HomeworkListResponse:
@@ -78,7 +83,7 @@ async def list_homeworks(
 @router.post("", response_model=HomeworkResponse)
 @inject
 async def create_homework(
-    user: AdminOrMentorUser,
+    user: EducatorUser,
     use_case: FromDishka[CreateHomeworkUseCase],
     title: Annotated[str, Form()],
     lesson_id: Annotated[UUID, Form()],
@@ -102,7 +107,7 @@ async def create_homework(
 @inject
 async def update_homework(
     homework_id: UUID,
-    user: AdminOrMentorUser,
+    user: EducatorUser,
     use_case: FromDishka[UpdateHomeworkUseCase],
     title: Annotated[str | None, Form()] = None,
     lesson_id: Annotated[UUID | None, Form()] = None,
@@ -126,11 +131,31 @@ async def update_homework(
 @inject
 async def archive_homework(
     homework_id: UUID,
-    user: AdminOrMentorUser,
+    user: EducatorUser,
     use_case: FromDishka[ArchiveHomeworkUseCase],
 ) -> SuccessResponse:
     await use_case.execute(homework_id)
     return SuccessResponse()
+
+
+@router.post(
+    "/{homework_id}/submissions/presign",
+    response_model=PresignSubmissionResponse,
+)
+@inject
+async def presign_homework_submission(
+    homework_id: UUID,
+    user: CurrentUser,
+    body: PresignSubmissionRequest,
+    use_case: FromDishka[PresignHomeworkSubmissionUseCase],
+) -> PresignSubmissionResponse:
+    res = await use_case.execute(
+        homework_id=homework_id,
+        user_id=user.id,
+        filename=body.filename,
+        content_type=body.content_type,
+    )
+    return PresignSubmissionResponse(data=PresignSubmissionData(**res))
 
 
 @router.post(
@@ -142,17 +167,29 @@ async def submit_homework(
     homework_id: UUID,
     user: CurrentUser,
     use_case: FromDishka[SubmitHomeworkUseCase],
-    file: Annotated[UploadFile, File()],
+    request: Request,
 ) -> SubmissionResponse:
-    return SubmissionResponse(
-        data=await use_case.execute(
-            SubmitHomeworkDTO(
-                homework_id=homework_id,
-                user_id=user.id,
-                file=await _file_dto(file),
-            )
+    content_type = request.headers.get("content-type", "")
+    if "application/json" in content_type:
+        raw_body = await request.json()
+        body = SubmitHomeworkBody(**raw_body)
+        dto = SubmitHomeworkDTO(
+            homework_id=homework_id,
+            user_id=user.id,
+            object_key=body.object_key,
+            original_filename=body.original_filename,
         )
-    )
+    else:
+        form = await request.form()
+        uploaded = form.get("file")
+        if not uploaded or not isinstance(uploaded, UploadFile):
+            raise AppException("File nộp bài là bắt buộc", 400)
+        dto = SubmitHomeworkDTO(
+            homework_id=homework_id,
+            user_id=user.id,
+            file=await _file_dto(uploaded),
+        )
+    return SubmissionResponse(data=await use_case.execute(dto))
 
 
 @router.post(
@@ -165,9 +202,7 @@ async def retry_homework_submission(
     user: CurrentUser,
     use_case: FromDishka[RetryHomeworkSubmissionUseCase],
 ) -> SubmissionResponse:
-    return SubmissionResponse(
-        data=await use_case.execute(submission_id, user.id)
-    )
+    return SubmissionResponse(data=await use_case.execute(submission_id, user.id))
 
 
 @router.get(
@@ -190,25 +225,22 @@ async def get_my_submission(
 @inject
 async def list_submissions(
     homework_id: UUID,
-    user: AdminOrMentorUser,
+    user: EducatorUser,
     use_case: FromDishka[ListHomeworkSubmissionsUseCase],
 ) -> SubmissionListResponse:
     return SubmissionListResponse(data=await use_case.execute(homework_id))
 
 
 @router.get(
-    "/{homework_id}/completed-members",
+    "/{lesson_slug}/completed-members",
     response_model=CompletedHomeworkMembersResponse,
 )
 @inject
 async def list_completed_members_for_manage(
-    homework_id: UUID,
-    _service: ManageService,
+    lesson_slug: str,
     use_case: FromDishka[ListCompletedHomeworkMembersUseCase],
 ) -> CompletedHomeworkMembersResponse:
-    return CompletedHomeworkMembersResponse(
-        data=await use_case.execute(homework_id)
-    )
+    return CompletedHomeworkMembersResponse(data=await use_case.execute(lesson_slug))
 
 
 @router.get(
@@ -221,9 +253,7 @@ async def homework_attachment_url(
     user: CurrentUser,
     use_case: FromDishka[GetHomeworkAttachmentUrlUseCase],
 ) -> DownloadUrlResponse:
-    return DownloadUrlResponse(
-        data=DownloadUrlData(url=await use_case.execute(homework_id))
-    )
+    return DownloadUrlResponse(data=DownloadUrlData(url=await use_case.execute(homework_id)))
 
 
 @router.get(
@@ -241,7 +271,7 @@ async def submission_download_url(
             url=await use_case.execute(
                 submission_id,
                 user.id,
-                can_manage=user.has_any_role("admin", "MENTOR"),
+                can_manage=user.has_permission(SystemPermission.MANAGE_HOMEWORK),
             )
         )
     )

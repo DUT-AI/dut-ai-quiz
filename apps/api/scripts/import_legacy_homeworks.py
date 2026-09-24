@@ -1,7 +1,7 @@
 """Import homework data exported from the legacy DUT AI Manager database.
 
 The import is deterministic and safe to repeat: legacy integer IDs are mapped
-to UUIDv5 values, and rows are upserted by those UUIDs.  The script defaults to
+to UUIDv5 values, and rows are upserted by those UUIDs. The script defaults to
 validation-only mode; pass ``--apply`` to commit a single database transaction.
 """
 
@@ -24,7 +24,7 @@ from app.infrastructure.persistence.models.homework import (
     Homework,
     HomeworkSubmission,
 )
-from sqlalchemy import inspect
+from sqlalchemy import func, inspect
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 
@@ -47,16 +47,81 @@ def legacy_uuid(kind: str, legacy_id: int) -> UUID:
     return uuid5(LEGACY_IMPORT_NAMESPACE, f"{kind}:{legacy_id}")
 
 
+def parse_bool(value: Any) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() in ("true", "1", "t", "yes")
+    return bool(value)
+
+
+def parse_optional_bool(value: Any) -> bool | None:
+    if value is None or value == "":
+        return None
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        val = value.strip().lower()
+        if val in ("true", "1", "t", "yes"):
+            return True
+        if val in ("false", "0", "f", "no"):
+            return False
+        return None
+    return bool(value)
+
+
+def parse_optional_int(value: Any) -> int | None:
+    if value is None or value == "":
+        return None
+    return int(value)
+
+
+def parse_optional_float(value: Any) -> float | None:
+    if value is None or value == "":
+        return None
+    return float(value)
+
+
 def load_json_rows(path: Path) -> list[dict[str, Any]]:
     try:
         payload = json.loads(path.read_text(encoding="utf-8-sig"))
     except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         raise ValueError(f"Cannot read valid JSON from {path}: {exc}") from exc
-    if not isinstance(payload, list) or not all(
-        isinstance(row, dict) for row in payload
-    ):
+    if not isinstance(payload, list) or not all(isinstance(row, dict) for row in payload):
         raise ValueError(f"{path} must contain a JSON array of objects")
     return payload
+
+
+def load_legacy_data(
+    homeworks_path: Path, submissions_path: Path | None = None
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    try:
+        raw_homeworks = json.loads(homeworks_path.read_text(encoding="utf-8-sig"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise ValueError(f"Cannot read valid JSON from {homeworks_path}: {exc}") from exc
+
+    if isinstance(raw_homeworks, dict):
+        homeworks = raw_homeworks.get("public.homeworks") or raw_homeworks.get("homeworks") or []
+        submissions = (
+            raw_homeworks.get("public.homework_submissions")
+            or raw_homeworks.get("homework_submissions")
+            or []
+        )
+        if submissions_path is not None:
+            submissions = load_json_rows(submissions_path)
+        if not isinstance(homeworks, list) or not isinstance(submissions, list):
+            raise ValueError("Dictionary must contain list values for homeworks and submissions")
+        return homeworks, submissions
+
+    if isinstance(raw_homeworks, list):
+        if submissions_path is None:
+            raise ValueError(
+                "When homeworks JSON is a list, a separate submissions JSON path must be provided"
+            )
+        submissions = load_json_rows(submissions_path)
+        return raw_homeworks, submissions
+
+    raise ValueError(f"{homeworks_path} contains an unsupported JSON structure")
 
 
 def require_fields(
@@ -83,25 +148,17 @@ def parse_legacy_datetime(value: Any, *, field: str, row_id: int) -> datetime:
     return parsed
 
 
-def parse_json_list(
-    value: Any, *, field: str, row_id: int
-) -> list[dict[str, Any]] | None:
+def parse_json_list(value: Any, *, field: str, row_id: int) -> list[dict[str, Any]] | None:
     if value is None or value == "":
         return None
     try:
         parsed = json.loads(value) if isinstance(value, str) else value
     except json.JSONDecodeError as exc:
-        raise ValueError(
-            f"Legacy submission {row_id} has invalid JSON in {field}"
-        ) from exc
+        raise ValueError(f"Legacy submission {row_id} has invalid JSON in {field}") from exc
     if parsed is None:
         return None
-    if not isinstance(parsed, list) or not all(
-        isinstance(item, dict) for item in parsed
-    ):
-        raise ValueError(
-            f"Legacy submission {row_id} must contain a list of objects in {field}"
-        )
+    if not isinstance(parsed, list) or not all(isinstance(item, dict) for item in parsed):
+        raise ValueError(f"Legacy submission {row_id} must contain a list of objects in {field}")
     return parsed
 
 
@@ -123,15 +180,20 @@ def submission_status(
     score_details: list[dict[str, Any]] | None,
     plagiarism_info: list[dict[str, Any]] | None,
 ) -> str:
+    is_pass = parse_optional_bool(row.get("is_pass"))
+    score = parse_optional_float(row.get("score"))
+    is_plagiarized = parse_bool(row.get("is_plagiarized"))
+    plagiarized_from_user_id = parse_optional_int(row.get("plagiarized_from_user_id"))
+
     has_grading_result = any(
         (
-            row.get("is_pass") is not None,
-            row.get("score") is not None,
+            is_pass is not None,
+            score is not None,
             bool(row.get("feedback")),
             bool(score_details),
             bool(plagiarism_info),
-            bool(row.get("is_plagiarized")),
-            row.get("plagiarized_from_user_id") is not None,
+            is_plagiarized,
+            plagiarized_from_user_id is not None,
         )
     )
     return "GRADED" if has_grading_result else "UPLOADED"
@@ -182,33 +244,26 @@ def build_import_plan(
         raise ValueError("Duplicate legacy homework IDs found")
     if len(set(submission_ids)) != len(submission_ids):
         raise ValueError("Duplicate legacy submission IDs found")
-    unknown_homeworks = {int(row["homework_id"]) for row in legacy_submissions} - set(
-        homework_ids
-    )
+    unknown_homeworks = {int(row["homework_id"]) for row in legacy_submissions} - set(homework_ids)
     if unknown_homeworks:
-        raise ValueError(
-            f"Submissions reference unknown homework IDs: {sorted(unknown_homeworks)}"
-        )
+        raise ValueError(f"Submissions reference unknown homework IDs: {sorted(unknown_homeworks)}")
 
     homeworks: list[dict[str, Any]] = []
     for row in legacy_homeworks:
         legacy_id = int(row["id"])
-        created_at = parse_legacy_datetime(
-            row["created_at"], field="created_at", row_id=legacy_id
-        )
-        updated_at = parse_legacy_datetime(
-            row["updated_at"], field="updated_at", row_id=legacy_id
-        )
-        is_deleted = bool(row["is_deleted"])
+        created_at = parse_legacy_datetime(row["created_at"], field="created_at", row_id=legacy_id)
+        updated_at = parse_legacy_datetime(row["updated_at"], field="updated_at", row_id=legacy_id)
+        is_deleted = parse_bool(row["is_deleted"])
+        file_url = str(row["file_url"]).strip() if row.get("file_url") else ""
         homeworks.append(
             {
                 "id": legacy_uuid("homework", legacy_id),
                 "lesson_id": None,
                 "title": str(row["title"]).strip(),
-                "description": str(row["description"] or ""),
+                "description": str(row.get("description") or ""),
                 # Keep legacy HTTP(S) resources as URLs. The homework download
                 # use cases support both external URLs and native S3 keys.
-                "attachment_key": str(row["file_url"]).strip() or None,
+                "attachment_key": file_url or None,
                 "created_by": int(row["created_by"]),
                 "created_at": created_at,
                 "updated_at": updated_at,
@@ -234,10 +289,10 @@ def build_import_plan(
         ),
     )
     for row in ordered_submissions:
-        if row["is_deleted"]:
+        if parse_bool(row.get("is_deleted")):
             skipped_deleted += 1
             continue
-        link = str(row["link"] or "").strip()
+        link = str(row.get("link") or "").strip()
         if not link:
             skipped_empty += 1
             continue
@@ -245,13 +300,17 @@ def build_import_plan(
         homework_id = int(row["homework_id"])
         owner_id = int(row["owner_id"])
         score_details = parse_json_list(
-            row["score_details"], field="score_details", row_id=legacy_id
+            row.get("score_details"), field="score_details", row_id=legacy_id
         )
         plagiarism_info = parse_json_list(
-            row["plagiarism_info"], field="plagiarism_info", row_id=legacy_id
+            row.get("plagiarism_info"), field="plagiarism_info", row_id=legacy_id
         )
         attempt_key = (homework_id, owner_id)
         attempts[attempt_key] += 1
+        is_pass = parse_optional_bool(row.get("is_pass"))
+        score = parse_optional_float(row.get("score"))
+        is_plagiarized = parse_bool(row.get("is_plagiarized"))
+        plagiarized_from_user_id = parse_optional_int(row.get("plagiarized_from_user_id"))
         submissions.append(
             {
                 "id": legacy_uuid("homework-submission", legacy_id),
@@ -262,16 +321,16 @@ def build_import_plan(
                 "submitted_at": parse_legacy_datetime(
                     row["created_at"], field="created_at", row_id=legacy_id
                 ),
-                "is_late": bool(row["is_late"]),
+                "is_late": parse_bool(row.get("is_late")),
                 "attempt_number": attempts[attempt_key],
                 "status": submission_status(row, score_details, plagiarism_info),
-                "is_pass": row["is_pass"],
-                "score": float(row["score"]) if row["score"] is not None else None,
-                "feedback": row["feedback"],
+                "is_pass": is_pass,
+                "score": score,
+                "feedback": row.get("feedback") or None,
                 "score_details": score_details,
                 "plagiarism_info": plagiarism_info,
-                "is_plagiarized": bool(row["is_plagiarized"]),
-                "plagiarized_from_user_id": row["plagiarized_from_user_id"],
+                "is_plagiarized": is_plagiarized,
+                "plagiarized_from_user_id": plagiarized_from_user_id,
                 "grading_error": None,
             }
         )
@@ -290,9 +349,7 @@ async def assert_schema_ready(connection: AsyncConnection) -> None:
     )
     missing = REQUIRED_TABLES - table_names
     if missing:
-        raise RuntimeError(
-            f"Database is not migrated; missing tables: {sorted(missing)}"
-        )
+        raise RuntimeError(f"Database is not migrated; missing tables: {sorted(missing)}")
 
 
 async def apply_import(plan: ImportPlan, database_url: str) -> None:
@@ -306,7 +363,11 @@ async def apply_import(plan: ImportPlan, database_url: str) -> None:
                 homework_insert.on_conflict_do_update(
                     index_elements=[Homework.id],
                     set_={
-                        column.name: getattr(homework_insert.excluded, column.name)
+                        column.name: (
+                            func.coalesce(Homework.lesson_id, homework_insert.excluded.lesson_id)
+                            if column.name == "lesson_id"
+                            else getattr(homework_insert.excluded, column.name)
+                        )
                         for column in Homework.__table__.columns
                         if column.name != "id"
                     },
@@ -319,9 +380,7 @@ async def apply_import(plan: ImportPlan, database_url: str) -> None:
                     submission_insert.on_conflict_do_update(
                         index_elements=[HomeworkSubmission.id],
                         set_={
-                            column.name: getattr(
-                                submission_insert.excluded, column.name
-                            )
+                            column.name: getattr(submission_insert.excluded, column.name)
                             for column in HomeworkSubmission.__table__.columns
                             if column.name != "id"
                         },
@@ -340,8 +399,18 @@ def masked_database_target(database_url: str) -> str:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("homeworks_json", type=Path)
-    parser.add_argument("homework_submissions_json", type=Path)
+    parser.add_argument(
+        "homeworks_json",
+        type=Path,
+        help="Path to homeworks JSON file (or combined JSON containing both tables)",
+    )
+    parser.add_argument(
+        "homework_submissions_json",
+        type=Path,
+        nargs="?",
+        default=None,
+        help="Path to homework submissions JSON file (optional if combined in first file)",
+    )
     parser.add_argument(
         "--database-url",
         default=settings.database_url,
@@ -357,10 +426,10 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    plan = build_import_plan(
-        load_json_rows(args.homeworks_json),
-        load_json_rows(args.homework_submissions_json),
+    homeworks_raw, submissions_raw = load_legacy_data(
+        args.homeworks_json, args.homework_submissions_json
     )
+    plan = build_import_plan(homeworks_raw, submissions_raw)
     print(f"Database target: {masked_database_target(args.database_url)}")
     print(f"Homeworks: {len(plan.homeworks)}")
     print(f"Submissions: {len(plan.submissions)}")

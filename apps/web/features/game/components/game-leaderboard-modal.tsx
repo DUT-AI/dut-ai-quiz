@@ -14,6 +14,9 @@ interface LeaderboardRow {
   gold: number;
   total_time_response: number;
   attempt_count: number;
+  is_completed?: boolean;
+  total_questions?: number;
+  answered_questions?: number;
 }
 
 interface GameLeaderboardModalProps {

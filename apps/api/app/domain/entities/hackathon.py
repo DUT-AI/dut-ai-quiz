@@ -1,7 +1,7 @@
 import dataclasses
 from datetime import datetime
-from uuid import UUID
 from enum import Enum
+from uuid import UUID
 
 
 class ParticipationMode(str, Enum):

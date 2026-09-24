@@ -1,8 +1,10 @@
+from collections.abc import Sequence
 from hmac import compare_digest
-from typing import Annotated, Any, Sequence
+from typing import Annotated, Any
 
 from dishka.integrations.fastapi import inject
 from fastapi import Depends, Header, HTTPException, Request
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,6 +17,8 @@ from app.domain.entities.auth_enums import (
     resolve_permissions_for_roles,
 )
 from app.infrastructure.database import get_session
+
+bearer_scheme = HTTPBearer(auto_error=False)
 
 
 class UserContext(BaseModel):
@@ -49,8 +53,7 @@ class UserContext(BaseModel):
         if self.is_admin():
             return True
         check_perms = {
-            p.value if isinstance(p, SystemPermission) else str(p)
-            for p in required_permissions
+            p.value if isinstance(p, SystemPermission) else str(p) for p in required_permissions
         }
         return bool(self.permissions & check_perms)
 
@@ -58,7 +61,10 @@ class UserContext(BaseModel):
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
 
 
-def extract_auth_context_from_request(request: Request) -> UserContext | None:
+def extract_auth_context_from_request(
+    request: Request,
+    credentials: HTTPAuthorizationCredentials | None = None,
+) -> UserContext | None:
     if settings.auth_dev_bypass:
         rn = settings.auth_dev_role_name
         roles = [rn] if isinstance(rn, str) else (rn or [])
@@ -77,11 +83,12 @@ def extract_auth_context_from_request(request: Request) -> UserContext | None:
             )
         raise HTTPException(status_code=401, detail="Unauthorized: Invalid API Key")
 
-    # 2. Check Authorization Header (Bearer token)
-    access_token = None
-    auth_header = request.headers.get("Authorization")
-    if auth_header and auth_header.strip().startswith("Bearer "):
-        access_token = auth_header.strip().split(" ", 1)[1].strip()
+    # 2. Check Authorization Header (Bearer token via FastAPI security or header)
+    access_token = credentials.credentials if credentials else None
+    if not access_token:
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.strip().startswith("Bearer "):
+            access_token = auth_header.strip().split(" ", 1)[1].strip()
 
     # 3. Check Cookie
     if not access_token:
@@ -99,9 +106,7 @@ def extract_auth_context_from_request(request: Request) -> UserContext | None:
     roles = payload.get("roles")
 
     if uid is None or roles is None or not isinstance(roles, list):
-        raise HTTPException(
-            status_code=401, detail="Unauthorized: Invalid token payload"
-        )
+        raise HTTPException(status_code=401, detail="Unauthorized: Invalid token payload")
 
     return UserContext(
         id=int(uid),
@@ -112,18 +117,22 @@ def extract_auth_context_from_request(request: Request) -> UserContext | None:
 @inject
 async def get_current_user(
     request: Request,
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)] = None,
 ) -> UserContext:
-    user = extract_auth_context_from_request(request)
+    user = extract_auth_context_from_request(request, credentials)
     if not user:
-        raise HTTPException(status_code=401, detail="Unauthorized: No access token or API key provided")
+        raise HTTPException(
+            status_code=401, detail="Unauthorized: No access token or API key provided"
+        )
     return user
 
 
 @inject
 async def get_optional_current_user(
     request: Request,
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)] = None,
 ) -> UserContext | None:
-    return extract_auth_context_from_request(request)
+    return extract_auth_context_from_request(request, credentials)
 
 
 def RequirePermissions(
@@ -137,8 +146,7 @@ def RequirePermissions(
     - require_all: True to require all permissions, False (default) to require at least one.
     """
     req_list = [
-        p.value if isinstance(p, SystemPermission) else str(p)
-        for p in required_permissions
+        p.value if isinstance(p, SystemPermission) else str(p) for p in required_permissions
     ]
 
     async def dependency(
@@ -163,9 +171,7 @@ def RequirePermissions(
 
 
 def require_roles(*allowed_roles: str | UserRole):
-    allowed_list = [
-        r.value if isinstance(r, UserRole) else str(r) for r in allowed_roles
-    ]
+    allowed_list = [r.value if isinstance(r, UserRole) else str(r) for r in allowed_roles]
 
     async def dependency(
         user: Annotated[UserContext, Depends(get_current_user)],
@@ -204,18 +210,12 @@ async def require_manage_service(
 
 CurrentUser = Annotated[UserContext, Depends(get_current_user)]
 AdminUser = Annotated[UserContext, Depends(require_roles(UserRole.ADMIN, "admin"))]
-AdminOrMentorUser = Annotated[
-    UserContext,
-    Depends(require_roles(UserRole.ADMIN, UserRole.EDUCATOR, "admin", "MENTOR")),
-]
 EducatorUser = Annotated[
     UserContext,
-    Depends(
-        require_roles(
-            UserRole.ADMIN, UserRole.EDUCATOR, "admin", "MENTOR", "educator"
-        )
-    ),
+    Depends(require_roles(UserRole.ADMIN, UserRole.EDUCATOR, "admin", "EDUCATOR", "educator")),
 ]
+AdminOrEducatorUser = EducatorUser
+TeacherUser = EducatorUser
 ProjectDevUser = Annotated[
     UserContext,
     Depends(
@@ -224,11 +224,13 @@ ProjectDevUser = Annotated[
             UserRole.SUB_ADMIN,
             UserRole.PROJECT_DEVELOPER,
             "admin",
+            "ADMIN",
             "PROJECT_DEVELOPER",
+            "project_developer",
+            "project developer",
         )
     ),
 ]
-TeacherUser = AdminOrMentorUser
 StudentUser = CurrentUser
 OptionalCurrentUser = Annotated[UserContext | None, Depends(get_optional_current_user)]
 ManageService = Annotated[None, Depends(require_manage_service)]

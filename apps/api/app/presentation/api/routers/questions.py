@@ -2,42 +2,46 @@ from uuid import UUID
 
 from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel
 
 from app.application.use_cases.questions import (
+    AiRegenerateSolutionUseCase,
+    AnswerQuestionUseCase,
     BulkCreateQuestionsUseCase,
     CreateQuestionUseCase,
     DeleteQuestionUseCase,
+    FindRelatedQuestionsUseCase,
     GetQuestionUseCase,
-    ListQuestionsUseCase,
-    UpdateQuestionUseCase,
-    AnswerQuestionUseCase,
     GetRelatedLessonsUseCase,
     HeartbeatQuestionUseCase,
-    AiRegenerateSolutionUseCase,
+    ListQuestionsUseCase,
     PublishQuestionUseCase,
-    FindRelatedQuestionsUseCase,
+    UpdateQuestionUseCase,
 )
 from app.config import settings
+from app.domain.entities.auth_enums import SystemPermission
+from app.domain.entities.question import QuestionStatus
 from app.domain.interfaces import EmbeddingServiceError
 from app.domain.value_objects import Difficulty, PoolType
-from app.presentation.api.deps import CurrentUser, AdminOrMentorUser
+from app.presentation.api.deps import CurrentUser, EducatorUser
+from app.presentation.schemas.lessons import RelatedLessonOut, RelativeDocumentOut
 from app.presentation.schemas.questions import (
+    QuestionAnswerIn,
+    QuestionAnswerOut,
     QuestionBulkCreate,
     QuestionCreate,
     QuestionListQuery,
     QuestionOut,
     QuestionToStudent,
     QuestionUpdate,
-    QuestionAnswerIn,
-    QuestionAnswerOut,
     RelatedQuestionOut,
     RelatedQuestionsIn,
 )
-from pydantic import BaseModel
-from app.presentation.schemas.lessons import RelatedLessonOut, RelativeDocumentOut
-    
+
+
 class AiRegenerateRequest(BaseModel):
     custom_prompt: str | None = None
+
 
 router = APIRouter(prefix="/questions", tags=["questions"])
 
@@ -56,12 +60,17 @@ async def list_questions_route(
     lesson_id: UUID | None = None,
     tag: str | None = None,
     import_session_id: UUID | None = None,
+    status: QuestionStatus | None = None,
+    related_questions: bool | None = Query(None),
     offset: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=2000),
 ):
-    # For guests, we only allow viewing PRACTICE questions.
-    if not user.has_any_role("admin", "MENTOR"):
+    # For guests/students, we only allow viewing PUBLIC questions.
+    if not user.has_permission(SystemPermission.MANAGE_QUESTION):
         pool_type = PoolType.PRACTICE
+        status = QuestionStatus.PUBLIC
+    elif status is None:
+        status = QuestionStatus.PUBLIC
 
     q = QuestionListQuery(
         pool_type=pool_type,
@@ -69,11 +78,13 @@ async def list_questions_route(
         lesson_id=lesson_id,
         tag=tag,
         import_session_id=import_session_id,
+        status=status,
+        related_questions=related_questions,
         offset=offset,
         limit=limit,
     )
     rows = await use_case.execute(q)
-    if not user.has_any_role("admin", "MENTOR"):
+    if not user.has_permission(SystemPermission.MANAGE_QUESTION):
         rows = sanitize_questions_for_student(rows)
     return rows
 
@@ -81,7 +92,7 @@ async def list_questions_route(
 @router.post("", response_model=QuestionOut)
 @inject
 async def create_question_route(
-    user: AdminOrMentorUser,
+    user: EducatorUser,
     body: QuestionCreate,
     use_case: FromDishka[CreateQuestionUseCase],
 ):
@@ -97,7 +108,7 @@ async def find_related_questions_route(
     use_case: FromDishka[FindRelatedQuestionsUseCase],
 ):
     pool_type = body.pool_type
-    if not user.has_any_role("admin", "MENTOR"):
+    if not user.has_permission(SystemPermission.MANAGE_QUESTION):
         pool_type = PoolType.PRACTICE
 
     try:
@@ -105,9 +116,7 @@ async def find_related_questions_route(
             content=body.content,
             limit=body.limit,
             min_score=(
-                settings.related_question_min_score
-                if body.min_score is None
-                else body.min_score
+                settings.related_question_min_score if body.min_score is None else body.min_score
             ),
             pool_type=pool_type,
         )
@@ -120,7 +129,7 @@ async def find_related_questions_route(
 @router.get("/{question_id}", response_model=QuestionOut)
 @inject
 async def get_question_route(
-    user: AdminOrMentorUser,
+    user: EducatorUser,
     question_id: UUID,
     use_case: FromDishka[GetQuestionUseCase],
 ):
@@ -133,7 +142,7 @@ async def get_question_route(
 @router.patch("/{question_id}", response_model=QuestionOut)
 @inject
 async def update_question_route(
-    user: AdminOrMentorUser,
+    user: EducatorUser,
     question_id: UUID,
     body: QuestionUpdate,
     use_case: FromDishka[UpdateQuestionUseCase],
@@ -147,7 +156,7 @@ async def update_question_route(
 @router.delete("/{question_id}")
 @inject
 async def delete_question_route(
-    user: AdminOrMentorUser,
+    user: EducatorUser,
     question_id: UUID,
     use_case: FromDishka[DeleteQuestionUseCase],
 ):
@@ -160,7 +169,7 @@ async def delete_question_route(
 @router.post("/bulk", response_model=list[QuestionOut])
 @inject
 async def bulk_create_questions_route(
-    user: AdminOrMentorUser,
+    user: EducatorUser,
     body: QuestionBulkCreate,
     use_case: FromDishka[BulkCreateQuestionsUseCase],
 ):
@@ -182,9 +191,7 @@ async def answer_question_route(
     return result
 
 
-@router.get(
-    "/{question_id}/related-lessons", response_model=list[RelatedLessonOut]
-)
+@router.get("/{question_id}/related-lessons", response_model=list[RelatedLessonOut])
 @inject
 async def get_related_lessons_route(
     user: CurrentUser,
@@ -197,11 +204,7 @@ async def get_related_lessons_route(
         result = await use_case.execute(
             question_id,
             limit=limit,
-            min_score=(
-                settings.related_lesson_min_score
-                if min_score is None
-                else min_score
-            ),
+            min_score=(settings.related_lesson_min_score if min_score is None else min_score),
         )
     except EmbeddingServiceError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
@@ -245,20 +248,22 @@ async def get_relative_document(
 @router.post("/{question_id}/heartbeat")
 @inject
 async def heartbeat_question_route(
-    user: AdminOrMentorUser,
+    user: EducatorUser,
     question_id: UUID,
     use_case: FromDishka[HeartbeatQuestionUseCase],
 ):
     ok = await use_case.execute(question_id, user.id)
     if not ok:
-        raise HTTPException(status_code=409, detail="Could not acquire lock or question not found/not draft.")
+        raise HTTPException(
+            status_code=409, detail="Could not acquire lock or question not found/not draft."
+        )
     return {"ok": True}
 
 
 @router.post("/{question_id}/ai-regenerate", response_model=QuestionOut)
 @inject
 async def ai_regenerate_route(
-    user: AdminOrMentorUser,
+    user: EducatorUser,
     question_id: UUID,
     body: AiRegenerateRequest,
     use_case: FromDishka[AiRegenerateSolutionUseCase],
@@ -273,7 +278,7 @@ async def ai_regenerate_route(
 @router.put("/{question_id}/publish", response_model=QuestionOut)
 @inject
 async def publish_question_route(
-    user: AdminOrMentorUser,
+    user: EducatorUser,
     question_id: UUID,
     use_case: FromDishka[PublishQuestionUseCase],
 ):

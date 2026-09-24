@@ -1,9 +1,8 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel
-
 from app.presentation.schemas.lessons import LessonOut
+from pydantic import BaseModel
 
 
 class ModuleCreate(BaseModel):
@@ -44,4 +43,3 @@ class ModuleReorder(BaseModel):
     """Schema for reordering modules."""
 
     module_ids: list[UUID]
-

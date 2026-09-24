@@ -24,9 +24,7 @@ class JoinTeamUseCase:
         self._reg_repo = reg_repo
         self._user_service = user_service
 
-    async def __call__(
-        self, hackathon_id: UUID, user_id: int, code: str
-    ) -> HackathonTeamOutDTO:
+    async def __call__(self, hackathon_id: UUID, user_id: int, code: str) -> HackathonTeamOutDTO:
         team = await self._team_repo.get_by_code(code.strip().upper())
         if not team:
             raise AppException("Mã đội thi không chính xác", 400)
@@ -47,13 +45,9 @@ class JoinTeamUseCase:
             raise AppException("Bạn đã tham gia một đội thi trong hackathon này", 400)
 
         # Kiểm tra xem user đã đăng ký cá nhân chưa
-        existing_reg = await self._reg_repo.get_user_registration(
-            team.hackathon_id, user_id
-        )
+        existing_reg = await self._reg_repo.get_user_registration(team.hackathon_id, user_id)
         if existing_reg:
-            raise AppException(
-                "Bạn đã đăng ký tham gia hackathon này với tư cách cá nhân", 400
-            )
+            raise AppException("Bạn đã đăng ký tham gia hackathon này với tư cách cá nhân", 400)
 
         # Giới hạn số lượng thành viên dựa trên max_team_members của hackathon
         if len(team.member_ids) >= hackathon.max_team_members:
@@ -68,9 +62,7 @@ class JoinTeamUseCase:
             team.member_ids = new_members
             await self._team_repo.update(team)
 
-        members_info = [
-            await self._user_service.get_user_info(mid) for mid in team.member_ids
-        ]
+        members_info = [await self._user_service.get_user_info(mid) for mid in team.member_ids]
 
         return HackathonTeamOutDTO(
             id=team.id,

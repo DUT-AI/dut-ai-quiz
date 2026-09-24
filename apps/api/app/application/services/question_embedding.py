@@ -1,9 +1,8 @@
 import hashlib
 
-from loguru import logger
-
 from app.domain.entities.question import QuestionEntity
 from app.domain.interfaces import EmbeddingServiceError, IEmbeddingService
+from loguru import logger
 
 
 def question_embedding_text(question: QuestionEntity) -> str:

@@ -51,6 +51,9 @@ services:
             - REDIS_PORT=6379
         ports:
             - "8076:8076"
+        networks:
+            - default
+            - shared
         depends_on:
             postgres:
                 condition: service_healthy
@@ -60,7 +63,7 @@ services:
     worker-hackathon:
         build:
             context: .
-            dockerfile: apps/worker/Dockerfile
+            dockerfile: apps/worker/worker-hackathon/Dockerfile
         container_name: dut-ai-quiz-worker-hackathon
         restart: unless-stopped
         init: true
@@ -88,7 +91,7 @@ services:
     worker-lesson-index:
         build:
             context: .
-            dockerfile: apps/worker/Dockerfile
+            dockerfile: apps/worker/worker-lesson-index/Dockerfile
         container_name: dut-ai-quiz-worker-lesson-index
         restart: unless-stopped
         init: true
@@ -108,7 +111,7 @@ services:
     worker-evaluate-homework:
         build:
             context: .
-            dockerfile: apps/worker/Dockerfile
+            dockerfile: apps/worker/worker-evaluate-homework/Dockerfile
         container_name: dut-ai-quiz-worker-evaluate-homework
         restart: unless-stopped
         init: true
@@ -120,6 +123,9 @@ services:
             - POSTGRES_PORT=5432
             - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
             - REDIS_URL=redis://redis:6379/${REDIS_DB:-0}
+        networks:
+            - default
+            - shared
         depends_on:
             postgres:
                 condition: service_healthy
@@ -130,7 +136,7 @@ services:
     pdf-worker:
         build:
             context: .
-            dockerfile: apps/worker/Dockerfile
+            dockerfile: apps/worker/worker-pdf-import/Dockerfile
         container_name: dut-ai-quiz-pdf-worker
         restart: unless-stopped
         init: true
@@ -144,6 +150,9 @@ services:
             - REDIS_URL=redis://redis:6379/${REDIS_DB:-0}
             - REDIS_HOST=redis
             - REDIS_PORT=6379
+        networks:
+            - default
+            - shared
         depends_on:
             postgres:
                 condition: service_healthy
@@ -172,3 +181,9 @@ services:
 
 volumes:
     pgdata:
+
+networks:
+    default:
+    shared:
+        name: dut-ai-shared
+        external: true

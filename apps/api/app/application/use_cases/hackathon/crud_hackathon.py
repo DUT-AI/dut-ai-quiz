@@ -1,34 +1,23 @@
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from fastapi import HTTPException
-
 from app.core.datetime_utils import utc_to_ict
 from app.domain.entities.hackathon import HackathonEntity
 from app.domain.interfaces import IHackathonRepository
 from app.presentation.schemas.hackathons import HackathonCreate, HackathonUpdate
+from fastapi import HTTPException
 
 
 class CreateHackathonUseCase:
     def __init__(self, hackathon_repo: IHackathonRepository):
         self._hackathon_repo = hackathon_repo
 
-    async def execute(
-        self, payload: HackathonCreate, user_id: int
-    ) -> HackathonEntity:
-        if (
-            payload.start_time
-            and payload.end_time
-            and payload.start_time >= payload.end_time
-        ):
-            raise HTTPException(
-                status_code=400, detail="start_time must be before end_time"
-            )
+    async def execute(self, payload: HackathonCreate, user_id: int) -> HackathonEntity:
+        if payload.start_time and payload.end_time and payload.start_time >= payload.end_time:
+            raise HTTPException(status_code=400, detail="start_time must be before end_time")
         name = payload.name.strip()
         if not name:
-            raise HTTPException(
-                status_code=400, detail="name must not be empty"
-            )
+            raise HTTPException(status_code=400, detail="name must not be empty")
         entity = HackathonEntity(
             id=uuid4(),
             name=name,
@@ -52,9 +41,7 @@ class ListHackathonsUseCase:
     def __init__(self, hackathon_repo: IHackathonRepository):
         self._hackathon_repo = hackathon_repo
 
-    async def execute(
-        self, user_id: int, quiz_role: str
-    ) -> list[HackathonEntity]:
+    async def execute(self, user_id: int, quiz_role: str) -> list[HackathonEntity]:
         return await self._hackathon_repo.list_all()
 
 
@@ -91,14 +78,8 @@ class UpdateHackathonUseCase:
                 detail="Forbidden: You do not have permission to update this hackathon (Ownership required)",
             )
 
-        if (
-            payload.start_time
-            and payload.end_time
-            and payload.start_time >= payload.end_time
-        ):
-            raise HTTPException(
-                status_code=400, detail="start_time must be before end_time"
-            )
+        if payload.start_time and payload.end_time and payload.start_time >= payload.end_time:
+            raise HTTPException(status_code=400, detail="start_time must be before end_time")
         data = payload.model_dump(exclude_unset=True)
         for k, v in data.items():
             if k in ["start_time", "end_time"] and v is not None:
@@ -112,9 +93,7 @@ class DeleteHackathonUseCase:
     def __init__(self, hackathon_repo: IHackathonRepository):
         self._hackathon_repo = hackathon_repo
 
-    async def execute(
-        self, hackathon_id: UUID, user_id: int, is_admin: bool = False
-    ) -> bool:
+    async def execute(self, hackathon_id: UUID, user_id: int, is_admin: bool = False) -> bool:
         entity = await self._hackathon_repo.get(hackathon_id)
         if not entity:
             return False

@@ -50,11 +50,14 @@ export const QuestionOutSchema = z.object({
   content: z.string(),
   options: z.array(z.any()),
   difficulty: z.string().optional(),
-  tags: z.array(z.string()),
-  lesson_id: z.string().optional(),
-  pool_type: PoolTypeSchema.optional(),
+  tags: z.preprocess((val) => val ?? [], z.array(z.string())),
+  lesson_id: z.string().nullable().optional(),
+  pool_type: PoolTypeSchema.nullable().optional(),
   solution: z.string().nullable().optional(),
-  created_by: z.number(),
+  created_by: z.preprocess((val) => typeof val === "number" ? val : 0, z.number()),
+  status: z.string().nullable().optional(),
+  duplicate_status: z.string().nullable().optional(),
+  duplicate_of_question_id: z.string().nullable().optional(),
 });
 
 export type QuestionOut = z.infer<typeof QuestionOutSchema>;

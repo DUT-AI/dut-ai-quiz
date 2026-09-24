@@ -3,7 +3,8 @@ from uuid import UUID, uuid4
 
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import ForeignKey, Index, Integer, String, Text
-from sqlalchemy.dialects.postgresql import JSONB, UUID as pgUUID
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import UUID as pgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import Base
@@ -28,9 +29,7 @@ class LessonChunk(Base):
         ),
     )
 
-    id: Mapped[UUID] = mapped_column(
-        pgUUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(pgUUID(as_uuid=True), primary_key=True, default=uuid4)
     lesson_id: Mapped[UUID] = mapped_column(
         pgUUID(as_uuid=True),
         ForeignKey("lessons.id", ondelete="CASCADE"),
@@ -55,6 +54,4 @@ class LessonChunk(Base):
         ),
     )
     embedding: Mapped[list[float]] = mapped_column(Vector(768), nullable=False)
-    embedding_model: Mapped[str] = mapped_column(
-        String(200), nullable=False, index=True
-    )
+    embedding_model: Mapped[str] = mapped_column(String(200), nullable=False, index=True)

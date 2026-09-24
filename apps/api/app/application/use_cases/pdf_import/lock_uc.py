@@ -4,17 +4,17 @@ Redis Heartbeat Lock Use Cases — Step 7.
 AcquireLockUseCase: Thiết lập Redis lock khi admin mở câu hỏi DRAFT.
 HeartbeatLockUseCase: Gia hạn TTL lock mỗi 30 giây từ frontend.
 """
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import UUID
-
-from redis.asyncio import Redis
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.infrastructure.persistence.models import Question
+from redis.asyncio import Redis
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class AcquireLockUseCase:
@@ -41,13 +41,11 @@ class AcquireLockUseCase:
         await self._redis.setex(lock_key, ttl, str(admin_id))
 
         # Update DB review_locked_by field
-        r = await self._s.execute(
-            select(Question).where(Question.id == question_id)
-        )
+        r = await self._s.execute(select(Question).where(Question.id == question_id))
         model = r.scalar_one_or_none()
         if model:
             model.review_locked_by = admin_id
-            model.review_locked_at = datetime.now(timezone.utc)
+            model.review_locked_at = datetime.now(UTC)
             await self._s.flush()
 
         return {
