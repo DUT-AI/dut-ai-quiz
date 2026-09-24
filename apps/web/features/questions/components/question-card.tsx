@@ -13,6 +13,7 @@ import { Markdown } from "@/components/markdown";
 import { RelatedLessonSchema, type QuestionOut, type RelatedLesson } from "@/lib/types";
 import { useAuth } from "@/context/auth-context";
 import { apiGet, apiPost } from "@/lib/api";
+import { ReferenceDocumentsModal } from "./reference-documents-modal";
 
 interface QuestionCardProps {
   q: QuestionOut;
@@ -37,6 +38,7 @@ export const QuestionCard = React.memo(
       solution: string | null;
     } | null>(null);
     const [relatedLessons, setRelatedLessons] = useState<RelatedLesson[]>([]);
+    const [showReferences, setShowReferences] = useState(false);
 
     // Load state from sessionStorage on mount
     React.useEffect(() => {
@@ -139,6 +141,7 @@ export const QuestionCard = React.memo(
       setSelectedId(null);
       setIsRevealed(false);
       setResult(null);
+      setShowReferences(false);
 
       try {
         const stored = sessionStorage.getItem(storageKey) || "{}";
@@ -343,6 +346,17 @@ export const QuestionCard = React.memo(
                       )}
                     </div>
                   )}
+                  {isRevealed && q.pool_type === "PRACTICE" && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-primary font-bold flex items-center gap-2 hover:bg-primary/10 px-4 py-2 rounded-2xl"
+                      onClick={() => setShowReferences(true)}
+                    >
+                      <BookOpen className="size-4" />
+                      Tài liệu tham khảo
+                    </Button>
+                  )}
                   <div className="h-px flex-1" />
                   <Button
                     size="sm"
@@ -359,6 +373,12 @@ export const QuestionCard = React.memo(
             </div>
           </CardContent>
         </Card>
+        {showReferences && isRevealed && q.pool_type === "PRACTICE" && (
+          <ReferenceDocumentsModal
+            questionId={q.id}
+            onClose={() => setShowReferences(false)}
+          />
+        )}
       </motion.div>
     );
   }

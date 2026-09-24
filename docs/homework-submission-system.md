@@ -76,9 +76,10 @@ Required configuration:
 
 ```dotenv
 GEMINI_API_KEY=
-HOMEWORK_GRADING_ENABLED=true
-HOMEWORK_GRADING_MODEL=gemini-3.5-flash
 ```
+
+The grading model, enable flag, timeout, pass score, file limits, and plagiarism
+threshold are application policy constants in `apps/api/app/config.py`.
 
 Apply migrations before starting the worker:
 
