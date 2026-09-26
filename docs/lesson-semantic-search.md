@@ -43,11 +43,15 @@ Markdown gốc vẫn được giữ trong `lesson_chunks.content`. Text đã enr
 - Table: giữ Markdown table và thêm từng row dưới dạng `Column=value`.
 - Image: giữ Markdown image và thêm `source` + `caption` nếu có.
 
-## pgvector
+## pgvector & 2-Stage Retrieval (Dense + Rerank)
 
-Migration bật extension `vector`, chuyển lesson embeddings sang `vector(768)` và
-tạo HNSW index với `vector_cosine_ops`. Repository chạy cosine nearest-neighbour ngay
-trong PostgreSQL (`ORDER BY embedding <=> query`) thay vì tải toàn bộ vectors về API.
+1. **Stage 1 - Dense Retrieval (Vector Search)**:
+   - Migration bật extension `vector`, chuyển embeddings sang `vector(1024)` (`BAAI/bge-m3`) và tạo HNSW index với `vector_cosine_ops`.
+   - Repository chạy cosine nearest-neighbour ngay trong PostgreSQL (`ORDER BY embedding <=> query`) để lọc ra top candidate nhanh chóng.
+
+2. **Stage 2 - Cross-Encoder Reranking**:
+   - Các ứng viên được gửi tới mô hình cross-encoder `BAAI/bge-reranker-v2-m3` để tính điểm tương quan trực tiếp giữa câu hỏi và từng đoạn văn bản (`/rerank`).
+   - Kết quả được sắp xếp lại theo reranker score giúp nâng cao độ chính xác đáng kể.
 
 Docker Compose dùng image `pgvector/pgvector:pg16`. Nếu đổi embedding dimensions,
 cần tạo migration đổi cả hai cột `lesson_chunks.embedding` và `questions.embedding`;
@@ -56,27 +60,38 @@ không chỉ đổi biến môi trường.
 ## Cấu hình
 
 ```env
+# Embedding
 EMBEDDING_ENABLED=true
 EMBEDDING_PROVIDER=dutai
-EMBEDDING_API_URL=https://embedding.dutai.site/v1/embeddings
+EMBEDDING_API_URL=https://textembedding.dutai.io.vn/embed
 EMBEDDING_API_KEY=
-EMBEDDING_MODEL=keepitreal/vietnamese-sbert
-EMBEDDING_DIMENSIONS=768
-LESSON_CHUNK_TARGET_TOKENS=180
-LESSON_CHUNK_MAX_TOKENS=220
+EMBEDDING_MODEL=BAAI/bge-m3
+EMBEDDING_DIMENSIONS=1024
+LESSON_CHUNK_TARGET_TOKENS=250
+LESSON_CHUNK_MAX_TOKENS=400
 RELATED_LESSON_MIN_SCORE=0.25
+RELATED_QUESTION_MIN_SCORE=0.5
+
+# Reranking
+RERANK_ENABLED=true
+RERANK_PROVIDER=dutai
+RERANK_API_URL=https://textembedding.dutai.io.vn/rerank
+RERANK_API_KEY=
+RERANK_MODEL=BAAI/bge-reranker-v2-m3
 ```
 
-Provider `dutai` gọi service Sentence Transformers của câu lạc bộ và mặc định dùng
-Vietnamese SBERT 768 chiều. Provider `local` vẫn có thể dùng khi phát triển offline;
-nếu đổi model thì phải migrate vector dimension, re-index lessons và save lại questions.
+Provider `dutai` gọi dịch vụ Hugging Face Text Embeddings Inference (TEI) tối ưu cho tiếng Việt:
+- **Embedding**: `BAAI/bge-m3` (1024 dimensions, context 8192 tokens)
+- **Reranking**: `BAAI/bge-reranker-v2-m3` (Cross-encoder, context 8192 tokens)
 
 ## API và worker
 
 - `GET /api/v1/questions/{question_id}/related-lessons?limit=3`: chỉ dành cho câu
-  hỏi `PRACTICE`, dùng cached question embedding.
+  hỏi `PRACTICE`, dùng cached question embedding kết hợp cross-encoder reranking.
+- `GET /api/v1/questions/{question_id}/relative-documents?limit=3`: trả về tài liệu markdown
+  và các chunk liên quan đã qua rerank.
 - `POST /api/v1/questions/related`: nhận nội dung câu hỏi, tạo embedding bằng
-  provider hiện tại và query các question embedding đã cache bằng cosine similarity.
+  provider hiện tại, query các question embedding đã cache và rerank kết quả.
   Response không chứa đáp án đúng hoặc lời giải. User thường chỉ được tìm trong
   pool `PRACTICE`; admin/mentor có thể truyền `pool_type`.
 - `POST /api/v1/lessons/{lesson_id}/embeddings/reindex`: enqueue job và trả

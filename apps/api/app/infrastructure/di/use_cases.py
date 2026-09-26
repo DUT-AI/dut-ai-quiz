@@ -112,7 +112,10 @@ from app.application.use_cases.lessons.get_lesson_detail_uc import (
 from app.application.use_cases.lessons.import_notion_lesson_uc import (
     ImportNotionLessonUseCase,
 )
-from app.application.use_cases.lessons.index_lesson_uc import IndexLessonUseCase
+from app.application.use_cases.lessons.index_lesson_uc import (
+    IndexAllLessonsUseCase,
+    IndexLessonUseCase,
+)
 from app.application.use_cases.lessons.list_lessons_uc import ListLessonsUseCase
 from app.application.use_cases.lessons.reorder_lessons_uc import (
     ReorderLessonsUseCase,
@@ -331,6 +334,7 @@ class UseCaseProvider(Provider):
     get_lesson_by_slug_use_case = provide(GetLessonBySlugUseCase, scope=Scope.REQUEST)
     reorder_lessons_use_case = provide(ReorderLessonsUseCase, scope=Scope.REQUEST)
     index_lesson_use_case = provide(IndexLessonUseCase, scope=Scope.REQUEST)
+    index_all_lessons_use_case = provide(IndexAllLessonsUseCase, scope=Scope.REQUEST)
     lesson_embedding_indexer = provide(LessonEmbeddingIndexer, scope=Scope.REQUEST)
     lesson_index_scheduler = provide(LessonIndexScheduler, scope=Scope.REQUEST)
     question_embedding_service = provide(QuestionEmbeddingService, scope=Scope.REQUEST)

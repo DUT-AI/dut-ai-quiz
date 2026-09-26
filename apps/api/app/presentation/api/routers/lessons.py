@@ -9,6 +9,7 @@ from app.application.use_cases.lessons import (
     GetLessonBySlugUseCase,
     GetLessonDetailUseCase,
     ImportNotionLessonUseCase,
+    IndexAllLessonsUseCase,
     IndexLessonUseCase,
     ListLessonsUseCase,
     ReorderLessonsUseCase,
@@ -20,6 +21,7 @@ from app.domain.interfaces import EmbeddingServiceError
 from app.domain.value_objects import Difficulty, PoolType
 from app.presentation.api.deps import CurrentUser, EducatorUser
 from app.presentation.schemas.lessons import (
+    LessonBulkIndexOut,
     LessonCreate,
     LessonDetailOut,
     LessonIndexOut,
@@ -192,6 +194,19 @@ async def reorder_lessons(
     """Reorder lessons in the system. Educator or Admin only."""
     await use_case.execute(body)
     return {"ok": True}
+
+
+@router.post("/embeddings/reindex-all", response_model=LessonBulkIndexOut)
+@inject
+async def reindex_all_lessons(
+    user: EducatorUser,
+    use_case: FromDishka[IndexAllLessonsUseCase],
+):
+    """Reindex embeddings for all lessons. Educator or Admin only."""
+    try:
+        return await use_case.execute()
+    except EmbeddingServiceError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
 @router.patch("/{lesson_id}", response_model=LessonOut)

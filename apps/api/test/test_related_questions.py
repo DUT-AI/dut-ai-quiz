@@ -8,6 +8,7 @@ from app.application.use_cases.questions.related_questions_uc import (
 )
 from app.domain.entities.question import QuestionEntity, QuestionOptionEntity
 from app.domain.interfaces import EmbeddingServiceError, QuestionSimilarityMatch
+from app.domain.interfaces.rerank_service import RerankItem
 from app.domain.value_objects import Difficulty, PoolType
 from app.presentation.schemas.questions import RelatedQuestionsIn
 
@@ -22,6 +23,22 @@ class FakeEmbeddingService:
     async def embed(self, texts: list[str]) -> list[list[float]]:
         self.inputs.extend(texts)
         return [[1.0, 0.0]]
+
+
+class FakeRerankService:
+    enabled = True
+    model_name = "test-reranker"
+    calls = 0
+
+    async def rerank(
+        self, query: str, texts: list[str], *, return_text: bool = False, top_k: int | None = None
+    ):
+        self.calls += 1
+        items = [
+            RerankItem(index=i, score=0.99 - 0.1 * i, text=texts[i] if return_text else None)
+            for i in range(len(texts))
+        ]
+        return items[:top_k] if top_k else items
 
 
 class FakeQuestionRepository:
@@ -109,6 +126,34 @@ async def test_related_questions_embeds_input_and_returns_safe_ranked_results() 
     ]
     assert "solution" not in result[0]
     assert "is_correct" not in result[0]["options"][0]
+
+
+@pytest.mark.asyncio
+async def test_related_questions_with_reranking() -> None:
+    q1 = make_question("Question 1")
+    q2 = make_question("Question 2")
+    repository = FakeQuestionRepository(
+        [
+            QuestionSimilarityMatch(q1, 0.6),
+            QuestionSimilarityMatch(q2, 0.7),
+        ]
+    )
+    embedding_service = FakeEmbeddingService()
+    rerank_service = FakeRerankService()
+    use_case = FindRelatedQuestionsUseCase(repository, embedding_service, rerank_service)
+
+    result = await use_case.execute(
+        content="Query text",
+        limit=5,
+        min_score=0.5,
+        pool_type=PoolType.PRACTICE,
+    )
+
+    assert rerank_service.calls == 1
+    # FakeRerankService assigns q1 (index 0) score 0.99, q2 (index 1) score 0.89
+    assert len(result) == 2
+    assert result[0]["id"] == q1.id
+    assert result[0]["score"] == 0.99
 
 
 @pytest.mark.asyncio

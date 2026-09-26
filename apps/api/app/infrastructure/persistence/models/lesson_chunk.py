@@ -53,5 +53,5 @@ class LessonChunk(Base):
             "reject stale embeddings while a newer version is being indexed"
         ),
     )
-    embedding: Mapped[list[float]] = mapped_column(Vector(768), nullable=False)
+    embedding: Mapped[list[float]] = mapped_column(Vector(1024), nullable=False)
     embedding_model: Mapped[str] = mapped_column(String(200), nullable=False, index=True)

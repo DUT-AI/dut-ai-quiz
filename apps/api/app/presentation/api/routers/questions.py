@@ -215,9 +215,7 @@ async def get_related_lessons_route(
     return result
 
 
-@router.get(
-    "/{question_id}/relative-documents", response_model=list[RelativeDocumentOut]
-)
+@router.get("/{question_id}/relative-documents", response_model=list[RelativeDocumentOut])
 @inject
 async def get_relative_document(
     user: CurrentUser,
@@ -230,11 +228,7 @@ async def get_relative_document(
         result = await use_case.get_relative_document(
             question_id,
             limit=limit,
-            min_score=(
-                settings.related_lesson_min_score
-                if min_score is None
-                else min_score
-            ),
+            min_score=(settings.related_lesson_min_score if min_score is None else min_score),
         )
     except EmbeddingServiceError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc

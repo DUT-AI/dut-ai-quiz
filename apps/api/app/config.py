@@ -105,20 +105,31 @@ class Settings(BaseSettings):
     homework_max_file_size_bytes: ClassVar[int] = 20 * 1024 * 1024
     homework_grading_timeout_seconds: ClassVar[float] = 300.0
 
-    # Lesson semantic search. DUT-AI's Vietnamese SBERT service is the default;
+    # Lesson semantic search and reranking.
+    # DUT-AI's TEI service (BAAI/bge-m3 + BAAI/bge-reranker-v2-m3) is the default;
     # local hashing and OpenAI-compatible providers remain available for dev.
     embedding_enabled: bool = True
     embedding_provider: str = "dutai"
-    embedding_api_url: str = "https://embedding.dutai.site/v1/embeddings"
+    embedding_api_url: str = "https://textembedding.dutai.io.vn/embed"
     embedding_api_key: str = ""
-    embedding_model: str = "keepitreal/vietnamese-sbert"
-    embedding_dimensions: int = 768
-    embedding_batch_size: int = 64
-    embedding_timeout_seconds: float = 30.0
-    lesson_chunk_target_tokens: int = 180
-    lesson_chunk_max_tokens: int = 220
+    embedding_model: str = "BAAI/bge-m3"
+    embedding_dimensions: int = 1024
+    embedding_batch_size: int = 16
+    embedding_timeout_seconds: float = 60.0
+    lesson_chunk_target_tokens: int = 250
+    lesson_chunk_max_tokens: int = 400
     related_lesson_min_score: float = 0.25
     related_question_min_score: float = 0.5
+
+    # Reranking configuration
+    rerank_enabled: bool = True
+    rerank_provider: str = "dutai"
+    rerank_api_url: str = "https://textembedding.dutai.io.vn/rerank"
+    rerank_api_key: str = ""
+    rerank_model: str = "BAAI/bge-reranker-v2-m3"
+    rerank_batch_size: int = 32
+    rerank_timeout_seconds: float = 30.0
+    rerank_min_score: float = 0.0
 
     # ================= SUBMISSION SYSTEM CONFIG =================
     submission_cooldown_seconds: int = 300  # 5 minutes

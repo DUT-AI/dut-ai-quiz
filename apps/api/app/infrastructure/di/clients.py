@@ -12,6 +12,7 @@ from app.domain.interfaces import (
     IHomeworkEvaluationQueue,
     ILessonIndexQueue,
     IManageService,
+    IRerankService,
     IS3Client,
     ISubmissionQueue,
 )
@@ -33,6 +34,11 @@ from app.infrastructure.clients.hackathon_submission_store import (
     MinIOHackathonSubmissionStore,
 )
 from app.infrastructure.clients.minio_client import MinioClient
+from app.infrastructure.clients.rerank_service import (
+    DisabledRerankService,
+    DutAiRerankService,
+    LocalRerankService,
+)
 
 
 class ClientProvider(Provider):
@@ -90,3 +96,11 @@ class ClientProvider(Provider):
         if settings.embedding_provider.casefold() == "dutai":
             return DutAiEmbeddingService(client, settings)
         return OpenAICompatibleEmbeddingService(client, settings)
+
+    @provide(scope=Scope.APP)
+    def get_rerank_service(self, client: httpx.AsyncClient) -> IRerankService:
+        if not settings.rerank_enabled or settings.rerank_provider.casefold() == "disabled":
+            return DisabledRerankService()
+        if settings.rerank_provider.casefold() == "local":
+            return LocalRerankService()
+        return DutAiRerankService(client, settings)

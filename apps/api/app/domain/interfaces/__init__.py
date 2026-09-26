@@ -28,6 +28,7 @@ from .manage_cache import IDUTAIManageCache
 from .manage_service import IManageService
 from .module_repo import IModuleRepository
 from .question_repo import IQuestionRepository, QuestionSimilarityMatch
+from .rerank_service import IRerankService, RerankItem, RerankServiceError
 from .s3_client import IS3Client
 from .submission_queue import ISubmissionQueue
 from .tag_repo import ITagRepository
@@ -44,6 +45,9 @@ __all__ = [
     "ILessonIndexQueue",
     "IEmbeddingService",
     "EmbeddingServiceError",
+    "IRerankService",
+    "RerankServiceError",
+    "RerankItem",
     "IModuleRepository",
     "IGameSessionRepository",
     "IQuestionRepository",

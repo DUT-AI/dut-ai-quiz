@@ -77,3 +77,9 @@ class RelativeDocumentOut(BaseModel):
 class LessonIndexOut(BaseModel):
     lesson_id: UUID
     status: str
+
+
+class LessonBulkIndexOut(BaseModel):
+    total_lessons: int
+    queued_lessons: int
+    status: str

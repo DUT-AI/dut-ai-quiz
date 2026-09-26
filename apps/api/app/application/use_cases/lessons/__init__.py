@@ -9,7 +9,7 @@ from .get_lesson_detail_uc import (
 from .import_notion_lesson_uc import (
     ImportNotionLessonUseCase,
 )
-from .index_lesson_uc import IndexLessonUseCase
+from .index_lesson_uc import IndexAllLessonsUseCase, IndexLessonUseCase
 from .list_lessons_uc import ListLessonsUseCase
 from .reorder_lessons_uc import (
     ReorderLessonsUseCase,
@@ -25,5 +25,6 @@ __all__ = [
     "ReorderLessonsUseCase",
     "UpdateLessonUseCase",
     "IndexLessonUseCase",
+    "IndexAllLessonsUseCase",
     "ImportNotionLessonUseCase",
 ]

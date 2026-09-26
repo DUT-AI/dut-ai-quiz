@@ -53,7 +53,7 @@ class Question(Base):
     )
     created_by: Mapped[int] = mapped_column(index=True)
     created_at: Mapped[datetime] = mapped_column(default=now_ict)
-    embedding: Mapped[list[float] | None] = mapped_column(Vector(768), nullable=True)
+    embedding: Mapped[list[float] | None] = mapped_column(Vector(1024), nullable=True)
     embedding_model: Mapped[str | None] = mapped_column(String(200), nullable=True)
     embedding_source_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
     status: Mapped[QuestionStatus] = mapped_column(
