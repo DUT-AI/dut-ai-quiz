@@ -23,7 +23,7 @@ class Homework(Base):
     id: Mapped[UUID] = mapped_column(pgUUID(as_uuid=True), primary_key=True, default=uuid4)
     lesson_id: Mapped[UUID | None] = mapped_column(
         pgUUID(as_uuid=True),
-        ForeignKey("lessons.id", ondelete="RESTRICT"),
+        ForeignKey("lessons.id", ondelete="CASCADE"),
         nullable=True,
         index=True,
     )

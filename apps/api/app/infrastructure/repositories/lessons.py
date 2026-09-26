@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities.lesson import LessonEntity
 from app.domain.interfaces import ILessonRepository
-from app.infrastructure.persistence.models import Lesson
+from app.infrastructure.persistence.models import Comment, Lesson
 
 
 class LessonRepository(ILessonRepository):
@@ -53,6 +53,10 @@ class LessonRepository(ILessonRepository):
         return entity
 
     async def delete(self, entity: LessonEntity) -> None:
+        stmt_comments = delete(Comment).where(Comment.target_id == entity.id)
+        await self._session.execute(stmt_comments)
+
         stmt = delete(Lesson).where(Lesson.id == entity.id)
         await self._session.execute(stmt)
         await self._session.flush()
+

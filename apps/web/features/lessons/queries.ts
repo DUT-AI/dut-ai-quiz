@@ -35,7 +35,10 @@ export function useDeleteLesson() {
   return useMutation({
     mutationFn: (id: string) =>
       apiClient.delete(`/api/v1/lessons/${id}`).then((r) => r.data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["lessons"] }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["lessons"] });
+      void qc.invalidateQueries({ queryKey: ["questions"] });
+    },
   });
 }
 

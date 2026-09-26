@@ -46,7 +46,10 @@ class Question(Base):
         ARRAY(pgUUID(as_uuid=True)), nullable=False, default=list
     )
     lesson_id: Mapped[UUID | None] = mapped_column(
-        pgUUID(as_uuid=True), ForeignKey("lessons.id"), index=True, nullable=True
+        pgUUID(as_uuid=True),
+        ForeignKey("lessons.id", ondelete="CASCADE"),
+        index=True,
+        nullable=True,
     )
     created_by: Mapped[int] = mapped_column(index=True)
     created_at: Mapped[datetime] = mapped_column(default=now_ict)
@@ -65,14 +68,16 @@ class Question(Base):
         server_default=DuplicateStatus.NONE.value,
     )
     duplicate_of_question_id: Mapped[UUID | None] = mapped_column(
-        pgUUID(as_uuid=True), ForeignKey("questions.id"), nullable=True
+        pgUUID(as_uuid=True),
+        ForeignKey("questions.id", ondelete="SET NULL"),
+        nullable=True,
     )
     is_difficulty_ai_suggested: Mapped[bool] = mapped_column(default=False, server_default="false")
     is_answer_ai_generated: Mapped[bool] = mapped_column(default=False, server_default="false")
     is_solution_ai_generated: Mapped[bool] = mapped_column(default=False, server_default="false")
     import_session_id: Mapped[UUID | None] = mapped_column(
         pgUUID(as_uuid=True),
-        ForeignKey("import_sessions.id"),
+        ForeignKey("import_sessions.id", ondelete="SET NULL"),
         nullable=True,
         index=True,
     )
