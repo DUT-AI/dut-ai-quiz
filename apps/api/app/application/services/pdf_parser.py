@@ -19,7 +19,7 @@ class RegexPdfParserStrategy(IPdfParserStrategy):
             doc.authenticate(password)
 
         all_lines = []
-        total_pages = len(doc)
+        len(doc)
         for page in doc:
             # page.get_text("dict") provides spans with color and flags
             blocks = page.get_text("dict")["blocks"]

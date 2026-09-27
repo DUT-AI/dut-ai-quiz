@@ -39,8 +39,8 @@ class ImportNotionLessonUseCase:
         # 1. Read ZIP in memory
         try:
             z = zipfile.ZipFile(io.BytesIO(zip_bytes))
-        except zipfile.BadZipFile:
-            raise ValueError("Invalid ZIP file")
+        except zipfile.BadZipFile as exc:
+            raise ValueError("Invalid ZIP file") from exc
 
         # 2. Separate markdown file and image files (recursively handling nested zip files)
         md_filename = None

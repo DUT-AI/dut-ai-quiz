@@ -1,15 +1,15 @@
 from dataclasses import dataclass
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from uuid import UUID
 
 
-class TargetType(str, Enum):
+class TargetType(StrEnum):
     system_feedback = "system_feedback"
     lesson_qna = "lesson_qna"
 
 
-class ReactionType(str, Enum):
+class ReactionType(StrEnum):
     like = "like"
     dislike = "dislike"
 

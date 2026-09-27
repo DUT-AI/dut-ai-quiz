@@ -17,4 +17,3 @@ class DeleteLessonUseCase:
 
         await self._repo.delete(entity)
         return True
-

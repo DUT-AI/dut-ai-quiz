@@ -37,8 +37,8 @@ class StartPdfImportUseCase:
 
         try:
             doc = fitz.open(stream=pdf_bytes, filetype="pdf")
-        except Exception:
-            raise ValueError("Invalid PDF format")
+        except Exception as exc:
+            raise ValueError("Invalid PDF format") from exc
 
         if doc.is_encrypted:
             if not password:

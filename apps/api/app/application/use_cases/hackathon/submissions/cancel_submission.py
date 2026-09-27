@@ -57,7 +57,7 @@ class CancelSubmissionUseCase:
         except Exception as redis_err:
             raise AppException(
                 f"Lỗi kết nối hệ thống hàng đợi khi gửi lệnh hủy: {str(redis_err)}", 500
-            )
+            ) from redis_err
 
         # 5. Cập nhật trạng thái trong DB thành CANCELLED (Không trừ quota nộp bài)
         submission.status = SubmissionStatus.CANCELLED

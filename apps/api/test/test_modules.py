@@ -70,9 +70,9 @@ class MockLessonRepository(ILessonRepository):
         return self.lessons
 
     async def get(self, lesson_id: UUID) -> LessonEntity | None:
-        for l in self.lessons:
-            if l.id == lesson_id:
-                return l
+        for lesson in self.lessons:
+            if lesson.id == lesson_id:
+                return lesson
         return None
 
     async def get_by_slug(self, slug: str) -> LessonEntity | None:
@@ -83,14 +83,14 @@ class MockLessonRepository(ILessonRepository):
         return entity
 
     async def update(self, entity: LessonEntity) -> LessonEntity:
-        for i, l in enumerate(self.lessons):
-            if l.id == entity.id:
+        for i, lesson in enumerate(self.lessons):
+            if lesson.id == entity.id:
                 self.lessons[i] = entity
                 return entity
         return entity
 
     async def delete(self, entity: LessonEntity) -> None:
-        self.lessons = [l for l in self.lessons if l.id != entity.id]
+        self.lessons = [lesson for lesson in self.lessons if lesson.id != entity.id]
 
 
 @pytest.mark.asyncio

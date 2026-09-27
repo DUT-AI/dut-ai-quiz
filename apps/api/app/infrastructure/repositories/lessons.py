@@ -59,4 +59,3 @@ class LessonRepository(ILessonRepository):
         stmt = delete(Lesson).where(Lesson.id == entity.id)
         await self._session.execute(stmt)
         await self._session.flush()
-

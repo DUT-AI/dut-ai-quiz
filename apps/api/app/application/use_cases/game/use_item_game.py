@@ -45,8 +45,10 @@ class UseItemGameUseCase:
 
         try:
             item = GamificationItem(payload.item_name.lower())
-        except ValueError:
-            raise HTTPException(status_code=400, detail=f"Invalid item: {payload.item_name}")
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=400, detail=f"Invalid item: {payload.item_name}"
+            ) from exc
 
         is_boss = current_q.get("is_boss", False)
         price_multiplier = 2 if is_boss else 1

@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class UserRole(str, Enum):
+class UserRole(StrEnum):
     ADMIN = "ADMIN"
     EDUCATOR = "EDUCATOR"
     PROJECT_DEVELOPER = "PROJECT_DEVELOPER"
@@ -9,7 +9,7 @@ class UserRole(str, Enum):
     TEAMMATE = "TEAMMATE"
 
 
-class SystemPermission(str, Enum):
+class SystemPermission(StrEnum):
     # LMS
     CREATE_LESSON = "CREATE_LESSON"
     UPDATE_LESSON = "UPDATE_LESSON"

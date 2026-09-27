@@ -1,6 +1,8 @@
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
+from app.domain.entities.question import DuplicateStatus, QuestionStatus
 from app.domain.value_objects import Difficulty, PoolType
 from pydantic import BaseModel, Field, field_validator
 
@@ -41,11 +43,6 @@ class QuestionUpdate(BaseModel):
     lesson_id: UUID | None = None
     tags: list[UUID] | None = None
     created_by: int | None = None
-
-
-from typing import Any
-
-from app.domain.entities.question import DuplicateStatus, QuestionStatus
 
 
 class QuestionOptionToStudent(BaseModel):

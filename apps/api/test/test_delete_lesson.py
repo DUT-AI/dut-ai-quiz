@@ -64,5 +64,3 @@ async def test_delete_non_existing_lesson_returns_false():
     result = await use_case.execute(str(uuid4()))
 
     assert result is False
-
-

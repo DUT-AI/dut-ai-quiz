@@ -2,9 +2,6 @@ from abc import ABC, abstractmethod
 from typing import Any
 from uuid import UUID
 
-from app.application.dtos.homework import (
-    CompletedHomeworkMemberOutDTO,
-)
 from app.domain.entities.homework import HomeworkEntity, HomeworkSubmissionEntity
 
 

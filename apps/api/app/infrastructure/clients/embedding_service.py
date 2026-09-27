@@ -42,7 +42,7 @@ class LocalHashingEmbeddingService(IEmbeddingService):
         words = self._word_pattern.findall(normalized)
 
         features: list[tuple[str, float]] = [(f"word:{word}", 1.0) for word in words]
-        features.extend((f"bigram:{left}:{right}", 1.35) for left, right in zip(words, words[1:]))
+        features.extend((f"bigram:{left}:{right}", 1.35) for left, right in zip(words, words[1:], strict=False))
 
         compact = " ".join(words)
         for size in (3, 4, 5):
@@ -137,7 +137,9 @@ class DutAiEmbeddingService(IEmbeddingService):
                     raise ValueError(f"Unexpected response format from embedding service: {data}")
         except (httpx.HTTPError, KeyError, TypeError, ValueError) as exc:
             err_msg = str(exc) or repr(exc)
-            raise EmbeddingServiceError(f"DUT-AI embedding service failed ({type(exc).__name__}): {err_msg}") from exc
+            raise EmbeddingServiceError(
+                f"DUT-AI embedding service failed ({type(exc).__name__}): {err_msg}"
+            ) from exc
 
         expected = self._settings.embedding_dimensions
         if len(result) != len(texts) or any(len(vector) != expected for vector in result):

@@ -22,14 +22,14 @@ class CsvEvaluator(IEvaluator):
     def calculate_accuracy(y_true: list[str], y_pred: list[str]) -> float:
         if not y_true or len(y_true) != len(y_pred):
             return 0.0
-        correct = sum(1 for gt, pred in zip(y_true, y_pred) if gt.strip() == pred.strip())
+        correct = sum(1 for gt, pred in zip(y_true, y_pred, strict=False) if gt.strip() == pred.strip())
         return correct / len(y_true)
 
     @staticmethod
     def calculate_rmse(y_true: list[float], y_pred: list[float]) -> float:
         if not y_true or len(y_true) != len(y_pred):
             return 0.0
-        mse = sum((gt - pred) ** 2 for gt, pred in zip(y_true, y_pred)) / len(y_true)
+        mse = sum((gt - pred) ** 2 for gt, pred in zip(y_true, y_pred, strict=False)) / len(y_true)
         return math.sqrt(mse)
 
     @staticmethod
@@ -38,7 +38,7 @@ class CsvEvaluator(IEvaluator):
             return 0.0
 
         tp = fp = fn = 0
-        for gt, pred in zip(y_true, y_pred):
+        for gt, pred in zip(y_true, y_pred, strict=False):
             gt_val = gt.strip()
             pred_val = pred.strip()
             if gt_val == positive_label and pred_val == positive_label:

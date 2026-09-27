@@ -56,7 +56,7 @@ class HackathonLeaderboardDomainService:
         for task in tasks:
             task_id = str(task.id)
             scores = []
-            for p_id, p_tasks in best_by_participant.items():
+            for p_tasks in best_by_participant.values():
                 if task_id in p_tasks:
                     s = (
                         p_tasks[task_id].private_score

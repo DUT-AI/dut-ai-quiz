@@ -333,7 +333,7 @@ class HackathonSubmissionRepository(IHackathonSubmissionRepository):
         elif user_id:
             stmt = stmt.where(
                 HackathonSubmission.user_id == user_id,
-                HackathonSubmission.team_id == None,
+                HackathonSubmission.team_id is None,
             )
         stmt = stmt.order_by(HackathonSubmission.created_at.desc())
         r = await self._s.execute(stmt)
@@ -357,7 +357,7 @@ class HackathonSubmissionRepository(IHackathonSubmissionRepository):
         elif user_id:
             stmt = stmt.where(
                 HackathonSubmission.user_id == user_id,
-                HackathonSubmission.team_id == None,
+                HackathonSubmission.team_id is None,
             )
 
         r = await self._s.execute(stmt)
@@ -383,7 +383,7 @@ class HackathonSubmissionRepository(IHackathonSubmissionRepository):
         elif user_id:
             stmt = stmt.where(
                 HackathonSubmission.user_id == user_id,
-                HackathonSubmission.team_id == None,
+                HackathonSubmission.team_id is None,
             )
         stmt = stmt.order_by(HackathonSubmission.created_at.desc()).limit(1)
         r = await self._s.execute(stmt)

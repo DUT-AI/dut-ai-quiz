@@ -79,7 +79,7 @@ async def import_pdf_route(
             password=password,
         )
     except ValueError as e:
-        raise HTTPException(status_code=422, detail={"error": str(e)})
+        raise HTTPException(status_code=422, detail={"error": str(e)}) from e
 
 
 @router.post("/upload", response_model=PDFUploadResponse, status_code=202)

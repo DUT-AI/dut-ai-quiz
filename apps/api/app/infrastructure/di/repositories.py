@@ -24,7 +24,6 @@ from app.domain.interfaces.hackathon_repo import (
     IHackathonTaskRepository,
     IHackathonTeamRepository,
 )
-from app.domain.interfaces.import_session_repo import IImportSessionRepository
 from app.infrastructure.repositories.attempts import AttemptRepository
 from app.infrastructure.repositories.comment_reactions import CommentReactionRepository
 from app.infrastructure.repositories.comments import CommentRepository

@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class GamificationItem(str, Enum):
+class GamificationItem(StrEnum):
     MICROSCOPE = "microscope"
     DOUBLE_POINTS = "double_points"
     SHIELD = "shield"

@@ -84,7 +84,9 @@ class DutAiRerankService(IRerankService):
                     all_results.append(RerankItem(index=global_index, score=score, text=text_val))
         except (httpx.HTTPError, KeyError, TypeError, ValueError) as exc:
             err_msg = str(exc) or repr(exc)
-            raise RerankServiceError(f"DUT-AI reranking service failed ({type(exc).__name__}): {err_msg}") from exc
+            raise RerankServiceError(
+                f"DUT-AI reranking service failed ({type(exc).__name__}): {err_msg}"
+            ) from exc
 
         # Sort all items by score descending
         all_results.sort(key=lambda item: item.score, reverse=True)

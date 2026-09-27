@@ -1,10 +1,10 @@
 import dataclasses
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from uuid import UUID
 
 
-class ImportSessionStatus(str, Enum):
+class ImportSessionStatus(StrEnum):
     PROCESSING = "PROCESSING"
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"

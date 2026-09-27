@@ -5,7 +5,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.application.dtos.homework import CompletedHomeworkMemberOutDTO
 from app.core.datetime_utils import now_ict
-
 from app.domain.entities.homework import (
     HomeworkEntity,
     HomeworkSubmissionEntity,

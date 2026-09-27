@@ -282,4 +282,4 @@ async def publish_question_route(
             raise HTTPException(status_code=404, detail="Not found or not draft")
         return q
     except ValueError as e:
-        raise HTTPException(status_code=409, detail=str(e))
+        raise HTTPException(status_code=409, detail=str(e)) from e
