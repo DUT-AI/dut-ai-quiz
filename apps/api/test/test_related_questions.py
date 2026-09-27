@@ -10,6 +10,7 @@ from app.domain.entities.question import QuestionEntity, QuestionOptionEntity
 from app.domain.interfaces import EmbeddingServiceError, QuestionSimilarityMatch
 from app.domain.interfaces.rerank_service import RerankItem
 from app.domain.value_objects import Difficulty, PoolType
+from app.infrastructure.clients.rerank_service import DisabledRerankService
 from app.presentation.schemas.questions import RelatedQuestionsIn
 
 
@@ -90,7 +91,11 @@ async def test_related_questions_embeds_input_and_returns_safe_ranked_results() 
         ]
     )
     embedding_service = FakeEmbeddingService()
-    use_case = FindRelatedQuestionsUseCase(repository, embedding_service)
+    use_case = FindRelatedQuestionsUseCase(
+        repository,
+        embedding_service,
+        DisabledRerankService(),
+    )
 
     result = await use_case.execute(
         content="  Batch normalization  ",
@@ -160,7 +165,11 @@ async def test_related_questions_with_reranking() -> None:
 async def test_related_questions_rejects_disabled_embedding() -> None:
     embedding_service = FakeEmbeddingService()
     embedding_service.enabled = False
-    use_case = FindRelatedQuestionsUseCase(FakeQuestionRepository([]), embedding_service)
+    use_case = FindRelatedQuestionsUseCase(
+        FakeQuestionRepository([]),
+        embedding_service,
+        DisabledRerankService(),
+    )
 
     with pytest.raises(EmbeddingServiceError, match="not enabled"):
         await use_case.execute(

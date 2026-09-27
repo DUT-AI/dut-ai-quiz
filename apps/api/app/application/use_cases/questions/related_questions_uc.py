@@ -19,7 +19,7 @@ class FindRelatedQuestionsUseCase:
         self,
         question_repo: IQuestionRepository,
         embedding_service: IEmbeddingService,
-        rerank_service: IRerankService | None = None,
+        rerank_service: IRerankService,
     ) -> None:
         self._question_repo = question_repo
         self._embedding_service = embedding_service

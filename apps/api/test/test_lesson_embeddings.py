@@ -348,11 +348,13 @@ async def test_related_lessons_rejects_stale_question_embedding() -> None:
     embedding_service = FakeEmbeddingService()
     await QuestionEmbeddingService(embedding_service).prepare(question)
     question.content = "Nội dung đã thay đổi"
-    use_case = GetRelatedLessonsUseCase(
-        FakeQuestionRepository(question), FakeChunkRepository([]), embedding_service
-    )
-
     with pytest.raises(Exception, match="Question embedding is not ready"):
+        use_case = GetRelatedLessonsUseCase(
+            FakeQuestionRepository(question),
+            FakeChunkRepository([]),
+            embedding_service,
+            DisabledRerankService(),
+        )
         await use_case.execute(question.id, limit=3, min_score=0.25)
 
 
@@ -391,6 +393,7 @@ async def test_relative_documents_groups_current_chunks_by_lesson() -> None:
         FakeQuestionRepository(question),
         FakeChunkRepository(matches),
         embedding_service,
+        DisabledRerankService(),
     )
 
     result = await use_case.get_relative_document(question.id, limit=2, min_score=0.25)

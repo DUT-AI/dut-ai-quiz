@@ -20,7 +20,7 @@ class GetRelatedLessonsUseCase:
         question_repo: IQuestionRepository,
         chunk_repo: ILessonChunkRepository,
         embedding_service: IEmbeddingService,
-        rerank_service: IRerankService | None = None,
+        rerank_service: IRerankService,
     ) -> None:
         self._question_repo = question_repo
         self._chunk_repo = chunk_repo
