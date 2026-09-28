@@ -51,6 +51,10 @@ class IQuestionRepository(Protocol):
         """Delete a question entity from the store."""
         ...
 
+    async def delete_bulk(self, question_ids: list[UUID]) -> int:
+        """Delete multiple questions by their IDs and return count deleted."""
+        ...
+
     async def search_similar(
         self,
         *,

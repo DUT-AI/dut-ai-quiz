@@ -134,13 +134,34 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
   } = methods;
 
   React.useEffect(() => {
-    if (initialData?.tags && allTags.length) {
-      const tagIds = allTags
-        .filter((tag) => initialData.tags.includes(tag.name))
-        .map((tag) => tag.id);
-      setValue("tags", tagIds);
+    if (initialData) {
+      const tagIds = initialData.tags && allTags.length
+        ? allTags.filter((tag) => initialData.tags.includes(tag.name)).map((tag) => tag.id)
+        : [];
+      const opts = initialData.options?.length
+        ? initialData.options.map((o) => ({
+            id: o.id ?? newOption().id,
+            text: o.text,
+            is_correct: o.is_correct,
+          }))
+        : [
+            { ...newOption(), is_correct: true },
+            newOption(),
+            newOption(),
+            newOption(),
+          ];
+
+      methods.reset({
+        pool_type: initialData.pool_type ?? "PRACTICE",
+        difficulty: (initialData.difficulty as any) ?? "EASY",
+        content: initialData.content ?? "",
+        options: opts,
+        solution: initialData.solution ?? "",
+        lesson_id: initialData.lesson_id || lessonId,
+        tags: tagIds,
+      });
     }
-  }, [initialData?.tags, allTags, setValue]);
+  }, [initialData, allTags, lessonId, methods]);
 
   const { fields, append, remove, update } = useFieldArray({ control, name: "options" });
 

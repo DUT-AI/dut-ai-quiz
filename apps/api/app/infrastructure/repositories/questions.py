@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities.question import QuestionEntity, QuestionStatus
@@ -224,6 +224,13 @@ class QuestionRepository(IQuestionRepository):
         model = r.scalar_one_or_none()
         if model:
             await self._s.delete(model)
+
+    async def delete_bulk(self, question_ids: list[UUID]) -> int:
+        if not question_ids:
+            return 0
+        stmt = delete(Question).where(Question.id.in_(question_ids))
+        res = await self._s.execute(stmt)
+        return res.rowcount or len(question_ids)
 
     async def search_similar(
         self,

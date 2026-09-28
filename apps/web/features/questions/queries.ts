@@ -47,8 +47,11 @@ export function useCreateQuestion() {
   return useMutation({
     mutationFn: (body: QuestionCreate) =>
       apiPost<QuestionOut>("/api/v1/questions", body, QuestionOutSchema),
-    onSuccess: () => {
+    onSuccess: (createdQuestion) => {
       void qc.invalidateQueries({ queryKey: ["questions"] });
+      if (createdQuestion?.id) {
+        qc.setQueryData(["question", createdQuestion.id], createdQuestion);
+      }
     },
   });
 }
@@ -58,8 +61,13 @@ export function useUpdateQuestion() {
   return useMutation({
     mutationFn: ({ id, payload }: { id: string; payload: Partial<QuestionCreate> }) =>
       apiPatch<QuestionOut>(`/api/v1/questions/${id}`, payload, QuestionOutSchema),
-    onSuccess: () => {
+    onSuccess: (updatedQuestion, variables) => {
       void qc.invalidateQueries({ queryKey: ["questions"] });
+      void qc.invalidateQueries({ queryKey: ["question", variables.id] });
+      void qc.invalidateQueries({ queryKey: ["question"] });
+      if (updatedQuestion) {
+        qc.setQueryData(["question", variables.id], updatedQuestion);
+      }
     },
   });
 }
@@ -69,8 +77,27 @@ export function useDeleteQuestion() {
   return useMutation({
     mutationFn: (id: string) =>
       apiClient.delete(`/api/v1/questions/${id}`).then((r) => r.data),
-    onSuccess: () => {
+    onSuccess: (_data, id) => {
       void qc.invalidateQueries({ queryKey: ["questions"] });
+      void qc.invalidateQueries({ queryKey: ["question", id] });
+      void qc.invalidateQueries({ queryKey: ["question"] });
+    },
+  });
+}
+
+export function useBulkDeleteQuestions() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (questionIds: string[]) =>
+      apiPost<{ deleted_count: number }>("/api/v1/questions/bulk-delete", {
+        question_ids: questionIds,
+      }),
+    onSuccess: (_data, questionIds) => {
+      void qc.invalidateQueries({ queryKey: ["questions"] });
+      questionIds.forEach((id) => {
+        void qc.invalidateQueries({ queryKey: ["question", id] });
+      });
+      void qc.invalidateQueries({ queryKey: ["question"] });
     },
   });
 }

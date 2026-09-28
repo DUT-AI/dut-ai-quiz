@@ -8,6 +8,7 @@ from app.application.use_cases.questions import (
     AiRegenerateSolutionUseCase,
     AnswerQuestionUseCase,
     BulkCreateQuestionsUseCase,
+    BulkDeleteQuestionsUseCase,
     CreateQuestionUseCase,
     DeleteQuestionUseCase,
     FindRelatedQuestionsUseCase,
@@ -29,6 +30,8 @@ from app.presentation.schemas.questions import (
     QuestionAnswerIn,
     QuestionAnswerOut,
     QuestionBulkCreate,
+    QuestionBulkDeleteIn,
+    QuestionBulkDeleteOut,
     QuestionCreate,
     QuestionListQuery,
     QuestionOut,
@@ -175,6 +178,17 @@ async def bulk_create_questions_route(
 ):
     body.created_by = user.id
     return await use_case.execute(body)
+
+
+@router.post("/bulk-delete", response_model=QuestionBulkDeleteOut)
+@inject
+async def bulk_delete_questions_route(
+    user: EducatorUser,
+    body: QuestionBulkDeleteIn,
+    use_case: FromDishka[BulkDeleteQuestionsUseCase],
+):
+    count = await use_case.execute(body.question_ids)
+    return QuestionBulkDeleteOut(deleted_count=count)
 
 
 @router.post("/{question_id}/answer", response_model=QuestionAnswerOut)

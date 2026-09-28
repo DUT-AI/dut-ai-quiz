@@ -192,3 +192,22 @@ def test_question_to_student_schema_directly():
     assert student_q.options[0].is_correct is None
     assert student_q.options[1].is_correct is None
     assert student_q.tags == ["ML", "AI"]
+
+
+@pytest.mark.asyncio
+async def test_bulk_delete_questions_use_case():
+    from app.application.use_cases.questions.detete_question_uc import BulkDeleteQuestionsUseCase
+
+    question_repo = AsyncMock()
+    question_repo.delete_bulk.return_value = 3
+
+    ids = [uuid4(), uuid4(), uuid4()]
+    use_case = BulkDeleteQuestionsUseCase(question_repo)
+    count = await use_case.execute(ids)
+
+    assert count == 3
+    question_repo.delete_bulk.assert_called_once_with(ids)
+
+    # Empty list
+    empty_count = await use_case.execute([])
+    assert empty_count == 0

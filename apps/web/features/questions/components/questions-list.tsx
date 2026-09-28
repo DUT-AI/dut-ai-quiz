@@ -17,6 +17,8 @@ interface QuestionsListProps {
   onClearSearch?: () => void;
   difficultyFilter?: "ALL" | "EASY" | "MEDIUM" | "HARD";
   onClearDifficulty?: () => void;
+  selectedIds?: Set<string>;
+  onToggleSelect?: (q: QuestionOut) => void;
 }
 
 export function QuestionsList({
@@ -31,6 +33,8 @@ export function QuestionsList({
   onClearSearch,
   difficultyFilter = "ALL",
   onClearDifficulty,
+  selectedIds,
+  onToggleSelect,
 }: QuestionsListProps) {
   if (isLoading) {
     return (
@@ -149,6 +153,9 @@ export function QuestionsList({
           onExplain={onExplain}
           onEdit={isTeacher ? onEdit : undefined}
           onDelete={isTeacher ? onDelete : undefined}
+          selectable={isTeacher}
+          isSelected={selectedIds?.has(q.id)}
+          onToggleSelect={isTeacher ? onToggleSelect : undefined}
         />
       ))}
     </div>

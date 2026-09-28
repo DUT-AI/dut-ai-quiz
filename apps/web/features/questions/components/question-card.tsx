@@ -21,10 +21,22 @@ interface QuestionCardProps {
   onExplain: (q: QuestionOut) => void;
   onEdit?: (q: QuestionOut) => void;
   onDelete?: (q: QuestionOut) => void;
+  selectable?: boolean;
+  isSelected?: boolean;
+  onToggleSelect?: (q: QuestionOut) => void;
 }
 
 export const QuestionCard = React.memo(
-  ({ q, idx, onExplain, onEdit, onDelete }: QuestionCardProps) => {
+  ({
+    q,
+    idx,
+    onExplain,
+    onEdit,
+    onDelete,
+    selectable = false,
+    isSelected = false,
+    onToggleSelect,
+  }: QuestionCardProps) => {
     const { user } = useAuth();
     const storageKey = useMemo(() => {
       return `practice_progress_${user?.id || "guest"}_${q.lesson_id || "default"}`;
@@ -163,19 +175,50 @@ export const QuestionCard = React.memo(
         <Card
           className={cn(
             "border-none shadow-lg bg-white dark:bg-navy-blue/60 rounded-3xl overflow-hidden hover:shadow-xl transition-all border-l-4 text-left",
+            isSelected && "ring-2 ring-primary/40 bg-primary/[0.02] dark:bg-primary/[0.04]",
             isRevealed
               ? (result?.isCorrect ?? q.options.find((o) => o.id === selectedId)?.is_correct)
                 ? "border-l-green"
                 : "border-l-red"
+              : isSelected
+              ? "border-l-primary"
               : "border-l-primary/20"
           )}
         >
           <CardContent className="p-8">
             <div className="flex flex-col sm:flex-row gap-6">
               <div className="flex sm:flex-col items-center justify-between sm:justify-start gap-4 shrink-0">
-                <div className="size-14 rounded-2xl bg-gray-50 dark:bg-white/5 flex items-center justify-center font-bold text-gray-navy opacity-50">
-                  #{idx + 1}
-                </div>
+                {selectable && onToggleSelect ? (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onToggleSelect(q);
+                    }}
+                    className={cn(
+                      "size-14 rounded-2xl flex flex-col items-center justify-center font-bold transition-all cursor-pointer border-2 select-none group",
+                      isSelected
+                        ? "bg-primary text-white border-primary shadow-md shadow-primary/25"
+                        : "bg-gray-50 dark:bg-white/5 border-gray-200/70 dark:border-white/10 text-gray-navy/60 hover:border-primary/50 hover:text-primary"
+                    )}
+                    title={isSelected ? "Bỏ chọn câu hỏi" : "Chọn câu hỏi"}
+                  >
+                    <div className="flex items-center justify-center">
+                      {isSelected ? (
+                        <Check className="size-5 stroke-[3]" />
+                      ) : (
+                        <>
+                          <span className="text-xs font-bold opacity-80 group-hover:hidden">#{idx + 1}</span>
+                          <div className="size-4 rounded-md border-2 border-slate-300 dark:border-zinc-600 hidden group-hover:block" />
+                        </>
+                      )}
+                    </div>
+                  </button>
+                ) : (
+                  <div className="size-14 rounded-2xl bg-gray-50 dark:bg-white/5 flex items-center justify-center font-bold text-gray-navy opacity-50">
+                    #{idx + 1}
+                  </div>
+                )}
 
                 {q.difficulty && (
                   <span className={cn(

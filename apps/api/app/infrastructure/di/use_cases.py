@@ -143,6 +143,7 @@ from app.application.use_cases.questions import (
     AiRegenerateSolutionUseCase,
     AnswerQuestionUseCase,
     BulkCreateQuestionsUseCase,
+    BulkDeleteQuestionsUseCase,
     CreateQuestionUseCase,
     DeleteQuestionUseCase,
     FindRelatedQuestionsUseCase,
@@ -274,6 +275,7 @@ class UseCaseProvider(Provider):
     # questions
     create_question_use_case = provide(CreateQuestionUseCase, scope=Scope.REQUEST)
     delete_question_use_case = provide(DeleteQuestionUseCase, scope=Scope.REQUEST)
+    bulk_delete_questions_use_case = provide(BulkDeleteQuestionsUseCase, scope=Scope.REQUEST)
     get_question_use_case = provide(GetQuestionUseCase, scope=Scope.REQUEST)
     list_questions_use_case = provide(ListQuestionsUseCase, scope=Scope.REQUEST)
     update_question_use_case = provide(UpdateQuestionUseCase, scope=Scope.REQUEST)

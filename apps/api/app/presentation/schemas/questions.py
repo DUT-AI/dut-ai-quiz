@@ -152,6 +152,14 @@ class QuestionBulkCreate(BaseModel):
     created_by: int | None = None
 
 
+class QuestionBulkDeleteIn(BaseModel):
+    question_ids: list[UUID]
+
+
+class QuestionBulkDeleteOut(BaseModel):
+    deleted_count: int
+
+
 class QuestionAnswerIn(BaseModel):
     option_id: str
 
