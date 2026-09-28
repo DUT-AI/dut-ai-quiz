@@ -132,22 +132,22 @@ export function ModuleTrack({ module, lessons, index }: Props) {
             </span>
           </div>
 
-          <button className="p-2 text-gray-navy/60 hover:text-gray-navy dark:text-light-blue/60 dark:hover:text-light-blue hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl transition-all">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsExpanded((prev) => !prev);
+            }}
+            className="p-2 text-gray-navy/60 hover:text-gray-navy dark:text-light-blue/60 dark:hover:text-light-blue hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl transition-all cursor-pointer"
+          >
             <ChevronRight className={`size-5 transition-transform duration-300 ${isExpanded ? "rotate-90" : ""}`} />
           </button>
         </div>
       </div>
 
-      {/* Module Description (expanded view on desktop) */}
-      <AnimatePresence initial={false}>
-        {isExpanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25, ease: "easeInOut" }}
-          >
-            <div className="border-t border-slate-150/50 dark:border-white/5 p-6 bg-slate-50/20 dark:bg-navy-blue/10">
+      {/* Module Content / Lessons Sequence */}
+      {isExpanded && (
+        <div className="border-t border-slate-150/50 dark:border-white/5 p-6 bg-slate-50/20 dark:bg-navy-blue/10 animate-in fade-in slide-in-from-top-2 duration-200">
               {/* Description Block */}
               {module.description && (
                 <div className="mb-6 text-left">
@@ -172,16 +172,14 @@ export function ModuleTrack({ module, lessons, index }: Props) {
                       key={`step-${module.id}-${order}`}
                       order={order}
                       moduleId={module.id}
-                      lessons={lessonsByOrder[order]}
+                      lessons={lessonsByOrder[order] || []}
                       isLast={idx === totalSteps - 1}
                     />
                   ))}
                 </div>
               )}
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
     </div>
   );
 }

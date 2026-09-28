@@ -155,9 +155,9 @@ export const QuestionCard = React.memo(
 
     return (
       <motion.div
-        initial={{ opacity: 0, x: -10 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: idx * 0.05 }}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.28, delay: Math.min(idx * 0.03, 0.25) }}
         className="w-full min-w-0"
       >
         <Card
@@ -249,7 +249,7 @@ export const QuestionCard = React.memo(
 
                         {isSelected && !isRevealed && (
                           <motion.div
-                            layoutId="selection"
+                            layoutId={`selection-${q.id}`}
                             className="absolute inset-0 border-2 border-primary rounded-2xl pointer-events-none"
                           />
                         )}
@@ -258,11 +258,14 @@ export const QuestionCard = React.memo(
                   })}
                 </div>
 
-                <AnimatePresence>
+                <AnimatePresence initial={false}>
                   {isRevealed && (result?.solution || q.solution) && (
                     <motion.div
+                      key={`solution-${q.id}`}
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.25, ease: "easeInOut" }}
                       className="overflow-hidden"
                     >
                       <div className="mt-8 p-6 rounded-3xl bg-primary/5 border border-primary/10 space-y-3">
@@ -278,11 +281,14 @@ export const QuestionCard = React.memo(
                   )}
                 </AnimatePresence>
 
-                <AnimatePresence>
+                <AnimatePresence initial={false}>
                   {isRevealed && relatedLessons.length > 0 && (
                     <motion.div
+                      key={`related-${q.id}`}
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.25, ease: "easeInOut" }}
                       className="overflow-hidden"
                     >
                       <div className="mt-6 space-y-3">

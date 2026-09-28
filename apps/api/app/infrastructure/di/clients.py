@@ -47,7 +47,7 @@ class ClientProvider(Provider):
     @provide(scope=Scope.APP)
     async def get_http_client(self) -> AsyncIterable[httpx.AsyncClient]:
         """Provide http client."""
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(timeout=30.0, connect=10.0)) as client:
             yield client
 
     @provide(scope=Scope.APP)

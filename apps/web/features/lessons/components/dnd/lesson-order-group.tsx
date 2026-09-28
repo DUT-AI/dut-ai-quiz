@@ -54,7 +54,6 @@ export function LessonOrderGroup({ order, moduleId, lessons, onEdit, onDelete }:
       </div>
       
       <div
-        ref={setNodeRef}
         className={`w-full min-h-[110px] p-4 rounded-2xl bg-gray-50/40 dark:bg-black/35 border-2 border-dashed transition-all duration-300 flex flex-row flex-wrap gap-4 ${
           isOver 
             ? "border-primary bg-primary/10 dark:bg-primary/5 shadow-inner" 

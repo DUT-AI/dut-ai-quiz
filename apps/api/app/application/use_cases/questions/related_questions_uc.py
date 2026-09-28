@@ -80,7 +80,13 @@ class FindRelatedQuestionsUseCase:
             if match.question.embedding_source_hash == question_embedding_hash(match.question)
         ]
 
-        candidates = await self._rerank_candidates(normalized_content, valid_candidates)
+        # Rerank top candidates with cross-encoder to maintain sub-second latency and prevent timeout
+        rerank_count = max(limit * 3, 15)
+        top_candidates = valid_candidates[:rerank_count]
+        remaining_candidates = valid_candidates[rerank_count:]
+
+        reranked_top = await self._rerank_candidates(normalized_content, top_candidates)
+        candidates = reranked_top + remaining_candidates
 
         results: list[dict] = []
         for match in candidates:

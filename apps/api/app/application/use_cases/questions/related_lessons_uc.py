@@ -81,13 +81,16 @@ class GetRelatedLessonsUseCase:
         if not valid_candidates:
             return []
 
-        texts = [c.chunk_content for c in valid_candidates]
+        top_candidates = valid_candidates[:20]
+        remaining_candidates = valid_candidates[20:]
+
+        texts = [c.chunk_content for c in top_candidates]
         query = question.content.strip() or "Question"
         try:
             rerank_results = await self._rerank_service.rerank(query=query, texts=texts)
             reranked: list[LessonChunkMatch] = []
             for item in rerank_results:
-                orig = valid_candidates[item.index]
+                orig = top_candidates[item.index]
                 reranked.append(
                     LessonChunkMatch(
                         lesson_id=orig.lesson_id,
@@ -101,7 +104,7 @@ class GetRelatedLessonsUseCase:
                         score=item.score,
                     )
                 )
-            return reranked
+            return reranked + remaining_candidates
         except Exception as exc:
             logger.warning(
                 "Reranking failed in related lessons, falling back to vector score: {}", exc
