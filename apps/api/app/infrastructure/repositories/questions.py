@@ -228,9 +228,9 @@ class QuestionRepository(IQuestionRepository):
     async def delete_bulk(self, question_ids: list[UUID]) -> int:
         if not question_ids:
             return 0
-        stmt = delete(Question).where(Question.id.in_(question_ids))
+        stmt = delete(Question).where(Question.id.in_(question_ids)).returning(Question.id)
         res = await self._s.execute(stmt)
-        return res.rowcount or len(question_ids)
+        return len(res.scalars().all())
 
     async def search_similar(
         self,
