@@ -1,12 +1,13 @@
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import ForeignKey, Integer, UniqueConstraint
+from sqlalchemy import Enum, ForeignKey, Integer, UniqueConstraint
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.dialects.postgresql import UUID as pgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.domain.entities.exam import ExamEntity
+from app.domain.value_objects import ExamAccessScope
 
 from .base import Base
 
@@ -26,6 +27,12 @@ class Exam(Base):
     participant_ids: Mapped[list[int]] = mapped_column(
         ARRAY(Integer()), nullable=False, default=list
     )
+    access_scope: Mapped[ExamAccessScope] = mapped_column(
+        Enum(ExamAccessScope, name="examaccessscope", native_enum=True),
+        nullable=False,
+        default=ExamAccessScope.PUBLIC,
+        server_default="PUBLIC",
+    )
     show_answers: Mapped[bool] = mapped_column(default=False, server_default="false")
 
     def to_entity(self) -> "ExamEntity":
@@ -40,6 +47,7 @@ class Exam(Base):
             is_published=self.is_published,
             created_by=self.created_by,
             participant_ids=self.participant_ids,
+            access_scope=self.access_scope,
             show_answers=self.show_answers,
         )
 
@@ -56,6 +64,7 @@ class Exam(Base):
             is_published=entity.is_published,
             created_by=entity.created_by,
             participant_ids=entity.participant_ids,
+            access_scope=entity.access_scope,
             show_answers=entity.show_answers,
         )
 

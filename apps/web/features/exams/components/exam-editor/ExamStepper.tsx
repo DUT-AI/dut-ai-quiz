@@ -32,6 +32,9 @@ export default function ExamStepper({ initialData }: Props) {
     is_published: initialData?.is_published ?? false,
     show_answers: initialData?.show_answers ?? false,
   });
+  const [accessScope, setAccessScope] = useState<"PUBLIC" | "RESTRICTED">(
+    initialData?.access_scope ?? (initialData?.participant_ids?.length > 0 ? "RESTRICTED" : "PUBLIC")
+  );
   const [participantIds, setParticipantIds] = useState<number[]>(initialData?.participant_ids ?? []);
   const [questionIds, setQuestionIds] = useState<string[]>(initialData?.questions?.map((q: any) => q.id) ?? []);
   const [isSaving, setIsSaving] = useState(false);
@@ -59,7 +62,8 @@ export default function ExamStepper({ initialData }: Props) {
         ...formData,
         start_time: formData.start_time || null,
         end_time: formData.end_time || null,
-        participant_ids: participantIds,
+        access_scope: accessScope,
+        participant_ids: accessScope === "PUBLIC" ? [] : participantIds,
       } as any;
 
       let examId = initialData?.id;
@@ -72,6 +76,7 @@ export default function ExamStepper({ initialData }: Props) {
           duration_minutes: payload.duration_minutes,
           max_attempts: payload.max_attempts,
           is_published: payload.is_published,
+          access_scope: payload.access_scope,
           participant_ids: payload.participant_ids,
           show_answers: payload.show_answers,
         });
@@ -182,7 +187,12 @@ export default function ExamStepper({ initialData }: Props) {
           <StepInfo data={formData} onChange={(d) => setFormData((prev) => ({ ...prev, ...d }))} />
         )}
         {currentStep === 1 && (
-          <StepParticipants selectedIds={participantIds} onChange={setParticipantIds} />
+          <StepParticipants
+            selectedIds={participantIds}
+            onChange={setParticipantIds}
+            accessScope={accessScope}
+            onAccessScopeChange={setAccessScope}
+          />
         )}
         {currentStep === 2 && (
           <StepQuestions selectedIds={questionIds} onChange={setQuestionIds} />

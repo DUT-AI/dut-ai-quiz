@@ -1,6 +1,7 @@
 from .enums import (
     AttemptStatus,
     Difficulty,
+    ExamAccessScope,
     GameSessionStatus,
     PoolType,
 )
@@ -20,6 +21,7 @@ __all__ = [
     "ShuffledExamResult",
     "AttemptStatus",
     "Difficulty",
+    "ExamAccessScope",
     "PoolType",
     "GameSessionStatus",
     "SubmissionStorageInfo",

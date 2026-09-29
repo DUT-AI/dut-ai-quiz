@@ -22,3 +22,9 @@ class AttemptStatus(StrEnum):
 class GameSessionStatus(StrEnum):
     IN_PROGRESS = "IN_PROGRESS"
     COMPLETED = "COMPLETED"
+
+
+class ExamAccessScope(StrEnum):
+    PUBLIC = "PUBLIC"
+    RESTRICTED = "RESTRICTED"
+

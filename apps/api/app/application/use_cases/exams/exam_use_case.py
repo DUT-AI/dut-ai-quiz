@@ -27,6 +27,7 @@ class CreateExamUseCase:
             is_published=payload.is_published,
             created_by=teacher_user_id,
             participant_ids=payload.participant_ids,
+            access_scope=payload.access_scope,
             show_answers=payload.show_answers,
         )
         return await self._exam_repo.add(entity)
@@ -43,10 +44,9 @@ class GetExamUseCase:
         if not entity:
             return None
 
-        # If student/teacher is checking for participation, verify participation or ownership
-        if user_id is not None:
-            if user_id != entity.created_by and user_id not in entity.participant_ids:
-                return None
+        # Verify participation or ownership using domain entity method
+        if not entity.can_access(user_id):
+            return None
         return entity
 
 
