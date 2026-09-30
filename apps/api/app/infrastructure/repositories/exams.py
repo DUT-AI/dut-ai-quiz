@@ -77,6 +77,8 @@ class ExamRepository(IExamRepository):
             model.max_attempts = entity.max_attempts
             model.is_published = entity.is_published
             model.show_answers = entity.show_answers
+            model.access_scope = entity.access_scope
+            model.participant_ids = entity.participant_ids
             await self._s.flush()
             await self._s.refresh(model)
             return model.to_entity()
