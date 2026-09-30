@@ -41,8 +41,13 @@ class UserRepository(IUserRepository):
             m.google_id = entity.google_id
             await self._session.flush()
             await self._session.refresh(m)
-            return m.to_entity()
         return entity
+
+    async def list_all(self) -> list[UserEntity]:
+        stmt = select(User)
+        result = await self._session.execute(stmt)
+        users = result.scalars().all()
+        return [u.to_entity() for u in users]
 
     async def flush(self) -> None:
         await self._session.flush()

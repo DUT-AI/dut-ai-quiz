@@ -22,6 +22,10 @@ class IUserRepository(Protocol):
         """Update an existing user entity in the store."""
         ...
 
+    async def list_all(self) -> list[UserEntity]:
+        """List all users in the store."""
+        ...
+
     async def flush(self) -> None:
         """Flush pending changes to the database."""
         ...
