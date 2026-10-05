@@ -201,7 +201,6 @@ class HomeworkRepository(IHomeworkRepository):
             .where(
                 Homework.lesson_id == lesson_id,
                 Homework.archived_at.is_(None),
-                HomeworkSubmission.status == HomeworkSubmissionStatus.GRADED.value,
             )
             .group_by(HomeworkSubmission.user_id)
             .order_by(HomeworkSubmission.user_id)
