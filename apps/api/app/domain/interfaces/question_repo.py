@@ -65,3 +65,12 @@ class IQuestionRepository(Protocol):
     ) -> list[QuestionSimilarityMatch]:
         """Return public questions ordered by cosine similarity."""
         ...
+
+    async def count_by_lesson_and_pool(
+        self,
+        lesson_id: UUID,
+        pool_type: PoolType | None = None,
+    ) -> int:
+        """Count questions assigned to a lesson, optionally filtered by pool_type."""
+        ...
+

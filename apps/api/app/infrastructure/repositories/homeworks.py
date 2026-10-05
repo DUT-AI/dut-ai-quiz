@@ -225,3 +225,14 @@ class HomeworkRepository(IHomeworkRepository):
             )
             or 0
         )
+
+    async def count_active_by_lesson(self, lesson_id: UUID) -> int:
+        stmt = (
+            select(func.count(Homework.id))
+            .where(
+                Homework.lesson_id == lesson_id,
+                Homework.archived_at.is_(None),
+            )
+        )
+        return int(await self._session.scalar(stmt) or 0)
+

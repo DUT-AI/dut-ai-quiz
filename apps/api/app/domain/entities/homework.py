@@ -12,6 +12,11 @@ class HomeworkSubmissionStatus(StrEnum):
     FAILED = "FAILED"
 
 
+class SubmissionType(StrEnum):
+    CODING = "CODING"
+    GAME = "GAME"
+
+
 @dataclass(slots=True)
 class HomeworkEntity:
     lesson_id: UUID | None

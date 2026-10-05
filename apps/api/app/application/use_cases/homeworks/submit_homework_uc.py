@@ -7,11 +7,16 @@ from app.core.datetime_utils import now_ict
 from app.domain.entities.homework import (
     HomeworkSubmissionEntity,
     HomeworkSubmissionStatus,
+    SubmissionType,
 )
 from app.domain.interfaces import IS3Client
 from app.domain.interfaces.homework_queue import IHomeworkEvaluationQueue
 from app.domain.interfaces.homework_repo import IHomeworkRepository
 
+from loguru import logger
+
+from app.domain.interfaces.lesson_repo import ILessonRepository
+from app.infrastructure.services.manage_webhook import dispatch_manage_submission_webhook
 from ._shared import (
     HOMEWORK_SUBMISSION_SUFFIXES,
     get_homework_or_raise,
@@ -25,16 +30,18 @@ class SubmitHomeworkUseCase:
         repository: IHomeworkRepository,
         storage: IS3Client,
         queue: IHomeworkEvaluationQueue,
+        lesson_repo: ILessonRepository,
     ) -> None:
         self._repository = repository
         self._storage = storage
         self._queue = queue
+        self._lesson_repo = lesson_repo
 
     async def execute(
         self,
         payload: SubmitHomeworkDTO,
     ) -> HomeworkSubmissionOutDTO:
-        await get_homework_or_raise(
+        homework = await get_homework_or_raise(
             self._repository,
             payload.homework_id,
         )
@@ -79,4 +86,24 @@ class SubmitHomeworkUseCase:
         if submission.id is None:
             raise ValueError("Created submission must be persisted")
         await self._queue.enqueue_evaluation(submission.id)
+
+        # Bắn webhook sang Manage nếu học viên thuộc quyền quản lý (user_id < 1,000,000)
+        if homework.lesson_id:
+            try:
+                lesson = await self._lesson_repo.get(homework.lesson_id)
+                if lesson and lesson.slug:
+                    dispatch_manage_submission_webhook(
+                        lesson_slug=lesson.slug,
+                        user_id=payload.user_id,
+                        submission_type=SubmissionType.CODING,
+                        is_passed=True,
+                        details={
+                            "submission_id": str(submission.id),
+                            "attempt_number": submission.attempt_number,
+                            "original_filename": submission.original_filename,
+                        },
+                    )
+            except Exception as e:
+                logger.warning(f"Error dispatching coding submission webhook: {e}")
+
         return HomeworkSubmissionOutDTO.from_entity(submission)

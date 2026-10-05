@@ -71,3 +71,9 @@ class IHomeworkRepository(ABC):
     @abstractmethod
     async def count_submitters(self, homework_id: UUID) -> int:
         raise NotImplementedError
+
+    @abstractmethod
+    async def count_active_by_lesson(self, lesson_id: UUID) -> int:
+        """Count active (non-archived) homeworks assigned to a lesson."""
+        raise NotImplementedError
+

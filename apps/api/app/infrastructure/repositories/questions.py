@@ -260,3 +260,14 @@ class QuestionRepository(IQuestionRepository):
             question.tags = [tag_map[tag_id] for tag_id in model.tags if tag_id in tag_map]
             matches.append(QuestionSimilarityMatch(question=question, score=float(score)))
         return matches
+
+    async def count_by_lesson_and_pool(
+        self,
+        lesson_id: UUID,
+        pool_type: PoolType | None = None,
+    ) -> int:
+        stmt = select(func.count(Question.id)).where(Question.lesson_id == lesson_id)
+        if pool_type is not None:
+            stmt = stmt.where(Question.pool_type == pool_type)
+        return int(await self._s.scalar(stmt) or 0)
+

@@ -3,7 +3,7 @@
 import React from "react";
 import { useAuth } from "@/context/auth-context";
 import { useRouter } from "next/navigation";
-import { API_BASE } from "@/lib/config";
+// import { API_BASE } from "@/lib/config";
 import { useLogin } from "./use-login";
 import { Loader2 } from "lucide-react";
 
@@ -18,9 +18,9 @@ export default function LoginPage() {
     }
   }, [isAuthenticated, isLoading, router]);
 
-  const handleGoogleLogin = () => {
-    window.location.href = `${API_BASE}/api/v1/auth/google/login`;
-  };
+  // const handleGoogleLogin = () => {
+  //   window.location.href = `${API_BASE}/api/v1/auth/google/login`;
+  // };
 
   if (isLoading) {
     return (
@@ -122,7 +122,8 @@ export default function LoginPage() {
           </div>
         </form>
 
-        <div className="mt-6">
+        {/* Google login feature temporarily commented out */}
+        {/* <div className="mt-6">
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-300" />
@@ -159,7 +160,7 @@ export default function LoginPage() {
               <span>Sign in with Google</span>
             </button>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

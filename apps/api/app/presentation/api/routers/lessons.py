@@ -17,7 +17,12 @@ from app.application.use_cases.lessons import (
 )
 from app.application.use_cases.questions import ListQuestionsUseCase
 from app.domain.entities.auth_enums import SystemPermission
-from app.domain.interfaces import EmbeddingServiceError
+from app.domain.interfaces import (
+    EmbeddingServiceError,
+    IHomeworkRepository,
+    ILessonRepository,
+    IQuestionRepository,
+)
 from app.domain.value_objects import Difficulty, PoolType
 from app.presentation.api.deps import CurrentUser, EducatorUser
 from app.presentation.schemas.lessons import (
@@ -25,10 +30,12 @@ from app.presentation.schemas.lessons import (
     LessonCreate,
     LessonDetailOut,
     LessonIndexOut,
+    LessonMetadataOut,
     LessonOut,
     LessonReorder,
     LessonUpdate,
 )
+
 from app.presentation.schemas.questions import QuestionListQuery, QuestionOut, QuestionToStudent
 
 router = APIRouter(prefix="/lessons", tags=["lessons"])
@@ -253,3 +260,53 @@ async def delete_lesson(
         return {"ok": True}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+@router.get("/{lesson_slug}/metadata", response_model=LessonMetadataOut)
+@inject
+async def get_lesson_metadata(
+    lesson_slug: str,
+    lesson_repo: FromDishka[ILessonRepository],
+    homework_repo: FromDishka[IHomeworkRepository],
+    question_repo: FromDishka[IQuestionRepository],
+):
+    """
+    Get lesson metadata and component readiness (coding homework and game questions)
+    used for validation by DUT-AI Manager.
+    """
+    lesson = await lesson_repo.get_by_slug(lesson_slug)
+    if not lesson:
+        # Fallback: check if lesson_slug is a UUID or matches by normalized name slug
+        all_lessons = await lesson_repo.list_all()
+        for l in all_lessons:
+            name_slug = l.name.lower().replace(" ", "-").replace("_", "-")
+            if (
+                str(l.id) == lesson_slug
+                or (l.slug and l.slug.lower() == lesson_slug.lower())
+                or name_slug == lesson_slug.lower()
+            ):
+                lesson = l
+                break
+
+    if not lesson:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Bài học '{lesson_slug}' không tồn tại trên hệ thống Quiz.",
+        )
+
+    coding_count = await homework_repo.count_active_by_lesson(lesson.id)
+    game_count = await question_repo.count_by_lesson_and_pool(lesson.id, PoolType.GAME)
+
+    has_coding = coding_count > 0
+    has_game = game_count > 0
+
+    return LessonMetadataOut(
+        slug=lesson.slug or str(lesson.id),
+        name=lesson.name,
+        has_coding=has_coding,
+        has_game=has_game,
+        coding_count=coding_count,
+        game_question_count=game_count,
+        is_ready=has_coding or has_game,
+    )
+

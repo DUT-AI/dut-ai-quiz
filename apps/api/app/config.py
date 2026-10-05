@@ -24,6 +24,8 @@ class Settings(BaseSettings):
 
     manage_base_url: str = ""
     manage_api_key: str = ""
+    manage_webhook_secret: str = ""
+    
     third_party_api_keys: str = ""
 
     cors_origins: str = "http://localhost:3000,https://quiz.dutai.site"

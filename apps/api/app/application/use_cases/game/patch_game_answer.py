@@ -13,13 +13,20 @@ from app.presentation.schemas.game import (
 )
 from fastapi import HTTPException
 
+from app.infrastructure.services.manage_webhook import dispatch_manage_submission_webhook
+
+from app.domain.entities.homework import SubmissionType
+        # Anti-cheat: Check if time limit exceeded
+from datetime import datetime
+
+from app.core.datetime_utils import now_ict
 
 class PatchGameAnswerUseCase:
     def __init__(
         self,
         ps_repo: IGameSessionRepository,
         question_repo: IQuestionRepository,
-        cache: GameLeaderboardCache = None,
+        cache: GameLeaderboardCache,
     ):
         self._ps_repo = ps_repo
         self._question_repo = question_repo
@@ -64,10 +71,7 @@ class PatchGameAnswerUseCase:
 
         is_correct = str(payload.option_id) == str(correct_opt_id)
 
-        # Anti-cheat: Check if time limit exceeded
-        from datetime import datetime
 
-        from app.core.datetime_utils import now_ict
 
         started_at_str = session.snapshot["gamification"].get("current_question_started_at")
         if started_at_str:
@@ -144,6 +148,9 @@ class PatchGameAnswerUseCase:
             session.snapshot["gamification"]["gold"] = (
                 session.snapshot["gamification"].get("gold", 0) + coins_gained
             )
+            session.snapshot["gamification"]["correct_count"] = (
+                session.snapshot["gamification"].get("correct_count", 0) + 1
+            )
 
             if is_boss:
                 session.snapshot["gamification"]["boss_hp"] = 0
@@ -201,8 +208,31 @@ class PatchGameAnswerUseCase:
             session.snapshot["gamification"]["final_score"] = base_points * decay
             session.snapshot["gamification"]["attempt_count"] = count_completed + 1
 
-            if hasattr(self, "_cache") and self._cache:
-                await self._cache.invalidate(lesson_slug)
+   
+            await self._cache.invalidate(lesson_slug)
+
+            # Kiểm tra tiêu chuẩn hoàn thành game: đúng 100% câu hỏi
+            total_questions_count = len(questions)
+            correct_questions_count = session.snapshot["gamification"].get("correct_count", 0)
+            is_100_percent_correct = (
+                total_questions_count > 0
+                and correct_questions_count >= total_questions_count
+                and session.status == GameSessionStatus.COMPLETED
+            )
+
+            if is_100_percent_correct:
+                dispatch_manage_submission_webhook(
+                    lesson_slug=lesson_slug,
+                    user_id=user_id,
+                    submission_type=SubmissionType.GAME,
+                    is_passed=True,
+                    details={
+                        "session_id": str(session.id),
+                        "final_score": float(session.snapshot["gamification"].get("final_score", 0)),
+                        "correct_count": correct_questions_count,
+                        "total_questions": total_questions_count,
+                    },
+                )
 
         # Set started_at for next question
         session.snapshot["gamification"]["current_question_started_at"] = now_ict().isoformat()

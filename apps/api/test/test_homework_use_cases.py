@@ -116,7 +116,8 @@ async def test_unassigned_authenticated_user_can_submit(
     upload = AsyncMock(return_value="homeworks/submission.zip")
     monkeypatch.setattr(submit_homework_uc, "upload_homework_file", upload)
     queue = AsyncMock()
-    use_case = SubmitHomeworkUseCase(repository, AsyncMock(), queue)
+    lesson_repo = AsyncMock()
+    use_case = SubmitHomeworkUseCase(repository, AsyncMock(), queue, lesson_repo)
 
     result = await use_case.execute(
         SubmitHomeworkDTO(
@@ -305,7 +306,8 @@ async def test_submit_homework_with_presigned_object_key(
 ) -> None:
     repository = HomeworkRepositoryStub(homework)
     queue = AsyncMock()
-    use_case = SubmitHomeworkUseCase(repository, AsyncMock(), queue)
+    lesson_repo = AsyncMock()
+    use_case = SubmitHomeworkUseCase(repository, AsyncMock(), queue, lesson_repo)
 
     result = await use_case.execute(
         SubmitHomeworkDTO(
@@ -328,7 +330,8 @@ async def test_submit_homework_with_invalid_key_prefix_fails(
 ) -> None:
     repository = HomeworkRepositoryStub(homework)
     queue = AsyncMock()
-    use_case = SubmitHomeworkUseCase(repository, AsyncMock(), queue)
+    lesson_repo = AsyncMock()
+    use_case = SubmitHomeworkUseCase(repository, AsyncMock(), queue, lesson_repo)
 
     with pytest.raises(ValueError, match="không hợp lệ"):
         await use_case.execute(
