@@ -2,6 +2,7 @@ from app.application.dtos.homework import (
     CompletedHomeworkMemberOutDTO,
     HomeworkOutDTO,
     HomeworkSubmissionOutDTO,
+    HomeworkSubmissionSyncOutDTO,
 )
 from pydantic import BaseModel
 
@@ -23,6 +24,11 @@ class SubmissionListResponse(BaseModel):
 
 class CompletedHomeworkMembersResponse(BaseModel):
     data: list[CompletedHomeworkMemberOutDTO]
+    is_success: bool = True
+
+
+class HomeworkSubmissionsSyncResponse(BaseModel):
+    data: list[HomeworkSubmissionSyncOutDTO]
     is_success: bool = True
 
 

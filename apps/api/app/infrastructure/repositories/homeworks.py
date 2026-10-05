@@ -3,7 +3,10 @@ from uuid import UUID
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.application.dtos.homework import CompletedHomeworkMemberOutDTO
+from app.application.dtos.homework import (
+    CompletedHomeworkMemberOutDTO,
+    HomeworkSubmissionSyncOutDTO,
+)
 from app.core.datetime_utils import now_ict
 from app.domain.entities.homework import (
     HomeworkEntity,
@@ -196,6 +199,7 @@ class HomeworkRepository(IHomeworkRepository):
                 HomeworkSubmission.user_id,
                 func.count(HomeworkSubmission.id).label("submission_count"),
                 func.max(HomeworkSubmission.score).label("max_score"),
+                func.max(HomeworkSubmission.submitted_at).label("submitted_at"),
             )
             .join(Homework, Homework.id == HomeworkSubmission.homework_id)
             .where(
@@ -211,6 +215,7 @@ class HomeworkRepository(IHomeworkRepository):
                 user_id=row.user_id,
                 submission_count=int(row.submission_count or 0),
                 max_score=float(row.max_score) if row.max_score is not None else None,
+                submitted_at=row.submitted_at,
             )
             for row in rows
         ]
@@ -234,4 +239,33 @@ class HomeworkRepository(IHomeworkRepository):
             )
         )
         return int(await self._session.scalar(stmt) or 0)
+
+    async def list_submissions_for_sync_by_lesson(
+        self, lesson_id: UUID
+    ) -> list[HomeworkSubmissionSyncOutDTO]:
+        stmt = (
+            select(HomeworkSubmission)
+            .join(Homework, Homework.id == HomeworkSubmission.homework_id)
+            .where(
+                Homework.lesson_id == lesson_id,
+                Homework.archived_at.is_(None),
+            )
+            .order_by(HomeworkSubmission.submitted_at.asc())
+        )
+        rows = (await self._session.scalars(stmt)).all()
+        return [
+            HomeworkSubmissionSyncOutDTO(
+                submission_id=str(row.id),
+                homework_id=str(row.homework_id),
+                user_id=row.user_id,
+                attempt_number=row.attempt_number,
+                original_filename=row.original_filename,
+                submitted_at=row.submitted_at,
+                status=str(row.status.value if hasattr(row.status, "value") else row.status),
+                is_pass=row.is_pass,
+                score=float(row.score) if row.score is not None else None,
+                score_details=row.score_details or [],
+            )
+            for row in rows
+        ]
 

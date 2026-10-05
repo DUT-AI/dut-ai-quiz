@@ -43,6 +43,20 @@ class CompletedHomeworkMemberOutDTO(BaseModel):
     user_id: int
     submission_count: int = 1
     max_score: float | None = None
+    submitted_at: datetime | None = None
+
+
+class HomeworkSubmissionSyncOutDTO(BaseModel):
+    submission_id: str
+    homework_id: str
+    user_id: int
+    attempt_number: int
+    original_filename: str
+    submitted_at: datetime
+    status: str
+    is_pass: bool | None = None
+    score: float | None = None
+    score_details: list[dict[str, Any]] | None = None
 
 
 class HomeworkSubmissionOutDTO(BaseModel):

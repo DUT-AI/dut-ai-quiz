@@ -10,6 +10,7 @@ from .homework import (
     HomeworkFileDTO,
     HomeworkOutDTO,
     HomeworkSubmissionOutDTO,
+    HomeworkSubmissionSyncOutDTO,
     SubmitHomeworkDTO,
     UpdateHomeworkDTO,
 )
@@ -25,6 +26,7 @@ __all__ = [
     "HomeworkFileDTO",
     "HomeworkOutDTO",
     "HomeworkSubmissionOutDTO",
+    "HomeworkSubmissionSyncOutDTO",
     "LoginPayload",
     "SubmitHomeworkDTO",
     "UpdateHomeworkDTO",

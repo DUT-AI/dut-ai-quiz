@@ -96,6 +96,7 @@ class SubmitHomeworkUseCase:
                         lesson_slug=lesson.slug,
                         user_id=payload.user_id,
                         submission_type=SubmissionType.CODING,
+                        submitted_at=submission.submitted_at,
                         is_passed=True,
                         details={
                             "submission_id": str(submission.id),

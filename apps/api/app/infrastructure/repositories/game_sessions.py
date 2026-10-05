@@ -7,6 +7,7 @@ from app.domain.entities.game import GameSessionEntity
 from app.domain.interfaces import IGameSessionRepository
 from app.infrastructure.persistence.models import GameSession
 
+from app.domain.value_objects import GameSessionStatus
 
 class GameSessionRepository(IGameSessionRepository):
     def __init__(self, session: AsyncSession) -> None:
@@ -164,7 +165,51 @@ class GameSessionRepository(IGameSessionRepository):
                     "is_completed": is_completed,
                     "total_questions": total_questions,
                     "answered_questions": answered_questions,
+                    "completed_at": row.GameSession.completed_at,
                 }
             )
 
         return result
+
+    async def list_completed_sessions_for_sync(self, lesson_slug: str) -> list[dict]:
+        
+
+        stmt = (
+            select(GameSession)
+            .where(
+                GameSession.status == GameSessionStatus.COMPLETED,
+                GameSession.tags_filter.contains([lesson_slug]),
+                GameSession.completed_at.is_not(None),
+            )
+            .order_by(GameSession.completed_at.asc())
+        )
+        r = await self._s.execute(stmt)
+        sessions = r.scalars().all()
+
+        results = []
+        for s in sessions:
+            snapshot = s.snapshot or {}
+            ps = snapshot.get("gamification", {})
+            questions = snapshot.get("questions", [])
+            answers = snapshot.get("answers", {})
+
+            total_q = len(questions) if questions else (s.question_limit or 0)
+            ans_q = len(answers) if isinstance(answers, dict) else 0
+            correct_q = int(ps.get("correct_count", 0))
+
+            is_100_percent = total_q > 0 and correct_q >= total_q
+
+            results.append(
+                {
+                    "session_id": str(s.id),
+                    "user_id": s.user_id,
+                    "completed_at": s.completed_at,
+                    "final_score": float(ps.get("final_score", 0)),
+                    "gold": int(ps.get("gold", 0)),
+                    "attempt_count": int(ps.get("attempt_count", 1)),
+                    "is_completed": is_100_percent,
+                    "total_questions": total_q,
+                    "correct_count": correct_q,
+                }
+            )
+        return results

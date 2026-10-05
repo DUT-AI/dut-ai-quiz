@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 from typing import Any
 
 import httpx
@@ -11,7 +12,8 @@ from app.domain.entities.homework import SubmissionType
 async def _send_webhook_request(
     lesson_slug: str,
     user_id: int,
-    submission_type: SubmissionType | str,
+    submission_type: SubmissionType,
+    submitted_at: datetime,
     is_passed: bool = True,
     details: dict[str, Any] | None = None,
 ) -> None:
@@ -25,16 +27,11 @@ async def _send_webhook_request(
     
     logger.debug(f"Manage URL: {url}")
 
-    type_value = (
-        submission_type.value
-        if isinstance(submission_type, SubmissionType)
-        else str(submission_type).upper()
-    )
-
     payload = {
         "lesson_slug": lesson_slug,
         "user_id": user_id,
-        "type": type_value,
+        "type": submission_type.value,
+        "submitted_at": submitted_at.isoformat(),
         "is_passed": is_passed,
         "details": details or {},
     }
@@ -49,7 +46,7 @@ async def _send_webhook_request(
             if resp.status_code == 200:
                 logger.info(
                     f"✅ [Manage Webhook] Sent submission event: slug={lesson_slug}, "
-                    f"user_id={user_id}, type={type_value}, is_passed={is_passed}"
+                    f"user_id={user_id}, type={submission_type.value}, is_passed={is_passed}"
                 )
             else:
                 logger.warning(
@@ -64,7 +61,8 @@ async def _send_webhook_request(
 def dispatch_manage_submission_webhook(
     lesson_slug: str,
     user_id: int,
-    submission_type: SubmissionType | str,
+    submission_type: SubmissionType,
+    submitted_at: datetime,
     is_passed: bool = True,
     details: dict[str, Any] | None = None,
 ) -> None:
@@ -81,6 +79,7 @@ def dispatch_manage_submission_webhook(
                 lesson_slug=lesson_slug,
                 user_id=user_id,
                 submission_type=submission_type,
+                submitted_at=submitted_at,
                 is_passed=is_passed,
                 details=details,
             )

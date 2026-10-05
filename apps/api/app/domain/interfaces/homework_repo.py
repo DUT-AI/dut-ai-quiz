@@ -77,3 +77,8 @@ class IHomeworkRepository(ABC):
         """Count active (non-archived) homeworks assigned to a lesson."""
         raise NotImplementedError
 
+    @abstractmethod
+    async def list_submissions_for_sync_by_lesson(self, lesson_id: UUID) -> list[Any]:
+        """List all submissions in the given lesson for synchronization."""
+        raise NotImplementedError
+

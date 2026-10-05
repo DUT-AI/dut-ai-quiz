@@ -36,3 +36,7 @@ class IGameSessionRepository(Protocol):
     async def get_leaderboard_by_lesson(self, lesson_slug: str, limit: int = 100) -> list[dict]:
         """Get the game leaderboard for a specific lesson."""
         ...
+
+    async def list_completed_sessions_for_sync(self, lesson_slug: str) -> list[dict]:
+        """List all completed game sessions for a lesson to synchronize to Manage."""
+        ...

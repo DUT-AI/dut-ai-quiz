@@ -4,6 +4,7 @@ from .get_game_history_summary import GetGameHistorySummaryUseCase
 from .get_game_leaderboard import GetGameLeaderboardUseCase
 from .get_game_session import GetGameSessionUseCase
 from .list_game_history import ListGameHistoryUseCase
+from .list_game_sessions_for_sync_uc import ListGameSessionsForSyncUseCase
 from .patch_game_answer import PatchGameAnswerUseCase
 from .start_game_session import StartGameSessionUseCase
 from .use_item_game import UseItemGameUseCase
@@ -13,6 +14,7 @@ __all__ = [
     "GetActiveGameSessionUseCase",
     "FinishGameSessionUseCase",
     "ListGameHistoryUseCase",
+    "ListGameSessionsForSyncUseCase",
     "GetGameHistorySummaryUseCase",
     "GetGameLeaderboardUseCase",
     "StartGameSessionUseCase",

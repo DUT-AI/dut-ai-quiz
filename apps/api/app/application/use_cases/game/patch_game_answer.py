@@ -225,6 +225,7 @@ class PatchGameAnswerUseCase:
                     lesson_slug=lesson_slug,
                     user_id=user_id,
                     submission_type=SubmissionType.GAME,
+                    submitted_at=session.completed_at or now_ict(),
                     is_passed=True,
                     details={
                         "session_id": str(session.id),

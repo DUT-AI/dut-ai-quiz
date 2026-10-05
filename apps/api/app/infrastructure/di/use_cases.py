@@ -51,6 +51,7 @@ from app.application.use_cases.game import (
     GetGameLeaderboardUseCase,
     GetGameSessionUseCase,
     ListGameHistoryUseCase,
+    ListGameSessionsForSyncUseCase,
     PatchGameAnswerUseCase,
     StartGameSessionUseCase,
     UseItemGameUseCase,
@@ -90,6 +91,7 @@ from app.application.use_cases.homeworks import (
     GetHomeworkSubmissionDownloadUrlUseCase,
     GetMyHomeworkSubmissionUseCase,
     ListCompletedHomeworkMembersUseCase,
+    ListHomeworkSubmissionsForSyncUseCase,
     ListHomeworkSubmissionsUseCase,
     ListHomeworksUseCase,
     ListMyHomeworksUseCase,
@@ -263,6 +265,10 @@ class UseCaseProvider(Provider):
         ListCompletedHomeworkMembersUseCase,
         scope=Scope.REQUEST,
     )
+    list_homework_submissions_for_sync_use_case = provide(
+        ListHomeworkSubmissionsForSyncUseCase,
+        scope=Scope.REQUEST,
+    )
     get_homework_attachment_url_use_case = provide(
         GetHomeworkAttachmentUrlUseCase,
         scope=Scope.REQUEST,
@@ -326,6 +332,7 @@ class UseCaseProvider(Provider):
     list_game_history_use_case = provide(ListGameHistoryUseCase, scope=Scope.REQUEST)
     get_game_history_summary_use_case = provide(GetGameHistorySummaryUseCase, scope=Scope.REQUEST)
     get_game_leaderboard_use_case = provide(GetGameLeaderboardUseCase, scope=Scope.REQUEST)
+    list_game_sessions_for_sync_use_case = provide(ListGameSessionsForSyncUseCase, scope=Scope.REQUEST)
 
     list_lessons_use_case = provide(ListLessonsUseCase, scope=Scope.REQUEST)
     create_lesson_use_case = provide(CreateLessonUseCase, scope=Scope.REQUEST)

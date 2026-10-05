@@ -17,6 +17,7 @@ from app.application.use_cases.homeworks import (
     GetHomeworkSubmissionDownloadUrlUseCase,
     GetMyHomeworkSubmissionUseCase,
     ListCompletedHomeworkMembersUseCase,
+    ListHomeworkSubmissionsForSyncUseCase,
     ListHomeworkSubmissionsUseCase,
     ListHomeworksUseCase,
     ListMyHomeworksUseCase,
@@ -35,6 +36,7 @@ from app.presentation.schemas.homeworks import (
     DownloadUrlResponse,
     HomeworkListResponse,
     HomeworkResponse,
+    HomeworkSubmissionsSyncResponse,
     PresignSubmissionData,
     PresignSubmissionRequest,
     PresignSubmissionResponse,
@@ -241,6 +243,18 @@ async def list_completed_members_for_manage(
     use_case: FromDishka[ListCompletedHomeworkMembersUseCase],
 ) -> CompletedHomeworkMembersResponse:
     return CompletedHomeworkMembersResponse(data=await use_case.execute(lesson_slug))
+
+
+@router.get(
+    "/{lesson_slug}/submissions-for-sync",
+    response_model=HomeworkSubmissionsSyncResponse,
+)
+@inject
+async def list_submissions_for_sync_for_manage(
+    lesson_slug: str,
+    use_case: FromDishka[ListHomeworkSubmissionsForSyncUseCase],
+) -> HomeworkSubmissionsSyncResponse:
+    return HomeworkSubmissionsSyncResponse(data=await use_case.execute(lesson_slug))
 
 
 @router.get(

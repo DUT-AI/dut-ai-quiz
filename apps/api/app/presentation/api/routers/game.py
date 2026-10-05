@@ -10,6 +10,7 @@ from app.application.use_cases.game import (
     GetGameLeaderboardUseCase,
     GetGameSessionUseCase,
     ListGameHistoryUseCase,
+    ListGameSessionsForSyncUseCase,
     PatchGameAnswerUseCase,
     StartGameSessionUseCase,
     UseItemGameUseCase,
@@ -18,6 +19,8 @@ from app.presentation.api.deps import CurrentUser, ManageService
 from app.presentation.schemas.game import (
     GameLeaderboardRowOut,
     GameLessonSummaryOut,
+    GameSessionSyncOutDTO,
+    GameSessionsSyncResponse,
     GamificationAnswerPatchIn,
     GamificationAnswerResultOut,
     GamificationStartIn,
@@ -154,3 +157,13 @@ async def get_user_game_summary_for_manage(
 @inject
 async def get_game_leaderboard(lesson_slug: str, use_case: FromDishka[GetGameLeaderboardUseCase]):
     return await use_case.execute(lesson_slug)
+
+
+@router.get("/{lesson_slug}/sessions-for-sync", response_model=GameSessionsSyncResponse)
+@inject
+async def list_game_sessions_for_sync(
+    lesson_slug: str,
+    use_case: FromDishka[ListGameSessionsForSyncUseCase],
+) -> GameSessionsSyncResponse:
+    data = await use_case.execute(lesson_slug)
+    return GameSessionsSyncResponse(data=[GameSessionSyncOutDTO(**item) for item in data])
