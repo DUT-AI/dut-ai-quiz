@@ -11,7 +11,7 @@ class FinishGameSessionUseCase:
     def __init__(
         self,
         ps_repo: IGameSessionRepository,
-        cache: GameLeaderboardCache = None,
+        cache: GameLeaderboardCache | None = None,
     ):
         self._ps_repo = ps_repo
         self._cache = cache
@@ -27,18 +27,15 @@ class FinishGameSessionUseCase:
         session.status = GameSessionStatus.COMPLETED
         session.completed_at = now_ict()
 
-        lesson_slug = session.snapshot.get("lesson_slug") or (
+        snap = session.get_snapshot_state()
+        lesson_slug = snap.lesson_slug or (
             session.tags_filter[0] if session.tags_filter else "unknown"
         )
         count_completed = await self._ps_repo.count_completed_by_lesson(user_id, lesson_slug)
-        decay = max(0.2, 1.0 - (count_completed * 0.2))
-
-        if "gamification" in session.snapshot:
-            base_points = session.snapshot["gamification"].get("points", 0)
-            session.snapshot["gamification"]["final_score"] = base_points * decay
-            session.snapshot["gamification"]["attempt_count"] = count_completed + 1
+        snap.gamification.finalize_score(count_completed)
 
         if self._cache:
             await self._cache.invalidate(lesson_slug)
 
+        session.set_snapshot_state(snap)
         return await self._ps_repo.save(session)

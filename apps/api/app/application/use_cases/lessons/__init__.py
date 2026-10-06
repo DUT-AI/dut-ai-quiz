@@ -6,6 +6,12 @@ from .get_lesson_by_slug_uc import (
 from .get_lesson_detail_uc import (
     GetLessonDetailUseCase,
 )
+from .get_lesson_exercises_uc import (
+    GetLessonExercisesUseCase,
+)
+from .get_lesson_metadata_uc import (
+    GetLessonMetadataUseCase,
+)
 from .import_notion_lesson_uc import (
     ImportNotionLessonUseCase,
 )
@@ -21,6 +27,8 @@ __all__ = [
     "DeleteLessonUseCase",
     "GetLessonDetailUseCase",
     "GetLessonBySlugUseCase",
+    "GetLessonExercisesUseCase",
+    "GetLessonMetadataUseCase",
     "ListLessonsUseCase",
     "ReorderLessonsUseCase",
     "UpdateLessonUseCase",

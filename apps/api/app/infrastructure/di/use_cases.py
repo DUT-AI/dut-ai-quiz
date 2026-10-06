@@ -111,6 +111,12 @@ from app.application.use_cases.lessons.get_lesson_by_slug_uc import (
 from app.application.use_cases.lessons.get_lesson_detail_uc import (
     GetLessonDetailUseCase,
 )
+from app.application.use_cases.lessons.get_lesson_exercises_uc import (
+    GetLessonExercisesUseCase,
+)
+from app.application.use_cases.lessons.get_lesson_metadata_uc import (
+    GetLessonMetadataUseCase,
+)
 from app.application.use_cases.lessons.import_notion_lesson_uc import (
     ImportNotionLessonUseCase,
 )
@@ -341,6 +347,8 @@ class UseCaseProvider(Provider):
     delete_lesson_use_case = provide(DeleteLessonUseCase, scope=Scope.REQUEST)
     get_lesson_detail_use_case = provide(GetLessonDetailUseCase, scope=Scope.REQUEST)
     get_lesson_by_slug_use_case = provide(GetLessonBySlugUseCase, scope=Scope.REQUEST)
+    get_lesson_metadata_use_case = provide(GetLessonMetadataUseCase, scope=Scope.REQUEST)
+    get_lesson_exercises_use_case = provide(GetLessonExercisesUseCase, scope=Scope.REQUEST)
     reorder_lessons_use_case = provide(ReorderLessonsUseCase, scope=Scope.REQUEST)
     index_lesson_use_case = provide(IndexLessonUseCase, scope=Scope.REQUEST)
     index_all_lessons_use_case = provide(IndexAllLessonsUseCase, scope=Scope.REQUEST)

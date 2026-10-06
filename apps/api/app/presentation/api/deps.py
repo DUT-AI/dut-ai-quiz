@@ -16,6 +16,7 @@ from app.domain.entities.auth_enums import (
     normalize_role,
     resolve_permissions_for_roles,
 )
+from app.domain.entities.user import UserSource
 from app.infrastructure.database import get_session
 
 bearer_scheme = HTTPBearer(auto_error=False)
@@ -25,6 +26,11 @@ class UserContext(BaseModel):
     id: int
     roles: list[str] = Field(default_factory=list)
     permissions: set[str] = Field(default_factory=set)
+    user_source: UserSource = UserSource.MANAGE
+
+    @property
+    def is_manage_user(self) -> bool:
+        return self.user_source == UserSource.MANAGE
 
     def model_post_init(self, __context: Any) -> None:
         if not self.permissions and self.roles:
@@ -108,9 +114,17 @@ def extract_auth_context_from_request(
     if uid is None or roles is None or not isinstance(roles, list):
         raise HTTPException(status_code=401, detail="Unauthorized: Invalid token payload")
 
+    raw_source = payload.get("user_source") or payload.get("source") or payload.get("type")
+    user_source = UserSource.MANAGE
+    if raw_source in ("google", "GOOGLE", "internal", "INTERNAL"):
+        user_source = UserSource.INTERNAL
+    elif raw_source in ("manage", "MANAGE"):
+        user_source = UserSource.MANAGE
+
     return UserContext(
         id=int(uid),
         roles=roles,
+        user_source=user_source,
     )
 
 

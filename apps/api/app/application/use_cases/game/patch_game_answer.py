@@ -1,67 +1,70 @@
+from datetime import datetime
 from uuid import UUID
 
+from app.core.datetime_utils import now_ict
+from app.domain.entities.homework import SubmissionType
+from app.domain.entities.user import UserSource
+from app.domain.exceptions import (
+    DomainValidationException,
+    EntityNotFoundException,
+    InsufficientResourceException,
+)
 from app.domain.interfaces import (
     IGameSessionRepository,
     IQuestionRepository,
 )
 from app.domain.value_objects import GameSessionStatus
-from app.domain.value_objects.gamification import ITEM_PRICES, GamificationItem
+from app.domain.value_objects.gamification import GamificationItem
 from app.infrastructure.cache.game_leaderboard_cache import GameLeaderboardCache
+from app.infrastructure.services.manage_webhook import dispatch_manage_submission_webhook
 from app.presentation.schemas.game import (
     GamificationAnswerPatchIn,
     GamificationAnswerResultOut,
 )
-from fastapi import HTTPException
 
-from app.infrastructure.services.manage_webhook import dispatch_manage_submission_webhook
-
-from app.domain.entities.homework import SubmissionType
-        # Anti-cheat: Check if time limit exceeded
-from datetime import datetime
-
-from app.core.datetime_utils import now_ict
 
 class PatchGameAnswerUseCase:
     def __init__(
         self,
         ps_repo: IGameSessionRepository,
         question_repo: IQuestionRepository,
-        cache: GameLeaderboardCache,
+        cache: GameLeaderboardCache | None = None,
     ):
         self._ps_repo = ps_repo
         self._question_repo = question_repo
         self._cache = cache
 
     async def execute(
-        self, session_id: UUID, user_id: int, payload: GamificationAnswerPatchIn
+        self,
+        session_id: UUID,
+        user_id: int,
+        payload: GamificationAnswerPatchIn,
+        user_source: UserSource = UserSource.MANAGE,
     ) -> GamificationAnswerResultOut:
         session = await self._ps_repo.get(session_id)
         if not session or session.user_id != user_id:
-            raise HTTPException(status_code=404, detail="Game session not found")
+            raise EntityNotFoundException("Game session not found")
 
         if session.status != GameSessionStatus.IN_PROGRESS:
-            raise HTTPException(status_code=400, detail="Session is not in progress")
+            raise DomainValidationException("Session is not in progress")
 
-        if not session.snapshot or "gamification" not in session.snapshot:
-            raise HTTPException(status_code=400, detail="Not a gamified session")
+        if not session.snapshot:
+            raise DomainValidationException("Not a gamified session")
 
-        # Find current question
-        questions = session.snapshot.get("questions", [])
-        current_idx = session.snapshot["gamification"].get("last_question_index", 0)
-        if current_idx >= len(questions):
-            raise HTTPException(status_code=400, detail="All questions already answered")
+        snap = session.get_snapshot_state()
+        state = snap.gamification
 
-        current_q = questions[current_idx]
-        if current_q["id"] != str(payload.question_id):
-            raise HTTPException(
-                status_code=400,
-                detail="Question ID does not match current question index",
-            )
+        current_q = snap.current_question()
+        if not current_q:
+            raise DomainValidationException("All questions already answered")
+
+        if current_q.id != str(payload.question_id):
+            raise DomainValidationException("Question ID does not match current question index")
 
         # Verify answer correctness from DB
         q_db = await self._question_repo.get(payload.question_id)
         if not q_db:
-            raise HTTPException(status_code=404, detail="Question not found")
+            raise EntityNotFoundException("Question not found")
 
         correct_opt_id = None
         for opt in q_db.options:
@@ -71,156 +74,73 @@ class PatchGameAnswerUseCase:
 
         is_correct = str(payload.option_id) == str(correct_opt_id)
 
-
-
-        started_at_str = session.snapshot["gamification"].get("current_question_started_at")
-        if started_at_str:
-            started_at = datetime.fromisoformat(started_at_str)
+        # Anti-cheat check: allow 10 seconds buffer for network latency/UI animations
+        if state.current_question_started_at:
+            started_at = datetime.fromisoformat(state.current_question_started_at)
             elapsed = (now_ict() - started_at).total_seconds()
-            time_limit = current_q.get("time_limit", 60)
+            time_limit = current_q.time_limit
 
-            # Anti-cheat check: allow 10 seconds buffer for network latency/UI animations
             if elapsed > time_limit + 10.0:
                 is_correct = False
-                payload.time_response = float(time_limit)  # Max out the time response
+                payload.time_response = float(time_limit)
 
         # Calculate item costs
-        is_boss = current_q.get("is_boss", False)
-        price_multiplier = 2 if is_boss else 1
-
         cost = 0
-        current_tier = current_q.get("tier", 1)
-
         if payload.activate_double_points:
-            cost += ITEM_PRICES[GamificationItem.DOUBLE_POINTS] * price_multiplier
+            cost += state.get_item_price(GamificationItem.DOUBLE_POINTS, is_boss=current_q.is_boss)
         if payload.activate_shield:
-            shield_used_in_tier = session.snapshot["gamification"].setdefault(
-                "shield_used_in_tier", {}
-            )
-            if shield_used_in_tier.get(str(current_tier), False):
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Shield already used in Tier {current_tier}",
-                )
-            cost += ITEM_PRICES[GamificationItem.SHIELD] * price_multiplier
+            if not state.can_use_shield_in_tier(current_q.tier):
+                raise DomainValidationException(f"Shield already used in Tier {current_q.tier}")
+            cost += state.get_item_price(GamificationItem.SHIELD, is_boss=current_q.is_boss)
 
-        gold = session.snapshot["gamification"].get("gold", 0)
-        if gold < cost:
-            raise HTTPException(status_code=400, detail="Not enough gold to activate items")
+        if not state.has_enough_gold(cost):
+            raise InsufficientResourceException("Not enough gold to activate items")
 
-        # Deduct item costs
-        gold -= cost
-        session.snapshot["gamification"]["gold"] = gold
-
-        # Record item usages
+        # Deduct item costs and record usages
+        state.deduct_gold(cost)
         if payload.activate_shield:
-            session.snapshot["gamification"]["shield_used_in_tier"][str(current_tier)] = True
+            state.record_shield_used(current_q.tier)
 
         # Calculate Points & Gold rewards
         points_gained = 0
         coins_gained = 0
 
         if is_correct:
-            base_points = 10
-            time_limit = current_q.get("time_limit", 60)
-            speed_ratio = payload.time_response / time_limit if time_limit > 0 else 1.0
-
-            speed_points_bonus = 0
-            speed_gold_bonus = 0
-            if speed_ratio <= 0.3:
-                speed_points_bonus = 5
-                speed_gold_bonus = 15
-            elif speed_ratio <= 0.6:
-                speed_points_bonus = 2
-                speed_gold_bonus = 5
-
-            points_gained = base_points + speed_points_bonus
-            coins_gained = 20 + speed_gold_bonus
-
-            if is_boss:
-                points_gained *= 2
-            if payload.activate_double_points:
-                points_gained *= 2
-
-            session.snapshot["gamification"]["points"] = (
-                session.snapshot["gamification"].get("points", 0) + points_gained
+            points_gained, coins_gained = state.record_correct_answer(
+                time_response=payload.time_response,
+                time_limit=current_q.time_limit,
+                is_boss=current_q.is_boss,
+                double_points=payload.activate_double_points,
             )
-            session.snapshot["gamification"]["gold"] = (
-                session.snapshot["gamification"].get("gold", 0) + coins_gained
-            )
-            session.snapshot["gamification"]["correct_count"] = (
-                session.snapshot["gamification"].get("correct_count", 0) + 1
-            )
-
-            if is_boss:
-                session.snapshot["gamification"]["boss_hp"] = 0
         else:
-            if payload.activate_shield:
-                pass
-            else:
-                lives_lost = 2 if is_boss else 1
-                current_lives = session.snapshot["gamification"].get("lives", 3)
-                session.snapshot["gamification"]["lives"] = max(0, current_lives - lives_lost)
+            state.record_incorrect_answer(
+                is_boss=current_q.is_boss,
+                shield_activated=payload.activate_shield,
+            )
 
         # Record answer and time response
-        session.snapshot["answers"][str(payload.question_id)] = str(payload.option_id)
-        current_q["time_response"] = payload.time_response
+        snap.record_answer(payload.question_id, payload.option_id, payload.time_response)
 
-        # Tự động cộng dồn tổng thời gian làm bài của toàn bộ session
-        current_total_time = session.snapshot["gamification"].get("total_time_response", 0.0)
-        session.snapshot["gamification"]["total_time_response"] = (
-            current_total_time + payload.time_response
-        )
-
-        # Check if we are advancing to next tier
-        next_idx = current_idx + 1
-        session.snapshot["gamification"]["last_question_index"] = next_idx
-
-        if next_idx < len(questions):
-            next_q = questions[next_idx]
-            if next_q["tier"] > current_tier:
-                current_lives = session.snapshot["gamification"].get("lives", 0)
-                if current_lives > 0:
-                    session.snapshot["gamification"]["lives"] = min(5, current_lives + 2)
-                    session.snapshot["gamification"]["current_tier"] = next_q["tier"]
-            session.snapshot["gamification"]["boss_hp"] = 1 if next_q.get("is_boss", False) else 0
-        else:
-            session.snapshot["gamification"]["boss_hp"] = 0
+        # Advance question index
+        state.advance_question(snap.questions)
 
         # Check game over conditions
-        is_game_over = False
-        if session.snapshot["gamification"].get("lives", 0) <= 0:
-            is_game_over = True
-            session.status = GameSessionStatus.COMPLETED
-            session.completed_at = now_ict()
-        elif next_idx >= len(questions):
-            is_game_over = True
+        is_game_over = snap.is_game_over()
+        if is_game_over:
             session.status = GameSessionStatus.COMPLETED
             session.completed_at = now_ict()
 
-        if is_game_over:
-            lesson_slug = session.snapshot.get("lesson_slug") or (
+            lesson_slug = snap.lesson_slug or (
                 session.tags_filter[0] if session.tags_filter else "unknown"
             )
             count_completed = await self._ps_repo.count_completed_by_lesson(user_id, lesson_slug)
-            decay = max(0.2, 1.0 - (count_completed * 0.2))
-            base_points = session.snapshot["gamification"].get("points", 0)
-            session.snapshot["gamification"]["final_score"] = base_points * decay
-            session.snapshot["gamification"]["attempt_count"] = count_completed + 1
+            state.finalize_score(count_completed)
 
-   
-            await self._cache.invalidate(lesson_slug)
+            if self._cache:
+                await self._cache.invalidate(lesson_slug)
 
             # Kiểm tra tiêu chuẩn hoàn thành game: đúng 100% câu hỏi
-            total_questions_count = len(questions)
-            correct_questions_count = session.snapshot["gamification"].get("correct_count", 0)
-            is_100_percent_correct = (
-                total_questions_count > 0
-                and correct_questions_count >= total_questions_count
-                and session.status == GameSessionStatus.COMPLETED
-            )
-
-            if is_100_percent_correct:
+            if snap.is_100_percent_correct() and session.status == GameSessionStatus.COMPLETED:
                 dispatch_manage_submission_webhook(
                     lesson_slug=lesson_slug,
                     user_id=user_id,
@@ -229,22 +149,24 @@ class PatchGameAnswerUseCase:
                     is_passed=True,
                     details={
                         "session_id": str(session.id),
-                        "final_score": float(session.snapshot["gamification"].get("final_score", 0)),
-                        "correct_count": correct_questions_count,
-                        "total_questions": total_questions_count,
+                        "final_score": float(state.final_score),
+                        "correct_count": state.correct_count,
+                        "total_questions": len(snap.questions),
                     },
+                    user_source=user_source,
                 )
 
         # Set started_at for next question
-        session.snapshot["gamification"]["current_question_started_at"] = now_ict().isoformat()
+        state.reset_question_timer()
 
+        session.set_snapshot_state(snap)
         await self._ps_repo.save(session)
 
         return GamificationAnswerResultOut(
             is_correct=is_correct,
             points_gained=points_gained,
             coins_gained=coins_gained,
-            updated_gamification=session.snapshot["gamification"],
+            updated_gamification=state.to_dict(),
             is_game_over=is_game_over,
             correct_option_id=str(correct_opt_id) if correct_opt_id else None,
         )

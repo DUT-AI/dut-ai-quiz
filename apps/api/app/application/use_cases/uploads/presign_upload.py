@@ -1,8 +1,8 @@
 from uuid import uuid4
 
 from app.config import settings
+from app.domain.exceptions import ServiceUnavailableException
 from app.domain.interfaces.s3_client import IS3Client
-from fastapi import HTTPException
 
 
 class PresignUploadUseCase:
@@ -13,7 +13,7 @@ class PresignUploadUseCase:
 
     async def __call__(self, *, key: str, content_type: str) -> dict:
         if not settings.s3_is_configured:
-            raise HTTPException(status_code=503, detail="S3 storage not configured")
+            raise ServiceUnavailableException("S3 storage not configured")
 
         safe_key = key.strip("/") or f"uploads/{uuid4()}"
 

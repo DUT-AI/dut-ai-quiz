@@ -10,56 +10,93 @@ class AppException(Exception):
             self.status_code = status_code
 
 
-class HomeworkWorkerUnavailableException(AppException):
-    status_code = 503
-    message = "Worker chấm bài chưa sẵn sàng. Vui lòng thử lại sau."
+class DomainValidationException(AppException):
+    status_code = 400
+    message = "Dữ liệu không hợp lệ"
+
+    def __init__(self, message: str | None = None) -> None:
+        super().__init__(message or self.message, 400)
 
 
-class AttemptNotFoundException(AppException):
-    status_code = 404
-    message = "Not found or not completed"
+class BadRequestException(DomainValidationException):
+    pass
 
 
 class NotFoundException(AppException):
-    def __init__(self, message: str):
-        super().__init__(message, 404)
+    status_code = 404
+    message = "Không tìm thấy dữ liệu"
+
+    def __init__(self, message: str | None = None) -> None:
+        super().__init__(message or self.message, 404)
 
 
-class AttemptNotCompletedException(AppException):
+class EntityNotFoundException(NotFoundException):
+    pass
+
+
+class ForbiddenException(AppException):
+    status_code = 403
+    message = "Không có quyền truy cập"
+
+    def __init__(self, message: str | None = None) -> None:
+        super().__init__(message or self.message, 403)
+
+
+class InsufficientResourceException(AppException):
     status_code = 400
+    message = "Tài nguyên không đủ để thực hiện hành động này"
+
+    def __init__(self, message: str | None = None) -> None:
+        super().__init__(message or self.message, 400)
+
+
+class ResourceConflictException(AppException):
+    status_code = 409
+    message = "Xung đột dữ liệu"
+
+    def __init__(self, message: str | None = None) -> None:
+        super().__init__(message or self.message, 409)
+
+
+class ServiceUnavailableException(AppException):
+    status_code = 503
+    message = "Dịch vụ hiện không khả dụng"
+
+    def __init__(self, message: str | None = None) -> None:
+        super().__init__(message or self.message, 503)
+
+
+class HomeworkWorkerUnavailableException(ServiceUnavailableException):
+    message = "Worker chấm bài chưa sẵn sàng. Vui lòng thử lại sau."
+
+
+class AttemptNotFoundException(NotFoundException):
+    message = "Not found or not completed"
+
+
+class AttemptNotCompletedException(DomainValidationException):
     message = "Attempt is not completed"
 
 
-class ReviewLockedException(AppException):
-    status_code = 403
+class ReviewLockedException(ForbiddenException):
     message = "Chưa đến thời gian xem đáp án. Vui lòng chờ đến khi kỳ thi kết thúc."
 
 
-class ExamNotFoundException(AppException):
-    status_code = 404
+class ExamNotFoundException(NotFoundException):
     message = "Exam not found"
 
 
-class ExamNotStartedException(AppException):
-    status_code = 403
+class ExamNotStartedException(ForbiddenException):
     message = "Exam not started yet"
 
 
-class ExamEndedException(AppException):
-    status_code = 403
+class ExamEndedException(ForbiddenException):
     message = "Exam ended"
 
 
-class MaxAttemptsReachedException(AppException):
-    status_code = 403
+class MaxAttemptsReachedException(ForbiddenException):
     message = "Max attempts reached"
 
 
-class ExamNoQuestionsException(AppException):
-    status_code = 400
+class ExamNoQuestionsException(DomainValidationException):
     message = "No questions in exam"
-
-
-class BadRequestException(AppException):
-    def __init__(self, message: str):
-        super().__init__(message, 400)

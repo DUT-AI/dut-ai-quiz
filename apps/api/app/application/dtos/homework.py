@@ -9,6 +9,7 @@ from app.domain.entities.homework import (
     HomeworkSubmissionEntity,
     HomeworkSubmissionStatus,
 )
+from app.domain.entities.user import UserSource
 
 
 class HomeworkFileDTO(BaseModel):
@@ -37,6 +38,7 @@ class SubmitHomeworkDTO(BaseModel):
     file: HomeworkFileDTO | None = None
     object_key: str | None = None
     original_filename: str | None = None
+    user_source: UserSource = UserSource.MANAGE
 
 
 class CompletedHomeworkMemberOutDTO(BaseModel):
@@ -49,6 +51,8 @@ class CompletedHomeworkMemberOutDTO(BaseModel):
 class HomeworkSubmissionSyncOutDTO(BaseModel):
     submission_id: str
     homework_id: str
+    exercise_id: str | None = None
+    exercise_title: str | None = None
     user_id: int
     attempt_number: int
     original_filename: str
@@ -57,6 +61,24 @@ class HomeworkSubmissionSyncOutDTO(BaseModel):
     is_pass: bool | None = None
     score: float | None = None
     score_details: list[dict[str, Any]] | None = None
+
+
+class ExerciseItemDTO(BaseModel):
+    id: UUID
+    lesson_id: UUID | None
+    title: str
+    description: str
+    created_at: datetime
+    has_attachment: bool
+    attachment_filename: str | None = None
+
+
+class LessonExercisesMetadataOutDTO(BaseModel):
+    lesson_slug: str
+    lesson_name: str
+    total_exercises: int
+    exercises: list[ExerciseItemDTO]
+
 
 
 class HomeworkSubmissionOutDTO(BaseModel):

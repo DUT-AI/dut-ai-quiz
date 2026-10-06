@@ -3,11 +3,14 @@ from uuid import UUID
 from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile
 
+from app.application.dtos.homework import LessonExercisesMetadataOutDTO
 from app.application.use_cases.lessons import (
     CreateLessonUseCase,
     DeleteLessonUseCase,
     GetLessonBySlugUseCase,
     GetLessonDetailUseCase,
+    GetLessonExercisesUseCase,
+    GetLessonMetadataUseCase,
     ImportNotionLessonUseCase,
     IndexAllLessonsUseCase,
     IndexLessonUseCase,
@@ -17,12 +20,7 @@ from app.application.use_cases.lessons import (
 )
 from app.application.use_cases.questions import ListQuestionsUseCase
 from app.domain.entities.auth_enums import SystemPermission
-from app.domain.interfaces import (
-    EmbeddingServiceError,
-    IHomeworkRepository,
-    ILessonRepository,
-    IQuestionRepository,
-)
+from app.domain.interfaces import EmbeddingServiceError
 from app.domain.value_objects import Difficulty, PoolType
 from app.presentation.api.deps import CurrentUser, EducatorUser
 from app.presentation.schemas.lessons import (
@@ -35,7 +33,6 @@ from app.presentation.schemas.lessons import (
     LessonReorder,
     LessonUpdate,
 )
-
 from app.presentation.schemas.questions import QuestionListQuery, QuestionOut, QuestionToStudent
 
 router = APIRouter(prefix="/lessons", tags=["lessons"])
@@ -266,47 +263,25 @@ async def delete_lesson(
 @inject
 async def get_lesson_metadata(
     lesson_slug: str,
-    lesson_repo: FromDishka[ILessonRepository],
-    homework_repo: FromDishka[IHomeworkRepository],
-    question_repo: FromDishka[IQuestionRepository],
+    use_case: FromDishka[GetLessonMetadataUseCase],
 ):
     """
     Get lesson metadata and component readiness (coding homework and game questions)
     used for validation by DUT-AI Manager.
     """
-    lesson = await lesson_repo.get_by_slug(lesson_slug)
-    if not lesson:
-        # Fallback: check if lesson_slug is a UUID or matches by normalized name slug
-        all_lessons = await lesson_repo.list_all()
-        for l in all_lessons:
-            name_slug = l.name.lower().replace(" ", "-").replace("_", "-")
-            if (
-                str(l.id) == lesson_slug
-                or (l.slug and l.slug.lower() == lesson_slug.lower())
-                or name_slug == lesson_slug.lower()
-            ):
-                lesson = l
-                break
+    return await use_case.execute(lesson_slug)
 
-    if not lesson:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Bài học '{lesson_slug}' không tồn tại trên hệ thống Quiz.",
-        )
 
-    coding_count = await homework_repo.count_active_by_lesson(lesson.id)
-    game_count = await question_repo.count_by_lesson_and_pool(lesson.id, PoolType.GAME)
+@router.get("/{lesson_slug}/exercises", response_model=LessonExercisesMetadataOutDTO)
+@inject
+async def get_lesson_exercises(
+    lesson_slug: str,
+    use_case: FromDishka[GetLessonExercisesUseCase],
+):
+    """
+    Get all active coding exercises for a lesson.
+    Used by DUT-AI Manager to track multi-exercise completion progress.
+    """
+    return await use_case.execute(lesson_slug)
 
-    has_coding = coding_count > 0
-    has_game = game_count > 0
-
-    return LessonMetadataOut(
-        slug=lesson.slug or str(lesson.id),
-        name=lesson.name,
-        has_coding=has_coding,
-        has_game=has_game,
-        coding_count=coding_count,
-        game_question_count=game_count,
-        is_ready=has_coding or has_game,
-    )
 

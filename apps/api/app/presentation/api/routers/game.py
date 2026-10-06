@@ -19,8 +19,8 @@ from app.presentation.api.deps import CurrentUser, ManageService
 from app.presentation.schemas.game import (
     GameLeaderboardRowOut,
     GameLessonSummaryOut,
-    GameSessionSyncOutDTO,
     GameSessionsSyncResponse,
+    GameSessionSyncOutDTO,
     GamificationAnswerPatchIn,
     GamificationAnswerResultOut,
     GamificationStartIn,
@@ -90,7 +90,7 @@ async def patch_game_answers(
     body: GamificationAnswerPatchIn,
     use_case: FromDishka[PatchGameAnswerUseCase],
 ):
-    return await use_case.execute(session_id, user.id, body)
+    return await use_case.execute(session_id, user.id, body, user_source=user.user_source)
 
 
 @router.post("/sessions/{session_id}/use-item")

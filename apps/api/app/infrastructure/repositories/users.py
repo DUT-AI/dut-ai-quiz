@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domain.entities.user import UserEntity
+from app.domain.entities.user import UserEntity, UserSource
 from app.domain.interfaces import IUserRepository
 from app.infrastructure.persistence.models import User
 
@@ -39,6 +39,11 @@ class UserRepository(IUserRepository):
             m.avatar_url = entity.avatar_url
             m.role = entity.role
             m.google_id = entity.google_id
+            m.user_source = (
+                entity.user_source.value
+                if isinstance(entity.user_source, UserSource)
+                else str(entity.user_source)
+            )
             await self._session.flush()
             await self._session.refresh(m)
         return entity

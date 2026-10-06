@@ -16,6 +16,7 @@ from app.domain.entities.auth_enums import (
     resolve_permissions_for_roles,
 )
 from app.domain.entities.hackathon import HackathonEntity
+from app.domain.exceptions import ForbiddenException
 from app.infrastructure.persistence.models.auth_rbac import (
     Permission,
     Role,
@@ -237,7 +238,7 @@ async def test_update_hackathon_abac_logic():
     assert res.name == "Updated Hackathon Name"
 
     # 2. Non-owner (user_id=20) updates -> 403 Forbidden
-    with pytest.raises(HTTPException) as exc_info:
+    with pytest.raises(ForbiddenException) as exc_info:
         await use_case.execute(
             hackathon_id=hackathon_id,
             payload=HackathonUpdate(name="Hacked Name"),
@@ -245,7 +246,7 @@ async def test_update_hackathon_abac_logic():
             is_admin=False,
         )
     assert exc_info.value.status_code == 403
-    assert "Ownership required" in exc_info.value.detail
+    assert "Ownership required" in exc_info.value.message
 
     # 3. Admin (user_id=99, is_admin=True) updates non-owned hackathon -> Success (Bypass)
     res_admin = await use_case.execute(
@@ -280,7 +281,7 @@ async def test_delete_hackathon_abac_logic():
     use_case = DeleteHackathonUseCase(mock_repo)
 
     # Non-owner fails
-    with pytest.raises(HTTPException) as exc_info:
+    with pytest.raises(ForbiddenException) as exc_info:
         await use_case.execute(hackathon_id=hackathon_id, user_id=20, is_admin=False)
     assert exc_info.value.status_code == 403
 

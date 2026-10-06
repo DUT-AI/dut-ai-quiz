@@ -28,6 +28,12 @@ class MockLessonRepository(ILessonRepository):
                 return les
         return None
 
+    async def get_by_identifier(self, identifier: str):
+        for les in self.lessons:
+            if str(les.id) == identifier or les.slug == identifier or les.name == identifier:
+                return les
+        return None
+
     async def add(self, entity: LessonEntity):
         self.lessons.append(entity)
         return entity

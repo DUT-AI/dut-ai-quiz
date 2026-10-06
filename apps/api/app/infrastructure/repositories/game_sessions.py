@@ -5,9 +5,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities.game import GameSessionEntity
 from app.domain.interfaces import IGameSessionRepository
-from app.infrastructure.persistence.models import GameSession
-
 from app.domain.value_objects import GameSessionStatus
+from app.infrastructure.persistence.models import GameSession
+from app.infrastructure.persistence.models.user import User
+
 
 class GameSessionRepository(IGameSessionRepository):
     def __init__(self, session: AsyncSession) -> None:
@@ -50,7 +51,7 @@ class GameSessionRepository(IGameSessionRepository):
     async def get_active_by_lesson(
         self, user_id: int, lesson_slug: str
     ) -> GameSessionEntity | None:
-        from app.domain.value_objects import GameSessionStatus
+        
 
         r = await self._s.execute(
             select(GameSession)
@@ -64,7 +65,7 @@ class GameSessionRepository(IGameSessionRepository):
         return model.to_entity() if model else None
 
     async def count_completed_by_lesson(self, user_id: int, lesson_slug: str) -> int:
-        from app.domain.value_objects import GameSessionStatus
+        
 
         r = await self._s.execute(
             select(func.count(GameSession.id))
@@ -76,8 +77,7 @@ class GameSessionRepository(IGameSessionRepository):
         return r.scalar() or 0
 
     async def get_leaderboard_by_lesson(self, lesson_slug: str, limit: int = 100) -> list[dict]:
-        from app.domain.value_objects import GameSessionStatus
-        from app.infrastructure.persistence.models.user import User
+        
 
         subq = (
             select(GameSession.id)
@@ -165,14 +165,17 @@ class GameSessionRepository(IGameSessionRepository):
                     "is_completed": is_completed,
                     "total_questions": total_questions,
                     "answered_questions": answered_questions,
-                    "completed_at": row.GameSession.completed_at,
+                    "completed_at": row.GameSession.completed_at.isoformat()
+                    if row.GameSession.completed_at
+                    else None,
                 }
             )
 
         return result
 
+
     async def list_completed_sessions_for_sync(self, lesson_slug: str) -> list[dict]:
-        
+
 
         stmt = (
             select(GameSession)
@@ -191,10 +194,8 @@ class GameSessionRepository(IGameSessionRepository):
             snapshot = s.snapshot or {}
             ps = snapshot.get("gamification", {})
             questions = snapshot.get("questions", [])
-            answers = snapshot.get("answers", {})
 
             total_q = len(questions) if questions else (s.question_limit or 0)
-            ans_q = len(answers) if isinstance(answers, dict) else 0
             correct_q = int(ps.get("correct_count", 0))
 
             is_100_percent = total_q > 0 and correct_q >= total_q
@@ -203,8 +204,11 @@ class GameSessionRepository(IGameSessionRepository):
                 {
                     "session_id": str(s.id),
                     "user_id": s.user_id,
-                    "completed_at": s.completed_at,
+                    "completed_at": s.completed_at.isoformat()
+                    if s.completed_at
+                    else None,
                     "final_score": float(ps.get("final_score", 0)),
+
                     "gold": int(ps.get("gold", 0)),
                     "attempt_count": int(ps.get("attempt_count", 1)),
                     "is_completed": is_100_percent,

@@ -180,6 +180,7 @@ async def submit_homework(
             user_id=user.id,
             object_key=body.object_key,
             original_filename=body.original_filename,
+            user_source=user.user_source,
         )
     else:
         form = await request.form()
@@ -190,6 +191,7 @@ async def submit_homework(
             homework_id=homework_id,
             user_id=user.id,
             file=await _file_dto(uploaded),
+            user_source=user.user_source,
         )
     return SubmissionResponse(data=await use_case.execute(dto))
 

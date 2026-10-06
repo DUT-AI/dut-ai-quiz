@@ -5,17 +5,16 @@ Revises: f2280fa41e46
 Create Date: 2026-09-29 10:20:04.117687
 
 """
-from typing import Sequence, Union
+from collections.abc import Sequence
 
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = '2f77daa7bb6f'
-down_revision: Union[str, None] = 'f2280fa41e46'
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = 'f2280fa41e46'
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 from sqlalchemy.dialects import postgresql

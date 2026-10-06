@@ -78,6 +78,9 @@ class MockLessonRepository(ILessonRepository):
     async def get_by_slug(self, slug: str) -> LessonEntity | None:
         return None
 
+    async def get_by_identifier(self, identifier: str) -> LessonEntity | None:
+        return None
+
     async def add(self, entity: LessonEntity) -> LessonEntity:
         self.lessons.append(entity)
         return entity

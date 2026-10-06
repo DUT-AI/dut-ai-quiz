@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities.lesson import LessonEntity
@@ -25,6 +25,29 @@ class LessonRepository(ILessonRepository):
 
     async def get_by_slug(self, slug: str) -> LessonEntity | None:
         stmt = select(Lesson).where(Lesson.slug == slug)
+        result = await self._session.execute(stmt)
+        m = result.scalar_one_or_none()
+        return m.to_entity() if m else None
+
+    async def get_by_identifier(self, identifier: str) -> LessonEntity | None:
+        raw = identifier.strip()
+        if not raw:
+            return None
+
+        clean_name = raw.replace("-", " ").replace("_", " ")
+        conditions = [
+            Lesson.slug == raw,
+            Lesson.slug == raw.lower(),
+            Lesson.name.ilike(raw),
+            Lesson.name.ilike(clean_name),
+        ]
+        try:
+            val_uuid = UUID(raw)
+            conditions.append(Lesson.id == val_uuid)
+        except ValueError:
+            pass
+
+        stmt = select(Lesson).where(or_(*conditions)).limit(1)
         result = await self._session.execute(stmt)
         m = result.scalar_one_or_none()
         return m.to_entity() if m else None

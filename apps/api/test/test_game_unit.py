@@ -8,11 +8,11 @@ from app.application.use_cases.game import (
 )
 from app.core.datetime_utils import now_ict
 from app.domain.entities.game import GameSessionEntity
+from app.domain.exceptions import DomainValidationException
 from app.domain.value_objects import Difficulty, GameSessionStatus, PoolType
 from app.presentation.schemas.game import (
     GamificationAnswerPatchIn,
 )
-from fastapi import HTTPException
 from pydantic import ValidationError
 
 
@@ -396,11 +396,11 @@ async def test_TC_S01_spam_already_answered_question():
         question_id=q_id, option_id=str(uuid4()), time_response=10.0
     )
 
-    with pytest.raises(HTTPException) as exc:
+    with pytest.raises(DomainValidationException) as exc:
         await use_case.execute(session_id, user_id=1, payload=payload)
     # Sẽ FAIL nếu UseCase chưa chặn việc trả lời lại câu đã làm
     assert exc.value.status_code == 400
-    assert "already answered" in exc.value.detail.lower()
+    assert "already answered" in exc.value.message.lower()
 
 
 @pytest.mark.asyncio
@@ -510,7 +510,7 @@ async def test_TC_S04_question_not_in_session():
         question_id=q_fake_id, option_id=str(uuid4()), time_response=10.0
     )
 
-    with pytest.raises(HTTPException) as exc:
+    with pytest.raises(DomainValidationException) as exc:
         await use_case.execute(session_id, user_id=1, payload=payload)
     assert exc.value.status_code == 400
 
@@ -556,6 +556,6 @@ async def test_TC_S05_submit_after_game_over():
         question_id=q_id, option_id=str(uuid4()), time_response=10.0
     )
 
-    with pytest.raises(HTTPException) as exc:
+    with pytest.raises(DomainValidationException) as exc:
         await use_case.execute(session_id, user_id=1, payload=payload)
     assert exc.value.status_code == 400

@@ -1,7 +1,7 @@
 from app.application.dtos import AuthTokens
 from app.core.jwt import create_access_token
 from app.domain.entities.manage_service import ManageUserProfile
-from app.domain.entities.user import UserEntity
+from app.domain.entities.user import UserEntity, UserSource
 from app.domain.exceptions.exceptions import AppException
 from app.domain.interfaces import IManageService, IUserRepository
 from app.infrastructure.clients import GoogleOAuthClient
@@ -20,10 +20,10 @@ class GoogleAuthUseCase:
         self._manage_client = manage_client
 
     async def handle_login_by_google_email_guest(self, google_user: dict[str, str]):
-        email = google_user.get("email")
+        email = google_user.get("email", "anonymos@gmail.com")
         name = google_user.get("name") or google_user.get("given_name", "Google User")
         picture = google_user.get("picture")
-        sub = google_user.get("sub")  # Unique Google ID
+        sub = google_user.get("sub", "no-id")  # Unique Google ID
 
         db_user = await self._user_repo.get_by_email(email)
 
@@ -35,6 +35,7 @@ class GoogleAuthUseCase:
                 google_id=sub,
                 name=name,
                 avatar_url=picture,
+                user_source=UserSource.GOOGLE,
             )
             db_user = await self._user_repo.add(db_user)
         else:
@@ -43,7 +44,12 @@ class GoogleAuthUseCase:
                 await self._user_repo.update(db_user)
 
         local_jwt = create_access_token(
-            {"user_id": db_user.id, "roles": [db_user.role or "guest"], "type": "google"}
+            {
+                "user_id": db_user.id,
+                "roles": [db_user.role or "guest"],
+                "type": "google",
+                "user_source": UserSource.GOOGLE.value,
+            }
         )
 
         return AuthTokens(
@@ -64,6 +70,7 @@ class GoogleAuthUseCase:
                 "user_id": service_a_user_id,
                 "roles": role_names or ["guest"],
                 "type": "service_a",
+                "user_source": UserSource.MANAGE.value,
             }
         )
         return AuthTokens(

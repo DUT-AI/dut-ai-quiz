@@ -54,6 +54,7 @@ class HomeworkRepository(IHomeworkRepository):
 
     async def create_homework(self, homework: HomeworkEntity) -> HomeworkEntity:
         model = Homework(
+            id=homework.id,
             lesson_id=homework.lesson_id,
             title=homework.title,
             description=homework.description,
@@ -112,6 +113,7 @@ class HomeworkRepository(IHomeworkRepository):
             )
         )
         model = HomeworkSubmission(
+            id=submission.id,
             homework_id=submission.homework_id,
             user_id=submission.user_id,
             object_key=submission.object_key,
@@ -194,9 +196,14 @@ class HomeworkRepository(IHomeworkRepository):
     async def list_completed_members_by_lesson(
         self, lesson_id: UUID
     ) -> list[CompletedHomeworkMemberOutDTO]:
+        total_active = await self.count_active_by_lesson(lesson_id)
+        if total_active == 0:
+            return []
+
         stmt = (
             select(
                 HomeworkSubmission.user_id,
+                func.count(func.distinct(HomeworkSubmission.homework_id)).label("completed_exercises_count"),
                 func.count(HomeworkSubmission.id).label("submission_count"),
                 func.max(HomeworkSubmission.score).label("max_score"),
                 func.max(HomeworkSubmission.submitted_at).label("submitted_at"),
@@ -207,6 +214,7 @@ class HomeworkRepository(IHomeworkRepository):
                 Homework.archived_at.is_(None),
             )
             .group_by(HomeworkSubmission.user_id)
+            .having(func.count(func.distinct(HomeworkSubmission.homework_id)) >= total_active)
             .order_by(HomeworkSubmission.user_id)
         )
         rows = (await self._session.execute(stmt)).all()
@@ -244,7 +252,7 @@ class HomeworkRepository(IHomeworkRepository):
         self, lesson_id: UUID
     ) -> list[HomeworkSubmissionSyncOutDTO]:
         stmt = (
-            select(HomeworkSubmission)
+            select(HomeworkSubmission, Homework.title.label("exercise_title"))
             .join(Homework, Homework.id == HomeworkSubmission.homework_id)
             .where(
                 Homework.lesson_id == lesson_id,
@@ -252,20 +260,23 @@ class HomeworkRepository(IHomeworkRepository):
             )
             .order_by(HomeworkSubmission.submitted_at.asc())
         )
-        rows = (await self._session.scalars(stmt)).all()
+        results = (await self._session.execute(stmt)).all()
         return [
             HomeworkSubmissionSyncOutDTO(
-                submission_id=str(row.id),
-                homework_id=str(row.homework_id),
-                user_id=row.user_id,
-                attempt_number=row.attempt_number,
-                original_filename=row.original_filename,
-                submitted_at=row.submitted_at,
-                status=str(row.status.value if hasattr(row.status, "value") else row.status),
-                is_pass=row.is_pass,
-                score=float(row.score) if row.score is not None else None,
-                score_details=row.score_details or [],
+                submission_id=str(row[0].id),
+                homework_id=str(row[0].homework_id),
+                exercise_id=str(row[0].homework_id),
+                exercise_title=str(row[1]) if row[1] else None,
+                user_id=row[0].user_id,
+                attempt_number=row[0].attempt_number,
+                original_filename=row[0].original_filename,
+                submitted_at=row[0].submitted_at,
+                status=str(row[0].status.value if hasattr(row[0].status, "value") else row[0].status),
+                is_pass=row[0].is_pass,
+                score=float(row[0].score) if row[0].score is not None else None,
+                score_details=row[0].score_details or [],
             )
-            for row in rows
+            for row in results
         ]
+
 
