@@ -25,7 +25,7 @@ class StartGameSessionUseCase:
         ps_repo: IGameSessionRepository,
         question_repo: IQuestionRepository,
         lesson_repo: ILessonRepository,
-        cache: GameLeaderboardCache = None,
+        cache: GameLeaderboardCache | None = None,
     ):
         self._ps_repo = ps_repo
         self._question_repo = question_repo

@@ -51,7 +51,7 @@ class GameSessionRepository(IGameSessionRepository):
     async def get_active_by_lesson(
         self, user_id: int, lesson_slug: str
     ) -> GameSessionEntity | None:
-        
+
 
         r = await self._s.execute(
             select(GameSession)
@@ -65,7 +65,7 @@ class GameSessionRepository(IGameSessionRepository):
         return model.to_entity() if model else None
 
     async def count_completed_by_lesson(self, user_id: int, lesson_slug: str) -> int:
-        
+
 
         r = await self._s.execute(
             select(func.count(GameSession.id))
@@ -77,7 +77,7 @@ class GameSessionRepository(IGameSessionRepository):
         return r.scalar() or 0
 
     async def get_leaderboard_by_lesson(self, lesson_slug: str, limit: int = 100) -> list[dict]:
-        
+
 
         subq = (
             select(GameSession.id)
