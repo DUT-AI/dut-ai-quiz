@@ -34,6 +34,10 @@ class IHomeworkRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def reset_homework_grading(self, homework_id: UUID) -> HomeworkEntity:
+        raise NotImplementedError
+
+    @abstractmethod
     async def create_submission(
         self, submission: HomeworkSubmissionEntity
     ) -> HomeworkSubmissionEntity:

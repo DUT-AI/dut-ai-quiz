@@ -148,6 +148,7 @@ class HomeworkOutDTO(BaseModel):
     submitted_count: int = 0
     grading_status: str = "PENDING"
     grading_error: str | None = None
+    grading_rubric: dict[str, Any] | None = None
     current_submission: HomeworkSubmissionOutDTO | None = None
 
     @classmethod
@@ -172,6 +173,7 @@ class HomeworkOutDTO(BaseModel):
             submitted_count=submitted_count,
             grading_status=entity.grading_status,
             grading_error=entity.grading_error,
+            grading_rubric=entity.grading_rubric,
             current_submission=(
                 HomeworkSubmissionOutDTO.from_entity(current_submission)
                 if current_submission

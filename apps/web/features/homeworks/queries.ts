@@ -86,6 +86,34 @@ export function useHomework(homeworkId: string | null) {
       ),
     select: (res) => res.data,
     enabled: !!homeworkId,
+    refetchInterval: (query) => {
+      const status = query.state.data?.data?.grading_status;
+      return status === "PENDING" || status === "PROCESSING" ? 3000 : false;
+    },
+  });
+}
+
+export function useRetryHomeworkRubric() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: async (homeworkId: string) => {
+      const response = await apiFetch(
+        `/api/v1/homeworks/${homeworkId}/retry-rubric`,
+        { method: "POST" },
+      );
+      if (!response.ok) {
+        const body = await response.json().catch(() => null);
+        throw new Error(body?.detail || body?.message || `HTTP ${response.status}`);
+      }
+      return z.object({
+        data: HomeworkSchema,
+        is_success: z.boolean(),
+      }).parse(await response.json());
+    },
+    onSuccess: (_, homeworkId) => {
+      client.invalidateQueries({ queryKey: ["homeworks"] });
+      client.invalidateQueries({ queryKey: ["homeworks", "detail", homeworkId] });
+    },
   });
 }
 

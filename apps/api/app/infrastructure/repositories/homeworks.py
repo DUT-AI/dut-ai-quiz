@@ -97,6 +97,17 @@ class HomeworkRepository(IHomeworkRepository):
         await self._session.flush()
         return True
 
+    async def reset_homework_grading(self, homework_id: UUID) -> HomeworkEntity:
+        model = await self._session.get(Homework, homework_id)
+        if model is None or model.archived_at is not None:
+            raise ValueError("Homework not found")
+        model.grading_rubric = None
+        model.grading_status = "PENDING"
+        model.grading_error = None
+        model.updated_at = now_ict()
+        await self._session.flush()
+        return model.to_entity()
+
     async def create_submission(
         self, submission: HomeworkSubmissionEntity
     ) -> HomeworkSubmissionEntity:

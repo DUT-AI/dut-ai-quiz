@@ -30,6 +30,7 @@ class HomeworkEntity:
     archived_at: datetime | None = None
     grading_status: str = "PENDING"
     grading_error: str | None = None
+    grading_rubric: dict[str, Any] | None = None
 
 
 @dataclass(slots=True)

@@ -23,6 +23,7 @@ from app.application.use_cases.homeworks import (
     ListHomeworksUseCase,
     ListMyHomeworksUseCase,
     PresignHomeworkSubmissionUseCase,
+    RetryHomeworkRubricUseCase,
     RetryHomeworkSubmissionUseCase,
     SubmitHomeworkUseCase,
     UpdateHomeworkUseCase,
@@ -149,6 +150,19 @@ async def archive_homework(
 ) -> SuccessResponse:
     await use_case.execute(homework_id)
     return SuccessResponse()
+
+
+@router.post(
+    "/{homework_id}/retry-rubric",
+    response_model=HomeworkResponse,
+)
+@inject
+async def retry_homework_rubric(
+    homework_id: UUID,
+    user: EducatorUser,
+    use_case: FromDishka[RetryHomeworkRubricUseCase],
+) -> HomeworkResponse:
+    return HomeworkResponse(data=await use_case.execute(homework_id))
 
 
 @router.post(
