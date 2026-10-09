@@ -82,9 +82,11 @@ class SubmitHomeworkUseCase:
                 ),
             )
         )
-        if submission.id is None:
-            raise ValueError("Created submission must be persisted")
-        await self._queue.enqueue_evaluation(submission.id)
+        try:
+            await self._queue.enqueue_evaluation(submission.id)
+        except Exception as e:
+            logger.warning(f"Error enqueuing homework evaluation: {e}")
+            
 
         # Bắn webhook sang Manage nếu học viên thuộc hệ thống Manage (UserSource.MANAGE)
         if homework.lesson_id:

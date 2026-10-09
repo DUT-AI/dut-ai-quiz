@@ -23,9 +23,14 @@ const submissionListResponse = z.object({
   data: z.array(HomeworkSubmissionSchema),
   is_success: z.boolean(),
 });
+const mySubmissionResponse = z.object({
+  data: HomeworkSubmissionSchema.nullable(),
+  is_success: z.boolean(),
+});
 type HomeworkListResponse = z.infer<typeof listResponse>;
 type HomeworkDetailResponse = z.infer<typeof detailResponse>;
 type HomeworkSubmissionListResponse = z.infer<typeof submissionListResponse>;
+type MySubmissionResponse = z.infer<typeof mySubmissionResponse>;
 
 async function formRequest<T>(
   path: string,
@@ -237,7 +242,47 @@ export function useSubmitHomework() {
         }),
       );
     },
-    onSuccess: () => client.invalidateQueries({ queryKey: ["homeworks"] }),
+    onSuccess: (_, vars) => {
+      client.invalidateQueries({ queryKey: ["homeworks"] });
+      client.invalidateQueries({ queryKey: ["homeworks", vars.homeworkId, "submission", "me"] });
+      client.invalidateQueries({ queryKey: ["homeworks", vars.homeworkId, "submissions", "me"] });
+    },
+  });
+}
+
+export function useMyHomeworkSubmission(homeworkId: string | null) {
+  return useQuery({
+    queryKey: ["homeworks", homeworkId, "submission", "me"],
+    queryFn: () =>
+      apiGet<MySubmissionResponse>(
+        `/api/v1/homeworks/${homeworkId}/submission/me`,
+        mySubmissionResponse,
+      ),
+    select: (res) => res.data,
+    enabled: !!homeworkId,
+    refetchInterval: (query) => {
+      const status = query.state.data?.data?.status;
+      return status === "GRADING" || status === "UPLOADED" ? 3000 : false;
+    },
+  });
+}
+
+export function useMyHomeworkSubmissions(homeworkId: string | null) {
+  return useQuery({
+    queryKey: ["homeworks", homeworkId, "submissions", "me"],
+    queryFn: () =>
+      apiGet<HomeworkSubmissionListResponse>(
+        `/api/v1/homeworks/${homeworkId}/submissions/me`,
+        submissionListResponse,
+      ),
+    select: (res) => res.data,
+    enabled: !!homeworkId,
+    refetchInterval: (query) => {
+      const items = query.state.data?.data;
+      return items?.some((s) => s.status === "GRADING" || s.status === "UPLOADED")
+        ? 3000
+        : false;
+    },
   });
 }
 
@@ -258,7 +303,9 @@ export function useRetryHomeworkSubmission() {
         is_success: z.boolean(),
       }).parse(await response.json());
     },
-    onSuccess: () => client.invalidateQueries({ queryKey: ["homeworks"] }),
+    onSuccess: () => {
+      client.invalidateQueries({ queryKey: ["homeworks"] });
+    },
   });
 }
 

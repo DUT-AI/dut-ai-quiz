@@ -22,6 +22,7 @@ from app.application.use_cases.homeworks import (
     ListHomeworkSubmissionsUseCase,
     ListHomeworksUseCase,
     ListMyHomeworksUseCase,
+    ListMyHomeworkSubmissionsUseCase,
     PresignHomeworkSubmissionUseCase,
     RetryHomeworkRubricUseCase,
     RetryHomeworkSubmissionUseCase,
@@ -245,6 +246,19 @@ async def get_my_submission(
     use_case: FromDishka[GetMyHomeworkSubmissionUseCase],
 ) -> SubmissionResponse:
     return SubmissionResponse(data=await use_case.execute(homework_id, user.id))
+
+
+@router.get(
+    "/{homework_id}/submissions/me",
+    response_model=SubmissionListResponse,
+)
+@inject
+async def list_my_submissions(
+    homework_id: UUID,
+    user: CurrentUser,
+    use_case: FromDishka[ListMyHomeworkSubmissionsUseCase],
+) -> SubmissionListResponse:
+    return SubmissionListResponse(data=await use_case.execute(homework_id, user.id))
 
 
 @router.get(

@@ -1,11 +1,13 @@
 "use client";
 
 import React from "react";
+import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { HomeworkTab } from "@/features/homeworks/components/homework-tab";
+import { StudentHomeworkDetail } from "@/features/homeworks/components/student-homework-detail";
 import { useLessonContext } from "@/features/lessons/context/lesson-context";
 
-export default function LessonHomeworkPage() {
+export default function StudentHomeworkDetailPage() {
+  const { id } = useParams<{ id: string }>();
   const { lessonId, slug, isPreview } = useLessonContext();
 
   return (
@@ -15,7 +17,12 @@ export default function LessonHomeworkPage() {
       exit={{ opacity: 0, y: -10 }}
       transition={{ duration: 0.2 }}
     >
-      <HomeworkTab lessonId={lessonId} slug={slug} isPreview={isPreview} />
+      <StudentHomeworkDetail
+        homeworkId={id}
+        lessonId={lessonId}
+        slug={slug}
+        isPreview={isPreview}
+      />
     </motion.div>
   );
 }

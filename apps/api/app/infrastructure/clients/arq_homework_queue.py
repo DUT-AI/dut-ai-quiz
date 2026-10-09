@@ -38,8 +38,6 @@ class ArqHomeworkEvaluationQueue(IHomeworkEvaluationQueue):
             raise HomeworkWorkerUnavailableException() from exc
 
     async def enqueue_evaluation(self, submission_id: UUID) -> None:
-        if not settings.homework_grading_enabled:
-            return
         await self._ensure_worker_available()
         try:
             await self._arq_redis.enqueue_job(

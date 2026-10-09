@@ -1,58 +1,31 @@
 "use client";
 
-import { motion } from "framer-motion";
+import React from "react";
 import { 
-  BookOpen, 
   CheckCircle2, 
   FileCode, 
   GraduationCap, 
   LayoutList,
-  Sparkles
+  Loader2,
 } from "lucide-react";
-import { toast } from "sonner";
 
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  useMyHomeworks,
-  useRetryHomeworkSubmission,
-  useSubmitHomework,
-} from "../queries";
-import { HomeworkCard } from "./homework-card";
+import { useMyHomeworks } from "../queries";
+import { StudentHomeworkTable } from "./student-homework-table";
 
-export function HomeworkTab({ lessonId }: { lessonId: string }) {
+interface HomeworkTabProps {
+  lessonId: string;
+  slug?: string;
+  isPreview?: boolean;
+}
+
+export function HomeworkTab({ lessonId, slug = "", isPreview = false }: HomeworkTabProps) {
   const { data, isLoading, error } = useMyHomeworks(lessonId || null);
-  const submit = useSubmitHomework();
-  const retry = useRetryHomeworkSubmission();
-
-  const handleSubmit = async (homeworkId: string, file: File) => {
-    try {
-      await submit.mutateAsync({ homeworkId, file });
-      toast.info("Đã nhận file. Hệ thống đang kiểm tra và chấm điểm.");
-    } catch (submissionError) {
-      const msg = submissionError instanceof Error ? submissionError.message : "Nộp bài thất bại";
-      toast.error(msg);
-      throw submissionError;
-    }
-  };
-
-  const handleRetry = async (submissionId: string) => {
-    try {
-      await retry.mutateAsync(submissionId);
-      toast.info("Đã dùng lại file cũ. Hệ thống đang chấm bài lại.");
-    } catch (retryError) {
-      const msg = retryError instanceof Error ? retryError.message : "Không thể chấm lại bài";
-      toast.error(msg);
-      throw retryError;
-    }
-  };
 
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
-        <svg className="h-10 w-10 animate-spin text-primary" fill="none" viewBox="0 0 24 24">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-        </svg>
+        <Loader2 className="size-10 animate-spin text-primary" />
         <p className="mt-4 text-sm font-semibold text-gray-navy dark:text-light-blue animate-pulse">
           Đang tải bài tập coding...
         </p>
@@ -77,24 +50,28 @@ export function HomeworkTab({ lessonId }: { lessonId: string }) {
           </div>
           <p className="font-bold text-dark-blue dark:text-white">Chưa có bài tập coding</p>
           <p className="mt-1 text-sm text-gray-navy dark:text-light-blue/70">
-            Bài học này chưa có bài tập coding dành cho bạn.
+            Bài học này hiện chưa có bài tập coding nào được giao.
           </p>
         </CardContent>
       </Card>
     );
   }
 
-  // Calculate statistics for the dashboard
+  // Calculate statistics for the mini dashboard
   const totalHomeworks = data.data.length;
   const submittedHomeworks = data.data.filter(
-    h => h.current_submission && h.current_submission.status !== "FAILED"
+    (h) => h.current_submission && h.current_submission.status !== "FAILED"
   ).length;
   const gradedHomeworks = data.data.filter(
-    h => h.current_submission?.status === "GRADED" && typeof h.current_submission.score === "number"
+    (h) => h.current_submission?.status === "GRADED" && typeof h.current_submission.score === "number"
   );
-  const avgScore = gradedHomeworks.length > 0
-    ? (gradedHomeworks.reduce((sum, h) => sum + (h.current_submission!.score || 0), 0) / gradedHomeworks.length).toFixed(1)
-    : "—";
+  const avgScore =
+    gradedHomeworks.length > 0
+      ? (
+          gradedHomeworks.reduce((sum, h) => sum + (h.current_submission!.score || 0), 0) /
+          gradedHomeworks.length
+        ).toFixed(1)
+      : "—";
 
   return (
     <div className="space-y-6">
@@ -118,13 +95,14 @@ export function HomeworkTab({ lessonId }: { lessonId: string }) {
         {/* Metric 2: Completed / Submitted */}
         <Card className="border border-gray-150 bg-white shadow-sm dark:border-white/5 dark:bg-navy-blue/30 backdrop-blur-sm">
           <CardContent className="flex items-center gap-4 py-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green/10 text-green">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
               <CheckCircle2 className="size-5" />
             </div>
             <div>
               <p className="text-xs font-bold text-gray-navy dark:text-light-blue">Đã nộp bài</p>
               <h3 className="text-xl font-black text-dark-blue dark:text-white">
-                {submittedHomeworks}/{totalHomeworks} <span className="text-xs font-normal text-gray-navy">hoàn thành</span>
+                {submittedHomeworks}/{totalHomeworks}{" "}
+                <span className="text-xs font-normal text-gray-navy">hoàn thành</span>
               </h3>
             </div>
           </CardContent>
@@ -146,23 +124,12 @@ export function HomeworkTab({ lessonId }: { lessonId: string }) {
         </Card>
       </div>
 
-      {/* Homework Cards List */}
-      <div className="grid gap-6">
-        {data.data.map((homework, idx) => (
-          <motion.div
-            key={homework.id}
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: idx * 0.05 }}
-          >
-            <HomeworkCard
-              homework={homework}
-              onSubmit={handleSubmit}
-              onRetry={handleRetry}
-            />
-          </motion.div>
-        ))}
-      </div>
+      {/* Homeworks Table View */}
+      <StudentHomeworkTable
+        homeworks={data.data}
+        slug={slug}
+        isPreview={isPreview}
+      />
     </div>
   );
 }

@@ -54,6 +54,12 @@ class IHomeworkRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def list_my_submissions(
+        self, homework_id: UUID, user_id: int
+    ) -> list[HomeworkSubmissionEntity]:
+        raise NotImplementedError
+
+    @abstractmethod
     async def retry_failed_submission(self, submission_id: UUID) -> HomeworkSubmissionEntity | None:
         """Atomically move a failed submission back to grading."""
         raise NotImplementedError

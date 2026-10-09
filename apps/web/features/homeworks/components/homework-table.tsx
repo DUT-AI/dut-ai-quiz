@@ -8,7 +8,6 @@ import {
   Archive,
   GraduationCap,
   Users,
-  Calendar,
   FileCode,
   FileText,
   ChevronLeft,
@@ -194,19 +193,6 @@ export function HomeworkTable({
     return homeworks.slice(startIndex, startIndex + pageSize);
   }, [homeworks, currentPage, pageSize]);
 
-  const formatDate = (dateStr: string) => {
-    try {
-      const d = new Date(dateStr);
-      return d.toLocaleDateString("vi-VN", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      });
-    } catch {
-      return dateStr;
-    }
-  };
-
   if (homeworks.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-gray-200 dark:border-white/10 p-12 text-center bg-white/50 dark:bg-navy-blue/30">
@@ -231,7 +217,6 @@ export function HomeworkTable({
                 {showLessonColumn && <th className="py-3.5 px-4 hidden md:table-cell">Bài học liên kết</th>}
                 <th className="py-3.5 px-4 text-center">Grading status</th>
                 <th className="py-3.5 px-4 text-center">Đã nộp</th>
-                <th className="py-3.5 px-4 hidden sm:table-cell">Ngày tạo</th>
                 <th className="py-3.5 px-4 md:px-5 text-right">Thao tác</th>
               </tr>
             </thead>
@@ -317,14 +302,6 @@ export function HomeworkTable({
                         <Users className="size-3.5" />
                         <span>{hw.submitted_count} bài</span>
                       </Link>
-                    </td>
-
-                    {/* Created Date */}
-                    <td className="py-3.5 px-4 hidden sm:table-cell text-xs text-gray-navy/80 dark:text-light-blue/60 font-semibold">
-                      <div className="flex items-center gap-1.5">
-                        <Calendar className="size-3 text-gray-400" />
-                        <span>{formatDate(hw.created_at)}</span>
-                      </div>
                     </td>
 
                     {/* Action Buttons */}

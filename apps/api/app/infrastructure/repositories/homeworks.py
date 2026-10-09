@@ -159,6 +159,21 @@ class HomeworkRepository(IHomeworkRepository):
         )
         return model.to_entity() if model else None
 
+    async def list_my_submissions(
+        self, homework_id: UUID, user_id: int
+    ) -> list[HomeworkSubmissionEntity]:
+        models = (
+            await self._session.scalars(
+                select(HomeworkSubmission)
+                .where(
+                    HomeworkSubmission.homework_id == homework_id,
+                    HomeworkSubmission.user_id == user_id,
+                )
+                .order_by(HomeworkSubmission.attempt_number.desc())
+            )
+        ).all()
+        return [model.to_entity() for model in models]
+
     async def retry_failed_submission(self, submission_id: UUID) -> HomeworkSubmissionEntity | None:
         model = await self._session.scalar(
             update(HomeworkSubmission)
