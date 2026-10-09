@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useLessons, useModules } from "@/lib/queries";
 import { SearchBar } from "@/components/ui/search-bar";
 import {
@@ -12,10 +12,13 @@ import {
   Folder,
   HelpCircle,
   Menu,
-  Compass
+  Compass,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { ModuleTrack } from "./module-track";
 import { LessonNodeCard } from "./lesson-node-card";
+import { useLearningPathStore } from "@/store/learning-path-store";
 
 export function LearningPath() {
   const { data: lessons = [], isLoading: isLoadingLessons, error: lessonsError } = useLessons();
@@ -25,6 +28,30 @@ export function LearningPath() {
   const [activeModuleId, setActiveModuleId] = useState<string>("");
 
   const isLoading = isLoadingLessons || isLoadingModules;
+
+  const lastVisitedLesson = useLearningPathStore((s) => s.lastVisitedLesson);
+  const hasAutoScrolledRef = useRef(false);
+
+  // Auto scroll to last visited lesson when returning to roadmap
+  useEffect(() => {
+    if (isLoading || hasAutoScrolledRef.current || !lastVisitedLesson?.id) return;
+
+    const timer = setTimeout(() => {
+      const targetId = `lesson-card-${lastVisitedLesson.id}`;
+      const element =
+        document.getElementById(targetId) ||
+        (lastVisitedLesson.slug
+          ? document.querySelector(`[data-lesson-slug="${lastVisitedLesson.slug}"]`)
+          : null);
+
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+        hasAutoScrolledRef.current = true;
+      }
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [isLoading, lastVisitedLesson]);
 
   // Scrollspy effect using IntersectionObserver to auto-update the active module track on scroll
   useEffect(() => {
@@ -112,8 +139,13 @@ export function LearningPath() {
     };
   }, [modules, lessons, unassignedLessons]);
 
+  const { setModuleExpanded, expandAll, collapseAll } = useLearningPathStore();
+
   // Handle scrolling to a specific module (quick jump)
   const scrollToModule = (id: string) => {
+    if (id !== "unassigned-lessons-track") {
+      setModuleExpanded(id, true);
+    }
     const element = document.getElementById(`module-${id}`);
     if (element) {
       element.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -132,13 +164,33 @@ export function LearningPath() {
             Hệ thống bài học được sắp xếp khoa học theo sơ đồ phát triển năng lực, giúp bạn chinh phục kiến thức từ cơ bản đến nâng cao.
           </p>
         </div>
-        <div className="w-full lg:w-96 shrink-0">
+        <div className="w-full lg:w-96 shrink-0 flex flex-col gap-2.5">
           <SearchBar
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onClear={() => setSearchQuery("")}
             placeholder="Tìm kiếm bài học hoặc chủ đề..."
           />
+          {!searchQuery && !isLoading && sortedModules.length > 0 && (
+            <div className="flex items-center justify-end gap-2 pr-1">
+              <button
+                type="button"
+                onClick={() => expandAll(sortedModules.map((m) => m.id))}
+                className="text-[11px] font-bold text-gray-navy/80 dark:text-light-blue/80 hover:text-primary transition-colors flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-200/80 dark:border-white/10 hover:border-primary/40 bg-white/50 dark:bg-navy-blue/30 cursor-pointer"
+              >
+                <ChevronDown className="size-3" />
+                Mở tất cả
+              </button>
+              <button
+                type="button"
+                onClick={collapseAll}
+                className="text-[11px] font-bold text-gray-navy/80 dark:text-light-blue/80 hover:text-primary transition-colors flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-200/80 dark:border-white/10 hover:border-primary/40 bg-white/50 dark:bg-navy-blue/30 cursor-pointer"
+              >
+                <ChevronUp className="size-3" />
+                Thu gọn tất cả
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

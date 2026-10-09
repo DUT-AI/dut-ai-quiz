@@ -12,6 +12,7 @@ import {
 } from "@/features/lessons/components";
 import { LessonComments } from "@/features/comments/components/lesson-comments";
 import { LessonProvider } from "@/features/lessons/context/lesson-context";
+import { useLearningPathStore } from "@/store/learning-path-store";
 
 export default function LessonTabsLayout({
   children,
@@ -63,11 +64,22 @@ export default function LessonTabsLayout({
     };
   }, [lessonId, user?.id]);
 
+  const setLastVisitedLesson = useLearningPathStore((s) => s.setLastVisitedLesson);
+  const currentLesson = lesson || resolvedLesson;
+
+  useEffect(() => {
+    if (currentLesson) {
+      setLastVisitedLesson({
+        id: currentLesson.id,
+        slug: currentLesson.slug,
+        moduleId: currentLesson.module_id,
+      });
+    }
+  }, [currentLesson, setLastVisitedLesson]);
+
   if (isLoading) {
     return <LessonLoading />;
   }
-
-  const currentLesson = lesson || resolvedLesson;
 
   if (!currentLesson) {
     return <LessonNotFound />;

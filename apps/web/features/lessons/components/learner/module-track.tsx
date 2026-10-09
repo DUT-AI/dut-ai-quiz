@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Folder, ChevronRight, BookOpen, Layers, Milestone } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { StepNode } from "./step-node";
 import type { Module, Lesson } from "@/features/lessons/types";
+import { useLearningPathStore } from "@/store/learning-path-store";
 
 interface Props {
   module: Module;
@@ -57,7 +58,21 @@ const DYNAMIC_THEMES = [
 ];
 
 export function ModuleTrack({ module, lessons, index }: Props) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const { expandedModuleIds, toggleModule } = useLearningPathStore();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const isExpanded = isMounted
+    ? (expandedModuleIds[module.id] ?? (index === 0))
+    : index === 0;
+
+  const handleToggle = () => {
+    toggleModule(module.id, index === 0);
+  };
+
   const theme = DYNAMIC_THEMES[index % DYNAMIC_THEMES.length];
 
   // Group lessons by order value
@@ -89,7 +104,7 @@ export function ModuleTrack({ module, lessons, index }: Props) {
     >
       {/* Module Header Container */}
       <div 
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={handleToggle}
         className={`p-5 sm:p-6 flex items-center justify-between gap-4 cursor-pointer hover:bg-slate-50/50 dark:hover:bg-white/5 transition-all bg-gradient-to-r ${theme.gradient}`}
       >
         <div className="flex items-center gap-3.5 min-w-0">
@@ -136,7 +151,7 @@ export function ModuleTrack({ module, lessons, index }: Props) {
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              setIsExpanded((prev) => !prev);
+              handleToggle();
             }}
             className="p-2 text-gray-navy/60 hover:text-gray-navy dark:text-light-blue/60 dark:hover:text-light-blue hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl transition-all cursor-pointer"
           >

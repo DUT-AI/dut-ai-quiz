@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import type { Lesson } from "@/features/lessons/types";
 
+import { useLearningPathStore } from "@/store/learning-path-store";
+
 interface Props {
   lesson: Lesson;
   index: number;
@@ -55,15 +57,35 @@ export function LessonNodeCard({ lesson, index }: Props) {
   const router = useRouter();
   const Icon = getLessonIcon(lesson?.name);
   const [isLoading, setIsLoading] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const setLastVisitedLesson = useLearningPathStore((s) => s.setLastVisitedLesson);
+  const lastVisitedLesson = useLearningPathStore((s) => s.lastVisitedLesson);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const isRecentlyVisited =
+    isMounted &&
+    !!lastVisitedLesson &&
+    (lastVisitedLesson.id === lesson?.id ||
+      (!!lesson?.slug && lastVisitedLesson.slug === lesson.slug));
 
   const handleClick = () => {
     if (!lesson) return;
     setIsLoading(true);
+    setLastVisitedLesson({
+      id: lesson.id,
+      slug: lesson.slug,
+      moduleId: lesson.module_id,
+    });
     router.push(`/lessons/${lesson.slug || lesson.id}`);
   };
 
   return (
     <motion.div
+      id={`lesson-card-${lesson.id}`}
+      data-lesson-slug={lesson.slug || undefined}
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.28, delay: Math.min(index * 0.04, 0.25) }}
@@ -72,13 +94,14 @@ export function LessonNodeCard({ lesson, index }: Props) {
         isLoading ? "cursor-wait pointer-events-none" : "cursor-pointer"
       }`}
     >
-      <div className="relative h-full overflow-hidden rounded-2xl transition-all duration-300
+      <div className={`relative h-full overflow-hidden rounded-2xl transition-all duration-300
         bg-white dark:bg-navy-blue/70 
-        border border-slate-200/80 dark:border-white/10 
-        hover:border-primary/50 dark:hover:border-primary/40
-        shadow-[0_4px_20px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.3)] 
-        hover:shadow-xl hover:shadow-primary/10 dark:hover:shadow-primary/5
-        p-6 flex flex-col justify-between gap-4"
+        ${
+          isRecentlyVisited
+            ? "border-2 border-primary/80 ring-2 ring-primary ring-offset-2 dark:ring-offset-navy-blue shadow-lg shadow-primary/25"
+            : "border border-slate-200/80 dark:border-white/10 hover:border-primary/50 dark:hover:border-primary/40 shadow-[0_4px_20px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.3)] hover:shadow-xl hover:shadow-primary/10 dark:hover:shadow-primary/5"
+        }
+        p-6 flex flex-col justify-between gap-4`}
       >
         {/* Loading Overlay */}
         {isLoading && (
@@ -100,9 +123,16 @@ export function LessonNodeCard({ lesson, index }: Props) {
               <Icon className="size-5 transition-transform duration-300 group-hover:scale-110" />
             </div>
             
-            <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 dark:bg-white/5 text-gray-navy dark:text-light-blue/70">
-              Bài {lesson?.order ?? 1}
-            </span>
+            <div className="flex items-center gap-1.5">
+              {isRecentlyVisited && (
+                <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30 animate-pulse">
+                  Vừa học
+                </span>
+              )}
+              <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 dark:bg-white/5 text-gray-navy dark:text-light-blue/70">
+                Bài {lesson?.order ?? 1}
+              </span>
+            </div>
           </div>
 
           {/* Title */}
