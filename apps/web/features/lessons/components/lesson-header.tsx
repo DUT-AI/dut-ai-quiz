@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Lesson } from "../types";
+import { LessonNavBar } from "./lesson-nav-bar";
 
 interface LessonHeaderProps {
   lesson: Partial<Lesson>;
@@ -11,14 +12,21 @@ interface LessonHeaderProps {
 export function LessonHeader({ lesson, backUrl = "/lessons" }: LessonHeaderProps) {
   return (
     <>
-      {/* Back button */}
-      <Link
-        href={backUrl}
-        className="inline-flex items-center gap-2 text-primary font-bold hover:gap-3 transition-all mb-4 group"
-      >
-        <ArrowLeft className="size-5" />
-        Quay lại danh sách bài học
-      </Link>
+      {/* Top Action Row: Back button & Lesson Navigation Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 relative z-40">
+        <Link
+          href={backUrl}
+          className="inline-flex items-center gap-2 text-primary font-bold hover:gap-3 transition-all group shrink-0"
+        >
+          <ArrowLeft className="size-5" />
+          Quay lại danh sách bài học
+        </Link>
+
+        {/* 3 Lesson Navigation Buttons (Prev - Dropdown - Next) */}
+        <div className="flex items-center justify-start sm:justify-end relative z-40">
+          <LessonNavBar currentLesson={lesson} />
+        </div>
+      </div>
 
       {/* Lesson Header */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 mb-8">

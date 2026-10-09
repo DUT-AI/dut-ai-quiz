@@ -12,3 +12,4 @@ export * from "./lesson-header";
 export * from "./lesson-draft";
 export * from "./learner";
 export * from "./lesson-tabs-bar";
+export * from "./lesson-nav-bar";

@@ -52,7 +52,7 @@ export default function GamePersonalBest({ lessonSlug, variant = "retro" }: Game
     };
 
     return (
-      <div className="w-full bg-white/60 dark:bg-[#1E2A3A]/20 backdrop-blur-md border border-gray-150/80 dark:border-white/5 p-6 rounded-[2.5rem] shadow-xl relative overflow-hidden transition-all duration-300">
+      <div className="w-full bg-white/80 dark:bg-[#1E2A3A]/40 border border-gray-150/80 dark:border-white/5 p-6 rounded-[2.5rem] shadow-lg relative overflow-hidden transition-all duration-300">
         {/* Hologram Grid Effect */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.015)_1px,transparent_1px)] dark:bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:16px_16px] pointer-events-none" />
         
