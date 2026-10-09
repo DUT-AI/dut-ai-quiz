@@ -146,6 +146,8 @@ class HomeworkOutDTO(BaseModel):
     updated_at: datetime
     has_attachment: bool
     submitted_count: int = 0
+    grading_status: str = "PENDING"
+    grading_error: str | None = None
     current_submission: HomeworkSubmissionOutDTO | None = None
 
     @classmethod
@@ -168,6 +170,8 @@ class HomeworkOutDTO(BaseModel):
             updated_at=entity.updated_at,
             has_attachment=entity.attachment_key is not None,
             submitted_count=submitted_count,
+            grading_status=entity.grading_status,
+            grading_error=entity.grading_error,
             current_submission=(
                 HomeworkSubmissionOutDTO.from_entity(current_submission)
                 if current_submission

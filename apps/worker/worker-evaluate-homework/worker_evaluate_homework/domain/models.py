@@ -27,7 +27,21 @@ class HomeworkRubric(BaseModel):
     allowed_libraries: list[str] = Field(default_factory=list)
     forbidden_libraries: list[str] = Field(default_factory=list)
     notes: list[str] = Field(default_factory=list)
-    criteria: list[GradingCriterion] = Field(default_factory=list, min_length=3, max_length=10)
+    criteria: list[GradingCriterion] = Field(default_factory=list)
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_fields(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if "topic" not in data and "title" in data:
+                data["topic"] = data["title"]
+            if not data.get("objective") and "description" in data:
+                data["objective"] = data["description"]
+        return data
+
+    @property
+    def title(self) -> str:
+        return self.topic
 
     @model_validator(mode="after")
     def validate_criteria(self) -> "HomeworkRubric":

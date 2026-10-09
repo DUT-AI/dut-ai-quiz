@@ -20,7 +20,7 @@ interface DescriptionEditorModalProps {
 
 export function DescriptionEditorModal({ open, initialValue, onClose, onSave }: DescriptionEditorModalProps) {
   const [mounted, setMounted] = useState(false);
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState(initialValue);
   const [activeTabMobile, setActiveTabMobile] = useState<"edit" | "preview">("edit");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -148,10 +148,10 @@ export function DescriptionEditorModal({ open, initialValue, onClose, onSave }: 
 
           {/* Modal Content */}
           <motion.div
-            initial={{ scale: 0.97, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.97, opacity: 0 }}
-            transition={{ type: "spring", damping: 30, stiffness: 300 }}
+            initial={{ scale: 0.98, opacity: 0, y: 10 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.98, opacity: 0, y: 10 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
             className="relative z-10 flex h-[92vh] w-full max-w-[95vw] flex-col rounded-2xl border border-gray-150 bg-white shadow-2xl dark:border-white/20 dark:bg-navy-blue"
           >
             {/* Header */}

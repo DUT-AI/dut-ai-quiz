@@ -51,6 +51,8 @@ class Homework(Base):
             created_at=self.created_at,
             updated_at=self.updated_at,
             archived_at=self.archived_at,
+            grading_status=self.grading_status,
+            grading_error=self.grading_error,
         )
 
 

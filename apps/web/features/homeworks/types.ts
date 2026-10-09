@@ -38,6 +38,8 @@ export const HomeworkSchema = z.object({
   updated_at: z.string(),
   has_attachment: z.boolean(),
   submitted_count: z.number(),
+  grading_status: z.string().default("PENDING"),
+  grading_error: z.string().nullable().optional(),
   current_submission: HomeworkSubmissionSchema.nullable().optional(),
 });
 

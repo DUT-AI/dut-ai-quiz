@@ -15,11 +15,16 @@ const listResponse = z.object({
   data: z.array(HomeworkSchema),
   is_success: z.boolean(),
 });
+const detailResponse = z.object({
+  data: HomeworkSchema,
+  is_success: z.boolean(),
+});
 const submissionListResponse = z.object({
   data: z.array(HomeworkSubmissionSchema),
   is_success: z.boolean(),
 });
 type HomeworkListResponse = z.infer<typeof listResponse>;
+type HomeworkDetailResponse = z.infer<typeof detailResponse>;
 type HomeworkSubmissionListResponse = z.infer<typeof submissionListResponse>;
 
 async function formRequest<T>(
@@ -63,10 +68,24 @@ export function useMyHomeworks(lessonId: string | null) {
   });
 }
 
-export function useHomeworks() {
+export function useHomeworks(lessonId?: string) {
+  const url = lessonId ? `/api/v1/homeworks?lesson_id=${lessonId}` : "/api/v1/homeworks";
   return useQuery({
-    queryKey: ["homeworks"],
-    queryFn: () => apiGet<HomeworkListResponse>("/api/v1/homeworks", listResponse),
+    queryKey: ["homeworks", lessonId ?? "all"],
+    queryFn: () => apiGet<HomeworkListResponse>(url, listResponse),
+  });
+}
+
+export function useHomework(homeworkId: string | null) {
+  return useQuery({
+    queryKey: ["homeworks", "detail", homeworkId],
+    queryFn: () =>
+      apiGet<HomeworkDetailResponse>(
+        `/api/v1/homeworks/${homeworkId}`,
+        detailResponse,
+      ),
+    select: (res) => res.data,
+    enabled: !!homeworkId,
   });
 }
 

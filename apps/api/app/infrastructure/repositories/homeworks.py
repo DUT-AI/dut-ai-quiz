@@ -60,6 +60,8 @@ class HomeworkRepository(IHomeworkRepository):
             description=homework.description,
             attachment_key=homework.attachment_key,
             created_by=homework.created_by,
+            grading_status=homework.grading_status,
+            grading_error=homework.grading_error,
         )
         self._session.add(model)
         await self._session.flush()

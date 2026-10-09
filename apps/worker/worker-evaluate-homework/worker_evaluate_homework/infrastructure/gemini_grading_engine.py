@@ -74,7 +74,10 @@ NỘI DUNG TRÍCH TỪ FILE ĐỀ:
 {attachment_text}
 
 Quy tắc:
-- required_files: Danh sách các tên file code bắt buộc (ví dụ: ["main.py"] hoặc ["bai1.ipynb"]). Không tự bịa nếu đề không yêu cầu rõ.
+- topic: Tên chủ đề của bài tập (dựa trên tiêu đề và nội dung bài tập).
+- objective: Mục tiêu của bài tập và kỹ năng cần đạt được.
+- notes: Danh sách ghi chú thêm (để rỗng [] nếu không có).
+- required_files: Danh sách các tên file code bắt buộc (ví dụ: ["main.py"] hoặc ["bai1.ipynb"]). Không tự bịa nếu đề không yêu cầu rõ (để rỗng [] nếu đề không quy định cụ thể).
 - requirements: Danh sách các yêu cầu có thể đối chiếu với nội dung bài nộp (mỗi phần tử là một string).
 - allowed_libraries và forbidden_libraries: Danh sách tên thư viện (để rỗng [] nếu đề không quy định).
 - criteria: Danh sách từ 3 đến 10 tiêu chí riêng cho đúng bài tập này.
@@ -88,9 +91,10 @@ Quy tắc:
 
 BẮT BUỘC TRẢ VỀ JSON theo cấu trúc mẫu sau (chỉ trả về JSON, không kèm văn bản giải thích nào khác):
 {{
-  "title": "{homework.title}",
-  "description": "Mô tả bài tập",
-  "required_files": ["..."],
+  "topic": "{homework.title}",
+  "objective": "Mục tiêu bài tập",
+  "notes": [],
+  "required_files": [],
   "allowed_libraries": [],
   "forbidden_libraries": [],
   "requirements": ["..."],

@@ -5,13 +5,14 @@ from uuid import UUID
 import httpx
 from app.config import settings
 from app.infrastructure.clients.minio_client import MinioClient
-from arq import Retry
+from arq import Retry, cron
 from arq.connections import RedisSettings
 from loguru import logger
 
 from worker_evaluate_homework.application.use_cases import (
     EvaluateHomeworkSubmissionUseCase,
     RegisterHomeworkUseCase,
+    RetryStaleHomeworkUseCase,
 )
 from worker_evaluate_homework.domain import InvalidArtifactError
 from worker_evaluate_homework.infrastructure import (
@@ -49,6 +50,15 @@ async def startup(ctx):
         grading_engine,
         register_use_case,
         settings.homework_plagiarism_threshold,
+    )
+    ctx["retry_stale_use_case"] = RetryStaleHomeworkUseCase(
+        repository=repository,
+        queue_name=settings.homework_queue_name,
+        stale_homework_minutes=10,
+        stale_submission_minutes=15,
+        days_limit=7,
+        homework_batch_limit=10,
+        submission_batch_limit=20,
     )
 
 
@@ -92,6 +102,15 @@ async def evaluate_homework_job(ctx, submission_id: str):
         raise
 
 
+async def sweep_stale_homework_and_submissions_job(ctx):
+    use_case: RetryStaleHomeworkUseCase = ctx["retry_stale_use_case"]
+    redis = ctx.get("redis")
+    if not redis:
+        logger.warning("Redis client không tồn tại trong context của cron job")
+        return {"homeworks_enqueued": 0, "submissions_enqueued": 0}
+    return await use_case.execute(redis)
+
+
 def _redis_settings_from_config() -> RedisSettings:
     parsed = urlparse(settings.redis_url)
     return RedisSettings(
@@ -106,6 +125,12 @@ def _redis_settings_from_config() -> RedisSettings:
 
 class WorkerSettings:
     functions: ClassVar[list] = [register_homework_job, evaluate_homework_job]
+    cron_jobs: ClassVar[list] = [
+        cron(
+            sweep_stale_homework_and_submissions_job,
+            minute={0, 10, 20, 30, 40, 50},
+        )
+    ]
     redis_settings = _redis_settings_from_config()
     queue_name = settings.homework_queue_name
     max_tries = 3

@@ -87,6 +87,7 @@ from app.application.use_cases.hackathon.submissions import (
 from app.application.use_cases.homeworks import (
     ArchiveHomeworkUseCase,
     CreateHomeworkUseCase,
+    GetHomeworkUseCase,
     GetHomeworkAttachmentUrlUseCase,
     GetHomeworkSubmissionDownloadUrlUseCase,
     GetMyHomeworkSubmissionUseCase,
@@ -233,6 +234,10 @@ class UseCaseProvider(Provider):
     )
     list_homeworks_use_case = provide(
         ListHomeworksUseCase,
+        scope=Scope.REQUEST,
+    )
+    get_homework_use_case = provide(
+        GetHomeworkUseCase,
         scope=Scope.REQUEST,
     )
     create_homework_use_case = provide(

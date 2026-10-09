@@ -13,6 +13,7 @@ from app.application.dtos.homework import (
 from app.application.use_cases.homeworks import (
     ArchiveHomeworkUseCase,
     CreateHomeworkUseCase,
+    GetHomeworkUseCase,
     GetHomeworkAttachmentUrlUseCase,
     GetHomeworkSubmissionDownloadUrlUseCase,
     GetMyHomeworkSubmissionUseCase,
@@ -103,6 +104,16 @@ async def create_homework(
             )
         )
     )
+
+
+@router.get("/{homework_id}", response_model=HomeworkResponse)
+@inject
+async def get_homework(
+    homework_id: UUID,
+    user: CurrentUser,
+    use_case: FromDishka[GetHomeworkUseCase],
+) -> HomeworkResponse:
+    return HomeworkResponse(data=await use_case.execute(homework_id))
 
 
 @router.patch("/{homework_id}", response_model=HomeworkResponse)

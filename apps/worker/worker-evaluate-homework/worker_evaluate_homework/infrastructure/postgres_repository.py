@@ -1,13 +1,15 @@
+from datetime import timedelta
 from typing import Any
 from uuid import UUID
 
+from app.core.datetime_utils import now_ict
 from app.infrastructure.database import AsyncSessionLocal
 from app.infrastructure.persistence.models.homework import (
     Homework,
     HomeworkSubmission,
     HomeworkSubmissionFingerprint,
 )
-from sqlalchemy import delete, func, select
+from sqlalchemy import and_, delete, func, not_, or_, select
 
 from worker_evaluate_homework.domain import (
     GradeResult,
@@ -196,3 +198,107 @@ class PostgresHomeworkGradingRepository:
                 ]
             )
             await session.commit()
+
+    async def list_stale_homework_ids(
+        self,
+        stale_minutes: int = 10,
+        days_limit: int = 7,
+        limit: int = 10,
+    ) -> list[UUID]:
+        now = now_ict()
+        cutoff_created = now - timedelta(days=days_limit)
+        cutoff_stale = now - timedelta(minutes=stale_minutes)
+
+        llm_error_conditions = or_(
+            Homework.grading_error.is_(None),
+            Homework.grading_error.ilike("%LLM%"),
+            Homework.grading_error.ilike("%timeout%"),
+            Homework.grading_error.ilike("%JSON%"),
+            Homework.grading_error.ilike("%Connect%"),
+            Homework.grading_error.ilike("%50%"),
+            Homework.grading_error.ilike("%Rate limit%"),
+        )
+
+        stmt = (
+            select(Homework.id)
+            .where(
+                Homework.archived_at.is_(None),
+                Homework.created_at >= cutoff_created,
+                or_(
+                    Homework.grading_status == "PENDING",
+                    and_(
+                        Homework.grading_status == "PROCESSING",
+                        Homework.updated_at < cutoff_stale,
+                    ),
+                    and_(
+                        Homework.grading_status == "FAILED",
+                        llm_error_conditions,
+                    ),
+                ),
+            )
+            .order_by(Homework.created_at.asc())
+            .limit(limit)
+        )
+        async with AsyncSessionLocal() as session:
+            result = await session.execute(stmt)
+            return list(result.scalars().all())
+
+    async def list_stale_submission_ids(
+        self,
+        stale_minutes: int = 15,
+        days_limit: int = 7,
+        limit: int = 20,
+    ) -> list[UUID]:
+        now = now_ict()
+        cutoff_submitted = now - timedelta(days=days_limit)
+        cutoff_stale = now - timedelta(minutes=stale_minutes)
+
+        llm_submission_error_conditions = or_(
+            HomeworkSubmission.grading_error.is_(None),
+            HomeworkSubmission.grading_error.ilike("%LLM%"),
+            HomeworkSubmission.grading_error.ilike("%timeout%"),
+            HomeworkSubmission.grading_error.ilike("%JSON%"),
+            HomeworkSubmission.grading_error.ilike("%Connect%"),
+            HomeworkSubmission.grading_error.ilike("%50%"),
+            HomeworkSubmission.grading_error.ilike("%Rate limit%"),
+        )
+        not_artifact_error_conditions = and_(
+            not_(HomeworkSubmission.grading_error.ilike("%hợp lệ%")),
+            not_(HomeworkSubmission.grading_error.ilike("%mật khẩu%")),
+            not_(HomeworkSubmission.grading_error.ilike("%symbolic link%")),
+            not_(HomeworkSubmission.grading_error.ilike("%UTF-8%")),
+            not_(HomeworkSubmission.grading_error.ilike("%vượt quá giới hạn%")),
+        )
+        failed_retry_conditions = and_(
+            HomeworkSubmission.status == SubmissionGradingStatus.FAILED.value,
+            or_(
+                HomeworkSubmission.grading_error.is_(None),
+                and_(
+                    llm_submission_error_conditions,
+                    not_artifact_error_conditions,
+                ),
+            ),
+        )
+
+        stmt = (
+            select(HomeworkSubmission.id)
+            .join(Homework, HomeworkSubmission.homework_id == Homework.id)
+            .where(
+                Homework.archived_at.is_(None),
+                Homework.grading_status == "READY",
+                HomeworkSubmission.submitted_at >= cutoff_submitted,
+                or_(
+                    HomeworkSubmission.status == SubmissionGradingStatus.UPLOADED.value,
+                    and_(
+                        HomeworkSubmission.status == SubmissionGradingStatus.GRADING.value,
+                        HomeworkSubmission.submitted_at < cutoff_stale,
+                    ),
+                    failed_retry_conditions,
+                ),
+            )
+            .order_by(HomeworkSubmission.submitted_at.asc())
+            .limit(limit)
+        )
+        async with AsyncSessionLocal() as session:
+            result = await session.execute(stmt)
+            return list(result.scalars().all())

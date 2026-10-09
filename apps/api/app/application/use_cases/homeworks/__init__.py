@@ -1,5 +1,6 @@
 from .archive_homework_uc import ArchiveHomeworkUseCase
 from .create_homework_uc import CreateHomeworkUseCase
+from .get_homework_uc import GetHomeworkUseCase
 from .get_homework_attachment_url_uc import GetHomeworkAttachmentUrlUseCase
 from .get_homework_submission_download_url_uc import (
     GetHomeworkSubmissionDownloadUrlUseCase,
@@ -18,6 +19,7 @@ from .update_homework_uc import UpdateHomeworkUseCase
 __all__ = [
     "ArchiveHomeworkUseCase",
     "CreateHomeworkUseCase",
+    "GetHomeworkUseCase",
     "GetHomeworkAttachmentUrlUseCase",
     "GetHomeworkSubmissionDownloadUrlUseCase",
     "GetMyHomeworkSubmissionUseCase",

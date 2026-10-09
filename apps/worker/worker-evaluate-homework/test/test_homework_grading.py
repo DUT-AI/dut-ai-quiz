@@ -606,8 +606,9 @@ async def test_openai_llm_client_and_grading_engine() -> None:
     mock_response.raise_for_status = MagicMock()
 
     rubric_payload = {
-        "title": "Bài 1: Linear Regression",
-        "description": "Cài đặt thuật toán hồi quy",
+        "topic": "Bài 1: Linear Regression",
+        "objective": "Cài đặt thuật toán hồi quy",
+        "notes": [],
         "required_files": ["main.py"],
         "allowed_libraries": [],
         "forbidden_libraries": [],
@@ -649,7 +650,9 @@ async def test_openai_llm_client_and_grading_engine() -> None:
         "Đề bài chi tiết...",
     )
 
+    assert rubric.topic == "Bài 1: Linear Regression"
     assert rubric.title == "Bài 1: Linear Regression"
+    assert rubric.objective == "Cài đặt thuật toán hồi quy"
     assert len(rubric.criteria) == 2
     assert sum(c.weight for c in rubric.criteria) == 10.0
 
@@ -680,3 +683,88 @@ async def test_openai_llm_client_and_grading_engine() -> None:
     assert grade_result.is_pass is True
     assert grade_result.score == 10.0
     assert len(grade_result.score_details) == 2
+
+
+@pytest.mark.asyncio
+async def test_retry_stale_homework_use_case() -> None:
+    from unittest.mock import AsyncMock, MagicMock
+    from uuid import uuid4
+    from worker_evaluate_homework.application.use_cases import RetryStaleHomeworkUseCase
+
+    hw_id1 = uuid4()
+    hw_id2 = uuid4()
+    sub_id1 = uuid4()
+    sub_id2 = uuid4()
+
+    mock_repo = MagicMock()
+    mock_repo.list_stale_homework_ids = AsyncMock(return_value=[hw_id1, hw_id2])
+    mock_repo.list_stale_submission_ids = AsyncMock(return_value=[sub_id1, sub_id2])
+
+    mock_redis = MagicMock()
+    mock_redis.enqueue_job = AsyncMock()
+
+    use_case = RetryStaleHomeworkUseCase(
+        repository=mock_repo,
+        queue_name="test_queue",
+        stale_homework_minutes=10,
+        stale_submission_minutes=15,
+        days_limit=7,
+        homework_batch_limit=10,
+        submission_batch_limit=20,
+    )
+
+    result = await use_case.execute(mock_redis)
+
+    assert result == {"homeworks_enqueued": 2, "submissions_enqueued": 2}
+    assert mock_redis.enqueue_job.await_count == 4
+
+    # Kiểm tra gọi register_homework_job
+    mock_redis.enqueue_job.assert_any_await(
+        "register_homework_job",
+        homework_id=str(hw_id1),
+        _queue_name="test_queue",
+        _defer_by=1,
+    )
+    mock_redis.enqueue_job.assert_any_await(
+        "register_homework_job",
+        homework_id=str(hw_id2),
+        _queue_name="test_queue",
+        _defer_by=1,
+    )
+
+    # Kiểm tra gọi evaluate_homework_job
+    mock_redis.enqueue_job.assert_any_await(
+        "evaluate_homework_job",
+        submission_id=str(sub_id1),
+        _queue_name="test_queue",
+        _defer_by=1,
+    )
+    mock_redis.enqueue_job.assert_any_await(
+        "evaluate_homework_job",
+        submission_id=str(sub_id2),
+        _queue_name="test_queue",
+        _defer_by=1,
+    )
+
+
+@pytest.mark.asyncio
+async def test_retry_stale_homework_use_case_empty() -> None:
+    from unittest.mock import AsyncMock, MagicMock
+    from worker_evaluate_homework.application.use_cases import RetryStaleHomeworkUseCase
+
+    mock_repo = MagicMock()
+    mock_repo.list_stale_homework_ids = AsyncMock(return_value=[])
+    mock_repo.list_stale_submission_ids = AsyncMock(return_value=[])
+
+    mock_redis = MagicMock()
+    mock_redis.enqueue_job = AsyncMock()
+
+    use_case = RetryStaleHomeworkUseCase(
+        repository=mock_repo,
+        queue_name="test_queue",
+    )
+
+    result = await use_case.execute(mock_redis)
+    assert result == {"homeworks_enqueued": 0, "submissions_enqueued": 0}
+    mock_redis.enqueue_job.assert_not_called()
+

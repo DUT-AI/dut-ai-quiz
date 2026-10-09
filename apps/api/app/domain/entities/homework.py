@@ -28,6 +28,8 @@ class HomeworkEntity:
     created_at: datetime | None = None
     updated_at: datetime | None = None
     archived_at: datetime | None = None
+    grading_status: str = "PENDING"
+    grading_error: str | None = None
 
 
 @dataclass(slots=True)

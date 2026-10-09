@@ -102,3 +102,17 @@ class IHomeworkGradingRepository(Protocol):
         submission: SubmissionGradingRecord,
         values: list[dict[str, Any]],
     ) -> None: ...
+
+    async def list_stale_homework_ids(
+        self,
+        stale_minutes: int = 10,
+        days_limit: int = 7,
+        limit: int = 10,
+    ) -> list[UUID]: ...
+
+    async def list_stale_submission_ids(
+        self,
+        stale_minutes: int = 15,
+        days_limit: int = 7,
+        limit: int = 20,
+    ) -> list[UUID]: ...
