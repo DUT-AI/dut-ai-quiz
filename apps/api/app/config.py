@@ -105,7 +105,11 @@ class Settings(BaseSettings):
     homework_grading_max_archive_entries: ClassVar[int] = 500
     homework_plagiarism_threshold: ClassVar[float] = 0.8
     homework_max_file_size_bytes: ClassVar[int] = 20 * 1024 * 1024
-    homework_grading_timeout_seconds: ClassVar[float] = 300.0
+    homework_grading_timeout_seconds: float = Field(default=900.0, gt=0)
+    homework_grading_max_attempts: int = Field(default=3, ge=1, le=10)
+    homework_grading_max_chunks: int = Field(default=32, ge=1, le=128)
+    homework_grading_chunk_chars: int = Field(default=24_000, ge=1000)
+    homework_notebook_output_max_chars: int = Field(default=6000, ge=1000)
 
     # Lesson semantic search and reranking.
     # DUT-AI's TEI service (BAAI/bge-m3 + BAAI/bge-reranker-v2-m3) is the default;
@@ -163,6 +167,13 @@ class Settings(BaseSettings):
     )
     homework_llm_temperature: float = 0.1
     homework_llm_timeout_seconds: float = 120.0
+    homework_llm_context_tokens: int = Field(default=66_816, ge=2048)
+    homework_llm_max_output_tokens: int = Field(default=4096, ge=256)
+    homework_llm_token_margin: int = Field(default=512, ge=0)
+    # Bound native tokenizer payloads independently of the model's token budget.
+    homework_llm_max_tokenizer_bytes: int = Field(default=48_000, ge=4096)
+    # Native llama.cpp endpoint root; empty means derive it from the chat URL.
+    homework_llm_tokenizer_url: str = ""
 
     # ================= GOOGLE GENAI / GEMMA API KEY =============
     gemini_api_key: str = Field(

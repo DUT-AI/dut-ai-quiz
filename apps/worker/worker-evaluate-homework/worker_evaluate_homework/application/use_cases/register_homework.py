@@ -1,3 +1,4 @@
+import asyncio
 from uuid import UUID
 
 from worker_evaluate_homework.domain import (
@@ -5,6 +6,7 @@ from worker_evaluate_homework.domain import (
     IHomeworkGradingEngine,
     IHomeworkGradingRepository,
 )
+from worker_evaluate_homework.domain.errors import is_retryable_error
 
 
 class RegisterHomeworkUseCase:
@@ -23,7 +25,8 @@ class RegisterHomeworkUseCase:
             homework = await self._repository.get_homework(homework_id)
             if homework is None:
                 raise ValueError(f"Homework {homework_id} not found")
-            await self._repository.set_homework_processing(homework_id)
+            if not await self._repository.set_homework_processing(homework_id):
+                return
             attachment_text = await self._artifact_reader.read_homework_text(
                 homework.attachment_key
             )
@@ -35,9 +38,17 @@ class RegisterHomeworkUseCase:
                 homework_id,
                 rubric.model_dump(mode="json"),
             )
+        except asyncio.CancelledError:
+            await self._repository.save_homework_error(
+                homework_id,
+                "Worker rubric timeout hoặc bị dừng",
+                retryable=True,
+            )
+            raise
         except Exception as exc:
             await self._repository.save_homework_error(
                 homework_id,
                 str(exc),
+                retryable=is_retryable_error(exc),
             )
             raise

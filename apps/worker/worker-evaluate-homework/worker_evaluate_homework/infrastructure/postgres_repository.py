@@ -2,6 +2,7 @@ from datetime import timedelta
 from typing import Any
 from uuid import UUID
 
+from app.config import settings
 from app.core.datetime_utils import now_ict
 from app.infrastructure.database import AsyncSessionLocal
 from app.infrastructure.persistence.models.homework import (
@@ -9,7 +10,7 @@ from app.infrastructure.persistence.models.homework import (
     HomeworkSubmission,
     HomeworkSubmissionFingerprint,
 )
-from sqlalchemy import and_, delete, func, not_, or_, select
+from sqlalchemy import and_, delete, func, or_, select, update
 
 from worker_evaluate_homework.domain import (
     GradeResult,
@@ -37,14 +38,33 @@ class PostgresHomeworkGradingRepository:
                 grading_rubric=model.grading_rubric,
             )
 
-    async def set_homework_processing(self, homework_id: UUID) -> None:
+    async def set_homework_processing(self, homework_id: UUID) -> bool:
+        now = now_ict()
+        expired = now - timedelta(seconds=settings.homework_grading_timeout_seconds + 60)
         async with AsyncSessionLocal() as session:
-            model = await session.get(Homework, homework_id)
-            if model is None:
-                raise ValueError(f"Homework {homework_id} not found")
-            model.grading_status = "PROCESSING"
-            model.grading_error = None
+            claimed = await session.scalar(
+                update(Homework)
+                .where(
+                    Homework.id == homework_id,
+                    Homework.grading_status != "READY",
+                    Homework.grading_retryable.is_(True),
+                    Homework.grading_attempts < settings.homework_grading_max_attempts,
+                    or_(
+                        Homework.grading_status != "PROCESSING",
+                        Homework.grading_started_at.is_(None),
+                        Homework.grading_started_at < expired,
+                    ),
+                )
+                .values(
+                    grading_status="PROCESSING",
+                    grading_error=None,
+                    grading_started_at=now,
+                    grading_attempts=Homework.grading_attempts + 1,
+                )
+                .returning(Homework.id)
+            )
             await session.commit()
+            return claimed is not None
 
     async def save_homework_rubric(
         self,
@@ -58,12 +78,15 @@ class PostgresHomeworkGradingRepository:
             model.grading_rubric = rubric
             model.grading_status = "READY"
             model.grading_error = None
+            model.grading_started_at = None
             await session.commit()
 
     async def save_homework_error(
         self,
         homework_id: UUID,
         error: str,
+        *,
+        retryable: bool = False,
     ) -> None:
         async with AsyncSessionLocal() as session:
             model = await session.get(Homework, homework_id)
@@ -71,6 +94,8 @@ class PostgresHomeworkGradingRepository:
                 return
             model.grading_status = "FAILED"
             model.grading_error = error[:2000]
+            model.grading_retryable = retryable
+            model.grading_started_at = None
             await session.commit()
 
     async def get_submission(
@@ -90,14 +115,33 @@ class PostgresHomeworkGradingRepository:
                 score=model.score,
             )
 
-    async def set_submission_grading(self, submission_id: UUID) -> None:
+    async def set_submission_grading(self, submission_id: UUID) -> bool:
+        now = now_ict()
+        expired = now - timedelta(seconds=settings.homework_grading_timeout_seconds + 60)
         async with AsyncSessionLocal() as session:
-            model = await session.get(HomeworkSubmission, submission_id)
-            if model is None:
-                raise ValueError(f"Submission {submission_id} not found")
-            model.status = SubmissionGradingStatus.GRADING.value
-            model.grading_error = None
+            claimed = await session.scalar(
+                update(HomeworkSubmission)
+                .where(
+                    HomeworkSubmission.id == submission_id,
+                    HomeworkSubmission.status != SubmissionGradingStatus.GRADED.value,
+                    HomeworkSubmission.grading_retryable.is_(True),
+                    HomeworkSubmission.grading_attempts < settings.homework_grading_max_attempts,
+                    or_(
+                        HomeworkSubmission.status != SubmissionGradingStatus.GRADING.value,
+                        HomeworkSubmission.grading_started_at.is_(None),
+                        HomeworkSubmission.grading_started_at < expired,
+                    ),
+                )
+                .values(
+                    status=SubmissionGradingStatus.GRADING.value,
+                    grading_error=None,
+                    grading_started_at=now,
+                    grading_attempts=HomeworkSubmission.grading_attempts + 1,
+                )
+                .returning(HomeworkSubmission.id)
+            )
             await session.commit()
+            return claimed is not None
 
     async def save_submission_result(
         self,
@@ -119,6 +163,7 @@ class PostgresHomeworkGradingRepository:
             model.is_plagiarized = copied_user_id is not None
             model.plagiarized_from_user_id = copied_user_id
             model.grading_error = None
+            model.grading_started_at = None
             await session.commit()
 
     async def save_submission_error(
@@ -127,11 +172,13 @@ class PostgresHomeworkGradingRepository:
         error: str,
         *,
         final: bool,
+        retryable: bool = False,
     ) -> None:
         async with AsyncSessionLocal() as session:
             model = await session.get(HomeworkSubmission, submission_id)
             if model is None:
                 return
+            final = final or model.grading_attempts >= settings.homework_grading_max_attempts
             model.status = (
                 SubmissionGradingStatus.FAILED.value
                 if final
@@ -141,6 +188,8 @@ class PostgresHomeworkGradingRepository:
                 model.is_pass = False
                 model.score = 0.0
             model.grading_error = error[:2000]
+            model.grading_retryable = retryable
+            model.grading_started_at = None
             await session.commit()
 
     async def list_previous_fingerprints(
@@ -207,16 +256,11 @@ class PostgresHomeworkGradingRepository:
     ) -> list[UUID]:
         now = now_ict()
         cutoff_created = now - timedelta(days=days_limit)
-        cutoff_stale = now - timedelta(minutes=stale_minutes)
-
-        llm_error_conditions = or_(
-            Homework.grading_error.is_(None),
-            Homework.grading_error.ilike("%LLM%"),
-            Homework.grading_error.ilike("%timeout%"),
-            Homework.grading_error.ilike("%JSON%"),
-            Homework.grading_error.ilike("%Connect%"),
-            Homework.grading_error.ilike("%50%"),
-            Homework.grading_error.ilike("%Rate limit%"),
+        cutoff_stale = now - timedelta(
+            seconds=max(
+                stale_minutes * 60,
+                settings.homework_grading_timeout_seconds + 60,
+            )
         )
 
         stmt = (
@@ -224,15 +268,22 @@ class PostgresHomeworkGradingRepository:
             .where(
                 Homework.archived_at.is_(None),
                 Homework.created_at >= cutoff_created,
+                Homework.grading_retryable.is_(True),
+                Homework.grading_attempts < settings.homework_grading_max_attempts,
                 or_(
                     Homework.grading_status == "PENDING",
                     and_(
                         Homework.grading_status == "PROCESSING",
-                        Homework.updated_at < cutoff_stale,
+                        or_(
+                            Homework.grading_started_at < cutoff_stale,
+                            and_(
+                                Homework.grading_started_at.is_(None),
+                                Homework.updated_at < cutoff_stale,
+                            ),
+                        ),
                     ),
                     and_(
                         Homework.grading_status == "FAILED",
-                        llm_error_conditions,
                     ),
                 ),
             )
@@ -251,33 +302,11 @@ class PostgresHomeworkGradingRepository:
     ) -> list[UUID]:
         now = now_ict()
         cutoff_submitted = now - timedelta(days=days_limit)
-        cutoff_stale = now - timedelta(minutes=stale_minutes)
-
-        llm_submission_error_conditions = or_(
-            HomeworkSubmission.grading_error.is_(None),
-            HomeworkSubmission.grading_error.ilike("%LLM%"),
-            HomeworkSubmission.grading_error.ilike("%timeout%"),
-            HomeworkSubmission.grading_error.ilike("%JSON%"),
-            HomeworkSubmission.grading_error.ilike("%Connect%"),
-            HomeworkSubmission.grading_error.ilike("%50%"),
-            HomeworkSubmission.grading_error.ilike("%Rate limit%"),
-        )
-        not_artifact_error_conditions = and_(
-            not_(HomeworkSubmission.grading_error.ilike("%hợp lệ%")),
-            not_(HomeworkSubmission.grading_error.ilike("%mật khẩu%")),
-            not_(HomeworkSubmission.grading_error.ilike("%symbolic link%")),
-            not_(HomeworkSubmission.grading_error.ilike("%UTF-8%")),
-            not_(HomeworkSubmission.grading_error.ilike("%vượt quá giới hạn%")),
-        )
-        failed_retry_conditions = and_(
-            HomeworkSubmission.status == SubmissionGradingStatus.FAILED.value,
-            or_(
-                HomeworkSubmission.grading_error.is_(None),
-                and_(
-                    llm_submission_error_conditions,
-                    not_artifact_error_conditions,
-                ),
-            ),
+        cutoff_stale = now - timedelta(
+            seconds=max(
+                stale_minutes * 60,
+                settings.homework_grading_timeout_seconds + 60,
+            )
         )
 
         stmt = (
@@ -287,13 +316,21 @@ class PostgresHomeworkGradingRepository:
                 Homework.archived_at.is_(None),
                 Homework.grading_status == "READY",
                 HomeworkSubmission.submitted_at >= cutoff_submitted,
+                HomeworkSubmission.grading_retryable.is_(True),
+                HomeworkSubmission.grading_attempts < settings.homework_grading_max_attempts,
                 or_(
                     HomeworkSubmission.status == SubmissionGradingStatus.UPLOADED.value,
                     and_(
                         HomeworkSubmission.status == SubmissionGradingStatus.GRADING.value,
-                        HomeworkSubmission.submitted_at < cutoff_stale,
+                        or_(
+                            HomeworkSubmission.grading_started_at < cutoff_stale,
+                            and_(
+                                HomeworkSubmission.grading_started_at.is_(None),
+                                HomeworkSubmission.submitted_at < cutoff_stale,
+                            ),
+                        ),
                     ),
-                    failed_retry_conditions,
+                    HomeworkSubmission.status == SubmissionGradingStatus.FAILED.value,
                 ),
             )
             .order_by(HomeworkSubmission.submitted_at.asc())

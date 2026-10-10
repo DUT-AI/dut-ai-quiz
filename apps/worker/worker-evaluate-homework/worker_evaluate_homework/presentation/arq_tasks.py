@@ -15,6 +15,7 @@ from worker_evaluate_homework.application.use_cases import (
     RetryStaleHomeworkUseCase,
 )
 from worker_evaluate_homework.domain import InvalidArtifactError
+from worker_evaluate_homework.domain.errors import is_retryable_error
 from worker_evaluate_homework.infrastructure import (
     GeminiLLMClient,
     HomeworkGradingEngine,
@@ -79,7 +80,7 @@ async def register_homework_job(ctx, homework_id: str):
         return
     except Exception as exc:
         logger.exception("Homework registration {} failed", homework_id)
-        if job_try < 3:
+        if is_retryable_error(exc) and job_try < settings.homework_grading_max_attempts:
             raise Retry(defer=10 * job_try) from exc
         raise
 
@@ -90,14 +91,14 @@ async def evaluate_homework_job(ctx, submission_id: str):
     try:
         return await use_case.execute(
             UUID(submission_id),
-            final_attempt=job_try >= 3,
+            final_attempt=job_try >= settings.homework_grading_max_attempts,
         )
     except InvalidArtifactError as exc:
         logger.warning(f"Homework evaluation {submission_id} rejected: {exc}")
         return
     except Exception as exc:
         logger.exception(f"Homework evaluation {submission_id} failed: {exc}")
-        if job_try < 3:
+        if is_retryable_error(exc) and job_try < settings.homework_grading_max_attempts:
             raise Retry(defer=10 * job_try) from exc
         raise
 
@@ -133,7 +134,8 @@ class WorkerSettings:
     ]
     redis_settings = _redis_settings_from_config()
     queue_name = settings.homework_queue_name
-    max_tries = 3
+    max_tries = settings.homework_grading_max_attempts
+    keep_result = 0
     max_jobs = 1
     job_timeout = int(settings.homework_grading_timeout_seconds) + 60
     health_check_interval = 15

@@ -32,6 +32,7 @@ class ArqHomeworkEvaluationQueue(IHomeworkEvaluationQueue):
                 "register_homework_job",
                 homework_id=str(homework_id),
                 _queue_name=settings.homework_queue_name,
+                _job_id=f"homework-register:{homework_id}",
                 _defer_by=1,
             )
         except RedisError as exc:
@@ -44,6 +45,7 @@ class ArqHomeworkEvaluationQueue(IHomeworkEvaluationQueue):
                 "evaluate_homework_job",
                 submission_id=str(submission_id),
                 _queue_name=settings.homework_queue_name,
+                _job_id=f"homework-evaluate:{submission_id}",
                 _defer_by=1,
             )
         except RedisError as exc:

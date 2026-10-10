@@ -51,12 +51,12 @@ class RepositoryStub:
         return self.homework if homework_id == self.homework.id else None
 
     async def set_homework_processing(self, homework_id):
-        return None
+        return True
 
     async def save_homework_rubric(self, homework_id, rubric):
         self.homework = replace(self.homework, grading_rubric=rubric)
 
-    async def save_homework_error(self, homework_id, error):
+    async def save_homework_error(self, homework_id, error, *, retryable=False):
         return None
 
     async def get_submission(self, submission_id):
@@ -65,7 +65,7 @@ class RepositoryStub:
         return None
 
     async def set_submission_grading(self, submission_id):
-        return None
+        return True
 
     async def save_submission_result(
         self,
@@ -83,6 +83,7 @@ class RepositoryStub:
         error,
         *,
         final,
+        retryable=False,
     ):
         self.saved_error = (submission_id, error, final)
 
@@ -236,17 +237,13 @@ async def test_invalid_archive_is_marked_as_final_failure() -> None:
 
 
 @pytest.mark.asyncio
-async def test_invalid_submission_marks_arq_job_as_failed() -> None:
+async def test_invalid_submission_does_not_retry_arq_job() -> None:
     submission_id = uuid4()
 
-    with pytest.raises(InvalidArtifactError, match="Bài nộp không hợp lệ"):
-        await evaluate_homework_job(
-            {
-                "evaluate_use_case": InvalidEvaluationUseCaseStub(),
-                "job_try": 1,
-            },
-            str(submission_id),
-        )
+    await evaluate_homework_job(
+        {"evaluate_use_case": InvalidEvaluationUseCaseStub(), "job_try": 1},
+        str(submission_id),
+    )
 
 
 def test_identical_python_sources_are_detected() -> None:
@@ -639,6 +636,8 @@ async def test_openai_llm_client_and_grading_engine() -> None:
         model="ggml-org/gemma-4-e4b-it-GGUF:Q4_0",
         http_client=mock_client,
     )
+    # Native token endpoints are covered separately with an HTTP MockTransport.
+    llm_client.count_tokens = AsyncMock(return_value=100)
     engine = HomeworkGradingEngine(llm_client=llm_client)
 
     rubric = await engine.create_rubric(
@@ -646,6 +645,8 @@ async def test_openai_llm_client_and_grading_engine() -> None:
             id=uuid4(),
             title="Linear Regression",
             description="Cài đặt hồi quy",
+            attachment_key=None,
+            grading_rubric=None,
         ),
         "Đề bài chi tiết...",
     )
@@ -689,6 +690,7 @@ async def test_openai_llm_client_and_grading_engine() -> None:
 async def test_retry_stale_homework_use_case() -> None:
     from unittest.mock import AsyncMock, MagicMock
     from uuid import uuid4
+
     from worker_evaluate_homework.application.use_cases import RetryStaleHomeworkUseCase
 
     hw_id1 = uuid4()
@@ -723,12 +725,14 @@ async def test_retry_stale_homework_use_case() -> None:
         "register_homework_job",
         homework_id=str(hw_id1),
         _queue_name="test_queue",
+        _job_id=f"homework-register:{hw_id1}",
         _defer_by=1,
     )
     mock_redis.enqueue_job.assert_any_await(
         "register_homework_job",
         homework_id=str(hw_id2),
         _queue_name="test_queue",
+        _job_id=f"homework-register:{hw_id2}",
         _defer_by=1,
     )
 
@@ -737,12 +741,14 @@ async def test_retry_stale_homework_use_case() -> None:
         "evaluate_homework_job",
         submission_id=str(sub_id1),
         _queue_name="test_queue",
+        _job_id=f"homework-evaluate:{sub_id1}",
         _defer_by=1,
     )
     mock_redis.enqueue_job.assert_any_await(
         "evaluate_homework_job",
         submission_id=str(sub_id2),
         _queue_name="test_queue",
+        _job_id=f"homework-evaluate:{sub_id2}",
         _defer_by=1,
     )
 
@@ -750,6 +756,7 @@ async def test_retry_stale_homework_use_case() -> None:
 @pytest.mark.asyncio
 async def test_retry_stale_homework_use_case_empty() -> None:
     from unittest.mock import AsyncMock, MagicMock
+
     from worker_evaluate_homework.application.use_cases import RetryStaleHomeworkUseCase
 
     mock_repo = MagicMock()
@@ -767,4 +774,3 @@ async def test_retry_stale_homework_use_case_empty() -> None:
     result = await use_case.execute(mock_redis)
     assert result == {"homeworks_enqueued": 0, "submissions_enqueued": 0}
     mock_redis.enqueue_job.assert_not_called()
-

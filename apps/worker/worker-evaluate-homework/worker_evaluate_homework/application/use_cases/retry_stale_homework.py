@@ -1,5 +1,3 @@
-from uuid import UUID
-
 from loguru import logger
 
 from worker_evaluate_homework.domain import IHomeworkGradingRepository
@@ -39,13 +37,14 @@ class RetryStaleHomeworkUseCase:
             )
             for hw_id in homework_ids:
                 try:
-                    await arq_redis.enqueue_job(
+                    job = await arq_redis.enqueue_job(
                         "register_homework_job",
                         homework_id=str(hw_id),
                         _queue_name=self._queue_name,
+                        _job_id=f"homework-register:{hw_id}",
                         _defer_by=1,
                     )
-                    enqueued_homeworks += 1
+                    enqueued_homeworks += int(job is not None)
                 except Exception as exc:
                     logger.warning("Không thể enqueue retry cho homework {}: {}", hw_id, exc)
         except Exception as exc:
@@ -60,13 +59,14 @@ class RetryStaleHomeworkUseCase:
             )
             for sub_id in submission_ids:
                 try:
-                    await arq_redis.enqueue_job(
+                    job = await arq_redis.enqueue_job(
                         "evaluate_homework_job",
                         submission_id=str(sub_id),
                         _queue_name=self._queue_name,
+                        _job_id=f"homework-evaluate:{sub_id}",
                         _defer_by=1,
                     )
-                    enqueued_submissions += 1
+                    enqueued_submissions += int(job is not None)
                 except Exception as exc:
                     logger.warning("Không thể enqueue retry cho submission {}: {}", sub_id, exc)
         except Exception as exc:

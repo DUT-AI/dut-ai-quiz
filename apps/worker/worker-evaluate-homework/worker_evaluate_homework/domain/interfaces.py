@@ -16,6 +16,11 @@ T = TypeVar("T", bound=BaseModel)
 
 
 class ILLMClient(Protocol):
+    @property
+    def input_token_budget(self) -> int: ...
+
+    async def count_tokens(self, prompt: str, system_instruction: str = "") -> int: ...
+
     async def generate_structured(
         self,
         prompt: str,
@@ -53,7 +58,7 @@ class IHomeworkGradingRepository(Protocol):
         homework_id: UUID,
     ) -> HomeworkGradingRecord | None: ...
 
-    async def set_homework_processing(self, homework_id: UUID) -> None: ...
+    async def set_homework_processing(self, homework_id: UUID) -> bool: ...
 
     async def save_homework_rubric(
         self,
@@ -65,6 +70,8 @@ class IHomeworkGradingRepository(Protocol):
         self,
         homework_id: UUID,
         error: str,
+        *,
+        retryable: bool = False,
     ) -> None: ...
 
     async def get_submission(
@@ -72,7 +79,7 @@ class IHomeworkGradingRepository(Protocol):
         submission_id: UUID,
     ) -> SubmissionGradingRecord | None: ...
 
-    async def set_submission_grading(self, submission_id: UUID) -> None: ...
+    async def set_submission_grading(self, submission_id: UUID) -> bool: ...
 
     async def save_submission_result(
         self,
@@ -88,6 +95,7 @@ class IHomeworkGradingRepository(Protocol):
         error: str,
         *,
         final: bool,
+        retryable: bool = False,
     ) -> None: ...
 
     async def list_previous_fingerprints(

@@ -39,6 +39,9 @@ class Homework(Base):
         String(30), default="PENDING", server_default="PENDING", index=True
     )
     grading_error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    grading_attempts: Mapped[int] = mapped_column(default=0, server_default="0")
+    grading_started_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    grading_retryable: Mapped[bool] = mapped_column(default=True, server_default="true")
 
     def to_entity(self) -> HomeworkEntity:
         return HomeworkEntity(
@@ -100,6 +103,9 @@ class HomeworkSubmission(Base):
     is_plagiarized: Mapped[bool] = mapped_column(default=False, server_default="false")
     plagiarized_from_user_id: Mapped[int | None] = mapped_column(nullable=True)
     grading_error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    grading_attempts: Mapped[int] = mapped_column(default=0, server_default="0")
+    grading_started_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    grading_retryable: Mapped[bool] = mapped_column(default=True, server_default="true")
 
     def to_entity(self) -> HomeworkSubmissionEntity:
         return HomeworkSubmissionEntity(

@@ -85,6 +85,9 @@ class HomeworkRepository(IHomeworkRepository):
             model.grading_rubric = None
             model.grading_status = "PENDING"
             model.grading_error = None
+            model.grading_attempts = 0
+            model.grading_started_at = None
+            model.grading_retryable = True
         model.updated_at = now_ict()
         await self._session.flush()
         return model.to_entity()
@@ -104,6 +107,9 @@ class HomeworkRepository(IHomeworkRepository):
         model.grading_rubric = None
         model.grading_status = "PENDING"
         model.grading_error = None
+        model.grading_attempts = 0
+        model.grading_started_at = None
+        model.grading_retryable = True
         model.updated_at = now_ict()
         await self._session.flush()
         return model.to_entity()
@@ -202,6 +208,9 @@ class HomeworkRepository(IHomeworkRepository):
                 is_plagiarized=False,
                 plagiarized_from_user_id=None,
                 grading_error=None,
+                grading_attempts=0,
+                grading_started_at=None,
+                grading_retryable=True,
             )
             .returning(HomeworkSubmission)
         )
@@ -242,7 +251,9 @@ class HomeworkRepository(IHomeworkRepository):
         stmt = (
             select(
                 HomeworkSubmission.user_id,
-                func.count(func.distinct(HomeworkSubmission.homework_id)).label("completed_exercises_count"),
+                func.count(func.distinct(HomeworkSubmission.homework_id)).label(
+                    "completed_exercises_count"
+                ),
                 func.count(HomeworkSubmission.id).label("submission_count"),
                 func.max(HomeworkSubmission.score).label("max_score"),
                 func.max(HomeworkSubmission.submitted_at).label("submitted_at"),
@@ -278,12 +289,9 @@ class HomeworkRepository(IHomeworkRepository):
         )
 
     async def count_active_by_lesson(self, lesson_id: UUID) -> int:
-        stmt = (
-            select(func.count(Homework.id))
-            .where(
-                Homework.lesson_id == lesson_id,
-                Homework.archived_at.is_(None),
-            )
+        stmt = select(func.count(Homework.id)).where(
+            Homework.lesson_id == lesson_id,
+            Homework.archived_at.is_(None),
         )
         return int(await self._session.scalar(stmt) or 0)
 
@@ -310,12 +318,12 @@ class HomeworkRepository(IHomeworkRepository):
                 attempt_number=row[0].attempt_number,
                 original_filename=row[0].original_filename,
                 submitted_at=row[0].submitted_at,
-                status=str(row[0].status.value if hasattr(row[0].status, "value") else row[0].status),
+                status=str(
+                    row[0].status.value if hasattr(row[0].status, "value") else row[0].status
+                ),
                 is_pass=row[0].is_pass,
                 score=float(row[0].score) if row[0].score is not None else None,
                 score_details=row[0].score_details or [],
             )
             for row in results
         ]
-
-
