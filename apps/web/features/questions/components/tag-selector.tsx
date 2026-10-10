@@ -2,7 +2,6 @@
 
 import React, { useState, useMemo } from "react";
 import * as Popover from "@radix-ui/react-popover";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
   Search,
@@ -156,7 +155,7 @@ export function TagSelector({ value, onChange }: TagSelectorProps) {
             align="start"
             sideOffset={6}
             className={cn(
-              "z-[150] w-72 sm:w-80 p-4 rounded-3xl outline-none shadow-2xl transition-all duration-150 animate-in fade-in zoom-in-95 duration-150",
+              "z-[150] w-72 sm:w-80 p-4 rounded-3xl outline-none shadow-2xl transition-all duration-150 animate-in fade-in zoom-in-95",
               darkMode
                 ? "dark bg-[#1E2A3A] border border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.5)] text-white"
                 : "bg-white border border-gray-200 shadow-[0_10px_40px_rgba(0,0,0,0.12)] text-dark-blue"

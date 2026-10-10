@@ -1,9 +1,8 @@
-from typing import Optional
 from uuid import UUID
 
 from dishka.integrations.fastapi import FromDishka as Inject
 from dishka.integrations.fastapi import inject
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Query
 
 from app.application.use_cases.comment import (
     CreateCommentUseCase,
@@ -47,8 +46,10 @@ async def create_comment(
 async def get_comments(
     use_case: Inject[GetCommentsUseCase],
     target_type: TargetType = Query(...),
-    target_id: Optional[UUID] = Query(None),
-    sort_by: str = Query(SortMode.BEST, description="Sort mode: best, top_likes, top_dislikes, new, old"),
+    target_id: UUID | None = Query(None),
+    sort_by: str = Query(
+        SortMode.BEST, description="Sort mode: best, top_likes, top_dislikes, new, old"
+    ),
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
 ) -> PaginatedCommentsResponse:

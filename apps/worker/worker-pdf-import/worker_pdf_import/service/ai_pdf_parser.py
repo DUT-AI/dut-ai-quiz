@@ -1,20 +1,20 @@
-import os
 import json
+import os
+import re
+import tempfile
 import time
-from loguru import logger
-from google import genai
+
+import opendataloader_pdf
+from app.config import settings
 from app.domain.interfaces.pdf_parser_strategy import IPdfParserStrategy
 from app.presentation.schemas.pdf_import import ParsedQuestionPreview
 from app.presentation.schemas.questions import QuestionOptionIn
-import tempfile
-import opendataloader_pdf
-import re
-from paddleocr import PaddleOCR
-from app.config import settings
-
+from google import genai
+from loguru import logger
+from PIL import Image
 from pydantic import BaseModel
 
-from PIL import Image
+
 class OptionSchema(BaseModel):
     id: str
     text: str
@@ -67,7 +67,7 @@ class AIPdfParserStrategy(IPdfParserStrategy):
 
             output_md = os.path.join(tmpdir, f"{job_id}.md")
             if os.path.exists(output_md):
-                with open(output_md, "r", encoding="utf-8") as f:
+                with open(output_md, encoding="utf-8") as f:
                     markdown_text = f.read()
             else:
                 markdown_text = ""
@@ -87,9 +87,7 @@ class AIPdfParserStrategy(IPdfParserStrategy):
                             img = Image.open(img_path).copy()
                             gemini_images.append(img)
                         except Exception as e:
-                            logger.error(
-                                f"[{job_id}] Failed to load image for Gemini: {e}"
-                            )
+                            logger.error(f"[{job_id}] Failed to load image for Gemini: {e}")
 
                 logger.info(
                     f"[{job_id}] ✅ STEP 2: Digital PDF detected. Skipping OCR. Loaded {len(gemini_images)} images for Gemini."
@@ -137,9 +135,7 @@ class AIPdfParserStrategy(IPdfParserStrategy):
 
             model_name = "gemma-4-31b-it"
 
-            logger.info(
-                f"[{job_id}] ⏳ STEP 3: Calling AI Model ({model_name}) via API..."
-            )
+            logger.info(f"[{job_id}] ⏳ STEP 3: Calling AI Model ({model_name}) via API...")
             gemini_start = time.time()
 
             # Use gemini-2.5-flash or gemma4 depending on config
@@ -152,9 +148,7 @@ class AIPdfParserStrategy(IPdfParserStrategy):
                 ),
             )
 
-            logger.info(
-                f"[{job_id}] ✅ AI API Call finished in {time.time() - gemini_start:.2f}s."
-            )
+            logger.info(f"[{job_id}] ✅ AI API Call finished in {time.time() - gemini_start:.2f}s.")
             if not response or not response.text:
                 logger.error(f"[{job_id}] AI API returned no response.")
                 return []

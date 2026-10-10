@@ -1,7 +1,6 @@
 from uuid import UUID, uuid4
 
 import pytest
-
 from app.application.use_cases.lessons.list_lessons_uc import ListLessonsUseCase
 from app.core.datetime_utils import now_ict
 from app.domain.entities.lesson import LessonEntity
@@ -26,6 +25,9 @@ class MockRepository(ILessonRepository):
         return None
 
     async def get_by_slug(self, slug: str) -> LessonEntity | None:
+        return None
+
+    async def get_by_identifier(self, identifier: str) -> LessonEntity | None:
         return None
 
     async def add(self, entity: LessonEntity) -> LessonEntity:

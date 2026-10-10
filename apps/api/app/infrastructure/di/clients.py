@@ -1,37 +1,43 @@
-from typing import AsyncIterable
+from collections.abc import AsyncIterable
 
 import httpx
 from dishka import Provider, Scope, provide
 from redis.asyncio import Redis
 
+from app.config import settings
 from app.domain.interfaces import (
     IDUTAIManageCache,
-    IManageService,
-    IS3Client,
-    IHackathonSubmissionStore,
-    ISubmissionQueue,
     IEmbeddingService,
-    ILessonIndexQueue,
+    IHackathonSubmissionStore,
     IHomeworkEvaluationQueue,
+    ILessonIndexQueue,
+    IManageService,
+    IRerankService,
+    IS3Client,
+    ISubmissionQueue,
 )
 from app.domain.interfaces.pdf_import_queue import IPdfImportQueue
-from app.config import settings
 from app.infrastructure.clients import (
     DUTAIManageService,
     GoogleOAuthClient,
 )
-from app.infrastructure.clients.minio_client import MinioClient
-from app.infrastructure.clients.hackathon_submission_store import (
-    MinIOHackathonSubmissionStore,
-)
-from app.infrastructure.clients.arq_submission_queue import ArqSubmissionQueue
+from app.infrastructure.clients.arq_homework_queue import ArqHomeworkEvaluationQueue
 from app.infrastructure.clients.arq_lesson_index_queue import ArqLessonIndexQueue
 from app.infrastructure.clients.arq_pdf_import_queue import ArqPdfImportQueue
-from app.infrastructure.clients.arq_homework_queue import ArqHomeworkEvaluationQueue
+from app.infrastructure.clients.arq_submission_queue import ArqSubmissionQueue
 from app.infrastructure.clients.embedding_service import (
     DutAiEmbeddingService,
     LocalHashingEmbeddingService,
     OpenAICompatibleEmbeddingService,
+)
+from app.infrastructure.clients.hackathon_submission_store import (
+    MinIOHackathonSubmissionStore,
+)
+from app.infrastructure.clients.minio_client import MinioClient
+from app.infrastructure.clients.rerank_service import (
+    DisabledRerankService,
+    DutAiRerankService,
+    LocalRerankService,
 )
 
 
@@ -41,7 +47,7 @@ class ClientProvider(Provider):
     @provide(scope=Scope.APP)
     async def get_http_client(self) -> AsyncIterable[httpx.AsyncClient]:
         """Provide http client."""
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(timeout=30.0, connect=10.0)) as client:
             yield client
 
     @provide(scope=Scope.APP)
@@ -62,9 +68,7 @@ class ClientProvider(Provider):
         return MinioClient()
 
     @provide(scope=Scope.APP)
-    def get_hackathon_submission_store(
-        self, s3_client: IS3Client
-    ) -> IHackathonSubmissionStore:
+    def get_hackathon_submission_store(self, s3_client: IS3Client) -> IHackathonSubmissionStore:
         """Provide MinIO Hackathon Submission Store."""
         return MinIOHackathonSubmissionStore(s3_client)
 
@@ -82,17 +86,21 @@ class ClientProvider(Provider):
         return ArqPdfImportQueue(redis)
 
     @provide(scope=Scope.APP)
-    def get_arq_homework_queue(
-        self, redis: Redis
-    ) -> IHomeworkEvaluationQueue:
+    def get_arq_homework_queue(self, redis: Redis) -> IHomeworkEvaluationQueue:
         return ArqHomeworkEvaluationQueue(redis)
 
     @provide(scope=Scope.APP)
-    def get_embedding_service(
-        self, client: httpx.AsyncClient
-    ) -> IEmbeddingService:
+    def get_embedding_service(self, client: httpx.AsyncClient) -> IEmbeddingService:
         if settings.embedding_provider.casefold() == "local":
             return LocalHashingEmbeddingService(settings)
         if settings.embedding_provider.casefold() == "dutai":
             return DutAiEmbeddingService(client, settings)
         return OpenAICompatibleEmbeddingService(client, settings)
+
+    @provide(scope=Scope.APP)
+    def get_rerank_service(self, client: httpx.AsyncClient) -> IRerankService:
+        if not settings.rerank_enabled or settings.rerank_provider.casefold() == "disabled":
+            return DisabledRerankService()
+        if settings.rerank_provider.casefold() == "local":
+            return LocalRerankService()
+        return DutAiRerankService(client, settings)

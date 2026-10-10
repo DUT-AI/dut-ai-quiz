@@ -1,7 +1,7 @@
 import csv
 import math
 import os
-from typing import Any, List
+from typing import Any
 
 from loguru import logger
 
@@ -19,30 +19,26 @@ class CsvEvaluator(IEvaluator):
         self._cupy = self._load_cupy() if prefer_gpu else None
 
     @staticmethod
-    def calculate_accuracy(y_true: List[str], y_pred: List[str]) -> float:
+    def calculate_accuracy(y_true: list[str], y_pred: list[str]) -> float:
         if not y_true or len(y_true) != len(y_pred):
             return 0.0
-        correct = sum(
-            1 for gt, pred in zip(y_true, y_pred) if gt.strip() == pred.strip()
-        )
+        correct = sum(1 for gt, pred in zip(y_true, y_pred, strict=False) if gt.strip() == pred.strip())
         return correct / len(y_true)
 
     @staticmethod
-    def calculate_rmse(y_true: List[float], y_pred: List[float]) -> float:
+    def calculate_rmse(y_true: list[float], y_pred: list[float]) -> float:
         if not y_true or len(y_true) != len(y_pred):
             return 0.0
-        mse = sum((gt - pred) ** 2 for gt, pred in zip(y_true, y_pred)) / len(y_true)
+        mse = sum((gt - pred) ** 2 for gt, pred in zip(y_true, y_pred, strict=False)) / len(y_true)
         return math.sqrt(mse)
 
     @staticmethod
-    def calculate_f1(
-        y_true: List[str], y_pred: List[str], positive_label: str = "1"
-    ) -> float:
+    def calculate_f1(y_true: list[str], y_pred: list[str], positive_label: str = "1") -> float:
         if not y_true or len(y_true) != len(y_pred):
             return 0.0
 
         tp = fp = fn = 0
-        for gt, pred in zip(y_true, y_pred):
+        for gt, pred in zip(y_true, y_pred, strict=False):
             gt_val = gt.strip()
             pred_val = pred.strip()
             if gt_val == positive_label and pred_val == positive_label:
@@ -61,16 +57,12 @@ class CsvEvaluator(IEvaluator):
             return 0.0
         return 2 * (precision * recall) / (precision + recall)
 
-    def evaluate(
-        self, ground_truth_path: str, prediction_path: str, metric_type: str
-    ) -> float:
+    def evaluate(self, ground_truth_path: str, prediction_path: str, metric_type: str) -> float:
         metric_lower = metric_type.lower()
 
         if self._cupy is not None:
             try:
-                return self._evaluate_gpu(
-                    ground_truth_path, prediction_path, metric_lower
-                )
+                return self._evaluate_gpu(ground_truth_path, prediction_path, metric_lower)
             except ValueError:
                 raise
             except Exception as exc:
@@ -84,9 +76,7 @@ class CsvEvaluator(IEvaluator):
                 )
 
         if self._require_gpu:
-            raise RuntimeError(
-                "GPU evaluation is required but CuPy/CUDA is not available."
-            )
+            raise RuntimeError("GPU evaluation is required but CuPy/CUDA is not available.")
 
         return self._evaluate_cpu(ground_truth_path, prediction_path, metric_lower)
 
@@ -94,21 +84,15 @@ class CsvEvaluator(IEvaluator):
         self, ground_truth_path: str, prediction_path: str, metric_lower: str
     ) -> float:
         if metric_lower == "accuracy":
-            y_true, y_pred = self._read_numeric_columns_gpu(
-                ground_truth_path, prediction_path
-            )
+            y_true, y_pred = self._read_numeric_columns_gpu(ground_truth_path, prediction_path)
             return self._gpu_accuracy(y_true, y_pred)
 
         if metric_lower == "rmse":
-            y_true, y_pred = self._read_numeric_columns_gpu(
-                ground_truth_path, prediction_path
-            )
+            y_true, y_pred = self._read_numeric_columns_gpu(ground_truth_path, prediction_path)
             return self._gpu_rmse(y_true, y_pred)
 
         if metric_lower in ("f1", "f1_score"):
-            y_true, y_pred = self._read_numeric_columns_gpu(
-                ground_truth_path, prediction_path
-            )
+            y_true, y_pred = self._read_numeric_columns_gpu(ground_truth_path, prediction_path)
             return self._gpu_f1(y_true, y_pred)
 
         raise ValueError(f"Unsupported metric: {metric_lower}")
@@ -133,9 +117,7 @@ class CsvEvaluator(IEvaluator):
                 y_pred_float = [float(x) for x in y_pred]
                 return self.calculate_rmse(y_true_float, y_pred_float)
             except ValueError as exc:
-                raise ValueError(
-                    "RMSE metric requires numeric values in columns."
-                ) from exc
+                raise ValueError("RMSE metric requires numeric values in columns.") from exc
         if metric_lower in ("f1", "f1_score"):
             return self.calculate_f1(y_true, y_pred)
         raise ValueError(f"Unsupported metric: {metric_lower}")
@@ -203,7 +185,7 @@ class CsvEvaluator(IEvaluator):
 
     def _read_csv_first_column(self, path: str) -> list[str]:
         values = []
-        with open(path, mode="r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             reader = csv.reader(f)
             next(reader, None)
             for row in reader:

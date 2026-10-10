@@ -11,7 +11,6 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
-
 revision: str = "b91e7c2a4d60"
 down_revision: str | Sequence[str] | None = "a81c4e7d2f90"
 branch_labels: str | Sequence[str] | None = None
@@ -62,17 +61,14 @@ def downgrade() -> None:
         op.get_bind()
         .execute(
             sa.text(
-                "SELECT count(*) FROM hackathon_tasks "
-                "WHERE metric_type::text NOT IN :metrics"
+                "SELECT count(*) FROM hackathon_tasks WHERE metric_type::text NOT IN :metrics"
             ).bindparams(sa.bindparam("metrics", expanding=True)),
             {"metrics": _OLD_METRICS},
         )
         .scalar_one()
     )
     if unsupported:
-        raise RuntimeError(
-            "Cannot downgrade while hackathon tasks use newly added metrics."
-        )
+        raise RuntimeError("Cannot downgrade while hackathon tasks use newly added metrics.")
     _replace_metric_enum(_OLD_METRICS)
     op.create_table(
         "homework_assignments",
@@ -91,4 +87,3 @@ def downgrade() -> None:
         "homework_assignments",
         ["user_id"],
     )
-

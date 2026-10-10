@@ -7,9 +7,7 @@ from app.domain.value_objects import PoolType
 class GetLessonDetailUseCase:
     """Get the detail of a lesson including its questions."""
 
-    def __init__(
-        self, lesson_repo: ILessonRepository, question_repo: IQuestionRepository
-    ) -> None:
+    def __init__(self, lesson_repo: ILessonRepository, question_repo: IQuestionRepository) -> None:
         self._lesson_repo = lesson_repo
         self._question_repo = question_repo
 
@@ -26,9 +24,7 @@ class GetLessonDetailUseCase:
 
         # Only show PRACTICE questions for students.
         pool_type = None if is_teacher else PoolType.PRACTICE
-        questions = await self._question_repo.list_all(
-            lesson_id=lid, pool_type=pool_type
-        )
+        questions = await self._question_repo.list_all(lesson_id=lid, pool_type=pool_type)
 
         # Check if lesson has game questions
         game_questions = await self._question_repo.list_all(

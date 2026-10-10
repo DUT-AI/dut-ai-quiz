@@ -5,7 +5,6 @@ import { Trophy, Crown, Medal, Coins, Clock, Gamepad2, Maximize2, Sparkles } fro
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameLeaderboard } from "../queries";
 import GameLeaderboardModal from "./game-leaderboard-modal";
-import GameFireworks from "./game-fireworks";
 
 interface GameLeaderboardProps {
   lessonSlug: string;
@@ -60,9 +59,6 @@ export default function GameLeaderboard({ lessonSlug, variant = "retro" }: GameL
           onClick={() => setIsModalOpen(true)}
           className="w-full font-sans text-dark-blue dark:text-white flex flex-col h-full relative cursor-pointer group/card py-4 overflow-hidden rounded-3xl"
         >
-          {/* Fireworks canvas animation directly on the card */}
-          <GameFireworks />
-
           {/* Soft aura glow behind leaderboards */}
           <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-indigo-500/10 dark:bg-indigo-500/15 blur-3xl rounded-full pointer-events-none" />
 

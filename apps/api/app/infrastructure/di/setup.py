@@ -1,16 +1,16 @@
-from dishka import make_async_container, Scope
+from dishka import Scope, make_async_container
 from dishka.integrations.fastapi import setup_dishka
 
-from app.infrastructure.di.database import DatabaseProvider
-from app.infrastructure.di.repositories import RepositoryProvider
-from app.infrastructure.di.clients import ClientProvider
-from app.infrastructure.di.use_cases import UseCaseProvider
-from app.infrastructure.di.bus import BusProvider
-from app.infrastructure.di.cache import CacheProvider
-from app.domain.events.bus import EventBus
-from app.domain.events.attempts import AttemptViolationEvent
 from app.application.handlers.attempt_handlers import AttemptViolationHandler
 from app.application.use_cases.attempts import SubmitAttemptUseCase
+from app.domain.events.attempts import AttemptViolationEvent
+from app.domain.events.bus import EventBus
+from app.infrastructure.di.bus import BusProvider
+from app.infrastructure.di.cache import CacheProvider
+from app.infrastructure.di.clients import ClientProvider
+from app.infrastructure.di.database import DatabaseProvider
+from app.infrastructure.di.repositories import RepositoryProvider
+from app.infrastructure.di.use_cases import UseCaseProvider
 
 
 def setup_di(app):

@@ -76,9 +76,7 @@ async def google_callback(
         tokens = await use_case.execute(code)
     except Exception as e:
         # Redirect back to frontend login with error query param
-        return RedirectResponse(
-            url=f"{settings.frontend_url.rstrip('/')}/login?error={str(e)}"
-        )
+        return RedirectResponse(url=f"{settings.frontend_url.rstrip('/')}/login?error={str(e)}")
 
     # Set cookies in the redirect response
     redirect_res = RedirectResponse(url=settings.frontend_url)
@@ -88,9 +86,7 @@ async def google_callback(
 
 @router.post("/logout")
 @inject
-async def logout(
-    request: Request, response: Response, use_case: FromDishka[LogoutUseCase]
-):
+async def logout(request: Request, response: Response, use_case: FromDishka[LogoutUseCase]):
     access_token = request.cookies.get("access_token")
     await use_case.execute(access_token)
 

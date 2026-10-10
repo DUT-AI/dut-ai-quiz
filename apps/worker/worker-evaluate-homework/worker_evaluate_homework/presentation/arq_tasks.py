@@ -1,4 +1,3 @@
-
 from typing import ClassVar
 from urllib.parse import urlparse
 from uuid import UUID
@@ -6,17 +5,21 @@ from uuid import UUID
 import httpx
 from app.config import settings
 from app.infrastructure.clients.minio_client import MinioClient
-from arq import Retry
+from arq import Retry, cron
 from arq.connections import RedisSettings
 from loguru import logger
 
 from worker_evaluate_homework.application.use_cases import (
     EvaluateHomeworkSubmissionUseCase,
     RegisterHomeworkUseCase,
+    RetryStaleHomeworkUseCase,
 )
 from worker_evaluate_homework.domain import InvalidArtifactError
+from worker_evaluate_homework.domain.errors import is_retryable_error
 from worker_evaluate_homework.infrastructure import (
-    GeminiHomeworkGradingEngine,
+    GeminiLLMClient,
+    HomeworkGradingEngine,
+    OpenAILLMClient,
     PostgresHomeworkGradingRepository,
     S3HomeworkArtifactReader,
 )
@@ -30,7 +33,11 @@ async def startup(ctx):
         http_client,
         MinioClient(),
     )
-    grading_engine = GeminiHomeworkGradingEngine()
+    if settings.homework_llm_provider == "gemini":
+        llm_client = GeminiLLMClient(model=settings.homework_grading_model)
+    else:
+        llm_client = OpenAILLMClient(http_client=http_client)
+    grading_engine = HomeworkGradingEngine(llm_client=llm_client)
     register_use_case = RegisterHomeworkUseCase(
         repository,
         artifact_reader,
@@ -44,6 +51,15 @@ async def startup(ctx):
         grading_engine,
         register_use_case,
         settings.homework_plagiarism_threshold,
+    )
+    ctx["retry_stale_use_case"] = RetryStaleHomeworkUseCase(
+        repository=repository,
+        queue_name=settings.homework_queue_name,
+        stale_homework_minutes=10,
+        stale_submission_minutes=15,
+        days_limit=7,
+        homework_batch_limit=10,
+        submission_batch_limit=20,
     )
 
 
@@ -64,7 +80,7 @@ async def register_homework_job(ctx, homework_id: str):
         return
     except Exception as exc:
         logger.exception("Homework registration {} failed", homework_id)
-        if job_try < 3:
+        if is_retryable_error(exc) and job_try < settings.homework_grading_max_attempts:
             raise Retry(defer=10 * job_try) from exc
         raise
 
@@ -75,16 +91,25 @@ async def evaluate_homework_job(ctx, submission_id: str):
     try:
         return await use_case.execute(
             UUID(submission_id),
-            final_attempt=job_try >= 3,
+            final_attempt=job_try >= settings.homework_grading_max_attempts,
         )
     except InvalidArtifactError as exc:
-        logger.warning("Homework evaluation {} rejected: {}", submission_id, exc)
-        raise
+        logger.warning(f"Homework evaluation {submission_id} rejected: {exc}")
+        return
     except Exception as exc:
-        logger.exception("Homework evaluation {} failed", submission_id)
-        if job_try < 3:
+        logger.exception(f"Homework evaluation {submission_id} failed: {exc}")
+        if is_retryable_error(exc) and job_try < settings.homework_grading_max_attempts:
             raise Retry(defer=10 * job_try) from exc
         raise
+
+
+async def sweep_stale_homework_and_submissions_job(ctx):
+    use_case: RetryStaleHomeworkUseCase = ctx["retry_stale_use_case"]
+    redis = ctx.get("redis")
+    if not redis:
+        logger.warning("Redis client không tồn tại trong context của cron job")
+        return {"homeworks_enqueued": 0, "submissions_enqueued": 0}
+    return await use_case.execute(redis)
 
 
 def _redis_settings_from_config() -> RedisSettings:
@@ -101,9 +126,16 @@ def _redis_settings_from_config() -> RedisSettings:
 
 class WorkerSettings:
     functions: ClassVar[list] = [register_homework_job, evaluate_homework_job]
+    cron_jobs: ClassVar[list] = [
+        cron(
+            sweep_stale_homework_and_submissions_job,
+            minute={0, 10, 20, 30, 40, 50},
+        )
+    ]
     redis_settings = _redis_settings_from_config()
     queue_name = settings.homework_queue_name
-    max_tries = 3
+    max_tries = settings.homework_grading_max_attempts
+    keep_result = 0
     max_jobs = 1
     job_timeout = int(settings.homework_grading_timeout_seconds) + 60
     health_check_interval = 15

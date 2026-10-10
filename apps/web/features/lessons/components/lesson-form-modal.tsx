@@ -42,17 +42,21 @@ export function LessonFormModal({ onClose, initialData }: LessonFormModalProps) 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6">
       <motion.div
+        key="backdrop"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
         onClick={onClose}
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
       />
 
       <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        key="modal-content"
+        initial={{ opacity: 0, scale: 0.95, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        exit={{ opacity: 0, scale: 0.95, y: 15 }}
+        transition={{ duration: 0.22, ease: "easeOut" }}
         className="bg-white dark:bg-navy-blue w-full max-w-4xl max-h-[calc(100vh-2rem)] md:max-h-[90vh] rounded-[24px] md:rounded-[40px] shadow-2xl relative z-10 flex flex-col overflow-hidden border border-gray-100 dark:border-white/10 m-4"
       >
         {/* Header - Fixed */}

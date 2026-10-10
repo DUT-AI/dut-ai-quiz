@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
+
 @dataclass(slots=True)
 class HackathonLeaderboardRow:
     rank: int
@@ -28,4 +29,3 @@ class HackathonLeaderboardRow:
             if self.latest_submission_time
             else None,
         }
-

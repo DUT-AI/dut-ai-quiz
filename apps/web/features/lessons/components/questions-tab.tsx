@@ -3,8 +3,9 @@
 import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { Trash2, Check } from "lucide-react";
 
-import { useQuestions, useDeleteQuestion } from "@/lib/queries";
+import { useQuestions, useDeleteQuestion, useBulkDeleteQuestions } from "@/lib/queries";
 import type { QuestionOut } from "@/lib/types";
 import { PoolType } from "@/features/questions/types";
 import { PdfImport } from "@/components/pdf-import";
@@ -12,6 +13,7 @@ import { useAuth } from "@/context/auth-context";
 import { ConfirmModal } from "@/components/molecules/confirm-modal";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SearchBar } from "@/components/ui/search-bar";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 import {
@@ -46,8 +48,18 @@ export function QuestionsTab({ lessonId, isAdminView = false, lessonName }: Ques
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [showPdfModal, setShowPdfModal] = useState(false);
   const [deletingQuestion, setDeletingQuestion] = useState<QuestionOut | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
   const deleteMut = useDeleteQuestion();
+  const bulkDeleteMut = useBulkDeleteQuestions();
+
+  const [difficultyFilter, setDifficultyFilter] = useState<"ALL" | "EASY" | "MEDIUM" | "HARD">("ALL");
+
+  // Reset selection when switching tab or filter
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [activePoolType, difficultyFilter, searchQuery]);
 
   // Local client-side realtime filtering across all tabs
   const searchedQuestions = useMemo(() => {
@@ -60,8 +72,6 @@ export function QuestionsTab({ lessonId, isAdminView = false, lessonName }: Ques
       return matchContent || matchSolution || matchOptions;
     });
   }, [allQuestions, searchQuery]);
-
-  const [difficultyFilter, setDifficultyFilter] = useState<"ALL" | "EASY" | "MEDIUM" | "HARD">("ALL");
 
   // Questions matching active pool type and difficulty filter
   const filteredQuestions = useMemo(() => {
@@ -143,6 +153,43 @@ export function QuestionsTab({ lessonId, isAdminView = false, lessonName }: Ques
   const handleClearDifficulty = useCallback(() => {
     setDifficultyFilter("ALL");
   }, []);
+
+  const handleToggleSelect = useCallback((q: QuestionOut) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(q.id)) {
+        next.delete(q.id);
+      } else {
+        next.add(q.id);
+      }
+      return next;
+    });
+  }, []);
+
+  const isAllSelected = filteredQuestions.length > 0 && selectedIds.size === filteredQuestions.length;
+
+  const handleSelectAll = useCallback(() => {
+    if (isAllSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredQuestions.map((q) => q.id)));
+    }
+  }, [isAllSelected, filteredQuestions]);
+
+  const handleClearSelection = useCallback(() => {
+    setSelectedIds(new Set());
+  }, []);
+
+  const handleBulkDeleteConfirm = async () => {
+    if (selectedIds.size === 0) return;
+    try {
+      await bulkDeleteMut.mutateAsync(Array.from(selectedIds));
+      setSelectedIds(new Set());
+      setShowBulkDeleteConfirm(false);
+    } catch (err) {
+      console.error("Bulk delete failed", err);
+    }
+  };
 
   return (
     <div className="space-y-8 text-left">
@@ -257,6 +304,67 @@ export function QuestionsTab({ lessonId, isAdminView = false, lessonName }: Ques
         </div>
       )}
 
+      {/* Teacher Bulk Selection Toolbar */}
+      {isTeacher && filteredQuestions.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 bg-slate-50 dark:bg-zinc-900/90 rounded-2xl border border-slate-200/60 dark:border-zinc-800 transition-all">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={handleSelectAll}
+              disabled={filteredQuestions.length === 0}
+              className="flex items-center gap-2.5 text-xs font-bold text-slate-700 dark:text-zinc-200 hover:text-primary transition-colors cursor-pointer select-none disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <div
+                className={cn(
+                  "size-5 rounded-lg border-2 flex items-center justify-center transition-all",
+                  isAllSelected
+                    ? "bg-primary border-primary text-white"
+                    : selectedIds.size > 0
+                    ? "bg-primary/20 border-primary text-primary"
+                    : "border-slate-300 dark:border-zinc-600 bg-white dark:bg-zinc-800"
+                )}
+              >
+                {isAllSelected && <Check className="size-3.5 stroke-[3]" />}
+                {selectedIds.size > 0 && !isAllSelected && <div className="size-2 bg-primary rounded-sm" />}
+              </div>
+              <span>
+                {isAllSelected
+                  ? "Bỏ chọn tất cả"
+                  : `Chọn tất cả (${filteredQuestions.length})`}
+              </span>
+            </button>
+
+            {selectedIds.size > 0 && (
+              <span className="text-xs px-2.5 py-1 rounded-lg bg-primary/10 text-primary font-black animate-in fade-in zoom-in-95 duration-150">
+                Đã chọn {selectedIds.size} câu
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            {selectedIds.size > 0 && (
+              <>
+                <button
+                  type="button"
+                  onClick={handleClearSelection}
+                  className="text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white px-3 py-1.5 rounded-xl transition-colors cursor-pointer"
+                >
+                  Hủy chọn
+                </button>
+                <Button
+                  size="sm"
+                  onClick={() => setShowBulkDeleteConfirm(true)}
+                  className="flex items-center gap-2 text-xs font-black uppercase tracking-wider bg-red hover:bg-red/90 text-white h-9 px-4 rounded-xl shadow-md shadow-red/20 transition-all cursor-pointer active:scale-95"
+                >
+                  <Trash2 className="size-3.5" />
+                  <span>Xóa {selectedIds.size} câu hỏi</span>
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Redesigned Questions list using subcomponent */}
       <QuestionsList
         isLoading={isLoadingQuestions}
@@ -270,6 +378,8 @@ export function QuestionsTab({ lessonId, isAdminView = false, lessonName }: Ques
         onClearSearch={handleClearSearch}
         difficultyFilter={difficultyFilter}
         onClearDifficulty={handleClearDifficulty}
+        selectedIds={selectedIds}
+        onToggleSelect={handleToggleSelect}
       />
 
       {/* Modals and overlay panels */}
@@ -314,6 +424,18 @@ export function QuestionsTab({ lessonId, isAdminView = false, lessonName }: Ques
           }
         }}
         onCancel={() => setDeletingQuestion(null)}
+      />
+
+      <ConfirmModal
+        isOpen={showBulkDeleteConfirm}
+        title="Xóa hàng loạt câu hỏi"
+        description={`Bạn có chắc chắn muốn xóa vĩnh viễn ${selectedIds.size} câu hỏi đã chọn không? Thao tác này không thể hoàn tác.`}
+        confirmLabel={`Xóa ${selectedIds.size} câu hỏi`}
+        cancelLabel="Hủy"
+        variant="danger"
+        isLoading={bulkDeleteMut.isPending}
+        onConfirm={handleBulkDeleteConfirm}
+        onCancel={() => setShowBulkDeleteConfirm(false)}
       />
     </div>
   );

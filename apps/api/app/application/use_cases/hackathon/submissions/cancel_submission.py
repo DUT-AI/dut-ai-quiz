@@ -1,13 +1,13 @@
 from datetime import datetime
 from uuid import UUID
-from redis.asyncio import Redis
 
-from app.domain.entities.submission import SubmissionStatus, HackathonSubmissionEntity
+from app.domain.entities.submission import HackathonSubmissionEntity, SubmissionStatus
 from app.domain.exceptions.exceptions import AppException
 from app.domain.interfaces.hackathon_repo import (
     IHackathonSubmissionRepository,
     IHackathonTeamRepository,
 )
+from redis.asyncio import Redis
 
 
 class CancelSubmissionUseCase:
@@ -21,9 +21,7 @@ class CancelSubmissionUseCase:
         self._team_repo = team_repo
         self._redis = redis
 
-    async def __call__(
-        self, submission_id: UUID, user_id: int
-    ) -> HackathonSubmissionEntity:
+    async def __call__(self, submission_id: UUID, user_id: int) -> HackathonSubmissionEntity:
         now = datetime.now()
 
         # 1. Lấy thông tin lượt nộp bài
@@ -59,7 +57,7 @@ class CancelSubmissionUseCase:
         except Exception as redis_err:
             raise AppException(
                 f"Lỗi kết nối hệ thống hàng đợi khi gửi lệnh hủy: {str(redis_err)}", 500
-            )
+            ) from redis_err
 
         # 5. Cập nhật trạng thái trong DB thành CANCELLED (Không trừ quota nộp bài)
         submission.status = SubmissionStatus.CANCELLED

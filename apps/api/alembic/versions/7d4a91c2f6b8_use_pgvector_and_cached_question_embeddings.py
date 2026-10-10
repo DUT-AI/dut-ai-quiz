@@ -5,18 +5,17 @@ Revises: 2b9f6c8d1e34
 Create Date: 2026-07-22
 """
 
-from typing import Sequence, Union
+from collections.abc import Sequence
 
+import sqlalchemy as sa
 from alembic import op
 from pgvector.sqlalchemy import Vector
-import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
-
 revision: str = "7d4a91c2f6b8"
-down_revision: Union[str, None] = "2b9f6c8d1e34"
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = "2b9f6c8d1e34"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
@@ -53,8 +52,7 @@ def upgrade() -> None:
     # Chunks are derived data and will be rebuilt by the lesson indexing worker.
     op.execute("DELETE FROM lesson_chunks")
     op.execute(
-        "ALTER TABLE lesson_chunks "
-        "ALTER COLUMN embedding TYPE vector(768) USING embedding::vector"
+        "ALTER TABLE lesson_chunks ALTER COLUMN embedding TYPE vector(768) USING embedding::vector"
     )
     op.create_index(
         "ix_lesson_chunks_embedding_hnsw",
@@ -73,15 +71,9 @@ def upgrade() -> None:
         ),
     )
 
-    op.add_column(
-        "questions", sa.Column("embedding", Vector(768), nullable=True)
-    )
-    op.add_column(
-        "questions", sa.Column("embedding_model", sa.String(200), nullable=True)
-    )
-    op.add_column(
-        "questions", sa.Column("embedding_source_hash", sa.String(64), nullable=True)
-    )
+    op.add_column("questions", sa.Column("embedding", Vector(768), nullable=True))
+    op.add_column("questions", sa.Column("embedding_model", sa.String(200), nullable=True))
+    op.add_column("questions", sa.Column("embedding_source_hash", sa.String(64), nullable=True))
 
 
 def downgrade() -> None:

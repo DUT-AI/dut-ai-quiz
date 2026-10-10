@@ -2,11 +2,6 @@ from urllib.parse import urlparse
 from uuid import UUID
 
 import httpx
-from arq import Retry
-from arq.connections import RedisSettings
-from loguru import logger
-from sqlalchemy import func, select
-
 from app.application.services.lesson_chunker import LessonChunker
 from app.application.services.lesson_embedding_indexer import LessonEmbeddingIndexer
 from app.config import settings
@@ -19,6 +14,10 @@ from app.infrastructure.clients.embedding_service import (
 from app.infrastructure.database import AsyncSessionLocal
 from app.infrastructure.repositories.lesson_chunks import LessonChunkRepository
 from app.infrastructure.repositories.lessons import LessonRepository
+from arq import Retry
+from arq.connections import RedisSettings
+from loguru import logger
+from sqlalchemy import func, select
 
 
 async def startup(ctx):
@@ -30,9 +29,7 @@ async def startup(ctx):
     elif settings.embedding_provider.casefold() == "dutai":
         ctx["embedding_service"] = DutAiEmbeddingService(http_client, settings)
     else:
-        ctx["embedding_service"] = OpenAICompatibleEmbeddingService(
-            http_client, settings
-        )
+        ctx["embedding_service"] = OpenAICompatibleEmbeddingService(http_client, settings)
     ctx["lesson_chunker"] = LessonChunker(
         target_tokens=settings.lesson_chunk_target_tokens,
         max_tokens=settings.lesson_chunk_max_tokens,
@@ -49,17 +46,13 @@ async def shutdown(ctx):
 async def index_lesson_job(ctx, lesson_id: str, expected_source_hash: str):
     lesson_uuid = UUID(lesson_id)
     async with AsyncSessionLocal() as session:
-        await session.execute(
-            select(func.pg_advisory_xact_lock(func.hashtext(str(lesson_uuid))))
-        )
+        await session.execute(select(func.pg_advisory_xact_lock(func.hashtext(str(lesson_uuid)))))
         lesson_repo = LessonRepository(session)
         lesson = await lesson_repo.get(lesson_uuid)
         if lesson is None:
             raise Retry(defer=2)
 
-        current_hash = lesson_source_hash(
-            lesson.name, lesson.description, lesson.content_md or ""
-        )
+        current_hash = lesson_source_hash(lesson.name, lesson.description, lesson.content_md or "")
         if current_hash != expected_source_hash:
             if ctx.get("job_try", 1) < 3:
                 raise Retry(defer=2)

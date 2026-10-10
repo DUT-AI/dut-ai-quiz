@@ -1,4 +1,3 @@
-from typing import Any
 from fastapi import HTTPException
 
 from app.presentation.api.deps import UserContext

@@ -11,7 +11,6 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
-
 revision: str = "a81c4e7d2f90"
 down_revision: str | Sequence[str] | None = "f2c7a1d9e480"
 branch_labels: str | Sequence[str] | None = None
@@ -109,4 +108,3 @@ def downgrade() -> None:
     op.drop_column("homeworks", "grading_error")
     op.drop_column("homeworks", "grading_status")
     op.drop_column("homeworks", "grading_rubric")
-

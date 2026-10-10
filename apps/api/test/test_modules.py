@@ -1,14 +1,12 @@
-from datetime import datetime
 from uuid import UUID, uuid4
 
 import pytest
-
 from app.application.use_cases.modules import (
     CreateModuleUseCase,
     DeleteModuleUseCase,
     ListModulesUseCase,
-    UpdateModuleUseCase,
     ReorderModulesUseCase,
+    UpdateModuleUseCase,
 )
 from app.core.datetime_utils import now_ict
 from app.domain.entities.lesson import LessonEntity
@@ -16,7 +14,7 @@ from app.domain.entities.module import ModuleEntity
 from app.domain.exceptions.exceptions import BadRequestException
 from app.domain.interfaces import ILessonRepository
 from app.domain.interfaces.module_repo import IModuleRepository
-from app.presentation.schemas.modules import ModuleCreate, ModuleUpdate, ModuleReorder
+from app.presentation.schemas.modules import ModuleCreate, ModuleReorder, ModuleUpdate
 
 
 class MockModuleRepository(IModuleRepository):
@@ -72,12 +70,15 @@ class MockLessonRepository(ILessonRepository):
         return self.lessons
 
     async def get(self, lesson_id: UUID) -> LessonEntity | None:
-        for l in self.lessons:
-            if l.id == lesson_id:
-                return l
+        for lesson in self.lessons:
+            if lesson.id == lesson_id:
+                return lesson
         return None
 
     async def get_by_slug(self, slug: str) -> LessonEntity | None:
+        return None
+
+    async def get_by_identifier(self, identifier: str) -> LessonEntity | None:
         return None
 
     async def add(self, entity: LessonEntity) -> LessonEntity:
@@ -85,14 +86,14 @@ class MockLessonRepository(ILessonRepository):
         return entity
 
     async def update(self, entity: LessonEntity) -> LessonEntity:
-        for i, l in enumerate(self.lessons):
-            if l.id == entity.id:
+        for i, lesson in enumerate(self.lessons):
+            if lesson.id == entity.id:
                 self.lessons[i] = entity
                 return entity
         return entity
 
     async def delete(self, entity: LessonEntity) -> None:
-        self.lessons = [l for l in self.lessons if l.id != entity.id]
+        self.lessons = [lesson for lesson in self.lessons if lesson.id != entity.id]
 
 
 @pytest.mark.asyncio
@@ -162,7 +163,9 @@ async def test_modules_flow():
 
     # Test update to duplicate name fails
     with pytest.raises(BadRequestException):
-        await update_uc.execute(str(another_module.id), ModuleUpdate(name="intro to machine learning"))
+        await update_uc.execute(
+            str(another_module.id), ModuleUpdate(name="intro to machine learning")
+        )
 
     # 4d. Test autocomplete suggest search
     suggestions = await list_uc.execute(q="adva", include_lessons=False)

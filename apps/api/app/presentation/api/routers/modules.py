@@ -5,16 +5,16 @@ from app.application.use_cases.modules import (
     CreateModuleUseCase,
     DeleteModuleUseCase,
     ListModulesUseCase,
-    UpdateModuleUseCase,
     ReorderModulesUseCase,
+    UpdateModuleUseCase,
 )
-from app.presentation.api.deps import EducatorUser, CurrentUser
+from app.presentation.api.deps import CurrentUser, EducatorUser
 from app.presentation.schemas.modules import (
     ModuleCreate,
     ModuleDetailOut,
     ModuleOut,
-    ModuleUpdate,
     ModuleReorder,
+    ModuleUpdate,
 )
 
 router = APIRouter(prefix="/modules", tags=["modules"])
@@ -27,7 +27,9 @@ async def list_modules(
     use_case: FromDishka[ListModulesUseCase],
     q: str | None = Query(None, description="Prefix search for module name (case-insensitive)"),
     name: str | None = Query(None, description="Exact match for module name (case-insensitive)"),
-    description: str | None = Query(None, description="Partial search for module description (case-insensitive)"),
+    description: str | None = Query(
+        None, description="Partial search for module description (case-insensitive)"
+    ),
     order: int | None = Query(None, description="Exact match for module order"),
     include_lessons: bool = Query(True, description="Whether to include lesson list in response"),
 ):

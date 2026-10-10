@@ -2,16 +2,14 @@ import json
 from datetime import datetime
 from uuid import UUID
 
+from app.domain.entities.submission import HackathonSubmissionEntity
 from redis.asyncio import Redis
 
-from app.domain.entities.submission import HackathonSubmissionEntity
 from worker_hackathon.domain.interfaces.event_publisher import ISubmissionEventPublisher
 
 
 class RedisSubmissionEventPublisher(ISubmissionEventPublisher):
-    def __init__(
-        self, redis: Redis, channel: str = "hackathon:submission-events"
-    ) -> None:
+    def __init__(self, redis: Redis, channel: str = "hackathon:submission-events") -> None:
         self._redis = redis
         self._channel = channel
 

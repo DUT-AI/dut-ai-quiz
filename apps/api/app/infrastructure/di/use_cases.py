@@ -51,6 +51,7 @@ from app.application.use_cases.game import (
     GetGameLeaderboardUseCase,
     GetGameSessionUseCase,
     ListGameHistoryUseCase,
+    ListGameSessionsForSyncUseCase,
     PatchGameAnswerUseCase,
     StartGameSessionUseCase,
     UseItemGameUseCase,
@@ -86,13 +87,18 @@ from app.application.use_cases.hackathon.submissions import (
 from app.application.use_cases.homeworks import (
     ArchiveHomeworkUseCase,
     CreateHomeworkUseCase,
+    GetHomeworkUseCase,
     GetHomeworkAttachmentUrlUseCase,
     GetHomeworkSubmissionDownloadUrlUseCase,
     GetMyHomeworkSubmissionUseCase,
     ListCompletedHomeworkMembersUseCase,
+    ListHomeworkSubmissionsForSyncUseCase,
     ListHomeworkSubmissionsUseCase,
     ListHomeworksUseCase,
     ListMyHomeworksUseCase,
+    ListMyHomeworkSubmissionsUseCase,
+    PresignHomeworkSubmissionUseCase,
+    RetryHomeworkRubricUseCase,
     RetryHomeworkSubmissionUseCase,
     SubmitHomeworkUseCase,
     UpdateHomeworkUseCase,
@@ -108,10 +114,19 @@ from app.application.use_cases.lessons.get_lesson_by_slug_uc import (
 from app.application.use_cases.lessons.get_lesson_detail_uc import (
     GetLessonDetailUseCase,
 )
+from app.application.use_cases.lessons.get_lesson_exercises_uc import (
+    GetLessonExercisesUseCase,
+)
+from app.application.use_cases.lessons.get_lesson_metadata_uc import (
+    GetLessonMetadataUseCase,
+)
 from app.application.use_cases.lessons.import_notion_lesson_uc import (
     ImportNotionLessonUseCase,
 )
-from app.application.use_cases.lessons.index_lesson_uc import IndexLessonUseCase
+from app.application.use_cases.lessons.index_lesson_uc import (
+    IndexAllLessonsUseCase,
+    IndexLessonUseCase,
+)
 from app.application.use_cases.lessons.list_lessons_uc import ListLessonsUseCase
 from app.application.use_cases.lessons.reorder_lessons_uc import (
     ReorderLessonsUseCase,
@@ -139,6 +154,7 @@ from app.application.use_cases.questions import (
     AiRegenerateSolutionUseCase,
     AnswerQuestionUseCase,
     BulkCreateQuestionsUseCase,
+    BulkDeleteQuestionsUseCase,
     CreateQuestionUseCase,
     DeleteQuestionUseCase,
     FindRelatedQuestionsUseCase,
@@ -175,9 +191,7 @@ class UseCaseProvider(Provider):
     create_exam_use_case = provide(CreateExamUseCase, scope=Scope.REQUEST)
     delete_exam_use_case = provide(DeleteExamUseCase, scope=Scope.REQUEST)
     get_exam_use_case = provide(GetExamUseCase, scope=Scope.REQUEST)
-    list_exam_questions_use_case = provide(
-        ListExamQuestionsUseCase, scope=Scope.REQUEST
-    )
+    list_exam_questions_use_case = provide(ListExamQuestionsUseCase, scope=Scope.REQUEST)
     list_exams_use_case = provide(ListExamsUseCase, scope=Scope.REQUEST)
     set_exam_questions_use_case = provide(SetExamQuestionsUseCase, scope=Scope.REQUEST)
     update_exam_use_case = provide(UpdateExamUseCase, scope=Scope.REQUEST)
@@ -187,47 +201,27 @@ class UseCaseProvider(Provider):
     get_hackathon_use_case = provide(GetHackathonUseCase, scope=Scope.REQUEST)
     list_hackathons_use_case = provide(ListHackathonsUseCase, scope=Scope.REQUEST)
     update_hackathon_use_case = provide(UpdateHackathonUseCase, scope=Scope.REQUEST)
-    create_hackathon_task_use_case = provide(
-        CreateHackathonTaskUseCase, scope=Scope.REQUEST
-    )
-    delete_hackathon_task_use_case = provide(
-        DeleteHackathonTaskUseCase, scope=Scope.REQUEST
-    )
+    create_hackathon_task_use_case = provide(CreateHackathonTaskUseCase, scope=Scope.REQUEST)
+    delete_hackathon_task_use_case = provide(DeleteHackathonTaskUseCase, scope=Scope.REQUEST)
     get_hackathon_task_use_case = provide(GetHackathonTaskUseCase, scope=Scope.REQUEST)
-    list_hackathon_tasks_use_case = provide(
-        ListHackathonTasksUseCase, scope=Scope.REQUEST
-    )
-    update_hackathon_task_use_case = provide(
-        UpdateHackathonTaskUseCase, scope=Scope.REQUEST
-    )
-    register_individual_use_case = provide(
-        RegisterIndividualUseCase, scope=Scope.REQUEST
-    )
+    list_hackathon_tasks_use_case = provide(ListHackathonTasksUseCase, scope=Scope.REQUEST)
+    update_hackathon_task_use_case = provide(UpdateHackathonTaskUseCase, scope=Scope.REQUEST)
+    register_individual_use_case = provide(RegisterIndividualUseCase, scope=Scope.REQUEST)
 
     create_team_use_case = provide(CreateTeamUseCase, scope=Scope.REQUEST)
     join_team_use_case = provide(JoinTeamUseCase, scope=Scope.REQUEST)
     leave_team_use_case = provide(LeaveTeamUseCase, scope=Scope.REQUEST)
-    cancel_registration_use_case = provide(
-        CancelRegistrationUseCase, scope=Scope.REQUEST
-    )
+    cancel_registration_use_case = provide(CancelRegistrationUseCase, scope=Scope.REQUEST)
     list_registrations_use_case = provide(ListRegistrationsUseCase, scope=Scope.REQUEST)
-    review_registration_use_case = provide(
-        ReviewRegistrationUseCase, scope=Scope.REQUEST
-    )
-    get_registration_status_use_case = provide(
-        GetRegistrationStatusUseCase, scope=Scope.REQUEST
-    )
+    review_registration_use_case = provide(ReviewRegistrationUseCase, scope=Scope.REQUEST)
+    get_registration_status_use_case = provide(GetRegistrationStatusUseCase, scope=Scope.REQUEST)
 
     # hackathon submissions
     submit_task_use_case = provide(SubmitTaskUseCase, scope=Scope.REQUEST)
     presign_submit_use_case = provide(PresignSubmitUseCase, scope=Scope.REQUEST)
     cancel_submission_use_case = provide(CancelSubmissionUseCase, scope=Scope.REQUEST)
-    get_submission_logs_use_case = provide(
-        GetSubmissionLogsUseCase, scope=Scope.REQUEST
-    )
-    hackathon_leaderboard_app_service = provide(
-        HackathonLeaderboardAppService, scope=Scope.REQUEST
-    )
+    get_submission_logs_use_case = provide(GetSubmissionLogsUseCase, scope=Scope.REQUEST)
+    hackathon_leaderboard_app_service = provide(HackathonLeaderboardAppService, scope=Scope.REQUEST)
     hackathon_leaderboard_domain_service = provide(
         HackathonLeaderboardDomainService, scope=Scope.REQUEST
     )
@@ -244,6 +238,10 @@ class UseCaseProvider(Provider):
         ListHomeworksUseCase,
         scope=Scope.REQUEST,
     )
+    get_homework_use_case = provide(
+        GetHomeworkUseCase,
+        scope=Scope.REQUEST,
+    )
     create_homework_use_case = provide(
         CreateHomeworkUseCase,
         scope=Scope.REQUEST,
@@ -256,8 +254,16 @@ class UseCaseProvider(Provider):
         ArchiveHomeworkUseCase,
         scope=Scope.REQUEST,
     )
+    retry_homework_rubric_use_case = provide(
+        RetryHomeworkRubricUseCase,
+        scope=Scope.REQUEST,
+    )
     submit_homework_use_case = provide(
         SubmitHomeworkUseCase,
+        scope=Scope.REQUEST,
+    )
+    presign_homework_submission_use_case = provide(
+        PresignHomeworkSubmissionUseCase,
         scope=Scope.REQUEST,
     )
     retry_homework_submission_use_case = provide(
@@ -268,12 +274,20 @@ class UseCaseProvider(Provider):
         GetMyHomeworkSubmissionUseCase,
         scope=Scope.REQUEST,
     )
+    list_my_homework_submissions_use_case = provide(
+        ListMyHomeworkSubmissionsUseCase,
+        scope=Scope.REQUEST,
+    )
     list_homework_submissions_use_case = provide(
         ListHomeworkSubmissionsUseCase,
         scope=Scope.REQUEST,
     )
     list_completed_homework_members_use_case = provide(
         ListCompletedHomeworkMembersUseCase,
+        scope=Scope.REQUEST,
+    )
+    list_homework_submissions_for_sync_use_case = provide(
+        ListHomeworkSubmissionsForSyncUseCase,
         scope=Scope.REQUEST,
     )
     get_homework_attachment_url_use_case = provide(
@@ -288,31 +302,18 @@ class UseCaseProvider(Provider):
     # questions
     create_question_use_case = provide(CreateQuestionUseCase, scope=Scope.REQUEST)
     delete_question_use_case = provide(DeleteQuestionUseCase, scope=Scope.REQUEST)
+    bulk_delete_questions_use_case = provide(BulkDeleteQuestionsUseCase, scope=Scope.REQUEST)
     get_question_use_case = provide(GetQuestionUseCase, scope=Scope.REQUEST)
     list_questions_use_case = provide(ListQuestionsUseCase, scope=Scope.REQUEST)
     update_question_use_case = provide(UpdateQuestionUseCase, scope=Scope.REQUEST)
-    bulk_create_questions_use_case = provide(
-        BulkCreateQuestionsUseCase, scope=Scope.REQUEST
-    )
+    bulk_create_questions_use_case = provide(BulkCreateQuestionsUseCase, scope=Scope.REQUEST)
     answer_question_use_case = provide(AnswerQuestionUseCase, scope=Scope.REQUEST)
-    get_related_lessons_use_case = provide(
-        GetRelatedLessonsUseCase, scope=Scope.REQUEST
-    )
-    start_pdf_import_use_case = provide(
-        StartPdfImportUseCase, scope=Scope.REQUEST
-    )
-    heartbeat_question_use_case = provide(
-        HeartbeatQuestionUseCase, scope=Scope.REQUEST
-    )
-    ai_regenerate_solution_use_case = provide(
-        AiRegenerateSolutionUseCase, scope=Scope.REQUEST
-    )
-    publish_question_use_case = provide(
-        PublishQuestionUseCase, scope=Scope.REQUEST
-    )
-    find_related_questions_use_case = provide(
-        FindRelatedQuestionsUseCase, scope=Scope.REQUEST
-    )
+    get_related_lessons_use_case = provide(GetRelatedLessonsUseCase, scope=Scope.REQUEST)
+    start_pdf_import_use_case = provide(StartPdfImportUseCase, scope=Scope.REQUEST)
+    heartbeat_question_use_case = provide(HeartbeatQuestionUseCase, scope=Scope.REQUEST)
+    ai_regenerate_solution_use_case = provide(AiRegenerateSolutionUseCase, scope=Scope.REQUEST)
+    publish_question_use_case = provide(PublishQuestionUseCase, scope=Scope.REQUEST)
+    find_related_questions_use_case = provide(FindRelatedQuestionsUseCase, scope=Scope.REQUEST)
 
     # tags
     list_tags_use_case = provide(ListTagsUseCase, scope=Scope.REQUEST)
@@ -325,9 +326,7 @@ class UseCaseProvider(Provider):
     get_attempt_use_case = provide(GetAttemptUseCase, scope=Scope.REQUEST)
     get_attempt_detail_use_case = provide(GetAttemptDetailUseCase, scope=Scope.REQUEST)
     list_exam_attempts_use_case = provide(ListExamAttemptsUseCase, scope=Scope.REQUEST)
-    patch_attempt_answers_use_case = provide(
-        PatchAttemptAnswersUseCase, scope=Scope.REQUEST
-    )
+    patch_attempt_answers_use_case = provide(PatchAttemptAnswersUseCase, scope=Scope.REQUEST)
     list_user_attempts_use_case = provide(ListUserAttemptsUseCase, scope=Scope.REQUEST)
     review_attempt_use_case = provide(ReviewAttemptUseCase, scope=Scope.REQUEST)
     rescore_attempt_use_case = provide(RescoreAttemptUseCase, scope=Scope.REQUEST)
@@ -345,50 +344,32 @@ class UseCaseProvider(Provider):
     get_leaderboard_use_case = provide(GetLeaderboardUseCase, scope=Scope.REQUEST)
 
     # game
-    start_game_session_use_case = provide(
-        StartGameSessionUseCase, scope=Scope.REQUEST
-    )
+    start_game_session_use_case = provide(StartGameSessionUseCase, scope=Scope.REQUEST)
     use_item_game_use_case = provide(UseItemGameUseCase, scope=Scope.REQUEST)
-    patch_game_answer_use_case = provide(
-        PatchGameAnswerUseCase, scope=Scope.REQUEST
-    )
-    get_game_session_use_case = provide(
-        GetGameSessionUseCase, scope=Scope.REQUEST
-    )
-    finish_game_session_use_case = provide(
-        FinishGameSessionUseCase, scope=Scope.REQUEST
-    )
-    get_active_game_session_use_case = provide(
-        GetActiveGameSessionUseCase, scope=Scope.REQUEST
-    )
-    list_game_history_use_case = provide(
-        ListGameHistoryUseCase, scope=Scope.REQUEST
-    )
-    get_game_history_summary_use_case = provide(
-        GetGameHistorySummaryUseCase, scope=Scope.REQUEST
-    )
-    get_game_leaderboard_use_case = provide(
-        GetGameLeaderboardUseCase, scope=Scope.REQUEST
-    )
+    patch_game_answer_use_case = provide(PatchGameAnswerUseCase, scope=Scope.REQUEST)
+    get_game_session_use_case = provide(GetGameSessionUseCase, scope=Scope.REQUEST)
+    finish_game_session_use_case = provide(FinishGameSessionUseCase, scope=Scope.REQUEST)
+    get_active_game_session_use_case = provide(GetActiveGameSessionUseCase, scope=Scope.REQUEST)
+    list_game_history_use_case = provide(ListGameHistoryUseCase, scope=Scope.REQUEST)
+    get_game_history_summary_use_case = provide(GetGameHistorySummaryUseCase, scope=Scope.REQUEST)
+    get_game_leaderboard_use_case = provide(GetGameLeaderboardUseCase, scope=Scope.REQUEST)
+    list_game_sessions_for_sync_use_case = provide(ListGameSessionsForSyncUseCase, scope=Scope.REQUEST)
 
     list_lessons_use_case = provide(ListLessonsUseCase, scope=Scope.REQUEST)
     create_lesson_use_case = provide(CreateLessonUseCase, scope=Scope.REQUEST)
-    import_notion_lesson_use_case = provide(
-        ImportNotionLessonUseCase, scope=Scope.REQUEST
-    )
+    import_notion_lesson_use_case = provide(ImportNotionLessonUseCase, scope=Scope.REQUEST)
     update_lesson_use_case = provide(UpdateLessonUseCase, scope=Scope.REQUEST)
     delete_lesson_use_case = provide(DeleteLessonUseCase, scope=Scope.REQUEST)
     get_lesson_detail_use_case = provide(GetLessonDetailUseCase, scope=Scope.REQUEST)
     get_lesson_by_slug_use_case = provide(GetLessonBySlugUseCase, scope=Scope.REQUEST)
+    get_lesson_metadata_use_case = provide(GetLessonMetadataUseCase, scope=Scope.REQUEST)
+    get_lesson_exercises_use_case = provide(GetLessonExercisesUseCase, scope=Scope.REQUEST)
     reorder_lessons_use_case = provide(ReorderLessonsUseCase, scope=Scope.REQUEST)
     index_lesson_use_case = provide(IndexLessonUseCase, scope=Scope.REQUEST)
-    lesson_embedding_indexer = provide(
-        LessonEmbeddingIndexer, scope=Scope.REQUEST
-    )
+    index_all_lessons_use_case = provide(IndexAllLessonsUseCase, scope=Scope.REQUEST)
+    lesson_embedding_indexer = provide(LessonEmbeddingIndexer, scope=Scope.REQUEST)
     lesson_index_scheduler = provide(LessonIndexScheduler, scope=Scope.REQUEST)
-    question_embedding_service = provide(
-        QuestionEmbeddingService, scope=Scope.REQUEST
-    )
+    question_embedding_service = provide(QuestionEmbeddingService, scope=Scope.REQUEST)
 
     @provide(scope=Scope.REQUEST)
     def lesson_chunker(self) -> LessonChunker:

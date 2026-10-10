@@ -1,5 +1,6 @@
+from collections.abc import Sequence
 from hmac import compare_digest
-from typing import Annotated, Any, Sequence
+from typing import Annotated, Any
 
 from dishka.integrations.fastapi import inject
 from fastapi import Depends, Header, HTTPException, Request
@@ -15,6 +16,7 @@ from app.domain.entities.auth_enums import (
     normalize_role,
     resolve_permissions_for_roles,
 )
+from app.domain.entities.user import UserSource
 from app.infrastructure.database import get_session
 
 bearer_scheme = HTTPBearer(auto_error=False)
@@ -24,6 +26,11 @@ class UserContext(BaseModel):
     id: int
     roles: list[str] = Field(default_factory=list)
     permissions: set[str] = Field(default_factory=set)
+    user_source: UserSource = UserSource.MANAGE
+
+    @property
+    def is_manage_user(self) -> bool:
+        return self.user_source == UserSource.MANAGE
 
     def model_post_init(self, __context: Any) -> None:
         if not self.permissions and self.roles:
@@ -52,8 +59,7 @@ class UserContext(BaseModel):
         if self.is_admin():
             return True
         check_perms = {
-            p.value if isinstance(p, SystemPermission) else str(p)
-            for p in required_permissions
+            p.value if isinstance(p, SystemPermission) else str(p) for p in required_permissions
         }
         return bool(self.permissions & check_perms)
 
@@ -106,13 +112,19 @@ def extract_auth_context_from_request(
     roles = payload.get("roles")
 
     if uid is None or roles is None or not isinstance(roles, list):
-        raise HTTPException(
-            status_code=401, detail="Unauthorized: Invalid token payload"
-        )
+        raise HTTPException(status_code=401, detail="Unauthorized: Invalid token payload")
+
+    raw_source = payload.get("user_source") or payload.get("source") or payload.get("type")
+    user_source = UserSource.MANAGE
+    if raw_source in ("google", "GOOGLE", "internal", "INTERNAL"):
+        user_source = UserSource.INTERNAL
+    elif raw_source in ("manage", "MANAGE"):
+        user_source = UserSource.MANAGE
 
     return UserContext(
         id=int(uid),
         roles=roles,
+        user_source=user_source,
     )
 
 
@@ -123,7 +135,9 @@ async def get_current_user(
 ) -> UserContext:
     user = extract_auth_context_from_request(request, credentials)
     if not user:
-        raise HTTPException(status_code=401, detail="Unauthorized: No access token or API key provided")
+        raise HTTPException(
+            status_code=401, detail="Unauthorized: No access token or API key provided"
+        )
     return user
 
 
@@ -146,8 +160,7 @@ def RequirePermissions(
     - require_all: True to require all permissions, False (default) to require at least one.
     """
     req_list = [
-        p.value if isinstance(p, SystemPermission) else str(p)
-        for p in required_permissions
+        p.value if isinstance(p, SystemPermission) else str(p) for p in required_permissions
     ]
 
     async def dependency(
@@ -172,9 +185,7 @@ def RequirePermissions(
 
 
 def require_roles(*allowed_roles: str | UserRole):
-    allowed_list = [
-        r.value if isinstance(r, UserRole) else str(r) for r in allowed_roles
-    ]
+    allowed_list = [r.value if isinstance(r, UserRole) else str(r) for r in allowed_roles]
 
     async def dependency(
         user: Annotated[UserContext, Depends(get_current_user)],
@@ -215,11 +226,7 @@ CurrentUser = Annotated[UserContext, Depends(get_current_user)]
 AdminUser = Annotated[UserContext, Depends(require_roles(UserRole.ADMIN, "admin"))]
 EducatorUser = Annotated[
     UserContext,
-    Depends(
-        require_roles(
-            UserRole.ADMIN, UserRole.EDUCATOR, "admin", "EDUCATOR", "educator"
-        )
-    ),
+    Depends(require_roles(UserRole.ADMIN, UserRole.EDUCATOR, "admin", "EDUCATOR", "educator")),
 ]
 AdminOrEducatorUser = EducatorUser
 TeacherUser = EducatorUser
@@ -231,7 +238,10 @@ ProjectDevUser = Annotated[
             UserRole.SUB_ADMIN,
             UserRole.PROJECT_DEVELOPER,
             "admin",
+            "ADMIN",
             "PROJECT_DEVELOPER",
+            "project_developer",
+            "project developer",
         )
     ),
 ]

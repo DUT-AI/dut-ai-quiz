@@ -1,30 +1,38 @@
 from .create_lesson_uc import CreateLessonUseCase
 from .delete_lesson_uc import DeleteLessonUseCase
-from .get_lesson_detail_uc import (
-    GetLessonDetailUseCase,
-)
 from .get_lesson_by_slug_uc import (
     GetLessonBySlugUseCase,
 )
+from .get_lesson_detail_uc import (
+    GetLessonDetailUseCase,
+)
+from .get_lesson_exercises_uc import (
+    GetLessonExercisesUseCase,
+)
+from .get_lesson_metadata_uc import (
+    GetLessonMetadataUseCase,
+)
+from .import_notion_lesson_uc import (
+    ImportNotionLessonUseCase,
+)
+from .index_lesson_uc import IndexAllLessonsUseCase, IndexLessonUseCase
 from .list_lessons_uc import ListLessonsUseCase
 from .reorder_lessons_uc import (
     ReorderLessonsUseCase,
 )
 from .update_lesson_uc import UpdateLessonUseCase
-from .index_lesson_uc import IndexLessonUseCase
-from .import_notion_lesson_uc import (
-    ImportNotionLessonUseCase,
-)
 
 __all__ = [
     "CreateLessonUseCase",
     "DeleteLessonUseCase",
     "GetLessonDetailUseCase",
     "GetLessonBySlugUseCase",
+    "GetLessonExercisesUseCase",
+    "GetLessonMetadataUseCase",
     "ListLessonsUseCase",
     "ReorderLessonsUseCase",
     "UpdateLessonUseCase",
     "IndexLessonUseCase",
+    "IndexAllLessonsUseCase",
     "ImportNotionLessonUseCase",
 ]
-

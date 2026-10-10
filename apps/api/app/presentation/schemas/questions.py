@@ -1,10 +1,10 @@
-import copy
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, Field, field_validator
-
+from app.domain.entities.question import DuplicateStatus, QuestionStatus
 from app.domain.value_objects import Difficulty, PoolType
+from pydantic import BaseModel, Field, field_validator
 
 
 class QuestionOptionIn(BaseModel):
@@ -43,10 +43,6 @@ class QuestionUpdate(BaseModel):
     lesson_id: UUID | None = None
     tags: list[UUID] | None = None
     created_by: int | None = None
-
-
-from typing import Any
-from app.domain.entities.question import QuestionStatus, DuplicateStatus
 
 
 class QuestionOptionToStudent(BaseModel):
@@ -95,7 +91,8 @@ class QuestionToStudent(BaseModel):
     @classmethod
     def hide_solution(cls, v: Any) -> None:
         return None
-    
+
+
 class QuestionOut(BaseModel):
     id: UUID
     pool_type: PoolType
@@ -155,6 +152,14 @@ class QuestionBulkCreate(BaseModel):
     created_by: int | None = None
 
 
+class QuestionBulkDeleteIn(BaseModel):
+    question_ids: list[UUID]
+
+
+class QuestionBulkDeleteOut(BaseModel):
+    deleted_count: int
+
+
 class QuestionAnswerIn(BaseModel):
     option_id: str
 
@@ -176,9 +181,7 @@ class RelatedQuestionsIn(BaseModel):
     def normalize_content(cls, value: str) -> str:
         value = value.strip()
         if len(value) < 3:
-            raise ValueError(
-                "content must contain at least 3 non-whitespace characters"
-            )
+            raise ValueError("content must contain at least 3 non-whitespace characters")
         return value
 
 

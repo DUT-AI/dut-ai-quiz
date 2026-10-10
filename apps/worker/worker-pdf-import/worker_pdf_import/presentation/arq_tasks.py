@@ -1,18 +1,17 @@
-from worker_pdf_import.process_pdf_import_uc import ProcessPdfImportUseCase
-from worker_pdf_import.service.ai_pdf_parser import AIPdfParserStrategy
 from urllib.parse import urlparse
 from uuid import UUID
 
 import httpx
-from arq.connections import RedisSettings
-from loguru import logger
-from redis.asyncio import from_url
-
 from app.config import settings
 from app.infrastructure.database import AsyncSessionLocal
 from app.infrastructure.repositories.import_sessions import ImportSessionRepository
 from app.infrastructure.repositories.questions import QuestionRepository
+from arq.connections import RedisSettings
+from loguru import logger
+from redis.asyncio import from_url
 
+from worker_pdf_import.process_pdf_import_uc import ProcessPdfImportUseCase
+from worker_pdf_import.service.ai_pdf_parser import AIPdfParserStrategy
 
 
 async def startup(ctx):
@@ -35,9 +34,7 @@ async def startup(ctx):
     import_session_repo = ImportSessionRepository(async_session)
     question_repo = QuestionRepository(async_session)
     pdf_parser = AIPdfParserStrategy()
-    process_pdf_uc = ProcessPdfImportUseCase(
-        import_session_repo, question_repo, pdf_parser
-    )
+    process_pdf_uc = ProcessPdfImportUseCase(import_session_repo, question_repo, pdf_parser)
     ctx["process_pdf_import_use_case"] = process_pdf_uc
     ctx["async_session"] = async_session
 
@@ -73,9 +70,7 @@ async def parse_pdf_job(
         import_session_repo = ImportSessionRepository(session)
         question_repo = QuestionRepository(session)
         pdf_parser = AIPdfParserStrategy()
-        use_case = ProcessPdfImportUseCase(
-            import_session_repo, question_repo, pdf_parser
-        )
+        use_case = ProcessPdfImportUseCase(import_session_repo, question_repo, pdf_parser)
 
         try:
             await use_case.execute(

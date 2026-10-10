@@ -14,3 +14,4 @@ export * from "./review-header";
 export * from "./review-loading-state";
 export * from "./review-empty-state";
 export * from "./review-pagination";
+export * from "./lesson-selector";

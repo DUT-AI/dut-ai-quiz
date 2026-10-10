@@ -1,22 +1,22 @@
 import dataclasses
 from datetime import datetime
+from enum import StrEnum
 from typing import Any
 from uuid import UUID
 
-from enum import Enum
-
 from app.domain.value_objects import Difficulty, PoolType
 
-class QuestionStatus(str, Enum):
+
+class QuestionStatus(StrEnum):
     DRAFT = "DRAFT"
     PUBLIC = "PUBLIC"
 
-class DuplicateStatus(str, Enum):
+
+class DuplicateStatus(StrEnum):
     UNIQUE = "UNIQUE"
     NONE = "NONE"
     POSSIBLE_DUPLICATE = "POSSIBLE_DUPLICATE"
     EXACT_DUPLICATE = "EXACT_DUPLICATE"
-
 
 
 @dataclasses.dataclass

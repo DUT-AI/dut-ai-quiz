@@ -40,5 +40,6 @@ async def test_homework_queue_enqueues_when_worker_is_healthy() -> None:
         "evaluate_homework_job",
         submission_id=str(submission_id),
         _queue_name="arq:homework",
+        _job_id=f"homework-evaluate:{submission_id}",
         _defer_by=1,
     )

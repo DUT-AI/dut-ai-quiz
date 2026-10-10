@@ -1,11 +1,12 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities.exam import ExamEntity
 from app.domain.interfaces import IExamRepository
+from app.domain.value_objects import ExamAccessScope
 from app.infrastructure.persistence.models import Exam
 
 
@@ -21,20 +22,34 @@ class ExamRepository(IExamRepository):
     async def list_for_teacher(self, user_id: int) -> list[ExamEntity]:
         stmt = select(Exam).where(
             (Exam.created_by == user_id)
-            | ((Exam.participant_ids.any(user_id)) & (Exam.is_published.is_(True)))
+            | (
+                (Exam.is_published.is_(True))
+                & (
+                    (Exam.access_scope == ExamAccessScope.PUBLIC)
+                    | (
+                        (Exam.access_scope == ExamAccessScope.RESTRICTED)
+                        & (Exam.participant_ids.any(user_id))
+                    )
+                )
+            )
         )
         r = await self._s.execute(stmt.order_by(Exam.title))
         return [m.to_entity() for m in r.scalars().all()]
 
-    async def list_published_for_student(
-        self, user_id: int, now: datetime
-    ) -> list[ExamEntity]:
-        # Condition for exams where the user is a participant
+    async def list_published_for_student(self, user_id: int, now: datetime) -> list[ExamEntity]:
+        # Condition for exams where access_scope is PUBLIC OR (RESTRICTED and user is participant)
+        access_cond = or_(
+            Exam.access_scope == ExamAccessScope.PUBLIC,
+            and_(
+                Exam.access_scope == ExamAccessScope.RESTRICTED,
+                Exam.participant_ids.any(user_id),
+            ),
+        )
         participant_cond = (
             (Exam.is_published.is_(True))
             & ((Exam.start_time.is_(None)) | (Exam.start_time <= now))
             & ((Exam.end_time.is_(None)) | (Exam.end_time >= now))
-            & (Exam.participant_ids.any(user_id))
+            & access_cond
         )
         # Condition for exams created by the user (allows teachers to see/test all their exams)
         creator_cond = Exam.created_by == user_id
@@ -62,6 +77,8 @@ class ExamRepository(IExamRepository):
             model.max_attempts = entity.max_attempts
             model.is_published = entity.is_published
             model.show_answers = entity.show_answers
+            model.access_scope = entity.access_scope
+            model.participant_ids = entity.participant_ids
             await self._s.flush()
             await self._s.refresh(model)
             return model.to_entity()

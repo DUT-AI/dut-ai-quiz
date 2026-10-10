@@ -5,6 +5,7 @@ from app.domain.entities.attempt import FocusEventEntity
 from app.domain.interfaces import IFocusEventRepository
 from app.infrastructure.persistence.models import FocusEvent
 
+
 class FocusEventRepository(IFocusEventRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._s = session
@@ -17,5 +18,7 @@ class FocusEventRepository(IFocusEventRepository):
         return model.to_entity()
 
     async def exists_for_client_event(self, client_event_id: str) -> bool:
-        r = await self._s.execute(select(FocusEvent).where(FocusEvent.client_event_id == client_event_id))
+        r = await self._s.execute(
+            select(FocusEvent).where(FocusEvent.client_event_id == client_event_id)
+        )
         return r.scalar_one_or_none() is not None

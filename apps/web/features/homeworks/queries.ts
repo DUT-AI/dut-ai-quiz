@@ -3,10 +3,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 
-import { apiFetch, apiGet } from "@/lib/api";
+import { apiClient, apiFetch, apiGet, apiPost } from "@/lib/api";
 import {
   HomeworkFormValues,
   HomeworkSchema,
+  HomeworkSubmission,
   HomeworkSubmissionSchema,
 } from "./types";
 
@@ -14,12 +15,22 @@ const listResponse = z.object({
   data: z.array(HomeworkSchema),
   is_success: z.boolean(),
 });
+const detailResponse = z.object({
+  data: HomeworkSchema,
+  is_success: z.boolean(),
+});
 const submissionListResponse = z.object({
   data: z.array(HomeworkSubmissionSchema),
   is_success: z.boolean(),
 });
+const mySubmissionResponse = z.object({
+  data: HomeworkSubmissionSchema.nullable(),
+  is_success: z.boolean(),
+});
 type HomeworkListResponse = z.infer<typeof listResponse>;
+type HomeworkDetailResponse = z.infer<typeof detailResponse>;
 type HomeworkSubmissionListResponse = z.infer<typeof submissionListResponse>;
+type MySubmissionResponse = z.infer<typeof mySubmissionResponse>;
 
 async function formRequest<T>(
   path: string,
@@ -62,10 +73,52 @@ export function useMyHomeworks(lessonId: string | null) {
   });
 }
 
-export function useHomeworks() {
+export function useHomeworks(lessonId?: string) {
+  const url = lessonId ? `/api/v1/homeworks?lesson_id=${lessonId}` : "/api/v1/homeworks";
   return useQuery({
-    queryKey: ["homeworks"],
-    queryFn: () => apiGet<HomeworkListResponse>("/api/v1/homeworks", listResponse),
+    queryKey: ["homeworks", lessonId ?? "all"],
+    queryFn: () => apiGet<HomeworkListResponse>(url, listResponse),
+  });
+}
+
+export function useHomework(homeworkId: string | null) {
+  return useQuery({
+    queryKey: ["homeworks", "detail", homeworkId],
+    queryFn: () =>
+      apiGet<HomeworkDetailResponse>(
+        `/api/v1/homeworks/${homeworkId}`,
+        detailResponse,
+      ),
+    select: (res) => res.data,
+    enabled: !!homeworkId,
+    refetchInterval: (query) => {
+      const status = query.state.data?.data?.grading_status;
+      return status === "PENDING" || status === "PROCESSING" ? 3000 : false;
+    },
+  });
+}
+
+export function useRetryHomeworkRubric() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: async (homeworkId: string) => {
+      const response = await apiFetch(
+        `/api/v1/homeworks/${homeworkId}/retry-rubric`,
+        { method: "POST" },
+      );
+      if (!response.ok) {
+        const body = await response.json().catch(() => null);
+        throw new Error(body?.detail || body?.message || `HTTP ${response.status}`);
+      }
+      return z.object({
+        data: HomeworkSchema,
+        is_success: z.boolean(),
+      }).parse(await response.json());
+    },
+    onSuccess: (_, homeworkId) => {
+      client.invalidateQueries({ queryKey: ["homeworks"] });
+      client.invalidateQueries({ queryKey: ["homeworks", "detail", homeworkId] });
+    },
   });
 }
 
@@ -142,19 +195,94 @@ export function useSubmitHomework() {
       homeworkId: string;
       file: File;
     }) => {
-      const form = new FormData();
-      form.append("file", file);
-      return formRequest(
+      // 1. Request presigned upload URL from backend
+      const presignRes = await apiPost<{
+        data: {
+          upload_url: string;
+          object_key: string;
+          original_filename: string;
+        };
+        is_success: boolean;
+      }>(
+        `/api/v1/homeworks/${homeworkId}/submissions/presign`,
+        {
+          filename: file.name,
+          content_type: file.type || "application/octet-stream",
+        },
+        z.object({
+          data: z.object({
+            upload_url: z.string(),
+            object_key: z.string(),
+            original_filename: z.string(),
+          }),
+          is_success: z.boolean(),
+        }),
+      );
+
+      // 2. Upload file directly to S3 / MinIO (non-blocking, client-to-storage)
+      await apiClient.put(presignRes.data.upload_url, file, {
+        headers: { "Content-Type": file.type || "application/octet-stream" },
+        withCredentials: false,
+        baseURL: "",
+      });
+
+      // 3. Commit submission to backend API
+      return apiPost<{
+        data: HomeworkSubmission;
+        is_success: boolean;
+      }>(
         `/api/v1/homeworks/${homeworkId}/submissions`,
-        "POST",
-        form,
+        {
+          object_key: presignRes.data.object_key,
+          original_filename: presignRes.data.original_filename,
+        },
         z.object({
           data: HomeworkSubmissionSchema,
           is_success: z.boolean(),
         }),
       );
     },
-    onSuccess: () => client.invalidateQueries({ queryKey: ["homeworks"] }),
+    onSuccess: (_, vars) => {
+      client.invalidateQueries({ queryKey: ["homeworks"] });
+      client.invalidateQueries({ queryKey: ["homeworks", vars.homeworkId, "submission", "me"] });
+      client.invalidateQueries({ queryKey: ["homeworks", vars.homeworkId, "submissions", "me"] });
+    },
+  });
+}
+
+export function useMyHomeworkSubmission(homeworkId: string | null) {
+  return useQuery({
+    queryKey: ["homeworks", homeworkId, "submission", "me"],
+    queryFn: () =>
+      apiGet<MySubmissionResponse>(
+        `/api/v1/homeworks/${homeworkId}/submission/me`,
+        mySubmissionResponse,
+      ),
+    select: (res) => res.data,
+    enabled: !!homeworkId,
+    refetchInterval: (query) => {
+      const status = query.state.data?.data?.status;
+      return status === "GRADING" || status === "UPLOADED" ? 3000 : false;
+    },
+  });
+}
+
+export function useMyHomeworkSubmissions(homeworkId: string | null) {
+  return useQuery({
+    queryKey: ["homeworks", homeworkId, "submissions", "me"],
+    queryFn: () =>
+      apiGet<HomeworkSubmissionListResponse>(
+        `/api/v1/homeworks/${homeworkId}/submissions/me`,
+        submissionListResponse,
+      ),
+    select: (res) => res.data,
+    enabled: !!homeworkId,
+    refetchInterval: (query) => {
+      const items = query.state.data?.data;
+      return items?.some((s) => s.status === "GRADING" || s.status === "UPLOADED")
+        ? 3000
+        : false;
+    },
   });
 }
 
@@ -175,7 +303,9 @@ export function useRetryHomeworkSubmission() {
         is_success: z.boolean(),
       }).parse(await response.json());
     },
-    onSuccess: () => client.invalidateQueries({ queryKey: ["homeworks"] }),
+    onSuccess: () => {
+      client.invalidateQueries({ queryKey: ["homeworks"] });
+    },
   });
 }
 

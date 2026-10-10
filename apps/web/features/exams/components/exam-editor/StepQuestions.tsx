@@ -20,6 +20,7 @@ import { Markdown } from "@/components/markdown";
 import QuestionStatsMatrix from "./QuestionStatsMatrix";
 import { QuestionCard } from "@/features/questions/components/question-card";
 import type { QuestionOut } from "@/features/questions/types";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 interface Props {
   selectedIds: string[];
@@ -97,33 +98,21 @@ export default function StepQuestions({ selectedIds, onChange }: Props) {
               />
             </div>
 
-            {/* Lesson Select Dropdown */}
-            <div className="relative min-w-[200px]">
-              <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-navy opacity-40">
-                <BookOpen className="size-4" />
-              </div>
-              <select
-                value={activeLessonId}
-                onChange={(e) => setActiveLessonId(e.target.value)}
-                className="w-full pl-11 pr-10 py-3.5 rounded-3xl bg-gray-50 dark:bg-white/5 border-none focus:ring-2 focus:ring-primary/50 transition-all font-bold text-xs text-dark-blue dark:text-white cursor-pointer appearance-none"
-              >
-                <option value="" className="bg-white dark:bg-navy-blue text-dark-blue dark:text-white">
-                  Tất cả bài học ({lessons.length} bài)
-                </option>
-                {lessons.map((lesson) => (
-                  <option
-                    key={lesson.id}
-                    value={lesson.id}
-                    className="bg-white dark:bg-navy-blue text-dark-blue dark:text-white"
-                  >
-                    {lesson.name}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-navy opacity-40">
-                <ChevronDown className="size-4" />
-              </div>
-            </div>
+            {/* Searchable Lesson Select */}
+            <SearchableSelect
+              options={lessons.map((lesson) => ({
+                value: lesson.id,
+                label: lesson.name,
+              }))}
+              value={activeLessonId}
+              onChange={setActiveLessonId}
+              placeholder="Chọn bài học..."
+              searchPlaceholder="Tìm bài học..."
+              allOptionLabel="Tất cả bài học"
+              allOptionCount={lessons.length}
+              leadingIcon={<BookOpen className="size-4" />}
+              className="min-w-[220px]"
+            />
 
             {/* 3 PoolTypes + ALL Filters */}
             <div className="flex items-center gap-1 p-1 rounded-2xl bg-gray-50 dark:bg-white/5">

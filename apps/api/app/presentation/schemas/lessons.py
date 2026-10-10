@@ -1,9 +1,8 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel
-
 from app.presentation.schemas.questions import QuestionOut
+from pydantic import BaseModel
 
 
 class LessonCreate(BaseModel):
@@ -50,7 +49,6 @@ class LessonDetailOut(LessonOut):
     has_game_questions: bool = False
 
 
-
 class LessonReorderItem(BaseModel):
     id: UUID
     order: int
@@ -70,6 +68,29 @@ class RelatedLessonOut(BaseModel):
     matched_chunk: str
 
 
+class RelativeDocumentOut(BaseModel):
+    document_title: str
+    full_md: str
+    relative_chunk: list[str]
+
+
 class LessonIndexOut(BaseModel):
     lesson_id: UUID
     status: str
+
+
+class LessonBulkIndexOut(BaseModel):
+    total_lessons: int
+    queued_lessons: int
+    status: str
+
+
+class LessonMetadataOut(BaseModel):
+    slug: str
+    name: str
+    has_coding: bool
+    has_game: bool
+    coding_count: int
+    game_question_count: int
+    is_ready: bool
+

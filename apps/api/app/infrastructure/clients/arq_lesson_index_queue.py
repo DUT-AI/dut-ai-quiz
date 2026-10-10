@@ -3,8 +3,8 @@ from uuid import UUID
 from arq.connections import ArqRedis
 from redis.asyncio import Redis
 
-from app.domain.interfaces import ILessonIndexQueue
 from app.config import settings
+from app.domain.interfaces import ILessonIndexQueue
 
 
 class ArqLessonIndexQueue(ILessonIndexQueue):

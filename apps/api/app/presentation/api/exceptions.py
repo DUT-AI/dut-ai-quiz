@@ -42,9 +42,7 @@ def setup_exception_handlers(app: FastAPI):
         )
 
     @app.exception_handler(RequestValidationError)
-    async def validation_exception_handler(
-        request: Request, exc: RequestValidationError
-    ):
+    async def validation_exception_handler(request: Request, exc: RequestValidationError):
         logger.error(
             f"Validation Error: {exc.errors()} | "
             f"Body: {getattr(request, '_json', 'N/A')} | "
@@ -63,8 +61,7 @@ def setup_exception_handlers(app: FastAPI):
     @app.exception_handler(Exception)
     async def global_exception_handler(request: Request, exc: Exception):
         logger.error(
-            f"Unhandled exception: {str(exc)}\n{traceback.format_exc()} | "
-            f"Path: {request.url.path}"
+            f"Unhandled exception: {str(exc)}\n{traceback.format_exc()} | Path: {request.url.path}"
         )
         return JSONResponse(
             status_code=HTTP_500_INTERNAL_SERVER_ERROR,

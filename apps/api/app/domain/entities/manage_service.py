@@ -1,12 +1,14 @@
 import dataclasses
 from datetime import datetime
 
+
 @dataclasses.dataclass(slots=True)
 class ManageUserEntity:
     user_id: int
     user_name: str
     email: str
     user_avatar_url: str | None = None
+
 
 @dataclasses.dataclass(slots=True)
 class ManageTeamEntity:

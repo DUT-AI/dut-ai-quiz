@@ -1,37 +1,35 @@
-import pytest
 from datetime import datetime, timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 from uuid import UUID, uuid4
 
+import pytest
 from app.application.use_cases.hackathon.submissions.cancel_submission import (
     CancelSubmissionUseCase,
 )
-from app.application.use_cases.hackathon.submissions.submit_task import (
-    SubmitTaskUseCase,
-)
 from app.application.use_cases.hackathon.submissions.presign_submit import (
     PresignSubmitUseCase,
+)
+from app.application.use_cases.hackathon.submissions.submit_task import (
+    SubmitTaskUseCase,
 )
 from app.domain.entities.hackathon import (
     HackathonEntity,
     HackathonRegistrationEntity,
     HackathonTaskEntity,
-    HackathonTeamEntity,
     MetricType,
     ParticipationMode,
     RegistrationStatus,
 )
 from app.domain.entities.submission import HackathonSubmissionEntity, SubmissionStatus
-from app.domain.exceptions.exceptions import AppException
 from app.domain.interfaces import (
     IHackathonRegistrationRepository,
     IHackathonRepository,
     IHackathonSubmissionRepository,
     IHackathonTaskRepository,
     IHackathonTeamRepository,
-    ISubmissionQueue,
     IS3Client,
+    ISubmissionQueue,
 )
 
 
@@ -132,9 +130,11 @@ class MockSubmissionQueue(ISubmissionQueue):
         self,
         submission_id: UUID,
     ) -> None:
-        self.enqueued.append({
-            "submission_id": submission_id,
-        })
+        self.enqueued.append(
+            {
+                "submission_id": submission_id,
+            }
+        )
 
 
 @pytest.mark.asyncio
@@ -192,10 +192,7 @@ async def test_presign_submit_success():
     )
 
     res = await use_case(
-        task_id=task.id,
-        user_id=1,
-        script_filename="predict.py",
-        model_filename="weights.pth"
+        task_id=task.id, user_id=1, script_filename="predict.py", model_filename="weights.pth"
     )
 
     assert res is not None

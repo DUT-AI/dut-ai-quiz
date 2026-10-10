@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
-from typing import Type, Callable, Any
+from collections.abc import Callable
+from typing import Any
+
 from .base import DomainEvent
+
 
 class EventBus(ABC):
     @abstractmethod
@@ -8,5 +11,5 @@ class EventBus(ABC):
         pass
 
     @abstractmethod
-    def subscribe(self, event_type: Type[DomainEvent], handler: Callable[[Any], Any]) -> None:
+    def subscribe(self, event_type: type[DomainEvent], handler: Callable[[Any], Any]) -> None:
         pass

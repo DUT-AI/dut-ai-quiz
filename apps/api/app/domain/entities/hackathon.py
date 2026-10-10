@@ -1,16 +1,16 @@
 import dataclasses
 from datetime import datetime
+from enum import StrEnum
 from uuid import UUID
-from enum import Enum
 
 
-class ParticipationMode(str, Enum):
+class ParticipationMode(StrEnum):
     INDIVIDUAL = "individual"
     TEAM = "team"
     BOTH = "both"
 
 
-class MetricType(str, Enum):
+class MetricType(StrEnum):
     RMSE = "rmse"
     F1_SCORE = "f1_score"
     ACCURACY = "accuracy"
@@ -50,7 +50,7 @@ class HackathonTaskEntity:
     updated_at: datetime | None = None
 
 
-class RegistrationStatus(str, Enum):
+class RegistrationStatus(StrEnum):
     PENDING = "pending"
     APPROVED = "approved"
     REJECTED = "rejected"

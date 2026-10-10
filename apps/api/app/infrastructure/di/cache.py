@@ -1,4 +1,4 @@
-from dishka import Provider, Scope, provide
+from dishka import Provider, Scope, alias, provide
 from redis.asyncio import Redis, from_url
 
 from app.config import settings
@@ -36,8 +36,11 @@ class CacheProvider(Provider):
     def game_leaderboard_cache(self, redis: Redis) -> GameLeaderboardCache:
         return GameLeaderboardCache(redis, ttl=600)
 
+    game_leaderboard_cache_opt = alias(
+        source=GameLeaderboardCache,
+        provides=GameLeaderboardCache | None,
+    )
+
     @provide(scope=Scope.APP)
-    def hackathon_leaderboard_cache(
-        self, redis: Redis
-    ) -> IHackathonLeaderboardCache:
+    def hackathon_leaderboard_cache(self, redis: Redis) -> IHackathonLeaderboardCache:
         return RedisHackathonLeaderboardCache(redis, ttl=5)

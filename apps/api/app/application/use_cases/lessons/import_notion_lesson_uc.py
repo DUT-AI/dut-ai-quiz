@@ -1,17 +1,16 @@
 import io
 import os
 import re
-import unicodedata
 import urllib.parse
 import zipfile
 from uuid import UUID, uuid4
 
+from app.application.services.lesson_index_scheduler import LessonIndexScheduler
 from app.config import settings
 from app.core.datetime_utils import now_ict
 from app.core.string_utils import slugify_vietnamese
 from app.domain.entities.lesson import LessonEntity
 from app.domain.interfaces import ILessonRepository, IS3Client
-from app.application.services.lesson_index_scheduler import LessonIndexScheduler
 
 
 class ImportNotionLessonUseCase:
@@ -36,27 +35,27 @@ class ImportNotionLessonUseCase:
         lesson_id: UUID | None = None,
     ) -> LessonEntity:
         """Parse ZIP file, extract & upload images, update MD links, and save the lesson."""
-        
+
         # 1. Read ZIP in memory
         try:
             z = zipfile.ZipFile(io.BytesIO(zip_bytes))
-        except zipfile.BadZipFile:
-            raise ValueError("Invalid ZIP file")
+        except zipfile.BadZipFile as exc:
+            raise ValueError("Invalid ZIP file") from exc
 
         # 2. Separate markdown file and image files (recursively handling nested zip files)
         md_filename = None
         md_content = None
         images_data: dict[str, bytes] = {}  # maps full zip path and basename to bytes
-        
+
         image_extensions = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".bmp"}
-        
+
         def process_zip(zip_obj: zipfile.ZipFile) -> None:
             nonlocal md_filename, md_content
             for name in zip_obj.namelist():
                 # Skip directories
                 if name.endswith("/"):
                     continue
-                    
+
                 _, ext = os.path.splitext(name.lower())
                 if ext == ".md":
                     # Save first markdown file found
@@ -76,7 +75,7 @@ class ImportNotionLessonUseCase:
                             process_zip(inner_z)
                     except zipfile.BadZipFile:
                         pass
-        
+
         process_zip(z)
 
         if not md_filename or md_content is None:
@@ -104,7 +103,13 @@ class ImportNotionLessonUseCase:
             # Extrapolate description from the first paragraph of markdown (max 200 chars)
             # Strip titles and find first text line
             lines = [line.strip() for line in md_content.splitlines() if line.strip()]
-            text_lines = [line for line in lines if not line.startswith("#") and not line.startswith("![") and not line.startswith("<")]
+            text_lines = [
+                line
+                for line in lines
+                if not line.startswith("#")
+                and not line.startswith("![")
+                and not line.startswith("<")
+            ]
             if text_lines:
                 lesson_description = text_lines[0][:200]
                 if len(text_lines[0]) > 200:
@@ -119,22 +124,20 @@ class ImportNotionLessonUseCase:
         uploaded_urls: dict[str, str] = {}
         for img_name, img_bytes in images_data.items():
             # Only upload unique original names (skip basenames to avoid double upload if full path is also mapped)
-            if img_name in uploaded_urls or ("/" not in img_name and os.path.basename(img_name) != img_name):
+            if img_name in uploaded_urls or (
+                "/" not in img_name and os.path.basename(img_name) != img_name
+            ):
                 continue
-            
+
             # Sanitize image filename
             safe_basename = slugify_vietnamese(os.path.splitext(os.path.basename(img_name))[0])
             ext = os.path.splitext(img_name)[1].lower()
             s3_key = f"uploads/lessons/{lesson_id}/{safe_basename}{ext}"
-            
+
             # Upload
-            self._storage.upload_fileobj(
-                io.BytesIO(img_bytes),
-                settings.s3_bucket_name,
-                s3_key
-            )
+            self._storage.upload_fileobj(io.BytesIO(img_bytes), settings.s3_bucket_name, s3_key)
             public_url = self._storage.get_object_url(settings.s3_bucket_name, s3_key)
-            
+
             # Map both full name and basename to this URL
             uploaded_urls[img_name] = public_url
             uploaded_urls[os.path.basename(img_name)] = public_url
@@ -146,7 +149,7 @@ class ImportNotionLessonUseCase:
             # URL decode path and normalize separators
             decoded = urllib.parse.unquote(url.split("#")[0].split("?")[0]).replace("\\", "/")
             basename = os.path.basename(decoded)
-            
+
             if decoded in uploaded_urls:
                 return f"![{alt}]({uploaded_urls[decoded]})"
             elif basename in uploaded_urls:
@@ -162,14 +165,16 @@ class ImportNotionLessonUseCase:
                 url = src_match.group(1)
                 decoded = urllib.parse.unquote(url.split("#")[0].split("?")[0]).replace("\\", "/")
                 basename = os.path.basename(decoded)
-                
+
                 if decoded in uploaded_urls:
                     return full_tag.replace(url, uploaded_urls[decoded])
                 elif basename in uploaded_urls:
                     return full_tag.replace(url, uploaded_urls[basename])
             return full_tag
 
-        content_md = re.sub(r"<img\s+[^>]*src=[\"']([^\"']+)[\"'][^>]*>", html_img_replacer, content_md)
+        content_md = re.sub(
+            r"<img\s+[^>]*src=[\"']([^\"']+)[\"'][^>]*>", html_img_replacer, content_md
+        )
 
         # 7. Generate unique slug (allow same slug if updating the same lesson)
         base_slug = slugify_vietnamese(lesson_name)
@@ -201,14 +206,14 @@ class ImportNotionLessonUseCase:
                 name=lesson_name,
                 description=lesson_description,
                 content_md=content_md,
-                order=0, # Defaults to 0, can be updated later
+                order=0,  # Defaults to 0, can be updated later
                 slug=slug,
                 module_id=module_id,
                 created_at=now_ict(),
             )
             saved = await self._repo.add(entity)
-        
+
         # 9. Trigger semantic indexing for search
         await self._scheduler.schedule(saved)
-        
+
         return saved

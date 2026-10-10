@@ -1,7 +1,9 @@
-from uuid import UUID
-from redis.asyncio import Redis
-from arq.connections import ArqRedis
 import hashlib
+from uuid import UUID
+
+from arq.connections import ArqRedis
+from redis.asyncio import Redis
+
 from app.domain.interfaces.pdf_import_queue import IPdfImportQueue
 
 

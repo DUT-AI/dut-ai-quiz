@@ -32,20 +32,20 @@ class ArqHomeworkEvaluationQueue(IHomeworkEvaluationQueue):
                 "register_homework_job",
                 homework_id=str(homework_id),
                 _queue_name=settings.homework_queue_name,
+                _job_id=f"homework-register:{homework_id}",
                 _defer_by=1,
             )
         except RedisError as exc:
             raise HomeworkWorkerUnavailableException() from exc
 
     async def enqueue_evaluation(self, submission_id: UUID) -> None:
-        if not settings.homework_grading_enabled:
-            return
         await self._ensure_worker_available()
         try:
             await self._arq_redis.enqueue_job(
                 "evaluate_homework_job",
                 submission_id=str(submission_id),
                 _queue_name=settings.homework_queue_name,
+                _job_id=f"homework-evaluate:{submission_id}",
                 _defer_by=1,
             )
         except RedisError as exc:

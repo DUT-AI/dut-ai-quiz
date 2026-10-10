@@ -30,8 +30,8 @@ export function GameTab({ lessonId, slug }: GameTabProps) {
         {/* Dynamic game tab background (grids, ambient spotlights, floaters) */}
         <GameTabBackground />
 
-        {/* Inner Content Card (Glassmorphism design) */}
-        <div className="relative z-10 w-full rounded-[calc(1.5rem-1.5px)] md:rounded-[calc(2.5rem-1.5px)] p-4 sm:p-6 md:p-10 flex flex-col gap-8 backdrop-blur-xl">
+        {/* Inner Content Card */}
+        <div className="relative z-10 w-full rounded-[calc(1.5rem-1.5px)] md:rounded-[calc(2.5rem-1.5px)] p-4 sm:p-6 md:p-10 flex flex-col gap-8">
           
           {/* Header Hero Section */}
           <GameTabHero 

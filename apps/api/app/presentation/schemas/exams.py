@@ -1,7 +1,9 @@
 from datetime import datetime
 from uuid import UUID
 
+from app.domain.value_objects import ExamAccessScope
 from pydantic import BaseModel, Field
+
 
 class ExamCreate(BaseModel):
     title: str
@@ -12,6 +14,7 @@ class ExamCreate(BaseModel):
     max_attempts: int = 1
     is_published: bool = False
     participant_ids: list[int] = Field(default_factory=list)
+    access_scope: ExamAccessScope = ExamAccessScope.PUBLIC
     show_answers: bool = False
 
 
@@ -24,6 +27,7 @@ class ExamUpdate(BaseModel):
     max_attempts: int | None = None
     is_published: bool | None = None
     participant_ids: list[int] | None = None
+    access_scope: ExamAccessScope | None = None
     show_answers: bool | None = None
 
 
@@ -38,6 +42,7 @@ class ExamOut(BaseModel):
     is_published: bool
     created_by: int
     participant_ids: list[int]
+    access_scope: ExamAccessScope = ExamAccessScope.PUBLIC
     show_answers: bool
 
     model_config = {"from_attributes": True}

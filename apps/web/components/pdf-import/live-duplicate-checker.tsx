@@ -3,6 +3,7 @@
 import React from "react";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { useCheckRelatedQuestions } from "@/lib/queries";
+import { useDebounce } from "@/hooks/use-debounce";
 
 interface Props {
   content: string;
@@ -10,10 +11,12 @@ interface Props {
 }
 
 export function LiveDuplicateChecker({ content, poolType }: Props) {
+  const debouncedContent = useDebounce(content, 600);
+
   const { data: related = [], isLoading } = useCheckRelatedQuestions({
-    content,
+    content: debouncedContent,
     pool_type: poolType,
-    enabled: content.trim().length >= 10,
+    enabled: debouncedContent.trim().length >= 10,
   });
 
   // Find duplicates with similarity score >= 0.85

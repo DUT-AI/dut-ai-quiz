@@ -10,6 +10,7 @@ class SubmissionGradingStatus(StrEnum):
     GRADING = "GRADING"
     GRADED = "GRADED"
     FAILED = "FAILED"
+    UPLOADED = "UPLOADED"
 
 
 class GradingCriterion(BaseModel):
@@ -27,9 +28,21 @@ class HomeworkRubric(BaseModel):
     allowed_libraries: list[str] = Field(default_factory=list)
     forbidden_libraries: list[str] = Field(default_factory=list)
     notes: list[str] = Field(default_factory=list)
-    criteria: list[GradingCriterion] = Field(
-        default_factory=list, min_length=3, max_length=10
-    )
+    criteria: list[GradingCriterion] = Field(default_factory=list)
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_fields(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if "topic" not in data and "title" in data:
+                data["topic"] = data["title"]
+            if not data.get("objective") and "description" in data:
+                data["objective"] = data["description"]
+        return data
+
+    @property
+    def title(self) -> str:
+        return self.topic
 
     @model_validator(mode="after")
     def validate_criteria(self) -> "HomeworkRubric":
@@ -59,9 +72,23 @@ class ChecklistEvaluation(BaseModel):
         return next(item for item in self.evaluations if item.id == criterion_id)
 
     def replace(self, value: CriterionEvaluation) -> None:
-        self.evaluations = [
-            value if item.id == value.id else item for item in self.evaluations
-        ]
+        self.evaluations = [value if item.id == value.id else item for item in self.evaluations]
+
+
+class CriterionEvidence(BaseModel):
+    id: str
+    evidence: str = Field(max_length=1200)
+
+
+class ChunkEvidence(BaseModel):
+    findings: list[CriterionEvidence] = Field(max_length=10)
+
+    @model_validator(mode="after")
+    def require_unique_ids(self) -> "ChunkEvidence":
+        ids = [item.id for item in self.findings]
+        if len(ids) != len(set(ids)):
+            raise ValueError("Evidence contains duplicate criterion IDs")
+        return self
 
 
 @dataclass(frozen=True, slots=True)
@@ -102,4 +129,3 @@ class GradeResult:
     score: float
     feedback: str
     score_details: list[dict[str, Any]]
-

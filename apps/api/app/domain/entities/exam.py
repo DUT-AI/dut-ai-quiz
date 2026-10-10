@@ -11,6 +11,7 @@ from app.domain.exceptions.exceptions import (
     ExamNotStartedException,
 )
 from app.domain.value_objects import (
+    ExamAccessScope,
     ShuffledExamResult,
     ShuffledOption,
     ShuffledQuestion,
@@ -30,9 +31,16 @@ class ExamEntity:
     is_published: bool
     created_by: int
     participant_ids: list[int]
+    access_scope: ExamAccessScope = ExamAccessScope.PUBLIC
     show_answers: bool = False
 
-    def check_can_start(self):
+    def can_access(self, user_id: int | None) -> bool:
+        """Kiểm tra quyền truy cập bài thi: Creator hoặc PUBLIC hoặc nằm trong danh sách RESTRICTED."""
+        if user_id is None or user_id == self.created_by or self.access_scope == ExamAccessScope.PUBLIC:
+            return True
+        return bool(self.participant_ids and user_id in self.participant_ids)
+
+    def check_can_start(self, user_id: int | None = None):
         if not self.is_published:
             raise ExamNotFoundException()
 
@@ -42,6 +50,9 @@ class ExamEntity:
 
         if self.end_time and self.end_time < now:
             raise ExamEndedException()
+
+        if not self.can_access(user_id):
+            raise ExamNotFoundException()
 
     def check_review_lock_status(self) -> bool:
         return not self.show_answers

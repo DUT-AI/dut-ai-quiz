@@ -30,14 +30,10 @@ class GetSubmissionLogsUseCase:
             if submission.team_id:
                 team = await self._team_repo.get(submission.team_id)
                 if not team or user_id not in team.member_ids:
-                    raise AppException(
-                        "Bạn không có quyền truy cập log của lượt nộp này", 403
-                    )
+                    raise AppException("Bạn không có quyền truy cập log của lượt nộp này", 403)
             else:
                 if submission.user_id != user_id:
-                    raise AppException(
-                        "Bạn không có quyền truy cập log của lượt nộp này", 403
-                    )
+                    raise AppException("Bạn không có quyền truy cập log của lượt nộp này", 403)
 
             # Th thí sinh chỉ được xem log khi lượt nộp bài bị lỗi (FAILED)
             if submission.status != SubmissionStatus.FAILED:

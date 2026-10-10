@@ -4,8 +4,8 @@ from app.domain.entities.submission import HackathonSubmissionEntity
 from app.domain.exceptions.exceptions import AppException
 from app.domain.interfaces.hackathon_repo import (
     IHackathonSubmissionRepository,
-    IHackathonTeamRepository,
     IHackathonTaskRepository,
+    IHackathonTeamRepository,
 )
 
 

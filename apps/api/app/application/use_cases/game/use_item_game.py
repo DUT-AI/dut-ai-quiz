@@ -2,21 +2,22 @@ import random
 from typing import Any
 from uuid import UUID
 
-from fastapi import HTTPException
-
+from app.domain.exceptions import (
+    DomainValidationException,
+    EntityNotFoundException,
+    InsufficientResourceException,
+)
 from app.domain.interfaces import (
     IGameSessionRepository,
     IQuestionRepository,
 )
 from app.domain.value_objects import GameSessionStatus
-from app.domain.value_objects.gamification import ITEM_PRICES, GamificationItem
+from app.domain.value_objects.gamification import GamificationItem
 from app.presentation.schemas.game import GamificationUseItemIn
 
 
 class UseItemGameUseCase:
-    def __init__(
-        self, ps_repo: IGameSessionRepository, question_repo: IQuestionRepository
-    ):
+    def __init__(self, ps_repo: IGameSessionRepository, question_repo: IQuestionRepository):
         self._ps_repo = ps_repo
         self._question_repo = question_repo
 
@@ -25,52 +26,39 @@ class UseItemGameUseCase:
     ) -> dict[str, Any] | None:
         session = await self._ps_repo.get(session_id)
         if not session or session.user_id != user_id:
-            raise HTTPException(status_code=404, detail="Game session not found")
+            raise EntityNotFoundException("Game session not found")
 
         if session.status != GameSessionStatus.IN_PROGRESS:
-            raise HTTPException(status_code=400, detail="Session is not in progress")
+            raise DomainValidationException("Session is not in progress")
 
-        if not session.snapshot or "gamification" not in session.snapshot:
-            raise HTTPException(status_code=400, detail="Not a gamified session")
+        if not session.snapshot:
+            raise DomainValidationException("Not a gamified session")
 
-        # Find current question
-        questions = session.snapshot.get("questions", [])
-        current_idx = session.snapshot["gamification"].get("last_question_index", 0)
-        if current_idx >= len(questions):
-            raise HTTPException(
-                status_code=400, detail="All questions already answered"
-            )
+        snap = session.get_snapshot_state()
+        state = snap.gamification
 
-        current_q = questions[current_idx]
-        if current_q["id"] != str(payload.question_id):
-            raise HTTPException(
-                status_code=400,
-                detail="Question ID does not match current question index",
-            )
+        current_q = snap.current_question()
+        if not current_q:
+            raise DomainValidationException("All questions already answered")
+
+        if current_q.id != str(payload.question_id):
+            raise DomainValidationException("Question ID does not match current question index")
 
         try:
             item = GamificationItem(payload.item_name.lower())
-        except ValueError:
-            raise HTTPException(
-                status_code=400, detail=f"Invalid item: {payload.item_name}"
-            )
+        except ValueError as exc:
+            raise DomainValidationException(f"Invalid item: {payload.item_name}") from exc
 
-        is_boss = current_q.get("is_boss", False)
-        price_multiplier = 2 if is_boss else 1
-        price = ITEM_PRICES[item] * price_multiplier
-
-        gold = session.snapshot["gamification"].get("gold", 0)
-        if gold < price:
-            raise HTTPException(
-                status_code=400, detail="Not enough gold to use this item"
-            )
+        price = state.get_item_price(item, is_boss=current_q.is_boss)
+        if not state.has_enough_gold(price):
+            raise InsufficientResourceException("Not enough gold to use this item")
 
         # Process item
         result = {}
         if item == GamificationItem.MICROSCOPE:
             q_db = await self._question_repo.get(payload.question_id)
             if not q_db:
-                raise HTTPException(status_code=404, detail="Question not found")
+                raise EntityNotFoundException("Question not found")
 
             correct_opt_id = None
             all_opt_ids = []
@@ -88,28 +76,16 @@ class UseItemGameUseCase:
             result["eliminated_option_ids"] = eliminated
         elif item == GamificationItem.TIME_FREEZE:
             result["time_freeze_active"] = True
-
-            from datetime import datetime, timedelta
-
-            started_at_str = session.snapshot["gamification"].get(
-                "current_question_started_at"
-            )
-            if started_at_str:
-                started_at = datetime.fromisoformat(started_at_str)
-                # Dời thời điểm bắt đầu lên 30s -> người dùng có thêm 30s để trả lời
-                new_started_at = started_at + timedelta(seconds=30)
-                session.snapshot["gamification"]["current_question_started_at"] = (
-                    new_started_at.isoformat()
-                )
+            state.apply_time_freeze(seconds=30)
         else:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Item {item.value} must be activated when submitting your answer",
+            raise DomainValidationException(
+                f"Item {item.value} must be activated when submitting your answer"
             )
 
         # Deduct gold and save
-        session.snapshot["gamification"]["gold"] = gold - price
+        state.deduct_gold(price)
+        session.set_snapshot_state(snap)
         await self._ps_repo.save(session)
 
-        result["gold"] = session.snapshot["gamification"]["gold"]
+        result["gold"] = state.gold
         return result

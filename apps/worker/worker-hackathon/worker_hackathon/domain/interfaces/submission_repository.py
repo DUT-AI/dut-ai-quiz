@@ -8,9 +8,7 @@ from app.domain.entities.submission import HackathonSubmissionEntity
 
 class ISubmissionRepository(ABC):
     @abstractmethod
-    async def get_submission(
-        self, submission_id: UUID
-    ) -> HackathonSubmissionEntity | None:
+    async def get_submission(self, submission_id: UUID) -> HackathonSubmissionEntity | None:
         """Load a submission by id."""
         pass
 

@@ -1,18 +1,17 @@
 import asyncio
 import os
 import time
-from typing import Any, Dict
+from typing import Any
 
 import docker
 from docker.errors import APIError, ContainerError, ImageNotFound
 from loguru import logger
+
 from worker_hackathon.domain.interfaces.sandbox import CancelCheck, ISandbox
 
 
 class DockerSandbox(ISandbox):
-    def __init__(
-        self, image_name: str = "python:3.12-slim", log_tail_lines: int = 200
-    ):
+    def __init__(self, image_name: str = "python:3.12-slim", log_tail_lines: int = 200):
         self.client = docker.from_env()
         self.image_name = image_name
         self.log_tail_lines = log_tail_lines
@@ -26,7 +25,7 @@ class DockerSandbox(ISandbox):
         nano_cpus: int = 1000000000,
         submission_id: str | None = None,
         cancel_check: CancelCheck | None = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         await asyncio.to_thread(self._ensure_image)
 
         container = None
@@ -46,9 +45,7 @@ class DockerSandbox(ISandbox):
                 submission_id=submission_id,
             )
 
-            container = await asyncio.to_thread(
-                self.client.containers.create, **create_kwargs
-            )
+            container = await asyncio.to_thread(self.client.containers.create, **create_kwargs)
             await asyncio.to_thread(container.start)
 
             deadline = time.monotonic() + timeout_seconds
@@ -76,18 +73,14 @@ class DockerSandbox(ISandbox):
                 if time.monotonic() >= deadline:
                     await self._kill_container(container)
                     result["status"] = "timeout"
-                    result["error"] = (
-                        f"Execution timed out after {timeout_seconds} seconds."
-                    )
+                    result["error"] = f"Execution timed out after {timeout_seconds} seconds."
                     result["logs"] = await self._read_logs(container)
                     return result
 
                 await asyncio.sleep(1)
         except ContainerError as e:
             result["error"] = f"Container error: {str(e)}"
-            result["logs"] = (
-                e.stderr.decode("utf-8", errors="replace") if e.stderr else ""
-            )
+            result["logs"] = e.stderr.decode("utf-8", errors="replace") if e.stderr else ""
         except APIError as e:
             result["error"] = f"Docker API error: {str(e)}"
         except Exception as e:
@@ -138,9 +131,7 @@ class DockerSandbox(ISandbox):
             try:
                 container.remove(force=True)
             except Exception as exc:
-                logger.warning(
-                    f"Could not remove stale container for {submission_id}: {exc}"
-                )
+                logger.warning(f"Could not remove stale container for {submission_id}: {exc}")
 
     async def _read_logs(self, container) -> str:
         try:

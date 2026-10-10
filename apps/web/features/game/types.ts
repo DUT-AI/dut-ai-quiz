@@ -106,5 +106,8 @@ export const GameLeaderboardRowOutSchema = z.object({
   gold: z.number(),
   total_time_response: z.number(),
   attempt_count: z.number(),
+  is_completed: z.boolean().default(false),
+  total_questions: z.number().default(0),
+  answered_questions: z.number().default(0),
 });
 export type GameLeaderboardRowOut = z.infer<typeof GameLeaderboardRowOutSchema>;

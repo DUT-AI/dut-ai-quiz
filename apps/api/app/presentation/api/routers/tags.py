@@ -8,7 +8,7 @@ from app.application.use_cases.tags.tags_use_case import (
     DeleteTagUseCase,
     ListTagsUseCase,
 )
-from app.presentation.api.deps import EducatorUser, CurrentUser
+from app.presentation.api.deps import CurrentUser, EducatorUser
 from app.presentation.schemas.tags import TagCreate, TagOut
 
 router = APIRouter(prefix="/tags", tags=["tags"])
@@ -45,4 +45,3 @@ async def delete_tag_route(
     """Delete a tag by its ID. Educator or Admin only."""
     await use_case.execute(tag_id)
     return {"status": "ok"}
-

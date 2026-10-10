@@ -1,32 +1,37 @@
-from app.domain.entities.auth_enums import SystemPermission
 from uuid import UUID
 
 from dishka.integrations.fastapi import FromDishka, inject
-from fastapi import APIRouter, HTTPException, Query, UploadFile, File, Form
+from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile
 
+from app.application.dtos.homework import LessonExercisesMetadataOutDTO
 from app.application.use_cases.lessons import (
     CreateLessonUseCase,
     DeleteLessonUseCase,
-    GetLessonDetailUseCase,
     GetLessonBySlugUseCase,
+    GetLessonDetailUseCase,
+    GetLessonExercisesUseCase,
+    GetLessonMetadataUseCase,
+    ImportNotionLessonUseCase,
+    IndexAllLessonsUseCase,
+    IndexLessonUseCase,
     ListLessonsUseCase,
     ReorderLessonsUseCase,
     UpdateLessonUseCase,
-    IndexLessonUseCase,
-    ImportNotionLessonUseCase,
 )
-
-from app.domain.interfaces import EmbeddingServiceError
 from app.application.use_cases.questions import ListQuestionsUseCase
+from app.domain.entities.auth_enums import SystemPermission
+from app.domain.interfaces import EmbeddingServiceError
 from app.domain.value_objects import Difficulty, PoolType
 from app.presentation.api.deps import CurrentUser, EducatorUser
 from app.presentation.schemas.lessons import (
+    LessonBulkIndexOut,
     LessonCreate,
     LessonDetailOut,
+    LessonIndexOut,
+    LessonMetadataOut,
     LessonOut,
     LessonReorder,
     LessonUpdate,
-    LessonIndexOut,
 )
 from app.presentation.schemas.questions import QuestionListQuery, QuestionOut, QuestionToStudent
 
@@ -103,6 +108,7 @@ async def get_lesson(
         raise HTTPException(status_code=404, detail="Lesson not found")
     if not is_teacher:
         import copy
+
         res = copy.deepcopy(res)
         res["questions"] = [QuestionToStudent.model_validate(q) for q in res.get("questions", [])]
     return res
@@ -123,7 +129,9 @@ async def create_lesson(
 async def import_notion_lesson(
     user: EducatorUser,
     use_case: FromDishka[ImportNotionLessonUseCase],
-    file: UploadFile = File(..., description="ZIP file exported from Notion containing markdown and images"),
+    file: UploadFile = File(
+        ..., description="ZIP file exported from Notion containing markdown and images"
+    ),
     module_id: str | None = Form(None),
     name: str | None = Form(None),
     description: str | None = Form(None),
@@ -137,7 +145,11 @@ async def import_notion_lesson(
         raise HTTPException(status_code=400, detail="Only ZIP files (.zip) are supported")
 
     mid = None
-    if module_id and module_id.strip() and module_id.strip().lower() not in ("null", "undefined", "none", "string"):
+    if (
+        module_id
+        and module_id.strip()
+        and module_id.strip().lower() not in ("null", "undefined", "none", "string")
+    ):
         try:
             mid = UUID(module_id.strip())
         except ValueError as e:
@@ -147,7 +159,11 @@ async def import_notion_lesson(
             ) from e
 
     lid = None
-    if lesson_id and lesson_id.strip() and lesson_id.strip().lower() not in ("null", "undefined", "none", "string"):
+    if (
+        lesson_id
+        and lesson_id.strip()
+        and lesson_id.strip().lower() not in ("null", "undefined", "none", "string")
+    ):
         try:
             lid = UUID(lesson_id.strip())
         except ValueError as e:
@@ -169,10 +185,7 @@ async def import_notion_lesson(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to import lesson: {str(e)}"
-        ) from e 
-
+        raise HTTPException(status_code=500, detail=f"Failed to import lesson: {str(e)}") from e
 
 
 @router.post("/reorder")
@@ -185,6 +198,19 @@ async def reorder_lessons(
     """Reorder lessons in the system. Educator or Admin only."""
     await use_case.execute(body)
     return {"ok": True}
+
+
+@router.post("/embeddings/reindex-all", response_model=LessonBulkIndexOut)
+@inject
+async def reindex_all_lessons(
+    user: EducatorUser,
+    use_case: FromDishka[IndexAllLessonsUseCase],
+):
+    """Reindex embeddings for all lessons. Educator or Admin only."""
+    try:
+        return await use_case.execute()
+    except EmbeddingServiceError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
 @router.patch("/{lesson_id}", response_model=LessonOut)
@@ -201,9 +227,7 @@ async def update_lesson(
     return res
 
 
-@router.post(
-    "/{lesson_id}/embeddings/reindex", response_model=LessonIndexOut
-)
+@router.post("/{lesson_id}/embeddings/reindex", response_model=LessonIndexOut)
 @inject
 async def reindex_lesson(
     user: EducatorUser,
@@ -233,3 +257,31 @@ async def delete_lesson(
         return {"ok": True}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+@router.get("/{lesson_slug}/metadata", response_model=LessonMetadataOut)
+@inject
+async def get_lesson_metadata(
+    lesson_slug: str,
+    use_case: FromDishka[GetLessonMetadataUseCase],
+):
+    """
+    Get lesson metadata and component readiness (coding homework and game questions)
+    used for validation by DUT-AI Manager.
+    """
+    return await use_case.execute(lesson_slug)
+
+
+@router.get("/{lesson_slug}/exercises", response_model=LessonExercisesMetadataOutDTO)
+@inject
+async def get_lesson_exercises(
+    lesson_slug: str,
+    use_case: FromDishka[GetLessonExercisesUseCase],
+):
+    """
+    Get all active coding exercises for a lesson.
+    Used by DUT-AI Manager to track multi-exercise completion progress.
+    """
+    return await use_case.execute(lesson_slug)
+
+

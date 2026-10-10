@@ -20,12 +20,12 @@ class Settings(BaseSettings):
         populate_by_name=True,
     )
 
-    database_url: str = (
-        "postgresql+asyncpg://dutai_dev:dutai_dev@127.0.0.1:6070/quizdb_dev"
-    )
+    database_url: str = "postgresql+asyncpg://dutai_dev:dutai_dev@127.0.0.1:6070/quizdb_dev"
 
     manage_base_url: str = ""
     manage_api_key: str = ""
+    manage_webhook_secret: str = ""
+
     third_party_api_keys: str = ""
 
     cors_origins: str = "http://localhost:3000,https://quiz.dutai.site"
@@ -80,36 +80,62 @@ class Settings(BaseSettings):
         default=True,
         validation_alias=AliasChoices("S3_SECURE", "MINIO_SECURE"),
     )
+    s3_public_endpoint: str = Field(
+        default="",
+        validation_alias=AliasChoices("S3_PUBLIC_ENDPOINT", "MINIO_PUBLIC_ENDPOINT"),
+    )
+    s3_public_secure: bool = Field(
+        default=True,
+        validation_alias=AliasChoices("S3_PUBLIC_SECURE", "MINIO_PUBLIC_SECURE"),
+    )
     presigned_url_expire_seconds: int = 3600
 
     # Homework submission and external evaluation services.
     homework_checker_api_url: str = ""
     submission_checker_api_url: str = ""
-    homework_grading_enabled: bool = True
-    homework_grading_pass_score: float = 7.0
-    homework_grading_max_attachment_bytes: int = 20 * 1024 * 1024
-    homework_grading_max_source_bytes: int = 5 * 1024 * 1024
-    homework_grading_max_source_chars: int = 200_000
-    homework_grading_max_files: int = 50
-    homework_grading_max_archive_entries: int = 500
-    homework_plagiarism_threshold: float = 0.8
-    # This limit is application policy, not deployment-specific configuration.
+
+    # Homework grading policy is fixed in code rather than deployment config.
+    homework_grading_enabled: ClassVar[bool] = True
+    homework_grading_model: ClassVar[str] = "gemma-4-31b-it"
+    homework_grading_pass_score: ClassVar[float] = 7.0
+    homework_grading_max_attachment_bytes: ClassVar[int] = 20 * 1024 * 1024
+    homework_grading_max_source_bytes: ClassVar[int] = 5 * 1024 * 1024
+    homework_grading_max_source_chars: ClassVar[int] = 200_000
+    homework_grading_max_files: ClassVar[int] = 50
+    homework_grading_max_archive_entries: ClassVar[int] = 500
+    homework_plagiarism_threshold: ClassVar[float] = 0.8
     homework_max_file_size_bytes: ClassVar[int] = 20 * 1024 * 1024
-    homework_grading_timeout_seconds: float = 300.0
-    # Lesson semantic search. DUT-AI's Vietnamese SBERT service is the default;
+    homework_grading_timeout_seconds: float = Field(default=900.0, gt=0)
+    homework_grading_max_attempts: int = Field(default=3, ge=1, le=10)
+    homework_grading_max_chunks: int = Field(default=32, ge=1, le=128)
+    homework_grading_chunk_chars: int = Field(default=24_000, ge=1000)
+    homework_notebook_output_max_chars: int = Field(default=6000, ge=1000)
+
+    # Lesson semantic search and reranking.
+    # DUT-AI's TEI service (BAAI/bge-m3 + BAAI/bge-reranker-v2-m3) is the default;
     # local hashing and OpenAI-compatible providers remain available for dev.
     embedding_enabled: bool = True
     embedding_provider: str = "dutai"
-    embedding_api_url: str = "https://embedding.dutai.site/v1/embeddings"
+    embedding_api_url: str = "https://textembedding.dutai.io.vn/embed"
     embedding_api_key: str = ""
-    embedding_model: str = "keepitreal/vietnamese-sbert"
-    embedding_dimensions: int = 768
-    embedding_batch_size: int = 64
-    embedding_timeout_seconds: float = 30.0
-    lesson_chunk_target_tokens: int = 180
-    lesson_chunk_max_tokens: int = 220
+    embedding_model: str = "BAAI/bge-m3"
+    embedding_dimensions: int = 1024
+    embedding_batch_size: int = 16
+    embedding_timeout_seconds: float = 60.0
+    lesson_chunk_target_tokens: int = 250
+    lesson_chunk_max_tokens: int = 400
     related_lesson_min_score: float = 0.25
     related_question_min_score: float = 0.5
+
+    # Reranking configuration
+    rerank_enabled: bool = True
+    rerank_provider: str = "dutai"
+    rerank_api_url: str = "https://textembedding.dutai.io.vn/rerank"
+    rerank_api_key: str = ""
+    rerank_model: str = "BAAI/bge-reranker-v2-m3"
+    rerank_batch_size: int = 32
+    rerank_timeout_seconds: float = 30.0
+    rerank_min_score: float = 0.0
 
     # ================= SUBMISSION SYSTEM CONFIG =================
     submission_cooldown_seconds: int = 300  # 5 minutes
@@ -122,6 +148,33 @@ class Settings(BaseSettings):
     max_script_size_bytes: int = 10 * 1024 * 1024  # 10 MB
     max_model_size_bytes: int = 1024 * 1024 * 1024  # 1 GB
 
+    # ================= HOMEWORK LLM EVALUATION CONFIG ============
+    homework_llm_provider: str = Field(
+        default="openai",
+        validation_alias=AliasChoices("HOMEWORK_LLM_PROVIDER", "LLM_PROVIDER"),
+    )
+    homework_llm_api_url: str = Field(
+        default="",
+        validation_alias=AliasChoices("HOMEWORK_LLM_API_URL", "LLM_API_URL", "OPENAI_API_BASE"),
+    )
+    homework_llm_api_key: str = Field(
+        default="",
+        validation_alias=AliasChoices("HOMEWORK_LLM_API_KEY", "LLM_API_KEY", "OPENAI_API_KEY"),
+    )
+    homework_llm_model: str = Field(
+        default="ggml-org/gemma-4-e4b-it-GGUF:Q4_0",
+        validation_alias=AliasChoices("HOMEWORK_LLM_MODEL", "LLM_MODEL"),
+    )
+    homework_llm_temperature: float = 0.1
+    homework_llm_timeout_seconds: float = 120.0
+    homework_llm_context_tokens: int = Field(default=66_816, ge=2048)
+    homework_llm_max_output_tokens: int = Field(default=4096, ge=256)
+    homework_llm_token_margin: int = Field(default=512, ge=0)
+    # Bound native tokenizer payloads independently of the model's token budget.
+    homework_llm_max_tokenizer_bytes: int = Field(default=48_000, ge=4096)
+    # Native llama.cpp endpoint root; empty means derive it from the chat URL.
+    homework_llm_tokenizer_url: str = ""
+
     # ================= GOOGLE GENAI / GEMMA API KEY =============
     gemini_api_key: str = Field(
         default="",
@@ -131,7 +184,7 @@ class Settings(BaseSettings):
     # ================= PDF IMPORT CONFIG ========================
     pdf_max_size_mb: int = 20
     pdf_max_pages: int = 5
-    pdf_image_min_px: int = 80          # Ignore images smaller than 80x80px
+    pdf_image_min_px: int = 80  # Ignore images smaller than 80x80px
     pdf_duplicate_threshold: float = 0.85
     review_lock_ttl_seconds: int = 60
     review_lock_heartbeat_seconds: int = 30
@@ -145,7 +198,7 @@ class Settings(BaseSettings):
             return value.replace("postgresql://", "postgresql+asyncpg://", 1)
         return value
 
-    @field_validator("s3_endpoint")
+    @field_validator("s3_endpoint", "s3_public_endpoint")
     @classmethod
     def normalize_s3_endpoint(cls, value: str) -> str:
         return value.strip().rstrip("/")
@@ -160,6 +213,15 @@ class Settings(BaseSettings):
         return f"{scheme}://{self.s3_endpoint}"
 
     @property
+    def s3_public_endpoint_url(self) -> str:
+        if not self.s3_public_endpoint:
+            return self.s3_endpoint_url
+        if "://" in self.s3_public_endpoint:
+            return self.s3_public_endpoint
+        scheme = "https" if self.s3_public_secure else "http"
+        return f"{scheme}://{self.s3_public_endpoint}"
+
+    @property
     def s3_is_configured(self) -> bool:
         return bool(
             self.s3_endpoint_url
@@ -171,9 +233,7 @@ class Settings(BaseSettings):
     @property
     def cors_origin_list(self) -> list[str]:
         return [
-            origin.strip().rstrip("/")
-            for origin in self.cors_origins.split(",")
-            if origin.strip()
+            origin.strip().rstrip("/") for origin in self.cors_origins.split(",") if origin.strip()
         ]
 
     @property

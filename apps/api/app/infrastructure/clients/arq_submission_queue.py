@@ -1,9 +1,10 @@
 from uuid import UUID
-from redis.asyncio import Redis
-from arq.connections import ArqRedis
 
-from app.domain.interfaces.submission_queue import ISubmissionQueue
+from arq.connections import ArqRedis
+from redis.asyncio import Redis
+
 from app.config import settings
+from app.domain.interfaces.submission_queue import ISubmissionQueue
 
 
 class ArqSubmissionQueue(ISubmissionQueue):

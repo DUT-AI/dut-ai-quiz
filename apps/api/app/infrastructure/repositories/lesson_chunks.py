@@ -13,9 +13,7 @@ class LessonChunkRepository(ILessonChunkRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def replace_for_lesson(
-        self, lesson_id: UUID, chunks: list[LessonChunkEntity]
-    ) -> None:
+    async def replace_for_lesson(self, lesson_id: UUID, chunks: list[LessonChunkEntity]) -> None:
         await self.delete_for_lesson(lesson_id)
         self._session.add_all(
             [
@@ -38,9 +36,7 @@ class LessonChunkRepository(ILessonChunkRepository):
         await self._session.flush()
 
     async def delete_for_lesson(self, lesson_id: UUID) -> None:
-        await self._session.execute(
-            delete(LessonChunk).where(LessonChunk.lesson_id == lesson_id)
-        )
+        await self._session.execute(delete(LessonChunk).where(LessonChunk.lesson_id == lesson_id))
         await self._session.flush()
 
     async def search(

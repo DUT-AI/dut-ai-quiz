@@ -75,9 +75,7 @@ class SubmitTaskUseCase:
                 400,
             )
 
-        await self._sub_repo.acquire_quota_lock(
-            task_id=task.id, user_id=user_id, team_id=team_id
-        )
+        await self._sub_repo.acquire_quota_lock(task_id=task.id, user_id=user_id, team_id=team_id)
         latest_submission = await self._sub_repo.get(submission_id)
         if not latest_submission or latest_submission.task_id != task_id:
             raise AppException("Submission not found", 404)

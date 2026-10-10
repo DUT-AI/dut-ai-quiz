@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any
 from uuid import UUID
 
@@ -15,9 +16,11 @@ class GamificationAnswerPatchIn(BaseModel):
     activate_shield: bool = False
     activate_double_points: bool = False
 
+
 class GamificationUseItemIn(BaseModel):
     item_name: str
     question_id: UUID
+
 
 class GamificationAnswerResultOut(BaseModel):
     is_correct: bool
@@ -26,6 +29,7 @@ class GamificationAnswerResultOut(BaseModel):
     updated_gamification: dict[str, Any]
     is_game_over: bool
     correct_option_id: str | None = None
+
 
 class GameLessonSummaryOut(BaseModel):
     lesson_slug: str
@@ -44,4 +48,24 @@ class GameLeaderboardRowOut(BaseModel):
     gold: int
     total_time_response: float
     attempt_count: int
+    is_completed: bool = False
+    total_questions: int = 0
+    answered_questions: int = 0
+    completed_at: datetime | None = None
 
+
+class GameSessionSyncOutDTO(BaseModel):
+    session_id: str
+    user_id: int
+    completed_at: datetime
+    final_score: float
+    gold: int
+    attempt_count: int
+    is_completed: bool
+    total_questions: int = 0
+    correct_count: int = 0
+
+
+class GameSessionsSyncResponse(BaseModel):
+    data: list[GameSessionSyncOutDTO]
+    is_success: bool = True

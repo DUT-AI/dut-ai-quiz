@@ -1,3 +1,8 @@
-/** Base URL API (FastAPI), ví dụ http://localhost:8000 */
+/** Base URL API (FastAPI) */
 export const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ?? "http://localhost:8000";
+  typeof window === "undefined"
+    ? process.env.INTERNAL_API_URL?.replace(/\/$/, "") ||
+      process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ||
+      "http://localhost:8076"
+    : process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || "";
+

@@ -5,22 +5,21 @@ StartImportUseCase — Step 1+2:
 - Chạy AI parse pipeline (FastAPI BackgroundTasks)
 - Trả về job_id ngay lập tức (202 Accepted)
 """
+
 from __future__ import annotations
 
 import uuid
 from uuid import UUID
 
-from fastapi import BackgroundTasks
-from loguru import logger
-
-from app.application.services.pdf_ai_parser import PDFAIParserService, PDFValidationResult
-from app.config import settings
+from app.application.services.pdf_ai_parser import PDFAIParserService
+from app.core.datetime_utils import now_ict
 from app.domain.entities.import_session import ImportSessionEntity
 from app.domain.entities.question import QuestionEntity, QuestionOptionEntity
 from app.domain.interfaces.import_session_repo import IImportSessionRepository
 from app.domain.interfaces.question_repo import IQuestionRepository
 from app.domain.value_objects import Difficulty, PoolType
-from app.core.datetime_utils import now_ict
+from fastapi import BackgroundTasks
+from loguru import logger
 
 
 class StartImportUseCase:
@@ -183,14 +182,13 @@ class StartImportUseCase:
                 processed_questions=len(parsed_questions),
             )
             await self._import_repo.update_status(job_id, "COMPLETED")
-            logger.info(f"[Import {job_str}] Completed — {len(parsed_questions)} DRAFT questions saved")
+            logger.info(
+                f"[Import {job_str}] Completed — {len(parsed_questions)} DRAFT questions saved"
+            )
 
         except Exception as exc:
             logger.exception(f"[Import {job_str}] Pipeline failed: {exc}")
             try:
-                await self._import_repo.update_status(
-                    job_id, "FAILED", error_message=str(exc)
-                )
+                await self._import_repo.update_status(job_id, "FAILED", error_message=str(exc))
             except Exception:
                 pass
-

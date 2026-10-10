@@ -11,9 +11,7 @@ engine = create_async_engine(
     max_overflow=40,  # Allow up to 40 additional connections
     pool_timeout=30,  # Wait up to 30s before failing
 )
-AsyncSessionLocal = async_sessionmaker(
-    engine, class_=AsyncSession, expire_on_commit=False
-)
+AsyncSessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:

@@ -62,17 +62,21 @@ export default function BulkQuestionModal({ lessonId, onClose, onSuccess }: Prop
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
       <motion.div
+        key="backdrop"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
         onClick={onClose}
         className="fixed inset-0 bg-black/70 backdrop-blur-md"
       />
 
       <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 30 }}
+        key="modal-content"
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 30 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        transition={{ duration: 0.22, ease: "easeOut" }}
         className="bg-white dark:bg-navy-blue w-full max-w-4xl rounded-[40px] shadow-2xl relative z-10 overflow-hidden border border-white/10"
       >
         <div className="flex flex-col h-full max-h-[90vh]">

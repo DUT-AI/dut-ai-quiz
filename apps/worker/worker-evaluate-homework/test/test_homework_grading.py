@@ -51,12 +51,12 @@ class RepositoryStub:
         return self.homework if homework_id == self.homework.id else None
 
     async def set_homework_processing(self, homework_id):
-        return None
+        return True
 
     async def save_homework_rubric(self, homework_id, rubric):
         self.homework = replace(self.homework, grading_rubric=rubric)
 
-    async def save_homework_error(self, homework_id, error):
+    async def save_homework_error(self, homework_id, error, *, retryable=False):
         return None
 
     async def get_submission(self, submission_id):
@@ -65,7 +65,7 @@ class RepositoryStub:
         return None
 
     async def set_submission_grading(self, submission_id):
-        return None
+        return True
 
     async def save_submission_result(
         self,
@@ -83,6 +83,7 @@ class RepositoryStub:
         error,
         *,
         final,
+        retryable=False,
     ):
         self.saved_error = (submission_id, error, final)
 
@@ -236,23 +237,17 @@ async def test_invalid_archive_is_marked_as_final_failure() -> None:
 
 
 @pytest.mark.asyncio
-async def test_invalid_submission_marks_arq_job_as_failed() -> None:
+async def test_invalid_submission_does_not_retry_arq_job() -> None:
     submission_id = uuid4()
 
-    with pytest.raises(InvalidArtifactError, match="Bài nộp không hợp lệ"):
-        await evaluate_homework_job(
-            {
-                "evaluate_use_case": InvalidEvaluationUseCaseStub(),
-                "job_try": 1,
-            },
-            str(submission_id),
-        )
+    await evaluate_homework_job(
+        {"evaluate_use_case": InvalidEvaluationUseCaseStub(), "job_try": 1},
+        str(submission_id),
+    )
 
 
 def test_identical_python_sources_are_detected() -> None:
-    current = build_fingerprint(
-        SourceFile(name="main.py", content="def add(a, b): return a + b")
-    )
+    current = build_fingerprint(SourceFile(name="main.py", content="def add(a, b): return a + b"))
     previous = [
         type(
             "Stored",
@@ -272,9 +267,7 @@ def test_identical_python_sources_are_detected() -> None:
 
 
 def test_plagiarism_score_covers_the_whole_multifile_submission() -> None:
-    copied = build_fingerprint(
-        SourceFile(name="main.py", content="print('shared bootstrap')")
-    )
+    copied = build_fingerprint(SourceFile(name="main.py", content="print('shared bootstrap')"))
     original = build_fingerprint(
         SourceFile(
             name="model.py",
@@ -587,3 +580,197 @@ def test_rar_extension_is_dispatched(
     )
 
     assert sources == expected
+
+
+@pytest.mark.asyncio
+async def test_openai_llm_client_and_grading_engine() -> None:
+    from unittest.mock import AsyncMock, MagicMock
+
+    from worker_evaluate_homework.infrastructure.gemini_grading_engine import (
+        HomeworkGradingEngine,
+    )
+    from worker_evaluate_homework.infrastructure.llm_clients import (
+        OpenAILLMClient,
+        _extract_json,
+    )
+
+    # Test _extract_json helper
+    assert _extract_json('```json\n{"status": true}\n```') == '{"status": true}'
+    assert _extract_json('Result is: {"status": true} done') == '{"status": true}'
+
+    mock_client = MagicMock()
+    mock_response = MagicMock()
+    mock_response.raise_for_status = MagicMock()
+
+    rubric_payload = {
+        "topic": "Bài 1: Linear Regression",
+        "objective": "Cài đặt thuật toán hồi quy",
+        "notes": [],
+        "required_files": ["main.py"],
+        "allowed_libraries": [],
+        "forbidden_libraries": [],
+        "requirements": ["Viết hàm fit và predict"],
+        "criteria": [
+            {
+                "id": "c1",
+                "criterion": "Hàm fit",
+                "description": "Huấn luyện mô hình",
+                "weight": 5.0,
+            },
+            {
+                "id": "c2",
+                "criterion": "Hàm predict",
+                "description": "Dự đoán",
+                "weight": 5.0,
+            },
+        ],
+    }
+
+    mock_response.json.return_value = {
+        "choices": [{"message": {"content": f"```json\n{json.dumps(rubric_payload)}\n```"}}]
+    }
+    mock_client.post = AsyncMock(return_value=mock_response)
+
+    llm_client = OpenAILLMClient(
+        api_url="https://llm2.dutai.site/v1",
+        model="ggml-org/gemma-4-e4b-it-GGUF:Q4_0",
+        http_client=mock_client,
+    )
+    # Native token endpoints are covered separately with an HTTP MockTransport.
+    llm_client.count_tokens = AsyncMock(return_value=100)
+    engine = HomeworkGradingEngine(llm_client=llm_client)
+
+    rubric = await engine.create_rubric(
+        HomeworkGradingRecord(
+            id=uuid4(),
+            title="Linear Regression",
+            description="Cài đặt hồi quy",
+            attachment_key=None,
+            grading_rubric=None,
+        ),
+        "Đề bài chi tiết...",
+    )
+
+    assert rubric.topic == "Bài 1: Linear Regression"
+    assert rubric.title == "Bài 1: Linear Regression"
+    assert rubric.objective == "Cài đặt thuật toán hồi quy"
+    assert len(rubric.criteria) == 2
+    assert sum(c.weight for c in rubric.criteria) == 10.0
+
+    # Test grading
+    grade_payload = {
+        "evaluations": [
+            {
+                "id": "c1",
+                "status": True,
+                "description": "Đã cài đặt hàm fit chính xác",
+            },
+            {
+                "id": "c2",
+                "status": True,
+                "description": "Đã cài đặt hàm predict chính xác",
+            },
+        ]
+    }
+    mock_response.json.return_value = {
+        "choices": [{"message": {"content": json.dumps(grade_payload)}}]
+    }
+
+    grade_result = await engine.grade(
+        rubric,
+        [SourceFile(name="main.py", content="def fit(): pass\ndef predict(): pass")],
+    )
+
+    assert grade_result.is_pass is True
+    assert grade_result.score == 10.0
+    assert len(grade_result.score_details) == 2
+
+
+@pytest.mark.asyncio
+async def test_retry_stale_homework_use_case() -> None:
+    from unittest.mock import AsyncMock, MagicMock
+    from uuid import uuid4
+
+    from worker_evaluate_homework.application.use_cases import RetryStaleHomeworkUseCase
+
+    hw_id1 = uuid4()
+    hw_id2 = uuid4()
+    sub_id1 = uuid4()
+    sub_id2 = uuid4()
+
+    mock_repo = MagicMock()
+    mock_repo.list_stale_homework_ids = AsyncMock(return_value=[hw_id1, hw_id2])
+    mock_repo.list_stale_submission_ids = AsyncMock(return_value=[sub_id1, sub_id2])
+
+    mock_redis = MagicMock()
+    mock_redis.enqueue_job = AsyncMock()
+
+    use_case = RetryStaleHomeworkUseCase(
+        repository=mock_repo,
+        queue_name="test_queue",
+        stale_homework_minutes=10,
+        stale_submission_minutes=15,
+        days_limit=7,
+        homework_batch_limit=10,
+        submission_batch_limit=20,
+    )
+
+    result = await use_case.execute(mock_redis)
+
+    assert result == {"homeworks_enqueued": 2, "submissions_enqueued": 2}
+    assert mock_redis.enqueue_job.await_count == 4
+
+    # Kiểm tra gọi register_homework_job
+    mock_redis.enqueue_job.assert_any_await(
+        "register_homework_job",
+        homework_id=str(hw_id1),
+        _queue_name="test_queue",
+        _job_id=f"homework-register:{hw_id1}",
+        _defer_by=1,
+    )
+    mock_redis.enqueue_job.assert_any_await(
+        "register_homework_job",
+        homework_id=str(hw_id2),
+        _queue_name="test_queue",
+        _job_id=f"homework-register:{hw_id2}",
+        _defer_by=1,
+    )
+
+    # Kiểm tra gọi evaluate_homework_job
+    mock_redis.enqueue_job.assert_any_await(
+        "evaluate_homework_job",
+        submission_id=str(sub_id1),
+        _queue_name="test_queue",
+        _job_id=f"homework-evaluate:{sub_id1}",
+        _defer_by=1,
+    )
+    mock_redis.enqueue_job.assert_any_await(
+        "evaluate_homework_job",
+        submission_id=str(sub_id2),
+        _queue_name="test_queue",
+        _job_id=f"homework-evaluate:{sub_id2}",
+        _defer_by=1,
+    )
+
+
+@pytest.mark.asyncio
+async def test_retry_stale_homework_use_case_empty() -> None:
+    from unittest.mock import AsyncMock, MagicMock
+
+    from worker_evaluate_homework.application.use_cases import RetryStaleHomeworkUseCase
+
+    mock_repo = MagicMock()
+    mock_repo.list_stale_homework_ids = AsyncMock(return_value=[])
+    mock_repo.list_stale_submission_ids = AsyncMock(return_value=[])
+
+    mock_redis = MagicMock()
+    mock_redis.enqueue_job = AsyncMock()
+
+    use_case = RetryStaleHomeworkUseCase(
+        repository=mock_repo,
+        queue_name="test_queue",
+    )
+
+    result = await use_case.execute(mock_redis)
+    assert result == {"homeworks_enqueued": 0, "submissions_enqueued": 0}
+    mock_redis.enqueue_job.assert_not_called()

@@ -3,6 +3,7 @@ from .interfaces import (
     IHomeworkArtifactReader,
     IHomeworkGradingEngine,
     IHomeworkGradingRepository,
+    ILLMClient,
 )
 from .models import (
     CriterionEvaluation,
@@ -25,10 +26,10 @@ __all__ = [
     "IHomeworkArtifactReader",
     "IHomeworkGradingEngine",
     "IHomeworkGradingRepository",
+    "ILLMClient",
     "InvalidArtifactError",
     "SourceFile",
     "StoredFingerprint",
     "SubmissionGradingRecord",
     "SubmissionGradingStatus",
 ]
-

@@ -47,8 +47,11 @@ export function useCreateQuestion() {
   return useMutation({
     mutationFn: (body: QuestionCreate) =>
       apiPost<QuestionOut>("/api/v1/questions", body, QuestionOutSchema),
-    onSuccess: () => {
+    onSuccess: (createdQuestion) => {
       void qc.invalidateQueries({ queryKey: ["questions"] });
+      if (createdQuestion?.id) {
+        qc.setQueryData(["question", createdQuestion.id], createdQuestion);
+      }
     },
   });
 }
@@ -58,8 +61,13 @@ export function useUpdateQuestion() {
   return useMutation({
     mutationFn: ({ id, payload }: { id: string; payload: Partial<QuestionCreate> }) =>
       apiPatch<QuestionOut>(`/api/v1/questions/${id}`, payload, QuestionOutSchema),
-    onSuccess: () => {
+    onSuccess: (updatedQuestion, variables) => {
       void qc.invalidateQueries({ queryKey: ["questions"] });
+      void qc.invalidateQueries({ queryKey: ["question", variables.id] });
+      void qc.invalidateQueries({ queryKey: ["question"] });
+      if (updatedQuestion) {
+        qc.setQueryData(["question", variables.id], updatedQuestion);
+      }
     },
   });
 }
@@ -69,8 +77,27 @@ export function useDeleteQuestion() {
   return useMutation({
     mutationFn: (id: string) =>
       apiClient.delete(`/api/v1/questions/${id}`).then((r) => r.data),
-    onSuccess: () => {
+    onSuccess: (_data, id) => {
       void qc.invalidateQueries({ queryKey: ["questions"] });
+      void qc.invalidateQueries({ queryKey: ["question", id] });
+      void qc.invalidateQueries({ queryKey: ["question"] });
+    },
+  });
+}
+
+export function useBulkDeleteQuestions() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (questionIds: string[]) =>
+      apiPost<{ deleted_count: number }>("/api/v1/questions/bulk-delete", {
+        question_ids: questionIds,
+      }),
+    onSuccess: (_data, questionIds) => {
+      void qc.invalidateQueries({ queryKey: ["questions"] });
+      questionIds.forEach((id) => {
+        void qc.invalidateQueries({ queryKey: ["question", id] });
+      });
+      void qc.invalidateQueries({ queryKey: ["question"] });
     },
   });
 }
@@ -107,11 +134,8 @@ export function useParsePDF() {
 export function useImportPDF() {
   return useMutation({
     mutationFn: async (formData: FormData) => {
-      const backendUrl = process.env.NODE_ENV === "development" ? "http://localhost:8000" : "";
-      const path = backendUrl ? `${backendUrl}/api/v1/pdf-import/import-pdf` : "/api/v1/pdf-import/import-pdf";
-
       const res = await apiClient.post<{ job_id: string; status: string; message: string }>(
-        path,
+        "/api/v1/pdf-import/import-pdf",
         formData
       );
       return res.data;
@@ -124,10 +148,7 @@ export function useUploadPDF() {
     mutationFn: async (args: FormData | { formData: FormData; hasPassword?: boolean }) => {
       const formData = args instanceof FormData ? args : args.formData;
       const hasPassword = args instanceof FormData ? false : !!args.hasPassword;
-
-      const backendUrl = process.env.NODE_ENV === "development" ? "http://localhost:8000" : "";
-      const endpoint = hasPassword ? "/api/v1/pdf-import/upload-with-password" : "/api/v1/pdf-import/upload";
-      const path = backendUrl ? `${backendUrl}${endpoint}` : endpoint;
+      const path = hasPassword ? "/api/v1/pdf-import/upload-with-password" : "/api/v1/pdf-import/upload";
 
       const res = await apiClient.post<{ ok: boolean; job_id?: string; status?: string; error?: string; is_encrypted?: boolean }>(
         path,
@@ -198,9 +219,6 @@ export function useQuestion(id: string) {
 }
 
 export function useImportSessionStatus(jobId: string, enabled: boolean = false) {
-  const backendUrl = process.env.NODE_ENV === "development" ? "http://localhost:8000" : "";
-  const path = backendUrl ? `${backendUrl}/api/v1/pdf-import/${jobId}/status` : `/api/v1/pdf-import/${jobId}/status`;
-
   return useQuery({
     queryKey: ["pdf-import", "status", jobId],
     queryFn: () =>
@@ -212,7 +230,7 @@ export function useImportSessionStatus(jobId: string, enabled: boolean = false) 
         error_message: string | null;
         file_name: string;
         created_at: string;
-      }>(path),
+      }>(`/api/v1/pdf-import/${jobId}/status`),
     enabled: !!jobId && enabled,
     refetchInterval: (query) => {
       const data = query.state.data;
@@ -225,16 +243,13 @@ export function useImportSessionStatus(jobId: string, enabled: boolean = false) 
 }
 
 export function useDraftQuestions(jobId: string) {
-  const backendUrl = process.env.NODE_ENV === "development" ? "http://localhost:8000" : "";
-  const path = backendUrl ? `${backendUrl}/api/v1/pdf-import/${jobId}/questions` : `/api/v1/pdf-import/${jobId}/questions`;
-
   return useQuery({
     queryKey: ["pdf-import", "questions", jobId],
     queryFn: () =>
       apiGet<{
         questions: any[];
         total: number;
-      }>(path),
+      }>(`/api/v1/pdf-import/${jobId}/questions`),
     enabled: !!jobId,
   });
 }
@@ -254,10 +269,8 @@ export function useApproveQuestion() {
         lesson_id?: string;
       };
     }) => {
-      const backendUrl = process.env.NODE_ENV === "development" ? "http://localhost:8000" : "";
-      const path = backendUrl ? `${backendUrl}/api/v1/pdf-import/questions/${id}/approve` : `/api/v1/pdf-import/questions/${id}/approve`;
       return apiPatch<{ ok: boolean; question_id: string; status: string }>(
-        path,
+        `/api/v1/pdf-import/questions/${id}/approve`,
         payload
       );
     },
@@ -272,9 +285,9 @@ export function useRejectQuestion() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const backendUrl = process.env.NODE_ENV === "development" ? "http://localhost:8000" : "";
-      const path = backendUrl ? `${backendUrl}/api/v1/pdf-import/questions/${id}` : `/api/v1/pdf-import/questions/${id}`;
-      const res = await apiClient.delete<{ ok: boolean; question_id: string; deleted: boolean }>(path);
+      const res = await apiClient.delete<{ ok: boolean; question_id: string; deleted: boolean }>(
+        `/api/v1/pdf-import/questions/${id}`
+      );
       return res.data;
     },
     onSuccess: () => {
@@ -287,10 +300,8 @@ export function useRejectQuestion() {
 export function useRegenerateSolution() {
   return useMutation({
     mutationFn: async ({ id, admin_hint }: { id: string; admin_hint?: string }) => {
-      const backendUrl = process.env.NODE_ENV === "development" ? "http://localhost:8000" : "";
-      const path = backendUrl ? `${backendUrl}/api/v1/pdf-import/questions/${id}/regenerate-solution` : `/api/v1/pdf-import/questions/${id}/regenerate-solution`;
       return apiPost<{ ok: boolean; question_id: string; solution: string }>(
-        path,
+        `/api/v1/pdf-import/questions/${id}/regenerate-solution`,
         { admin_hint: admin_hint || "" }
       );
     },
@@ -305,9 +316,7 @@ export function useCheckRelatedQuestions(params: {
   return useQuery({
     queryKey: ["questions", "related-live", params.content, params.pool_type],
     queryFn: () => {
-      const backendUrl = process.env.NODE_ENV === "development" ? "http://localhost:8000" : "";
-      const path = backendUrl ? `${backendUrl}/api/v1/questions/related` : `/api/v1/questions/related`;
-      return apiPost<any[]>(path, {
+      return apiPost<any[]>("/api/v1/questions/related", {
         content: params.content,
         pool_type: params.pool_type || "PRACTICE",
         limit: 5,

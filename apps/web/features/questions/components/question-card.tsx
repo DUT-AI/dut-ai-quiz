@@ -13,6 +13,7 @@ import { Markdown } from "@/components/markdown";
 import { RelatedLessonSchema, type QuestionOut, type RelatedLesson } from "@/lib/types";
 import { useAuth } from "@/context/auth-context";
 import { apiGet, apiPost } from "@/lib/api";
+import { ReferenceDocumentsModal } from "./reference-documents-modal";
 
 interface QuestionCardProps {
   q: QuestionOut;
@@ -20,10 +21,22 @@ interface QuestionCardProps {
   onExplain: (q: QuestionOut) => void;
   onEdit?: (q: QuestionOut) => void;
   onDelete?: (q: QuestionOut) => void;
+  selectable?: boolean;
+  isSelected?: boolean;
+  onToggleSelect?: (q: QuestionOut) => void;
 }
 
 export const QuestionCard = React.memo(
-  ({ q, idx, onExplain, onEdit, onDelete }: QuestionCardProps) => {
+  ({
+    q,
+    idx,
+    onExplain,
+    onEdit,
+    onDelete,
+    selectable = false,
+    isSelected = false,
+    onToggleSelect,
+  }: QuestionCardProps) => {
     const { user } = useAuth();
     const storageKey = useMemo(() => {
       return `practice_progress_${user?.id || "guest"}_${q.lesson_id || "default"}`;
@@ -37,6 +50,7 @@ export const QuestionCard = React.memo(
       solution: string | null;
     } | null>(null);
     const [relatedLessons, setRelatedLessons] = useState<RelatedLesson[]>([]);
+    const [showReferences, setShowReferences] = useState(false);
 
     // Load state from sessionStorage on mount
     React.useEffect(() => {
@@ -139,6 +153,7 @@ export const QuestionCard = React.memo(
       setSelectedId(null);
       setIsRevealed(false);
       setResult(null);
+      setShowReferences(false);
 
       try {
         const stored = sessionStorage.getItem(storageKey) || "{}";
@@ -152,27 +167,58 @@ export const QuestionCard = React.memo(
 
     return (
       <motion.div
-        initial={{ opacity: 0, x: -10 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: idx * 0.05 }}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.28, delay: Math.min(idx * 0.03, 0.25) }}
         className="w-full min-w-0"
       >
         <Card
           className={cn(
             "border-none shadow-lg bg-white dark:bg-navy-blue/60 rounded-3xl overflow-hidden hover:shadow-xl transition-all border-l-4 text-left",
+            isSelected && "ring-2 ring-primary/40 bg-primary/[0.02] dark:bg-primary/[0.04]",
             isRevealed
               ? (result?.isCorrect ?? q.options.find((o) => o.id === selectedId)?.is_correct)
                 ? "border-l-green"
                 : "border-l-red"
+              : isSelected
+              ? "border-l-primary"
               : "border-l-primary/20"
           )}
         >
           <CardContent className="p-8">
             <div className="flex flex-col sm:flex-row gap-6">
               <div className="flex sm:flex-col items-center justify-between sm:justify-start gap-4 shrink-0">
-                <div className="size-14 rounded-2xl bg-gray-50 dark:bg-white/5 flex items-center justify-center font-bold text-gray-navy opacity-50">
-                  #{idx + 1}
-                </div>
+                {selectable && onToggleSelect ? (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onToggleSelect(q);
+                    }}
+                    className={cn(
+                      "size-14 rounded-2xl flex flex-col items-center justify-center font-bold transition-all cursor-pointer border-2 select-none group",
+                      isSelected
+                        ? "bg-primary text-white border-primary shadow-md shadow-primary/25"
+                        : "bg-gray-50 dark:bg-white/5 border-gray-200/70 dark:border-white/10 text-gray-navy/60 hover:border-primary/50 hover:text-primary"
+                    )}
+                    title={isSelected ? "Bỏ chọn câu hỏi" : "Chọn câu hỏi"}
+                  >
+                    <div className="flex items-center justify-center">
+                      {isSelected ? (
+                        <Check className="size-5 stroke-[3]" />
+                      ) : (
+                        <>
+                          <span className="text-xs font-bold opacity-80 group-hover:hidden">#{idx + 1}</span>
+                          <div className="size-4 rounded-md border-2 border-slate-300 dark:border-zinc-600 hidden group-hover:block" />
+                        </>
+                      )}
+                    </div>
+                  </button>
+                ) : (
+                  <div className="size-14 rounded-2xl bg-gray-50 dark:bg-white/5 flex items-center justify-center font-bold text-gray-navy opacity-50">
+                    #{idx + 1}
+                  </div>
+                )}
 
                 {q.difficulty && (
                   <span className={cn(
@@ -246,7 +292,7 @@ export const QuestionCard = React.memo(
 
                         {isSelected && !isRevealed && (
                           <motion.div
-                            layoutId="selection"
+                            layoutId={`selection-${q.id}`}
                             className="absolute inset-0 border-2 border-primary rounded-2xl pointer-events-none"
                           />
                         )}
@@ -255,11 +301,14 @@ export const QuestionCard = React.memo(
                   })}
                 </div>
 
-                <AnimatePresence>
+                <AnimatePresence initial={false}>
                   {isRevealed && (result?.solution || q.solution) && (
                     <motion.div
+                      key={`solution-${q.id}`}
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.25, ease: "easeInOut" }}
                       className="overflow-hidden"
                     >
                       <div className="mt-8 p-6 rounded-3xl bg-primary/5 border border-primary/10 space-y-3">
@@ -275,11 +324,14 @@ export const QuestionCard = React.memo(
                   )}
                 </AnimatePresence>
 
-                <AnimatePresence>
+                <AnimatePresence initial={false}>
                   {isRevealed && relatedLessons.length > 0 && (
                     <motion.div
+                      key={`related-${q.id}`}
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.25, ease: "easeInOut" }}
                       className="overflow-hidden"
                     >
                       <div className="mt-6 space-y-3">
@@ -343,6 +395,17 @@ export const QuestionCard = React.memo(
                       )}
                     </div>
                   )}
+                  {isRevealed && q.pool_type === "PRACTICE" && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-primary font-bold flex items-center gap-2 hover:bg-primary/10 px-4 py-2 rounded-2xl"
+                      onClick={() => setShowReferences(true)}
+                    >
+                      <BookOpen className="size-4" />
+                      Tài liệu tham khảo
+                    </Button>
+                  )}
                   <div className="h-px flex-1" />
                   <Button
                     size="sm"
@@ -359,6 +422,12 @@ export const QuestionCard = React.memo(
             </div>
           </CardContent>
         </Card>
+        {showReferences && isRevealed && q.pool_type === "PRACTICE" && (
+          <ReferenceDocumentsModal
+            questionId={q.id}
+            onClose={() => setShowReferences(false)}
+          />
+        )}
       </motion.div>
     );
   }

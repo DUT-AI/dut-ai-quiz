@@ -7,10 +7,11 @@ import {
   Clock3, 
   Download, 
   XCircle, 
-  MessageSquare,
-  Award,
-  AlertCircle,
-  FileCode
+  MessageSquare, 
+  Award, 
+  AlertCircle, 
+  FileCode,
+  Loader2,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
@@ -35,8 +36,8 @@ export function SubmissionResult({ submission, compact = false }: SubmissionResu
     },
     GRADING: { 
       label: "Đang chấm điểm", 
-      icon: Clock3, 
-      className: "bg-amber-500/10 text-amber-600 border-amber-200 dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-800/30 animate-pulse" 
+      icon: Loader2, 
+      className: "bg-amber-500/10 text-amber-600 border-amber-200 dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-800/30" 
     },
     GRADED: { 
       label: "Đã chấm điểm", 
@@ -44,7 +45,7 @@ export function SubmissionResult({ submission, compact = false }: SubmissionResu
       className: "bg-green/10 text-green border-green/20 dark:bg-green/20 dark:text-green" 
     },
     FAILED: { 
-      label: "Không đạt",
+      label: "Không đạt", 
       icon: XCircle, 
       className: "bg-red/10 text-red border-red/20 dark:bg-red/20 dark:text-red" 
     },
@@ -71,7 +72,7 @@ export function SubmissionResult({ submission, compact = false }: SubmissionResu
 
           <div className="flex items-center gap-2">
             <Badge variant="outline" className={`h-6 ${statusConfig.className}`}>
-              <StatusIcon className="mr-1.5 size-3.5" />
+              <StatusIcon className={`mr-1.5 size-3.5 ${submission.status === "GRADING" ? "animate-spin" : ""}`} />
               {statusConfig.label}
             </Badge>
           </div>

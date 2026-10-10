@@ -25,12 +25,16 @@ from app.application.use_cases.pdf_import import (
     ApproveQuestionUseCase,
     GetImportStatusUseCase,
     HeartbeatLockUseCase,
-    RejectQuestionUseCase,
     RegenerateSolutionUseCase,
+    RejectQuestionUseCase,
     ReviewDraftQuestionsUseCase,
     StartImportUseCase,
 )
-from app.presentation.api.deps import EducatorUser, CurrentUser
+from app.application.use_cases.questions.start_pdf_import_uc import (
+    StartPdfImportUseCase,
+)
+from app.presentation.api.deps import EducatorUser
+from app.presentation.schemas.pdf_import import StartPdfImportResponse
 from app.presentation.schemas.pdf_import_v2 import (
     ApproveQuestionRequest,
     ApproveQuestionResponse,
@@ -38,13 +42,9 @@ from app.presentation.schemas.pdf_import_v2 import (
     ImportSessionStatusResponse,
     LockResponse,
     PDFUploadResponse,
-    RejectQuestionResponse,
     RegenerateSolutionRequest,
     RegenerateSolutionResponse,
-)
-from app.presentation.schemas.pdf_import import StartPdfImportResponse
-from app.application.use_cases.questions.start_pdf_import_uc import (
-    StartPdfImportUseCase,
+    RejectQuestionResponse,
 )
 
 router = APIRouter(prefix="/pdf-import", tags=["pdf-import"])
@@ -79,7 +79,7 @@ async def import_pdf_route(
             password=password,
         )
     except ValueError as e:
-        raise HTTPException(status_code=422, detail={"error": str(e)})
+        raise HTTPException(status_code=422, detail={"error": str(e)}) from e
 
 
 @router.post("/upload", response_model=PDFUploadResponse, status_code=202)
@@ -206,9 +206,7 @@ async def list_draft_questions(
 # ---------------------------------------------------------------------------
 
 
-@router.patch(
-    "/questions/{question_id}/approve", response_model=ApproveQuestionResponse
-)
+@router.patch("/questions/{question_id}/approve", response_model=ApproveQuestionResponse)
 @inject
 async def approve_question(
     question_id: UUID,

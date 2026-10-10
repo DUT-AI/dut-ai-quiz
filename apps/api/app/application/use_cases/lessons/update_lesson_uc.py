@@ -1,10 +1,10 @@
 from uuid import UUID
 
+from app.application.services.lesson_index_scheduler import LessonIndexScheduler
+from app.core.string_utils import slugify_vietnamese
 from app.domain.entities.lesson import LessonEntity
 from app.domain.interfaces import ILessonRepository
-from app.application.services.lesson_index_scheduler import LessonIndexScheduler
 from app.presentation.schemas.lessons import LessonUpdate
-from app.core.string_utils import slugify_vietnamese
 
 
 class UpdateLessonUseCase:
@@ -14,9 +14,7 @@ class UpdateLessonUseCase:
         self._repo = repo
         self._scheduler = scheduler
 
-    async def execute(
-        self, lesson_id: str, payload: LessonUpdate
-    ) -> LessonEntity | None:
+    async def execute(self, lesson_id: str, payload: LessonUpdate) -> LessonEntity | None:
         """Execute the use case to update the lesson."""
         entity = await self._repo.get(UUID(lesson_id))
         if not entity:
@@ -41,7 +39,7 @@ class UpdateLessonUseCase:
             slug = payload.slug if slug_passed else entity.slug
             if not slug or not slug.strip():
                 slug = slugify_vietnamese(entity.name)
-            
+
             # Ensure slug is unique (allow own slug)
             base_slug = slug
             counter = 1
@@ -55,8 +53,7 @@ class UpdateLessonUseCase:
 
         saved = await self._repo.update(entity)
         if any(
-            value is not None
-            for value in (payload.name, payload.description, payload.content_md)
+            value is not None for value in (payload.name, payload.description, payload.content_md)
         ):
             await self._scheduler.schedule(saved)
         return saved

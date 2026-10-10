@@ -1,11 +1,10 @@
 """ReviewDraftQuestionsUseCase — List DRAFT questions of an import session."""
+
 from uuid import UUID
 
+from app.infrastructure.persistence.models import Question
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.domain.entities.question import QuestionEntity, QuestionOptionEntity
-from app.infrastructure.persistence.models import Question
 
 
 class ReviewDraftQuestionsUseCase:
@@ -35,24 +34,26 @@ class ReviewDraftQuestionsUseCase:
         questions = []
         for m in models:
             entity = m.to_entity()
-            questions.append({
-                "id": str(entity.id),
-                "content": entity.content,
-                "options": [opt.to_dict() for opt in entity.options],
-                "solution": entity.solution,
-                "difficulty": entity.difficulty,
-                "status": entity.status,
-                "is_answer_ai_generated": entity.is_answer_ai_generated,
-                "is_solution_ai_generated": entity.is_solution_ai_generated,
-                "is_difficulty_ai_suggested": entity.is_difficulty_ai_suggested,
-                "duplicate_status": entity.duplicate_status,
-                "duplicate_of_question_id": (
-                    str(entity.duplicate_of_question_id)
-                    if entity.duplicate_of_question_id
-                    else None
-                ),
-                "review_locked_by": entity.review_locked_by,
-                "lesson_id": str(entity.lesson_id) if entity.lesson_id else None,
-                "created_at": entity.created_at.isoformat(),
-            })
+            questions.append(
+                {
+                    "id": str(entity.id),
+                    "content": entity.content,
+                    "options": [opt.to_dict() for opt in entity.options],
+                    "solution": entity.solution,
+                    "difficulty": entity.difficulty,
+                    "status": entity.status,
+                    "is_answer_ai_generated": entity.is_answer_ai_generated,
+                    "is_solution_ai_generated": entity.is_solution_ai_generated,
+                    "is_difficulty_ai_suggested": entity.is_difficulty_ai_suggested,
+                    "duplicate_status": entity.duplicate_status,
+                    "duplicate_of_question_id": (
+                        str(entity.duplicate_of_question_id)
+                        if entity.duplicate_of_question_id
+                        else None
+                    ),
+                    "review_locked_by": entity.review_locked_by,
+                    "lesson_id": str(entity.lesson_id) if entity.lesson_id else None,
+                    "created_at": entity.created_at.isoformat(),
+                }
+            )
         return questions

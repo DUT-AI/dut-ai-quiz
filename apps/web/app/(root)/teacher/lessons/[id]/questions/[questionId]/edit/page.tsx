@@ -43,6 +43,7 @@ export default function EditQuestionPage() {
 
   return (
     <QuestionEditorModal
+      key={`${question.id}-${question.content}`}
       lessonId={lessonId}
       initialData={question}
       onClose={handleBack}

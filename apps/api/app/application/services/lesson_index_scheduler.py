@@ -1,8 +1,7 @@
-from loguru import logger
-
 from app.domain.entities.lesson import LessonEntity
 from app.domain.entities.lesson_chunk import lesson_source_hash
 from app.domain.interfaces import IEmbeddingService, ILessonIndexQueue
+from loguru import logger
 
 
 class LessonIndexScheduler:
@@ -23,9 +22,7 @@ class LessonIndexScheduler:
     async def schedule(self, lesson: LessonEntity) -> bool:
         if not self.enabled:
             return False
-        source_hash = lesson_source_hash(
-            lesson.name, lesson.description, lesson.content_md or ""
-        )
+        source_hash = lesson_source_hash(lesson.name, lesson.description, lesson.content_md or "")
         try:
             await self._queue.enqueue_index(lesson.id, source_hash)
             return True

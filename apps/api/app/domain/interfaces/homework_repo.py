@@ -34,15 +34,17 @@ class IHomeworkRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def reset_homework_grading(self, homework_id: UUID) -> HomeworkEntity:
+        raise NotImplementedError
+
+    @abstractmethod
     async def create_submission(
         self, submission: HomeworkSubmissionEntity
     ) -> HomeworkSubmissionEntity:
         raise NotImplementedError
 
     @abstractmethod
-    async def get_submission(
-        self, submission_id: UUID
-    ) -> HomeworkSubmissionEntity | None:
+    async def get_submission(self, submission_id: UUID) -> HomeworkSubmissionEntity | None:
         raise NotImplementedError
 
     @abstractmethod
@@ -52,16 +54,22 @@ class IHomeworkRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def retry_failed_submission(
-        self, submission_id: UUID
-    ) -> HomeworkSubmissionEntity | None:
-        """Atomically move a failed submission back to grading."""
+    async def list_my_submissions(
+        self, homework_id: UUID, user_id: int
+    ) -> list[HomeworkSubmissionEntity]:
         raise NotImplementedError
 
     @abstractmethod
-    async def list_submissions(
-        self, homework_id: UUID
-    ) -> list[HomeworkSubmissionEntity]:
+    async def retry_failed_submission(
+        self,
+        submission_id: UUID,
+        allow_any_non_grading: bool = False,
+    ) -> HomeworkSubmissionEntity | None:
+        """Atomically move a failed submission (or any non-grading submission if allowed) back to grading."""
+        raise NotImplementedError
+
+    @abstractmethod
+    async def list_submissions(self, homework_id: UUID) -> list[HomeworkSubmissionEntity]:
         raise NotImplementedError
 
     @abstractmethod
@@ -70,12 +78,21 @@ class IHomeworkRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def list_completed_members_by_lesson(
-        self, lesson_id: UUID
-    ) -> list[Any]:
+    async def list_completed_members_by_lesson(self, lesson_id: UUID) -> list[Any]:
         """List member completion stats for homeworks in the given lesson."""
         raise NotImplementedError
 
     @abstractmethod
     async def count_submitters(self, homework_id: UUID) -> int:
         raise NotImplementedError
+
+    @abstractmethod
+    async def count_active_by_lesson(self, lesson_id: UUID) -> int:
+        """Count active (non-archived) homeworks assigned to a lesson."""
+        raise NotImplementedError
+
+    @abstractmethod
+    async def list_submissions_for_sync_by_lesson(self, lesson_id: UUID) -> list[Any]:
+        """List all submissions in the given lesson for synchronization."""
+        raise NotImplementedError
+

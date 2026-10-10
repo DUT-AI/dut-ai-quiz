@@ -24,6 +24,14 @@ export const RelatedLessonSchema = z.object({
 
 export type RelatedLesson = z.infer<typeof RelatedLessonSchema>;
 
+export const RelativeDocumentSchema = z.object({
+  document_title: z.string(),
+  full_md: z.string(),
+  relative_chunk: z.array(z.string()),
+});
+
+export type RelativeDocument = z.infer<typeof RelativeDocumentSchema>;
+
 export const ModuleSchema = z.object({
   id: z.string(),
   name: z.string(),

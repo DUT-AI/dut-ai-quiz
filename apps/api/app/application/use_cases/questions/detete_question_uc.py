@@ -1,4 +1,5 @@
 from uuid import UUID
+
 from app.domain.interfaces import IQuestionRepository
 
 
@@ -13,3 +14,13 @@ class DeleteQuestionUseCase:
 
         await self._question_repo.delete(entity)
         return True
+
+
+class BulkDeleteQuestionsUseCase:
+    def __init__(self, question_repo: IQuestionRepository):
+        self._question_repo = question_repo
+
+    async def execute(self, question_ids: list[UUID]) -> int:
+        if not question_ids:
+            return 0
+        return await self._question_repo.delete_bulk(question_ids)

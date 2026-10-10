@@ -6,7 +6,6 @@ from app.domain.interfaces.tag_repo import ITagRepository
 from app.presentation.schemas.tags import TagCreate
 
 
-
 class ListTagsUseCase:
     """Use case to list all tags."""
 
@@ -40,4 +39,3 @@ class DeleteTagUseCase:
 
     async def execute(self, tag_id: UUID) -> None:
         await self._tag_repo.delete(tag_id)
-

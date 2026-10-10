@@ -18,17 +18,21 @@ export function QuestionDetailModal({ question, correctRate, onClose }: Question
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 sm:p-10">
       <motion.div
+        key="backdrop"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
         onClick={onClose}
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
       />
 
       <motion.div
-        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        key="modal-content"
+        initial={{ opacity: 0, scale: 0.95, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+        exit={{ opacity: 0, scale: 0.95, y: 15 }}
+        transition={{ duration: 0.22, ease: "easeOut" }}
         className="bg-white dark:bg-navy-blue w-full max-w-2xl rounded-[40px] shadow-2xl relative z-10 overflow-hidden border border-gray-100 dark:border-white/5"
       >
         <div className="p-8 md:p-10 max-h-[85vh] overflow-y-auto custom-scrollbar text-left">

@@ -1,9 +1,12 @@
-from pydantic import BaseModel
 from uuid import UUID
+
+from pydantic import BaseModel
+
 
 class ScoreDistributionItem(BaseModel):
     range: str
     count: int
+
 
 class ParticipantStat(BaseModel):
     user_id: int
@@ -12,10 +15,12 @@ class ParticipantStat(BaseModel):
     last_status: str
     max_tab_out: int
 
+
 class QuestionStat(BaseModel):
     question_id: UUID
     content: str
     correct_rate: float
+
 
 class ExamSummary(BaseModel):
     total_assigned: int
@@ -23,6 +28,7 @@ class ExamSummary(BaseModel):
     total_completed: int
     average_score: float
     max_score: float
+
 
 class ExamStatsOut(BaseModel):
     summary: ExamSummary

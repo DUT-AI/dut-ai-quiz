@@ -1,6 +1,6 @@
 "use client";
 
-import { GripVertical, BookOpen, Edit2, Trash2, HelpCircle } from "lucide-react";
+import { GripVertical, BookOpen, Edit2, Trash2, HelpCircle, CodeXml } from "lucide-react";
 import Link from "next/link";
 import type { Lesson } from "@/features/lessons/types";
 
@@ -61,6 +61,14 @@ export function LessonCard({
       {/* Actions section */}
       {(onEdit || onDelete) && (
         <div className="flex items-center justify-end gap-1.5 mt-4 pt-3 border-t border-gray-100 dark:border-white/5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300">
+          <Link
+            href={`/teacher/lessons/${lesson.id}/homeworks`}
+            className="px-2.5 py-1.5 bg-indigo-500/10 hover:bg-indigo-500 text-indigo-600 hover:text-white dark:text-indigo-400 dark:hover:text-navy-blue font-bold rounded-lg text-[10px] md:text-[11px] transition-all duration-200 flex items-center gap-1 border border-indigo-500/20 shadow-sm"
+            title="Quản lý bài tập coding của bài học này"
+          >
+            <CodeXml className="size-3.5" />
+            <span className="font-bold">Bài tập</span>
+          </Link>
           <Link
             href={`/teacher/lessons/${lesson.id}/questions`}
             className="px-2.5 py-1.5 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-600 hover:text-white dark:text-emerald-400 dark:hover:text-navy-blue font-bold rounded-lg text-[10px] md:text-[11px] transition-all duration-200 flex items-center gap-1 border border-emerald-500/20 shadow-sm"

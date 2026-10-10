@@ -41,9 +41,7 @@ def upgrade() -> None:
         sa.Column("homework_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("user_id", sa.Integer(), nullable=False),
         sa.Column("assigned_at", sa.DateTime(), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["homework_id"], ["homeworks.id"], ondelete="CASCADE"
-        ),
+        sa.ForeignKeyConstraint(["homework_id"], ["homeworks.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("homework_id", "user_id"),
     )
     op.create_index(
@@ -68,14 +66,10 @@ def upgrade() -> None:
         sa.Column("feedback", sa.Text(), nullable=True),
         sa.Column("score_details", postgresql.JSONB(), nullable=True),
         sa.Column("plagiarism_info", postgresql.JSONB(), nullable=True),
-        sa.Column(
-            "is_plagiarized", sa.Boolean(), server_default="false", nullable=False
-        ),
+        sa.Column("is_plagiarized", sa.Boolean(), server_default="false", nullable=False),
         sa.Column("plagiarized_from_user_id", sa.Integer(), nullable=True),
         sa.Column("grading_error", sa.Text(), nullable=True),
-        sa.ForeignKeyConstraint(
-            ["homework_id"], ["homeworks.id"], ondelete="CASCADE"
-        ),
+        sa.ForeignKeyConstraint(["homework_id"], ["homeworks.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint(
             "homework_id",

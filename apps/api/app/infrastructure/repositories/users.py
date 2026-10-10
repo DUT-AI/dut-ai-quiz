@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domain.entities.user import UserEntity
+from app.domain.entities.user import UserEntity, UserSource
 from app.domain.interfaces import IUserRepository
 from app.infrastructure.persistence.models import User
 
@@ -39,10 +39,20 @@ class UserRepository(IUserRepository):
             m.avatar_url = entity.avatar_url
             m.role = entity.role
             m.google_id = entity.google_id
+            m.user_source = (
+                entity.user_source.value
+                if isinstance(entity.user_source, UserSource)
+                else str(entity.user_source)
+            )
             await self._session.flush()
             await self._session.refresh(m)
-            return m.to_entity()
         return entity
+
+    async def list_all(self) -> list[UserEntity]:
+        stmt = select(User)
+        result = await self._session.execute(stmt)
+        users = result.scalars().all()
+        return [u.to_entity() for u in users]
 
     async def flush(self) -> None:
         await self._session.flush()

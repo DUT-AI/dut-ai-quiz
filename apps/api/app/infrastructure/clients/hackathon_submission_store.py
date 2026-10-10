@@ -24,9 +24,7 @@ class MinIOHackathonSubmissionStore(IHackathonSubmissionStore):
         model_file: Any | None = None,
         model_filename: str | None = None,
     ) -> SubmissionStorageInfo:
-        script_s3_key = (
-            f"hackathons/{hackathon_slug}/{sender_slug}/{submission_id}/predict.py"
-        )
+        script_s3_key = f"hackathons/{hackathon_slug}/{sender_slug}/{submission_id}/predict.py"
         model_s3_key = None
 
         # 1. Upload Script File
@@ -34,10 +32,10 @@ class MinIOHackathonSubmissionStore(IHackathonSubmissionStore):
 
         # 2. Upload Model File (nếu có)
         if model_file and model_filename:
-            model_ext = (
-                model_filename.split(".")[-1] if "." in model_filename else "bin"
+            model_ext = model_filename.split(".")[-1] if "." in model_filename else "bin"
+            model_s3_key = (
+                f"hackathons/{hackathon_slug}/{sender_slug}/{submission_id}/model.{model_ext}"
             )
-            model_s3_key = f"hackathons/{hackathon_slug}/{sender_slug}/{submission_id}/model.{model_ext}"
             self._s3_client.upload_fileobj(model_file, self._bucket_name, model_s3_key)
 
         # 3. Tạo URL truy cập

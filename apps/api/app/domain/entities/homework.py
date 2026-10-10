@@ -1,8 +1,8 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import StrEnum
 from typing import Any
-from uuid import UUID
+from uuid import UUID, uuid4
 
 
 class HomeworkSubmissionStatus(StrEnum):
@@ -12,17 +12,25 @@ class HomeworkSubmissionStatus(StrEnum):
     FAILED = "FAILED"
 
 
+class SubmissionType(StrEnum):
+    CODING = "CODING"
+    GAME = "GAME"
+
+
 @dataclass(slots=True)
 class HomeworkEntity:
     lesson_id: UUID | None
     title: str
     description: str
     created_by: int
-    id: UUID | None = None
+    id: UUID = field(default_factory=uuid4)
     attachment_key: str | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
     archived_at: datetime | None = None
+    grading_status: str = "PENDING"
+    grading_error: str | None = None
+    grading_rubric: dict[str, Any] | None = None
 
 
 @dataclass(slots=True)
@@ -34,7 +42,7 @@ class HomeworkSubmissionEntity:
     submitted_at: datetime
     is_late: bool
     attempt_number: int
-    id: UUID | None = None
+    id: UUID = field(default_factory=uuid4)
     status: HomeworkSubmissionStatus = HomeworkSubmissionStatus.UPLOADED
     is_pass: bool | None = None
     score: float | None = None

@@ -1,10 +1,10 @@
 import dataclasses
 from datetime import datetime
+from enum import StrEnum
 from uuid import UUID
-from enum import Enum
 
 
-class SubmissionStatus(str, Enum):
+class SubmissionStatus(StrEnum):
     UPLOADING = "UPLOADING"
     EXTRACTING = "EXTRACTING"
     RUNNING = "RUNNING"

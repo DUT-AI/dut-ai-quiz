@@ -32,7 +32,7 @@ class StartAttemptUseCase:
         if not exam:
             raise ExamNotFoundException()
 
-        exam.check_can_start()
+        exam.check_can_start(user_id)
 
         now = now_ict()
         questions = await self._eq_repo.load_questions_ordered(exam_id)

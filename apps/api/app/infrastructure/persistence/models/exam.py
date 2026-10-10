@@ -1,12 +1,13 @@
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import ForeignKey, Integer, UniqueConstraint
+from sqlalchemy import Enum, ForeignKey, Integer, UniqueConstraint
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.dialects.postgresql import UUID as pgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.domain.entities.exam import ExamEntity
+from app.domain.value_objects import ExamAccessScope
 
 from .base import Base
 
@@ -14,9 +15,7 @@ from .base import Base
 class Exam(Base):
     __tablename__ = "exams"
 
-    id: Mapped[UUID] = mapped_column(
-        pgUUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(pgUUID(as_uuid=True), primary_key=True, default=uuid4)
     title: Mapped[str] = mapped_column()
     description: Mapped[str] = mapped_column(default="", server_default="")
     start_time: Mapped[datetime | None] = mapped_column(nullable=True)
@@ -27,6 +26,12 @@ class Exam(Base):
     created_by: Mapped[int] = mapped_column(index=True)
     participant_ids: Mapped[list[int]] = mapped_column(
         ARRAY(Integer()), nullable=False, default=list
+    )
+    access_scope: Mapped[ExamAccessScope] = mapped_column(
+        Enum(ExamAccessScope, name="examaccessscope", native_enum=True),
+        nullable=False,
+        default=ExamAccessScope.PUBLIC,
+        server_default="PUBLIC",
     )
     show_answers: Mapped[bool] = mapped_column(default=False, server_default="false")
 
@@ -42,6 +47,7 @@ class Exam(Base):
             is_published=self.is_published,
             created_by=self.created_by,
             participant_ids=self.participant_ids,
+            access_scope=self.access_scope,
             show_answers=self.show_answers,
         )
 
@@ -58,19 +64,16 @@ class Exam(Base):
             is_published=entity.is_published,
             created_by=entity.created_by,
             participant_ids=entity.participant_ids,
+            access_scope=entity.access_scope,
             show_answers=entity.show_answers,
         )
 
 
 class ExamQuestion(Base):
     __tablename__ = "exam_questions"
-    __table_args__ = (
-        UniqueConstraint("exam_id", "question_id", name="uq_exam_question"),
-    )
+    __table_args__ = (UniqueConstraint("exam_id", "question_id", name="uq_exam_question"),)
 
-    id: Mapped[UUID] = mapped_column(
-        pgUUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(pgUUID(as_uuid=True), primary_key=True, default=uuid4)
     exam_id: Mapped[UUID] = mapped_column(ForeignKey("exams.id"), index=True)
     question_id: Mapped[UUID] = mapped_column(ForeignKey("questions.id"), index=True)
     position: Mapped[int] = mapped_column(default=0, server_default="0")

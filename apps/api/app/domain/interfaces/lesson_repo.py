@@ -19,6 +19,10 @@ class ILessonRepository(Protocol):
         """Get a single lesson entity by its slug."""
         ...
 
+    async def get_by_identifier(self, identifier: str) -> LessonEntity | None:
+        """Get a single lesson entity by its UUID, slug, or name."""
+        ...
+
     async def add(self, entity: LessonEntity) -> LessonEntity:
         """Add a new lesson entity to the store."""
         ...

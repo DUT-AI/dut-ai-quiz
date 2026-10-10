@@ -1,7 +1,9 @@
 from uuid import UUID
-from redis.asyncio import Redis
-from app.domain.interfaces.question_repo import IQuestionRepository
+
 from app.domain.entities.question import QuestionEntity
+from app.domain.interfaces.question_repo import IQuestionRepository
+from redis.asyncio import Redis
+
 
 class PublishQuestionUseCase:
     def __init__(self, redis: Redis, question_repo: IQuestionRepository):
@@ -21,8 +23,8 @@ class PublishQuestionUseCase:
 
         q.status = "PUBLIC"
         await self.question_repo.update(q)
-        
+
         # Release the lock
         await self.redis.delete(lock_key)
-        
+
         return q

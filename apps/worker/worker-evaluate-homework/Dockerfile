@@ -2,10 +2,11 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install system dependencies (libarchive-tools for archive extraction)
+# Install system dependencies (libarchive-tools, unar for archive extraction)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     libarchive-tools \
+    unar \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv

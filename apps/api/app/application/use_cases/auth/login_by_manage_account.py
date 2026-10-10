@@ -1,9 +1,8 @@
 from app.application.dtos import AuthTokens, LoginPayload
-from app.application.services.auth_roles import quiz_role_from_manage
 from app.config import settings
 from app.core.jwt import create_access_token
-from app.domain.interfaces import IManageService
 from app.domain.exceptions.exceptions import AppException
+from app.domain.interfaces import IManageService
 from loguru import logger
 
 

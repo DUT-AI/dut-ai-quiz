@@ -1,5 +1,7 @@
-from typing import Any, Protocol
+from typing import Any, Protocol, TypeVar
 from uuid import UUID
+
+from pydantic import BaseModel
 
 from .models import (
     GradeResult,
@@ -9,6 +11,22 @@ from .models import (
     StoredFingerprint,
     SubmissionGradingRecord,
 )
+
+T = TypeVar("T", bound=BaseModel)
+
+
+class ILLMClient(Protocol):
+    @property
+    def input_token_budget(self) -> int: ...
+
+    async def count_tokens(self, prompt: str, system_instruction: str = "") -> int: ...
+
+    async def generate_structured(
+        self,
+        prompt: str,
+        schema: type[T],
+        system_instruction: str = "",
+    ) -> T: ...
 
 
 class IHomeworkArtifactReader(Protocol):
@@ -40,7 +58,7 @@ class IHomeworkGradingRepository(Protocol):
         homework_id: UUID,
     ) -> HomeworkGradingRecord | None: ...
 
-    async def set_homework_processing(self, homework_id: UUID) -> None: ...
+    async def set_homework_processing(self, homework_id: UUID) -> bool: ...
 
     async def save_homework_rubric(
         self,
@@ -52,6 +70,8 @@ class IHomeworkGradingRepository(Protocol):
         self,
         homework_id: UUID,
         error: str,
+        *,
+        retryable: bool = False,
     ) -> None: ...
 
     async def get_submission(
@@ -59,7 +79,7 @@ class IHomeworkGradingRepository(Protocol):
         submission_id: UUID,
     ) -> SubmissionGradingRecord | None: ...
 
-    async def set_submission_grading(self, submission_id: UUID) -> None: ...
+    async def set_submission_grading(self, submission_id: UUID) -> bool: ...
 
     async def save_submission_result(
         self,
@@ -75,6 +95,7 @@ class IHomeworkGradingRepository(Protocol):
         error: str,
         *,
         final: bool,
+        retryable: bool = False,
     ) -> None: ...
 
     async def list_previous_fingerprints(
@@ -90,3 +111,16 @@ class IHomeworkGradingRepository(Protocol):
         values: list[dict[str, Any]],
     ) -> None: ...
 
+    async def list_stale_homework_ids(
+        self,
+        stale_minutes: int = 10,
+        days_limit: int = 7,
+        limit: int = 10,
+    ) -> list[UUID]: ...
+
+    async def list_stale_submission_ids(
+        self,
+        stale_minutes: int = 15,
+        days_limit: int = 7,
+        limit: int = 20,
+    ) -> list[UUID]: ...

@@ -37,7 +37,7 @@ help:
 api-sync:
 	cd $(API_DIR) && uv sync --group dev
 
-api-dev: api-sync
+api-dev backend-dev: api-sync
 	cd $(API_DIR) && uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 api-lint:

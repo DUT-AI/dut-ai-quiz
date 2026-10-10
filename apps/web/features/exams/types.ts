@@ -11,6 +11,7 @@ export const ExamOutSchema = z.object({
   is_published: z.boolean(),
   created_by: z.number(),
   participant_ids: z.array(z.number()),
+  access_scope: z.enum(["PUBLIC", "RESTRICTED"]).default("PUBLIC"),
   show_answers: z.boolean(),
 });
 
@@ -33,6 +34,7 @@ export const ExamCreateSchema = z.object({
   max_attempts: z.number().optional(),
   is_published: z.boolean().optional(),
   participant_ids: z.array(z.number()).optional(),
+  access_scope: z.enum(["PUBLIC", "RESTRICTED"]).optional(),
   show_answers: z.boolean().optional(),
 });
 

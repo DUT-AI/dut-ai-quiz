@@ -1,9 +1,11 @@
-import json
 import dataclasses
+import json
 from datetime import datetime
+
 from redis.asyncio import Redis
-from app.domain.interfaces.manage_cache import IDUTAIManageCache
+
 from app.domain.entities.manage_service import ManageTeamEntity, ManageUserEntity
+from app.domain.interfaces.manage_cache import IDUTAIManageCache
 
 
 class DUTAIManageCache(IDUTAIManageCache):

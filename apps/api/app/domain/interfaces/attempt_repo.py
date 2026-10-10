@@ -61,9 +61,7 @@ class IAttemptRepository(Protocol):
         """List all completed attempt IDs that answered a specific question ID."""
         ...
 
-    async def list_all_answers_for_exam(
-        self, exam_id: UUID
-    ) -> list[AttemptAnswerEntity]:
+    async def list_all_answers_for_exam(self, exam_id: UUID) -> list[AttemptAnswerEntity]:
         """List all answers from completed attempts of an exam."""
         ...
 

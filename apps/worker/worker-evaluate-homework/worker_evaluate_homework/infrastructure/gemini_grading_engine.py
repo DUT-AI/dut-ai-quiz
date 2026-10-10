@@ -5,19 +5,25 @@ from pathlib import PurePath, PurePosixPath
 from typing import Any
 
 from app.config import settings
-from google import genai
-from google.genai import types as genai_types
+from loguru import logger
 
 from worker_evaluate_homework.domain import (
     CriterionEvaluation,
     GradeResult,
     HomeworkGradingRecord,
     HomeworkRubric,
+    ILLMClient,
     SourceFile,
 )
+from worker_evaluate_homework.domain.errors import ContextLimitError, LLMError
 from worker_evaluate_homework.domain.models import (
     ChecklistEvaluation,
+    ChunkEvidence,
     GradingCriterion,
+)
+from worker_evaluate_homework.infrastructure.llm_clients import (
+    GeminiLLMClient,
+    OpenAILLMClient,
 )
 
 _LIBRARY_IMPORT_MAP: dict[str, set[str]] = {
@@ -41,12 +47,16 @@ Evaluate only from the supplied evidence and return only the requested schema.
 """.strip()
 
 
-class GeminiHomeworkGradingEngine:
-    def __init__(self) -> None:
-        if not settings.gemini_api_key:
-            raise RuntimeError("Thiếu GEMINI_API_KEY; worker chưa thể chấm bài tự động")
-        self._client = genai.Client(api_key=settings.gemini_api_key)
-        self._model = "gemma-4-31b-it"
+class HomeworkGradingEngine:
+    """Homework grading engine using injected ILLMClient (OpenAI or Gemini)."""
+
+    def __init__(self, llm_client: ILLMClient | None = None) -> None:
+        if llm_client is not None:
+            self._llm = llm_client
+        elif settings.homework_llm_provider == "gemini":
+            self._llm = GeminiLLMClient(model=settings.homework_grading_model)
+        else:
+            self._llm = OpenAILLMClient()
 
     async def create_rubric(
         self,
@@ -55,7 +65,7 @@ class GeminiHomeworkGradingEngine:
     ) -> HomeworkRubric:
         prompt = f"""
 Bạn là người thiết kế rubric cho bài tập lập trình Python.
-Hãy phân tích đề bài và trả về rubric có cấu trúc.
+Hãy phân tích đề bài và trả về rubric có cấu trúc dưới định dạng JSON.
 
 TIÊU ĐỀ:
 {homework.title}
@@ -67,14 +77,39 @@ NỘI DUNG TRÍCH TỪ FILE ĐỀ:
 {attachment_text}
 
 Quy tắc:
-- required_files chỉ chứa tên file code bắt buộc, ví dụ "1.py" hoặc "bai1.ipynb".
-- Không tự bịa tên file nếu đề không yêu cầu rõ.
-- requirements phải là các yêu cầu có thể đối chiếu với nội dung bài nộp.
-- allowed_libraries và forbidden_libraries để rỗng nếu đề không quy định.
-- criteria phải có từ 3 đến 10 tiêu chí riêng cho đúng bài tập này.
-- Mỗi criteria.id là snake_case duy nhất, criteria.weight dương và tổng các weight là 10.
+- topic: Tên chủ đề của bài tập (dựa trên tiêu đề và nội dung bài tập).
+- objective: Mục tiêu của bài tập và kỹ năng cần đạt được.
+- notes: Danh sách ghi chú thêm (để rỗng [] nếu không có).
+- required_files: Danh sách các tên file code bắt buộc (ví dụ: ["main.py"] hoặc ["bai1.ipynb"]). Không tự bịa nếu đề không yêu cầu rõ (để rỗng [] nếu đề không quy định cụ thể).
+- requirements: Danh sách các yêu cầu có thể đối chiếu với nội dung bài nộp (mỗi phần tử là một string).
+- allowed_libraries và forbidden_libraries: Danh sách tên thư viện (để rỗng [] nếu đề không quy định).
+- criteria: Danh sách từ 3 đến 10 tiêu chí riêng cho đúng bài tập này.
+- Mỗi criteria có:
+  + id: snake_case duy nhất (ví dụ: "data_preprocessing", "model_training").
+  + criterion: Tên ngắn gọn của tiêu chí.
+  + description: Mô tả chi tiết cách kiểm tra.
+  + weight: Số thực dương, tổng trọng số của tất cả các tiêu chí phải bằng 10.
 - Tiêu chí phải chấm được từ code, Markdown hoặc output notebook; ưu tiên yêu cầu cụ thể trong đề.
 - Nếu đề có quy định thư viện, phải có tiêu chí id="library_policy".
+
+BẮT BUỘC TRẢ VỀ JSON theo cấu trúc mẫu sau (chỉ trả về JSON, không kèm văn bản giải thích nào khác):
+{{
+  "topic": "{homework.title}",
+  "objective": "Mục tiêu bài tập",
+  "notes": [],
+  "required_files": [],
+  "allowed_libraries": [],
+  "forbidden_libraries": [],
+  "requirements": ["..."],
+  "criteria": [
+    {{
+      "id": "criteria_id",
+      "criterion": "Tên tiêu chí",
+      "description": "Mô tả tiêu chí",
+      "weight": 2.5
+    }}
+  ]
+}}
 """.strip()
         rubric = await self._generate_structured(prompt, HomeworkRubric)
         return _normalize_rubric(rubric)
@@ -89,10 +124,7 @@ Quy tắc:
             return _blocking_result(rubric.criteria, static["blocking_errors"])
 
         checklist = "\n".join(
-            (
-                f"{item.id}. [{item.weight:.4g} điểm] "
-                f"{item.criterion}: {item.description}"
-            )
+            (f"{item.id}. [{item.weight:.4g} điểm] {item.criterion}: {item.description}")
             for item in rubric.criteria
         )
         source_text = _pack_sources(sources)
@@ -116,18 +148,51 @@ mô tả ngắn nêu bằng chứng cụ thể. Không thêm hoặc bỏ bất k
 
 CHECKLIST:
 {checklist}
+
+BẮT BUỘC TRẢ VỀ JSON theo cấu trúc sau:
+{{
+  "evaluations": [
+    {{
+      "id": "criteria_id",
+      "status": true,
+      "description": "Mô tả bằng chứng đánh giá"
+    }}
+  ]
+}}
 """.strip()
-        evaluated = await self._generate_structured(
-            prompt,
-            ChecklistEvaluation,
-        )
+        for label, value in (
+            ("rubric", rubric.model_dump_json()),
+            ("static", json.dumps(static, ensure_ascii=False)),
+            ("sources", source_text),
+            ("checklist", checklist),
+        ):
+            try:
+                component_tokens = await self._llm.count_tokens(value)
+            except ContextLimitError:
+                logger.info(
+                    "Grading input {} chars={} token measurement deferred to fragments",
+                    label,
+                    len(value),
+                )
+            else:
+                logger.info(
+                    "Grading input {} chars={} tokens_with_template={}",
+                    label,
+                    len(value),
+                    component_tokens,
+                )
+        try:
+            evaluated = await self._generate_structured(prompt, ChecklistEvaluation)
+        except ContextLimitError:
+            evaluated = await self._grade_chunks(rubric, sources, prompt, source_text)
         expected_ids = {item.id for item in rubric.criteria}
         actual_ids = {item.id for item in evaluated.evaluations}
         if actual_ids != expected_ids:
-            raise RuntimeError(
-                "Gemini trả về sai bộ tiêu chí chấm: "
+            raise LLMError(
+                "LLM trả về sai bộ tiêu chí chấm: "
                 f"thiếu={sorted(expected_ids - actual_ids)}, "
-                f"thừa={sorted(actual_ids - expected_ids)}"
+                f"thừa={sorted(actual_ids - expected_ids)}",
+                retryable=True,
             )
         _override_library_policy(evaluated, static, rubric)
         score_details: list[dict[str, Any]] = []
@@ -148,9 +213,7 @@ CHECKLIST:
                 }
             )
             mark = "✅" if evaluation.status else "❌"
-            feedback_lines.append(
-                f"- {mark} **{item.criterion}**: {evaluation.description}"
-            )
+            feedback_lines.append(f"- {mark} **{item.criterion}**: {evaluation.description}")
 
         score = round(min(score, 10.0), 2)
         feedback_lines.extend(["", f"**Tổng điểm: {score}/10**"])
@@ -162,21 +225,123 @@ CHECKLIST:
         )
 
     async def _generate_structured(self, prompt: str, schema):
-        schema_dict = _clean_schema(schema.model_json_schema())
-        response = await self._client.aio.models.generate_content(
-            model=self._model,
-            contents=prompt,
-            config=genai_types.GenerateContentConfig(
-                system_instruction=_SYSTEM_INSTRUCTION,
-                response_mime_type="application/json",
-                response_schema=schema_dict,
-                temperature=0.1,
-                max_output_tokens=8192,
-            ),
+        tokens = await self._llm.count_tokens(prompt, _SYSTEM_INSTRUCTION)
+        logger.info(
+            "Grading request schema={} prompt_tokens={} budget={}",
+            schema.__name__,
+            tokens,
+            self._llm.input_token_budget,
         )
-        if not response.text:
-            raise RuntimeError("Gemini không trả về nội dung")
-        return schema.model_validate_json(_strip_code_fence(response.text))
+        if tokens > self._llm.input_token_budget:
+            raise ContextLimitError(
+                f"LLM prompt có {tokens} token, vượt ngân sách {self._llm.input_token_budget}"
+            )
+        return await self._llm.generate_structured(
+            prompt=prompt,
+            schema=schema,
+            system_instruction=_SYSTEM_INSTRUCTION,
+        )
+
+    async def _grade_chunks(self, rubric, sources, full_prompt, source_text):
+        """Collect evidence from every fragment; award each criterion only once."""
+        rubric_text = rubric.model_dump_json()
+        prefix = (
+            "Trích bằng chứng từ MỘT PHẦN bài nộp. Đây chưa phải toàn bộ bài. "
+            "Không chấm điểm, không kết luận thiếu chức năng vì không thấy trong phần này. "
+            "Chỉ ghi bằng chứng cụ thể, tên file/cell, code liên quan và giới hạn quan sát. "
+            "Chỉ dùng id trong rubric; bỏ qua id không có bằng chứng. "
+            "Mỗi evidence tối đa 1200 ký tự. Trả JSON: "
+            '{"findings":[{"id":"criterion_id","evidence":"..."}]}\n'
+            f"RUBRIC:\n{rubric_text}\nFRAGMENT:\n"
+        )
+        # A rubric that cannot fit on its own must not be silently shortened.
+        base_tokens = await self._llm.count_tokens(prefix, _SYSTEM_INSTRUCTION)
+        if base_tokens >= self._llm.input_token_budget:
+            raise ContextLimitError("LLM rubric quá dài để đọc từng phần bài nộp")
+        pending = []
+        for source in sources:
+            step = settings.homework_grading_chunk_chars
+            for start in range(0, len(source.content), step):
+                pending.append((source.name, start, source.content[start : start + step]))
+        summaries = []
+        expected_ids = {item.id for item in rubric.criteria}
+        while pending:
+            if len(summaries) + len(pending) > settings.homework_grading_max_chunks:
+                raise ContextLimitError(
+                    "Bài nộp cần quá nhiều lượt đọc LLM; không chấm thiếu nội dung"
+                )
+            name, start, content = pending.pop(0)
+            fragment = f"### FILE: {name}, chars {start}:{start + len(content)}\n{content}"
+            try:
+                evidence = await self._generate_structured(prefix + fragment, ChunkEvidence)
+            except ContextLimitError:
+                if len(content) <= 1:
+                    raise
+                middle = len(content) // 2
+                pending[:0] = [
+                    (name, start, content[:middle]),
+                    (name, start + middle, content[middle:]),
+                ]
+                continue
+            if len(summaries) + len(pending) + 1 > settings.homework_grading_max_chunks:
+                raise ContextLimitError(
+                    "Bài nộp cần quá nhiều lượt đọc LLM; không chấm thiếu nội dung"
+                )
+            ids = [finding.id for finding in evidence.findings]
+            if len(ids) != len(set(ids)) or not set(ids) <= expected_ids:
+                raise LLMError("LLM trả bằng chứng sai bộ tiêu chí", retryable=True)
+            summaries.append(
+                {
+                    "file": name,
+                    "start": start,
+                    "end": start + len(content),
+                    "findings": evidence.model_dump()["findings"],
+                }
+            )
+        if not summaries:
+            raise ContextLimitError("Bài nộp không có nội dung để đọc từng phần")
+        # Replace the submission section only, not matching text in the rubric.
+        section = "NỘI DUNG BÀI NỘP (CODE, MARKDOWN VÀ NOTEBOOK OUTPUT):\n"
+        before, _, after = full_prompt.partition(section)
+        if not after.startswith(source_text + "\n"):
+            raise LLMError("Không thể dựng prompt tổng hợp bằng chứng")
+        logger.info("Grading evidence collected chunks={}", len(summaries))
+        while True:
+            evidence_text = (
+                "BẰNG CHỨNG ĐÃ ĐỌC TỪ TẤT CẢ PHẦN BÀI NỘP:\n"
+                + json.dumps(summaries, ensure_ascii=False)
+                + "\nTổng hợp bằng chứng giữa các file/phần trước khi kết luận. "
+                "Chỉ trả một evaluation cho mỗi tiêu chí; không cộng điểm theo từng phần."
+            )
+            final_prompt = before + section + evidence_text + after[len(source_text) :]
+            tokens = await self._llm.count_tokens(final_prompt, _SYSTEM_INSTRUCTION)
+            if tokens <= self._llm.input_token_budget:
+                return await self._generate_structured(final_prompt, ChecklistEvaluation)
+            if len(summaries) <= 1:
+                raise ContextLimitError("Bằng chứng tổng hợp và rubric vẫn vượt ngân sách LLM")
+            merged = []
+            for offset in range(0, len(summaries), 2):
+                pair = summaries[offset : offset + 2]
+                if len(pair) == 1:
+                    merged.extend(pair)
+                    continue
+                merge_prompt = (
+                    "Hợp nhất bằng chứng cho từng id từ hai nhóm phần bài nộp. "
+                    "Giữ tên file/cell, code quan trọng, phụ thuộc giữa các phần và giới hạn quan sát. "
+                    "Không chấm điểm, không tạo bằng chứng mới. Mỗi id tối đa 1200 ký tự. "
+                    'Trả JSON {"findings":[{"id":"criterion_id","evidence":"..."}]}.\n'
+                    + json.dumps(pair, ensure_ascii=False)
+                )
+                evidence = await self._generate_structured(merge_prompt, ChunkEvidence)
+                pair_ids = {item["id"] for part in pair for item in part["findings"]}
+                if {item.id for item in evidence.findings} != pair_ids:
+                    raise LLMError("LLM làm mất tiêu chí khi hợp nhất bằng chứng", retryable=True)
+                merged.append({"findings": evidence.model_dump()["findings"]})
+            summaries = merged
+
+
+# Alias for backward compatibility
+GeminiHomeworkGradingEngine = HomeworkGradingEngine
 
 
 def _analyze_sources(
@@ -186,9 +351,7 @@ def _analyze_sources(
     source_names = {PurePath(source.name).name.casefold() for source in sources}
     local_modules = _local_module_names(sources)
     missing = [
-        name
-        for name in rubric.required_files
-        if PurePath(name).name.casefold() not in source_names
+        name for name in rubric.required_files if PurePath(name).name.casefold() not in source_names
     ]
     syntax_errors: list[str] = []
     imported_modules: set[str] = set()
@@ -208,9 +371,7 @@ def _analyze_sources(
             elif isinstance(node, ast.ClassDef):
                 class_count += 1
             elif isinstance(node, ast.Import):
-                imported_modules.update(
-                    alias.name.split(".")[0].casefold() for alias in node.names
-                )
+                imported_modules.update(alias.name.split(".")[0].casefold() for alias in node.names)
             elif isinstance(node, ast.ImportFrom) and node.module:
                 imported_modules.add(node.module.split(".")[0].casefold())
 
@@ -218,9 +379,7 @@ def _analyze_sources(
     allowed = _expand_library_names(rubric.allowed_libraries)
     forbidden_imports = sorted(imported_modules & forbidden)
     unauthorized_imports = (
-        sorted(
-            imported_modules - allowed - local_modules - set(sys.stdlib_module_names)
-        )
+        sorted(imported_modules - allowed - local_modules - set(sys.stdlib_module_names))
         if allowed
         else []
     )
@@ -258,19 +417,7 @@ def _local_module_names(sources: list[SourceFile]) -> set[str]:
 
 
 def _pack_sources(sources: list[SourceFile]) -> str:
-    remaining = settings.homework_grading_max_source_chars
-    parts: list[str] = []
-    for source in sources:
-        header = f"\n### FILE: {source.name}\n"
-        if len(header) >= remaining:
-            break
-        remaining -= len(header)
-        content = source.content[:remaining]
-        parts.append(header + content)
-        remaining -= len(content)
-        if remaining <= 0:
-            break
-    return "".join(parts)
+    return "".join(f"\n### FILE: {source.name}\n{source.content}" for source in sources)
 
 
 def _override_library_policy(

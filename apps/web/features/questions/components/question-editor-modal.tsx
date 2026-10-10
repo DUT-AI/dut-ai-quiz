@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useMemo } from "react";
-import { useForm, useFieldArray, FormProvider } from "react-hook-form";
+import { useForm, useFieldArray, FormProvider, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   X,
@@ -23,6 +23,7 @@ import { EditorStep1 } from "./editor/editor-step1";
 import { EditorStep2 } from "./editor/editor-step2";
 import { EditorStep3 } from "./editor/editor-step3";
 import { EditorPreview } from "./editor/editor-preview";
+import { LessonSelector } from "./lesson-selector";
 
 interface Props {
   lessonId: string;
@@ -117,7 +118,7 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
       content: initialData?.content ?? "",
       options: defaultOptions,
       solution: initialData?.solution ?? "",
-      lesson_id: lessonId,
+      lesson_id: initialData?.lesson_id || lessonId,
       tags: [],
     },
   });
@@ -133,13 +134,34 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
   } = methods;
 
   React.useEffect(() => {
-    if (initialData?.tags && allTags.length) {
-      const tagIds = allTags
-        .filter((tag) => initialData.tags.includes(tag.name))
-        .map((tag) => tag.id);
-      setValue("tags", tagIds);
+    if (initialData) {
+      const tagIds = initialData.tags && allTags.length
+        ? allTags.filter((tag) => initialData.tags.includes(tag.name)).map((tag) => tag.id)
+        : [];
+      const opts = initialData.options?.length
+        ? initialData.options.map((o) => ({
+            id: o.id ?? newOption().id,
+            text: o.text,
+            is_correct: o.is_correct,
+          }))
+        : [
+            { ...newOption(), is_correct: true },
+            newOption(),
+            newOption(),
+            newOption(),
+          ];
+
+      methods.reset({
+        pool_type: initialData.pool_type ?? "PRACTICE",
+        difficulty: (initialData.difficulty as any) ?? "EASY",
+        content: initialData.content ?? "",
+        options: opts,
+        solution: initialData.solution ?? "",
+        lesson_id: initialData.lesson_id || lessonId,
+        tags: tagIds,
+      });
     }
-  }, [initialData?.tags, allTags, setValue]);
+  }, [initialData, allTags, lessonId, methods]);
 
   const { fields, append, remove, update } = useFieldArray({ control, name: "options" });
 
@@ -366,7 +388,7 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
         options: values.options,
         solution: values.solution || undefined,
         tags: values.tags || [],
-        lesson_id: lessonId,
+        lesson_id: values.lesson_id || lessonId,
       };
       if (initialData) {
         await updateMut.mutateAsync({ id: initialData.id, payload });
@@ -394,80 +416,100 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
   const isPending = createMut.isPending || updateMut.isPending || isSubmitting;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 15 }}
-      className={`fixed inset-0 z-[110] bg-white dark:bg-navy-blue flex flex-col w-screen h-screen overflow-hidden text-left ${
-        isDragging ? "select-none cursor-col-resize" : ""
-      }`}
-    >
-      {/* Header */}
-      <div className="px-8 py-4 border-b border-gray-100 dark:border-white/10 flex items-center justify-between shrink-0 bg-white dark:bg-navy-blue z-20">
-        <div className="flex items-center gap-4">
-          <div className="size-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-            <Edit3 className="size-5" />
-          </div>
-          <div>
-            <h2 className="text-lg font-black text-dark-blue dark:text-white leading-none">
-              {initialData ? "Chỉnh sửa câu hỏi" : "Soạn câu hỏi mới"}
-            </h2>
-            <p className="text-xs text-gray-navy font-bold tracking-wide mt-1">
-              Bài học • {lessonId.slice(0, 8)}...
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-6">
-          {/* View Modes */}
-          <div className="flex items-center gap-1 bg-gray-50 dark:bg-white/5 p-1 rounded-2xl border border-gray-200/40 dark:border-white/5">
-            <button
-              onClick={() => setViewMode("editor")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                viewMode === "editor"
-                  ? "bg-white dark:bg-white/15 text-primary shadow-sm"
-                  : "text-gray-navy hover:text-dark-blue dark:hover:text-white"
-              }`}
-            >
-              <Edit3 className="size-3.5" /> Chỉ soạn thảo
-            </button>
-            <button
-              onClick={() => setViewMode("split")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                viewMode === "split"
-                  ? "bg-white dark:bg-white/15 text-primary shadow-sm"
-                  : "text-gray-navy hover:text-dark-blue dark:hover:text-white"
-              }`}
-            >
-              <Columns className="size-3.5" /> Chia đôi
-            </button>
-            <button
-              onClick={() => setViewMode("preview")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                viewMode === "preview"
-                  ? "bg-white dark:bg-white/15 text-primary shadow-sm"
-                  : "text-gray-navy hover:text-dark-blue dark:hover:text-white"
-              }`}
-            >
-              <Eye className="size-3.5" /> Xem trước
-            </button>
-          </div>
-
-          <button
-            onClick={onClose}
-            className="size-10 rounded-2xl hover:bg-gray-100 dark:hover:bg-white/5 transition-all flex items-center justify-center text-gray-navy hover:text-dark-blue dark:hover:text-white border border-transparent hover:border-gray-200/50 dark:hover:border-white/10"
-          >
-            <X className="size-5" />
-          </button>
-        </div>
-      </div>
-
-      {/* Editor Body */}
-      <div
-        ref={containerRef}
-        className="flex-1 flex flex-col lg:flex-row overflow-hidden relative"
+    <FormProvider {...methods}>
+      <motion.div
+        key="question-editor-modal"
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 15 }}
+        transition={{ duration: 0.22, ease: "easeOut" }}
+        className={`fixed inset-0 z-[110] bg-white dark:bg-navy-blue flex flex-col w-screen h-screen overflow-hidden text-left ${
+          isDragging ? "select-none cursor-col-resize" : ""
+        }`}
       >
-        <FormProvider {...methods}>
+        {/* Header */}
+        <div className="px-6 md:px-8 py-3.5 border-b border-gray-100 dark:border-white/10 flex flex-wrap items-center justify-between gap-4 shrink-0 bg-white dark:bg-navy-blue z-20">
+          <div className="flex items-center gap-3 md:gap-4 min-w-0">
+            <div className="size-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+              <Edit3 className="size-5" />
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-base md:text-lg font-black text-dark-blue dark:text-white leading-none truncate">
+                {initialData ? "Chỉnh sửa câu hỏi" : "Soạn câu hỏi mới"}
+              </h2>
+              <p className="text-[11px] text-gray-navy font-bold tracking-wide mt-1">
+                Cập nhật nội dung & thuộc tính câu hỏi
+              </p>
+            </div>
+
+            {/* Lesson Searchable Selector in Header */}
+            <div className="ml-2 md:ml-4 pl-3 md:pl-4 border-l border-gray-100 dark:border-white/10">
+              <Controller
+                control={control}
+                name="lesson_id"
+                render={({ field }) => (
+                  <LessonSelector
+                    value={field.value}
+                    onChange={(newLessonId) => field.onChange(newLessonId)}
+                  />
+                )}
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 md:gap-6 ml-auto">
+            {/* View Modes */}
+            <div className="flex items-center gap-1 bg-gray-50 dark:bg-white/5 p-1 rounded-2xl border border-gray-200/40 dark:border-white/5">
+              <button
+                type="button"
+                onClick={() => setViewMode("editor")}
+                className={`flex items-center gap-2 px-3 md:px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                  viewMode === "editor"
+                    ? "bg-white dark:bg-white/15 text-primary shadow-sm"
+                    : "text-gray-navy hover:text-dark-blue dark:hover:text-white"
+                }`}
+              >
+                <Edit3 className="size-3.5" /> <span className="hidden sm:inline">Chỉ soạn thảo</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("split")}
+                className={`flex items-center gap-2 px-3 md:px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                  viewMode === "split"
+                    ? "bg-white dark:bg-white/15 text-primary shadow-sm"
+                    : "text-gray-navy hover:text-dark-blue dark:hover:text-white"
+                }`}
+              >
+                <Columns className="size-3.5" /> <span className="hidden sm:inline">Chia đôi</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("preview")}
+                className={`flex items-center gap-2 px-3 md:px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                  viewMode === "preview"
+                    ? "bg-white dark:bg-white/15 text-primary shadow-sm"
+                    : "text-gray-navy hover:text-dark-blue dark:hover:text-white"
+                }`}
+              >
+                <Eye className="size-3.5" /> <span className="hidden sm:inline">Xem trước</span>
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="size-10 rounded-2xl hover:bg-gray-100 dark:hover:bg-white/5 transition-all flex items-center justify-center text-gray-navy hover:text-dark-blue dark:hover:text-white border border-transparent hover:border-gray-200/50 dark:hover:border-white/10 shrink-0"
+            >
+              <X className="size-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Editor Body */}
+        <div
+          ref={containerRef}
+          className="flex-1 flex flex-col lg:flex-row overflow-hidden relative"
+        >
           <form
             id="question-form"
             onSubmit={handleSubmit(onSubmit)}
@@ -636,41 +678,41 @@ export default function QuestionEditorModal({ lessonId, initialData, onClose, on
               </div>
             </div>
           </form>
-        </FormProvider>
 
-        {/* Divider / Drag Handle */}
-        {viewMode === "split" && (
-          <div
-            onMouseDown={startResize}
-            onTouchStart={startResize}
-            className={`hidden lg:flex items-center justify-center w-1.5 hover:w-2 cursor-col-resize hover:bg-primary/30 transition-all select-none relative z-30 bg-gray-100/50 dark:bg-white/10 ${
-              isDragging ? "bg-primary/50 w-2" : ""
-            }`}
-          >
-            {/* Grabber Handle */}
-            <div className="absolute top-1/2 -translate-y-1/2 w-5 h-12 bg-white dark:bg-navy-blue border border-gray-200 dark:border-white/10 rounded-full flex flex-col gap-0.5 items-center justify-center shadow-lg transition-transform hover:scale-110 active:scale-95 group z-40">
-              <span className="w-1 h-3 bg-gray-400 dark:bg-white/30 rounded-full" />
-              <span className="w-1 h-3 bg-gray-400 dark:bg-white/30 rounded-full" />
+          {/* Divider / Drag Handle */}
+          {viewMode === "split" && (
+            <div
+              onMouseDown={startResize}
+              onTouchStart={startResize}
+              className={`hidden lg:flex items-center justify-center w-1.5 hover:w-2 cursor-col-resize hover:bg-primary/30 transition-all select-none relative z-30 bg-gray-100/50 dark:bg-white/10 ${
+                isDragging ? "bg-primary/50 w-2" : ""
+              }`}
+            >
+              {/* Grabber Handle */}
+              <div className="absolute top-1/2 -translate-y-1/2 w-5 h-12 bg-white dark:bg-navy-blue border border-gray-200 dark:border-white/10 rounded-full flex flex-col gap-0.5 items-center justify-center shadow-lg transition-transform hover:scale-110 active:scale-95 group z-40">
+                <span className="w-1 h-3 bg-gray-400 dark:bg-white/30 rounded-full" />
+                <span className="w-1 h-3 bg-gray-400 dark:bg-white/30 rounded-full" />
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Live Preview Area (always previews everything) */}
-        {(viewMode === "split" || viewMode === "preview") && (
-          <EditorPreview
-            viewMode={viewMode}
-            content={watchContent}
-            options={previewOptions}
-            solution={watchSolution}
-            style={
-              viewMode === "split" && isDesktop
-                ? { width: `${100 - editorWidth}%`, flex: "none" }
-                : undefined
-            }
-          />
-        )}
-      </div>
-    </motion.div>
+          {/* Live Preview Area (always previews everything) */}
+          {(viewMode === "split" || viewMode === "preview") && (
+            <EditorPreview
+              viewMode={viewMode}
+              content={watchContent}
+              options={previewOptions}
+              solution={watchSolution}
+              style={
+                viewMode === "split" && isDesktop
+                  ? { width: `${100 - editorWidth}%`, flex: "none" }
+                  : undefined
+              }
+            />
+          )}
+        </div>
+      </motion.div>
+    </FormProvider>
   );
 }
 

@@ -1,12 +1,11 @@
 """ApproveQuestionUseCase — Step 8: Chuyển câu hỏi DRAFT → PUBLIC."""
+
 from uuid import UUID
 
-from redis.asyncio import Redis
-from sqlalchemy import select, update
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.config import settings
 from app.infrastructure.persistence.models import Question
+from redis.asyncio import Redis
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class ApproveQuestionUseCase:

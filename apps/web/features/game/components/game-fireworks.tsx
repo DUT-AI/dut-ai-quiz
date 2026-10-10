@@ -54,49 +54,50 @@ export default function GameFireworks() {
     const rockets: Rocket[] = [];
 
     const createExplosion = (x: number, y: number, color: string) => {
-      const particleCount = Math.floor(Math.random() * 35) + 35; // 35-70 particles
+      const particleCount = Math.floor(Math.random() * 18) + 18; // 18-36 particles (optimized)
       for (let i = 0; i < particleCount; i++) {
         const angle = Math.random() * Math.PI * 2;
-        const speed = Math.random() * 5 + 1.5;
+        const speed = Math.random() * 4.5 + 1.5;
         particles.push({
           x,
           y,
           vx: Math.cos(angle) * speed,
           vy: Math.sin(angle) * speed,
           alpha: 1,
-          decay: Math.random() * 0.012 + 0.008,
+          decay: Math.random() * 0.015 + 0.01,
           color,
           gravity: 0.05,
           friction: 0.98,
           history: [],
-          maxHistory: 5,
+          maxHistory: 4,
           size: Math.random() * 2 + 1,
         });
       }
 
       // Add crackles (sparkles)
-      const sparkleCount = Math.floor(Math.random() * 12) + 8;
+      const sparkleCount = Math.floor(Math.random() * 6) + 4;
       for (let i = 0; i < sparkleCount; i++) {
         const angle = Math.random() * Math.PI * 2;
-        const speed = Math.random() * 7 + 2;
+        const speed = Math.random() * 6 + 2;
         particles.push({
           x,
           y,
           vx: Math.cos(angle) * speed,
           vy: Math.sin(angle) * speed,
           alpha: 1,
-          decay: Math.random() * 0.025 + 0.015,
+          decay: Math.random() * 0.03 + 0.02,
           color: "#FFFFFF",
           gravity: 0.07,
           friction: 0.96,
           history: [],
-          maxHistory: 3,
+          maxHistory: 2,
           size: Math.random() * 1.5 + 0.5,
         });
       }
     };
 
     const spawnRocket = () => {
+      if (rockets.length >= 3) return;
       const startX = Math.random() * (width * 0.8) + width * 0.1;
       const startY = height;
       const targetX = Math.random() * (width * 0.8) + width * 0.1;
@@ -199,8 +200,6 @@ export default function GameFireworks() {
           ctx.strokeStyle = p.color;
           ctx.lineWidth = p.size;
           ctx.lineCap = "round";
-          ctx.shadowBlur = 4;
-          ctx.shadowColor = p.color;
           ctx.stroke();
           ctx.restore();
         }
