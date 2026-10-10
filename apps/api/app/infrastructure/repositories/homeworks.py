@@ -174,13 +174,24 @@ class HomeworkRepository(IHomeworkRepository):
         ).all()
         return [model.to_entity() for model in models]
 
-    async def retry_failed_submission(self, submission_id: UUID) -> HomeworkSubmissionEntity | None:
+    async def retry_failed_submission(
+        self,
+        submission_id: UUID,
+        allow_any_non_grading: bool = False,
+    ) -> HomeworkSubmissionEntity | None:
+        where_conditions = [HomeworkSubmission.id == submission_id]
+        if allow_any_non_grading:
+            where_conditions.append(
+                HomeworkSubmission.status != HomeworkSubmissionStatus.GRADING.value
+            )
+        else:
+            where_conditions.append(
+                HomeworkSubmission.status == HomeworkSubmissionStatus.FAILED.value
+            )
+
         model = await self._session.scalar(
             update(HomeworkSubmission)
-            .where(
-                HomeworkSubmission.id == submission_id,
-                HomeworkSubmission.status == HomeworkSubmissionStatus.FAILED.value,
-            )
+            .where(*where_conditions)
             .values(
                 status=HomeworkSubmissionStatus.GRADING.value,
                 is_pass=None,

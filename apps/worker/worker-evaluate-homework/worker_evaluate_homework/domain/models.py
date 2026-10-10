@@ -10,6 +10,7 @@ class SubmissionGradingStatus(StrEnum):
     GRADING = "GRADING"
     GRADED = "GRADED"
     FAILED = "FAILED"
+    UPLOADED = "UPLOADED"
 
 
 class GradingCriterion(BaseModel):

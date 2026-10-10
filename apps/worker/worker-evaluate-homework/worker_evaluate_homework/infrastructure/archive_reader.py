@@ -4,6 +4,7 @@ import io
 import json
 import stat
 import tarfile
+import tempfile
 import zipfile
 from pathlib import PurePosixPath
 from typing import Any, BinaryIO
@@ -274,29 +275,32 @@ def _read_7z_sources(content: bytes) -> list[SourceFile]:
 
 
 def _read_rar_sources(content: bytes) -> list[SourceFile]:
-    try:
-        with rarfile.RarFile(io.BytesIO(content)) as archive:
-            infos = archive.infolist()
-            _ensure_entry_count(len(infos))
-            selected = _select_source_entries(
-                (info.filename, info.file_size, info) for info in infos if not info.is_dir()
-            )
-            result: list[SourceFile] = []
-            for name, _, info in selected:
-                if info.file_redir:
-                    raise InvalidArtifactError("Bài nộp RAR không được chứa symbolic link")
-                if info.needs_password():
-                    raise InvalidArtifactError(f"File {name} có mật khẩu nên worker không thể đọc")
-                with archive.open(info) as stream:
-                    raw = _read_limited(stream)
-                result.append(SourceFile(name=name, content=_decode_source_file(name, raw)))
-            return result
-    except InvalidArtifactError:
-        raise
-    except rarfile.RarCannotExec as exc:
-        raise RuntimeError("Worker thiếu công cụ hệ thống để giải nén RAR") from exc
-    except rarfile.Error as exc:
-        raise InvalidArtifactError("Bài nộp không phải RAR hợp lệ") from exc
+    with tempfile.NamedTemporaryFile(suffix=".rar") as temp_file:
+        temp_file.write(content)
+        temp_file.flush()
+        try:
+            with rarfile.RarFile(temp_file.name) as archive:
+                infos = archive.infolist()
+                _ensure_entry_count(len(infos))
+                selected = _select_source_entries(
+                    (info.filename, info.file_size, info) for info in infos if not info.is_dir()
+                )
+                result: list[SourceFile] = []
+                for name, _, info in selected:
+                    if info.file_redir:
+                        raise InvalidArtifactError("Bài nộp RAR không được chứa symbolic link")
+                    if info.needs_password():
+                        raise InvalidArtifactError(f"File {name} có mật khẩu nên worker không thể đọc")
+                    with archive.open(info) as stream:
+                        raw = _read_limited(stream)
+                    result.append(SourceFile(name=name, content=_decode_source_file(name, raw)))
+                return result
+        except InvalidArtifactError:
+            raise
+        except rarfile.RarCannotExec as exc:
+            raise RuntimeError("Worker thiếu công cụ hệ thống để giải nén RAR") from exc
+        except rarfile.Error as exc:
+            raise InvalidArtifactError("Bài nộp không phải RAR hợp lệ") from exc
 
 
 def _select_source_entries(

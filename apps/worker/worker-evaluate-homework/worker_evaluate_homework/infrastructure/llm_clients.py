@@ -92,6 +92,12 @@ class OpenAILLMClient(ILLMClient):
             response.raise_for_status()
             data = response.json()
             content = data["choices"][0]["message"]["content"]
+        except httpx.HTTPStatusError as exc:
+            error_body = exc.response.text
+            logger.error(
+                f"OpenAI LLM request to {self._chat_url} failed with {exc.response.status_code}: {error_body}"
+            )
+            raise RuntimeError(f"Lỗi khi gọi LLM ({exc.response.status_code}): {error_body}") from exc
         except Exception as exc:
             logger.error(f"OpenAI LLM request to {self._chat_url} failed: {exc}")
             raise RuntimeError(f"Lỗi khi gọi LLM: {exc}") from exc

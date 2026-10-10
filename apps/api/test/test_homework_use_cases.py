@@ -58,11 +58,14 @@ class HomeworkRepositoryStub:
             return self.submission
         return None
 
-    async def retry_failed_submission(self, submission_id):
+    async def retry_failed_submission(self, submission_id, allow_any_non_grading=False):
         if (
             self.submission
             and self.submission.id == submission_id
-            and self.submission.status == HomeworkSubmissionStatus.FAILED
+            and (
+                self.submission.status == HomeworkSubmissionStatus.FAILED
+                or (allow_any_non_grading and self.submission.status != HomeworkSubmissionStatus.GRADING)
+            )
         ):
             self.submission = replace(
                 self.submission,
@@ -197,11 +200,11 @@ async def test_submission_retry_is_limited_to_owner_and_failed_status(
     use_case = RetryHomeworkSubmissionUseCase(repository, AsyncMock())
 
     with pytest.raises(AppException) as owner_error:
-        await use_case.execute(repository.submission.id, user_id=7)
+        await use_case.execute(repository.submission.id)
     assert owner_error.value.status_code == 404
 
     with pytest.raises(AppException) as status_error:
-        await use_case.execute(repository.submission.id, user_id=99)
+        await use_case.execute(repository.submission.id)
     assert status_error.value.status_code == 409
 
 

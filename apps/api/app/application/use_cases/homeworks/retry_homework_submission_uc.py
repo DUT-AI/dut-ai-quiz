@@ -21,17 +21,20 @@ class RetryHomeworkSubmissionUseCase:
     async def execute(
         self,
         submission_id: UUID,
-        user_id: int,
+
     ) -> HomeworkSubmissionOutDTO:
         submission = await self._repository.get_submission(submission_id)
-        if submission is None or submission.user_id != user_id:
+        if submission is None:
             raise AppException("Bài nộp không tồn tại", 404)
-        if submission.status != HomeworkSubmissionStatus.FAILED:
-            raise AppException("Chỉ có thể chấm lại bài nộp đang bị lỗi", 409)
+        if submission.status == HomeworkSubmissionStatus.GRADING:
+            raise AppException("Bài nộp đang trong quá trình chấm điểm", 409)
 
-        retried = await self._repository.retry_failed_submission(submission_id)
+        retried = await self._repository.retry_failed_submission(
+            submission_id,
+            allow_any_non_grading=True,
+        )
         if retried is None:
-            raise AppException("Bài nộp đã được yêu cầu chấm lại", 409)
+            raise AppException("Bài nộp đã được yêu cầu chấm lại hoặc đang được chấm", 409)
 
         await self._queue.enqueue_evaluation(submission_id)
         return HomeworkSubmissionOutDTO.from_entity(retried)

@@ -101,7 +101,7 @@ class MockHomeworkRepository(IHomeworkRepository):
     async def get_latest_submission(self, homework_id: UUID, user_id: int) -> HomeworkSubmissionEntity | None:
         return None
 
-    async def retry_failed_submission(self, submission_id: UUID) -> HomeworkSubmissionEntity | None:
+    async def retry_failed_submission(self, submission_id: UUID, allow_any_non_grading: bool = False) -> HomeworkSubmissionEntity | None:
         return None
 
     async def list_submissions(self, homework_id: UUID) -> list[HomeworkSubmissionEntity]:

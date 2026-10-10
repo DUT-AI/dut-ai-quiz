@@ -93,10 +93,10 @@ async def evaluate_homework_job(ctx, submission_id: str):
             final_attempt=job_try >= 3,
         )
     except InvalidArtifactError as exc:
-        logger.warning("Homework evaluation {} rejected: {}", submission_id, exc)
-        raise
+        logger.warning(f"Homework evaluation {submission_id} rejected: {exc}")
+        return
     except Exception as exc:
-        logger.exception("Homework evaluation {} failed", submission_id)
+        logger.exception(f"Homework evaluation {submission_id} failed: {exc}")
         if job_try < 3:
             raise Retry(defer=10 * job_try) from exc
         raise
