@@ -1,3 +1,4 @@
+import asyncio
 from uuid import UUID
 
 from worker_evaluate_homework.domain import (
@@ -8,6 +9,7 @@ from worker_evaluate_homework.domain import (
     InvalidArtifactError,
     SubmissionGradingStatus,
 )
+from worker_evaluate_homework.domain.errors import LLMError, is_retryable_error
 from worker_evaluate_homework.domain.fingerprints import (
     build_fingerprint,
     find_plagiarism,
@@ -44,7 +46,8 @@ class EvaluateHomeworkSubmissionUseCase:
             if submission.status == SubmissionGradingStatus.GRADED.value:
                 return submission.score
 
-            await self._repository.set_submission_grading(submission_id)
+            if not await self._repository.set_submission_grading(submission_id):
+                return None
             homework = await self._repository.get_homework(submission.homework_id)
             if homework is None:
                 raise ValueError(f"Homework {submission.homework_id} not found")
@@ -56,7 +59,7 @@ class EvaluateHomeworkSubmissionUseCase:
                     or homework.grading_rubric is None
                     or not homework.grading_rubric.get("criteria")
                 ):
-                    raise RuntimeError("Không thể tạo rubric cho bài tập")
+                    raise LLMError("Rubric chưa sẵn sàng để chấm bài", retryable=True)
 
             sources = await self._artifact_reader.read_submission_sources(submission.object_key)
             fingerprints = [build_fingerprint(source) for source in sources]
@@ -92,10 +95,20 @@ class EvaluateHomeworkSubmissionUseCase:
                 final=True,
             )
             raise
+        except asyncio.CancelledError:
+            await self._repository.save_submission_error(
+                submission_id,
+                "Worker grading timeout hoặc bị dừng",
+                final=final_attempt,
+                retryable=True,
+            )
+            raise
         except Exception as exc:
+            retryable = is_retryable_error(exc)
             await self._repository.save_submission_error(
                 submission_id,
                 str(exc),
-                final=final_attempt,
+                final=final_attempt or not retryable,
+                retryable=retryable,
             )
             raise

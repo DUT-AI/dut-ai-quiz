@@ -2,6 +2,7 @@ import asyncio
 import gzip
 import io
 import json
+import re
 import stat
 import tarfile
 import tempfile
@@ -60,7 +61,7 @@ class S3HomeworkArtifactReader:
             f"### PDF: {name}\n{await asyncio.to_thread(self._extract_pdf_text, data)}"
             for name, data in pdf_files
         ]
-        return "\n\n".join(parts)[: settings.homework_grading_max_source_chars]
+        return "\n\n".join(parts)
 
     async def read_submission_sources(
         self,
@@ -151,7 +152,7 @@ class S3HomeworkArtifactReader:
             raise InvalidArtifactError("Không thể đọc PDF đề bài") from exc
         if not text.strip():
             raise InvalidArtifactError("PDF không có nội dung text; hãy bổ sung mô tả bài tập")
-        return text[: settings.homework_grading_max_source_chars]
+        return text
 
     @staticmethod
     def _read_python_sources(
@@ -290,7 +291,9 @@ def _read_rar_sources(content: bytes) -> list[SourceFile]:
                     if info.file_redir:
                         raise InvalidArtifactError("Bài nộp RAR không được chứa symbolic link")
                     if info.needs_password():
-                        raise InvalidArtifactError(f"File {name} có mật khẩu nên worker không thể đọc")
+                        raise InvalidArtifactError(
+                            f"File {name} có mật khẩu nên worker không thể đọc"
+                        )
                     with archive.open(info) as stream:
                         raw = _read_limited(stream)
                     result.append(SourceFile(name=name, content=_decode_source_file(name, raw)))
@@ -460,9 +463,11 @@ def _notebook_output_text(output: Any) -> str:
         return ""
     output_type = output.get("output_type")
     if output_type == "stream":
-        return _notebook_text(
-            output.get("text", ""),
-            error_message="Notebook có stream output không hợp lệ",
+        return _compact_training_output(
+            _notebook_text(
+                output.get("text", ""),
+                error_message="Notebook có stream output không hợp lệ",
+            )
         )
     if output_type == "error":
         traceback = _notebook_text(
@@ -498,6 +503,22 @@ def _notebook_output_text(output: Any) -> str:
             error_message=f"Notebook có output {mime_type} không hợp lệ",
         )
     return ""
+
+
+def _compact_training_output(text: str) -> str:
+    """Bound repetitive epoch logs; retain arbitrary results for chunked reading."""
+    limit = settings.homework_notebook_output_max_chars
+    if len(text) <= limit or len(re.findall(r"(?im)^\s*Epoch\s+\d+[/\s]", text)) < 3:
+        return text
+    head_end = text.rfind("\n", 0, limit // 2)
+    tail_start = text.find("\n", len(text) - limit // 2)
+    if head_end < 0 or tail_start < 0 or head_end >= tail_start:
+        return text
+    omitted = len(text[head_end:tail_start].splitlines())
+    marker = (
+        f"\n[TRAINING LOG COMPACTED: omitted {omitted} middle lines; first/last epochs retained]\n"
+    )
+    return text[:head_end] + marker + text[tail_start + 1 :]
 
 
 def _comment_notebook_text(label: str, content: str) -> str:

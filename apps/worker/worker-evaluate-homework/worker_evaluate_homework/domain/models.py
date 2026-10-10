@@ -75,6 +75,22 @@ class ChecklistEvaluation(BaseModel):
         self.evaluations = [value if item.id == value.id else item for item in self.evaluations]
 
 
+class CriterionEvidence(BaseModel):
+    id: str
+    evidence: str = Field(max_length=1200)
+
+
+class ChunkEvidence(BaseModel):
+    findings: list[CriterionEvidence] = Field(max_length=10)
+
+    @model_validator(mode="after")
+    def require_unique_ids(self) -> "ChunkEvidence":
+        ids = [item.id for item in self.findings]
+        if len(ids) != len(set(ids)):
+            raise ValueError("Evidence contains duplicate criterion IDs")
+        return self
+
+
 @dataclass(frozen=True, slots=True)
 class SourceFile:
     name: str

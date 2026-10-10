@@ -5,6 +5,7 @@ from pathlib import PurePath, PurePosixPath
 from typing import Any
 
 from app.config import settings
+from loguru import logger
 
 from worker_evaluate_homework.domain import (
     CriterionEvaluation,
@@ -14,8 +15,10 @@ from worker_evaluate_homework.domain import (
     ILLMClient,
     SourceFile,
 )
+from worker_evaluate_homework.domain.errors import ContextLimitError, LLMError
 from worker_evaluate_homework.domain.models import (
     ChecklistEvaluation,
+    ChunkEvidence,
     GradingCriterion,
 )
 from worker_evaluate_homework.infrastructure.llm_clients import (
@@ -157,17 +160,39 @@ BẮT BUỘC TRẢ VỀ JSON theo cấu trúc sau:
   ]
 }}
 """.strip()
-        evaluated = await self._generate_structured(
-            prompt,
-            ChecklistEvaluation,
-        )
+        for label, value in (
+            ("rubric", rubric.model_dump_json()),
+            ("static", json.dumps(static, ensure_ascii=False)),
+            ("sources", source_text),
+            ("checklist", checklist),
+        ):
+            try:
+                component_tokens = await self._llm.count_tokens(value)
+            except ContextLimitError:
+                logger.info(
+                    "Grading input {} chars={} token measurement deferred to fragments",
+                    label,
+                    len(value),
+                )
+            else:
+                logger.info(
+                    "Grading input {} chars={} tokens_with_template={}",
+                    label,
+                    len(value),
+                    component_tokens,
+                )
+        try:
+            evaluated = await self._generate_structured(prompt, ChecklistEvaluation)
+        except ContextLimitError:
+            evaluated = await self._grade_chunks(rubric, sources, prompt, source_text)
         expected_ids = {item.id for item in rubric.criteria}
         actual_ids = {item.id for item in evaluated.evaluations}
         if actual_ids != expected_ids:
-            raise RuntimeError(
+            raise LLMError(
                 "LLM trả về sai bộ tiêu chí chấm: "
                 f"thiếu={sorted(expected_ids - actual_ids)}, "
-                f"thừa={sorted(actual_ids - expected_ids)}"
+                f"thừa={sorted(actual_ids - expected_ids)}",
+                retryable=True,
             )
         _override_library_policy(evaluated, static, rubric)
         score_details: list[dict[str, Any]] = []
@@ -200,11 +225,119 @@ BẮT BUỘC TRẢ VỀ JSON theo cấu trúc sau:
         )
 
     async def _generate_structured(self, prompt: str, schema):
+        tokens = await self._llm.count_tokens(prompt, _SYSTEM_INSTRUCTION)
+        logger.info(
+            "Grading request schema={} prompt_tokens={} budget={}",
+            schema.__name__,
+            tokens,
+            self._llm.input_token_budget,
+        )
+        if tokens > self._llm.input_token_budget:
+            raise ContextLimitError(
+                f"LLM prompt có {tokens} token, vượt ngân sách {self._llm.input_token_budget}"
+            )
         return await self._llm.generate_structured(
             prompt=prompt,
             schema=schema,
             system_instruction=_SYSTEM_INSTRUCTION,
         )
+
+    async def _grade_chunks(self, rubric, sources, full_prompt, source_text):
+        """Collect evidence from every fragment; award each criterion only once."""
+        rubric_text = rubric.model_dump_json()
+        prefix = (
+            "Trích bằng chứng từ MỘT PHẦN bài nộp. Đây chưa phải toàn bộ bài. "
+            "Không chấm điểm, không kết luận thiếu chức năng vì không thấy trong phần này. "
+            "Chỉ ghi bằng chứng cụ thể, tên file/cell, code liên quan và giới hạn quan sát. "
+            "Chỉ dùng id trong rubric; bỏ qua id không có bằng chứng. "
+            "Mỗi evidence tối đa 1200 ký tự. Trả JSON: "
+            '{"findings":[{"id":"criterion_id","evidence":"..."}]}\n'
+            f"RUBRIC:\n{rubric_text}\nFRAGMENT:\n"
+        )
+        # A rubric that cannot fit on its own must not be silently shortened.
+        base_tokens = await self._llm.count_tokens(prefix, _SYSTEM_INSTRUCTION)
+        if base_tokens >= self._llm.input_token_budget:
+            raise ContextLimitError("LLM rubric quá dài để đọc từng phần bài nộp")
+        pending = []
+        for source in sources:
+            step = settings.homework_grading_chunk_chars
+            for start in range(0, len(source.content), step):
+                pending.append((source.name, start, source.content[start : start + step]))
+        summaries = []
+        expected_ids = {item.id for item in rubric.criteria}
+        while pending:
+            if len(summaries) + len(pending) > settings.homework_grading_max_chunks:
+                raise ContextLimitError(
+                    "Bài nộp cần quá nhiều lượt đọc LLM; không chấm thiếu nội dung"
+                )
+            name, start, content = pending.pop(0)
+            fragment = f"### FILE: {name}, chars {start}:{start + len(content)}\n{content}"
+            try:
+                evidence = await self._generate_structured(prefix + fragment, ChunkEvidence)
+            except ContextLimitError:
+                if len(content) <= 1:
+                    raise
+                middle = len(content) // 2
+                pending[:0] = [
+                    (name, start, content[:middle]),
+                    (name, start + middle, content[middle:]),
+                ]
+                continue
+            if len(summaries) + len(pending) + 1 > settings.homework_grading_max_chunks:
+                raise ContextLimitError(
+                    "Bài nộp cần quá nhiều lượt đọc LLM; không chấm thiếu nội dung"
+                )
+            ids = [finding.id for finding in evidence.findings]
+            if len(ids) != len(set(ids)) or not set(ids) <= expected_ids:
+                raise LLMError("LLM trả bằng chứng sai bộ tiêu chí", retryable=True)
+            summaries.append(
+                {
+                    "file": name,
+                    "start": start,
+                    "end": start + len(content),
+                    "findings": evidence.model_dump()["findings"],
+                }
+            )
+        if not summaries:
+            raise ContextLimitError("Bài nộp không có nội dung để đọc từng phần")
+        # Replace the submission section only, not matching text in the rubric.
+        section = "NỘI DUNG BÀI NỘP (CODE, MARKDOWN VÀ NOTEBOOK OUTPUT):\n"
+        before, _, after = full_prompt.partition(section)
+        if not after.startswith(source_text + "\n"):
+            raise LLMError("Không thể dựng prompt tổng hợp bằng chứng")
+        logger.info("Grading evidence collected chunks={}", len(summaries))
+        while True:
+            evidence_text = (
+                "BẰNG CHỨNG ĐÃ ĐỌC TỪ TẤT CẢ PHẦN BÀI NỘP:\n"
+                + json.dumps(summaries, ensure_ascii=False)
+                + "\nTổng hợp bằng chứng giữa các file/phần trước khi kết luận. "
+                "Chỉ trả một evaluation cho mỗi tiêu chí; không cộng điểm theo từng phần."
+            )
+            final_prompt = before + section + evidence_text + after[len(source_text) :]
+            tokens = await self._llm.count_tokens(final_prompt, _SYSTEM_INSTRUCTION)
+            if tokens <= self._llm.input_token_budget:
+                return await self._generate_structured(final_prompt, ChecklistEvaluation)
+            if len(summaries) <= 1:
+                raise ContextLimitError("Bằng chứng tổng hợp và rubric vẫn vượt ngân sách LLM")
+            merged = []
+            for offset in range(0, len(summaries), 2):
+                pair = summaries[offset : offset + 2]
+                if len(pair) == 1:
+                    merged.extend(pair)
+                    continue
+                merge_prompt = (
+                    "Hợp nhất bằng chứng cho từng id từ hai nhóm phần bài nộp. "
+                    "Giữ tên file/cell, code quan trọng, phụ thuộc giữa các phần và giới hạn quan sát. "
+                    "Không chấm điểm, không tạo bằng chứng mới. Mỗi id tối đa 1200 ký tự. "
+                    'Trả JSON {"findings":[{"id":"criterion_id","evidence":"..."}]}.\n'
+                    + json.dumps(pair, ensure_ascii=False)
+                )
+                evidence = await self._generate_structured(merge_prompt, ChunkEvidence)
+                pair_ids = {item["id"] for part in pair for item in part["findings"]}
+                if {item.id for item in evidence.findings} != pair_ids:
+                    raise LLMError("LLM làm mất tiêu chí khi hợp nhất bằng chứng", retryable=True)
+                merged.append({"findings": evidence.model_dump()["findings"]})
+            summaries = merged
 
 
 # Alias for backward compatibility
@@ -284,19 +417,7 @@ def _local_module_names(sources: list[SourceFile]) -> set[str]:
 
 
 def _pack_sources(sources: list[SourceFile]) -> str:
-    remaining = settings.homework_grading_max_source_chars
-    parts: list[str] = []
-    for source in sources:
-        header = f"\n### FILE: {source.name}\n"
-        if len(header) >= remaining:
-            break
-        remaining -= len(header)
-        content = source.content[:remaining]
-        parts.append(header + content)
-        remaining -= len(content)
-        if remaining <= 0:
-            break
-    return "".join(parts)
+    return "".join(f"\n### FILE: {source.name}\n{source.content}" for source in sources)
 
 
 def _override_library_policy(
