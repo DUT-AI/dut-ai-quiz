@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { SidebarNav } from "@/components/molecules/sidebar-nav";
 import { useAuth } from "@/context/auth-context";
@@ -8,11 +8,34 @@ import SwitchTheme from "@/components/atoms/switch-theme";
 import { cn } from "@/lib/utils";
 import { Menu, Rocket } from "lucide-react";
 
+const HOVER_CLOSE_DELAY = 450;
+
 const RootLayout = ({ children }: { children: React.ReactNode }) => {
   const { isLoading } = useAuth();
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(true);
+  const [isPinned, setIsPinned] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Sync pinned state from localStorage on mount
+  useEffect(() => {
+    try {
+      const savedPin = localStorage.getItem("sidebar_pinned");
+      if (savedPin === "true") {
+        setIsPinned(true);
+        setIsCollapsed(false);
+      }
+    } catch {
+      // Ignore if localStorage unavailable
+    }
+
+    return () => {
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // 1. Loading state during hydration/auth validation
   if (isLoading) {
@@ -36,9 +59,41 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
+  const handleMouseEnter = () => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+    if (isCollapsed) {
+      setIsCollapsed(false);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (isPinned) return; // Pinned sidebar never auto-collapses on hover out
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+    }
+    closeTimeoutRef.current = setTimeout(() => {
+      setIsCollapsed(true);
+      closeTimeoutRef.current = null;
+    }, HOVER_CLOSE_DELAY);
+  };
+
   const toggleSidebar = () => {
     if (window.innerWidth >= 1024) {
-      setIsCollapsed(!isCollapsed);
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current);
+        closeTimeoutRef.current = null;
+      }
+      const nextPinned = !isPinned;
+      setIsPinned(nextPinned);
+      setIsCollapsed(!nextPinned);
+      try {
+        localStorage.setItem("sidebar_pinned", String(nextPinned));
+      } catch {
+        // Ignore if localStorage unavailable
+      }
     } else {
       setIsMobileOpen(!isMobileOpen);
     }
@@ -59,13 +114,14 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
       {isCollapsed && (
         <div
           className="hidden lg:block fixed left-0 top-0 bottom-0 w-3 z-40 bg-transparent"
-          onMouseEnter={() => setIsCollapsed(false)}
+          onMouseEnter={handleMouseEnter}
         />
       )}
 
       {/* Sidebar Container */}
       <aside
-        onMouseLeave={() => setIsCollapsed(true)}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
         className={cn(
           "h-full flex-shrink-0 bg-white dark:bg-navy-blue border-r border-gray-100 dark:border-white/5 transition-all duration-300 ease-in-out z-50 overflow-hidden w-72",
           // Mobile Drawer
@@ -89,8 +145,14 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
             {/* Toggle Button */}
             <button
               onClick={toggleSidebar}
-              className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 text-gray-navy dark:text-light-blue transition-colors focus:outline-none"
-              aria-label="Toggle Navigation"
+              className={cn(
+                "p-2 rounded-xl transition-colors focus:outline-none",
+                isPinned
+                  ? "bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary"
+                  : "hover:bg-gray-100 dark:hover:bg-white/5 text-gray-navy dark:text-light-blue"
+              )}
+              aria-label={isPinned ? "Bỏ ghim thanh điều hướng" : "Mở / Ghim thanh điều hướng"}
+              title={isPinned ? "Đang ghim mở (Click để đóng)" : "Click để ghim mở"}
             >
               <Menu className="size-5" />
             </button>
