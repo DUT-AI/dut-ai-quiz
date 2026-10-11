@@ -4,6 +4,7 @@ import json
 import tarfile
 import zipfile
 from dataclasses import replace
+from datetime import datetime
 from uuid import uuid4
 
 import py7zr
@@ -25,9 +26,11 @@ from worker_evaluate_homework.domain.fingerprints import (
     build_fingerprint,
     find_plagiarism,
 )
+from worker_evaluate_homework.domain.retry import GradingAttempt
 from worker_evaluate_homework.infrastructure.archive_reader import (
     S3HomeworkArtifactReader,
 )
+from worker_evaluate_homework.infrastructure.arq_queue import ArqHomeworkGradingQueue
 from worker_evaluate_homework.infrastructure.gemini_grading_engine import (
     _analyze_sources,
 )
@@ -50,22 +53,23 @@ class RepositoryStub:
     async def get_homework(self, homework_id):
         return self.homework if homework_id == self.homework.id else None
 
-    async def set_homework_processing(self, homework_id):
+    async def claim_homework(self, homework_id):
+        return GradingAttempt(1, datetime(2026, 10, 11))
+
+    async def save_homework_rubric(self, homework_id, rubric, *, attempt):
+        self.homework = replace(self.homework, grading_rubric=rubric)
         return True
 
-    async def save_homework_rubric(self, homework_id, rubric):
-        self.homework = replace(self.homework, grading_rubric=rubric)
-
-    async def save_homework_error(self, homework_id, error, *, retryable=False):
-        return None
+    async def save_homework_error(self, homework_id, error, *, attempt, retryable=False):
+        return True
 
     async def get_submission(self, submission_id):
         if self.submission and submission_id == self.submission.id:
             return self.submission
         return None
 
-    async def set_submission_grading(self, submission_id):
-        return True
+    async def claim_submission(self, submission_id):
+        return GradingAttempt(1, datetime(2026, 10, 11))
 
     async def save_submission_result(
         self,
@@ -73,19 +77,26 @@ class RepositoryStub:
         result,
         plagiarism,
         copied_user_id,
+        *,
+        attempt,
+        fingerprints,
     ):
         self.saved_result = result
         self.saved_plagiarism = plagiarism
+        self.saved_fingerprints = fingerprints
+        return True
 
     async def save_submission_error(
         self,
         submission_id,
         error,
         *,
+        attempt,
         final,
         retryable=False,
     ):
         self.saved_error = (submission_id, error, final)
+        return True
 
     async def list_previous_fingerprints(
         self,
@@ -94,9 +105,6 @@ class RepositoryStub:
         file_names,
     ):
         return []
-
-    async def replace_fingerprints(self, submission, values):
-        self.saved_fingerprints = values
 
 
 class ArtifactReaderStub:
@@ -150,12 +158,12 @@ class InvalidArtifactReaderStub(ArtifactReaderStub):
 
 
 class InvalidEvaluationUseCaseStub:
-    async def execute(self, submission_id, *, final_attempt):
+    async def execute(self, submission_id):
         raise InvalidArtifactError("Bài nộp không hợp lệ")
 
 
 @pytest.mark.asyncio
-async def test_submission_is_graded_without_external_checker() -> None:
+async def test_submission_is_graded_without_external_checker(retry_policy) -> None:
     homework_id = uuid4()
     submission_id = uuid4()
     repository = RepositoryStub(
@@ -177,16 +185,17 @@ async def test_submission_is_graded_without_external_checker() -> None:
     )
     reader = ArtifactReaderStub()
     engine = GradingEngineStub()
-    register = RegisterHomeworkUseCase(repository, reader, engine)
+    register = RegisterHomeworkUseCase(repository, reader, engine, retry_policy)
     evaluate = EvaluateHomeworkSubmissionUseCase(
         repository,
         reader,
         engine,
         register,
         0.8,
+        retry_policy,
     )
 
-    score = await evaluate.execute(submission_id, final_attempt=True)
+    score = await evaluate.execute(submission_id)
 
     assert score == 9.0
     assert repository.saved_result.is_pass is True
@@ -195,7 +204,7 @@ async def test_submission_is_graded_without_external_checker() -> None:
 
 
 @pytest.mark.asyncio
-async def test_invalid_archive_is_marked_as_final_failure() -> None:
+async def test_invalid_archive_is_marked_as_final_failure(retry_policy) -> None:
     homework_id = uuid4()
     submission_id = uuid4()
     repository = RepositoryStub(
@@ -217,17 +226,18 @@ async def test_invalid_archive_is_marked_as_final_failure() -> None:
     )
     reader = InvalidArtifactReaderStub()
     engine = GradingEngineStub()
-    register = RegisterHomeworkUseCase(repository, reader, engine)
+    register = RegisterHomeworkUseCase(repository, reader, engine, retry_policy)
     evaluate = EvaluateHomeworkSubmissionUseCase(
         repository,
         reader,
         engine,
         register,
         0.8,
+        retry_policy,
     )
 
     with pytest.raises(InvalidArtifactError, match="Archive bị hỏng"):
-        await evaluate.execute(submission_id, final_attempt=False)
+        await evaluate.execute(submission_id)
 
     assert repository.saved_error == (
         submission_id,
@@ -707,7 +717,7 @@ async def test_retry_stale_homework_use_case() -> None:
 
     use_case = RetryStaleHomeworkUseCase(
         repository=mock_repo,
-        queue_name="test_queue",
+        queue=ArqHomeworkGradingQueue(mock_redis, "test_queue"),
         stale_homework_minutes=10,
         stale_submission_minutes=15,
         days_limit=7,
@@ -715,7 +725,7 @@ async def test_retry_stale_homework_use_case() -> None:
         submission_batch_limit=20,
     )
 
-    result = await use_case.execute(mock_redis)
+    result = await use_case.execute()
 
     assert result == {"homeworks_enqueued": 2, "submissions_enqueued": 2}
     assert mock_redis.enqueue_job.await_count == 4
@@ -768,9 +778,9 @@ async def test_retry_stale_homework_use_case_empty() -> None:
 
     use_case = RetryStaleHomeworkUseCase(
         repository=mock_repo,
-        queue_name="test_queue",
+        queue=ArqHomeworkGradingQueue(mock_redis, "test_queue"),
     )
 
-    result = await use_case.execute(mock_redis)
+    result = await use_case.execute()
     assert result == {"homeworks_enqueued": 0, "submissions_enqueued": 0}
     mock_redis.enqueue_job.assert_not_called()

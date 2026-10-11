@@ -1,5 +1,7 @@
 import asyncio
 import json
+from datetime import datetime
+from types import SimpleNamespace
 from unittest.mock import AsyncMock
 from uuid import uuid4
 
@@ -7,6 +9,7 @@ import httpx
 import pytest
 from app.config import settings
 from arq import Retry
+from worker_evaluate_homework.application.retry import RetryGradingRequested
 from worker_evaluate_homework.application.use_cases.retry_stale_homework import (
     RetryStaleHomeworkUseCase,
 )
@@ -17,12 +20,14 @@ from worker_evaluate_homework.domain.models import (
     ChunkEvidence,
     GradingCriterion,
 )
+from worker_evaluate_homework.domain.retry import GradingAttempt
 from worker_evaluate_homework.infrastructure.archive_reader import _compact_training_output
+from worker_evaluate_homework.infrastructure.arq_queue import ArqHomeworkGradingQueue
 from worker_evaluate_homework.infrastructure.gemini_grading_engine import (
     HomeworkGradingEngine,
     _pack_sources,
 )
-from worker_evaluate_homework.infrastructure.llm_clients import OpenAILLMClient
+from worker_evaluate_homework.infrastructure.llm_clients import GeminiLLMClient, OpenAILLMClient
 from worker_evaluate_homework.presentation.arq_tasks import evaluate_homework_job
 
 
@@ -299,19 +304,24 @@ def test_compact_only_repetitive_training_logs_retains_final_metrics():
     "error,job_try,should_retry",
     [
         (ContextLimitError("context exceeded"), 1, False),
-        (LLMError("429", retryable=True), 1, True),
+        (RetryGradingRequested(20), 1, True),
+        (RetryGradingRequested(20), 3, True),
         (LLMError("429", retryable=True), 3, False),
         (ValueError("bug"), 1, False),
     ],
 )
-async def test_arq_retries_only_transient_failures(error, job_try, should_retry):
+async def test_arq_converts_only_use_case_retry_requests(error, job_try, should_retry):
     use_case = AsyncMock()
     use_case.execute.side_effect = error
     expected = Retry if should_retry else type(error)
-    with pytest.raises(expected):
+    with pytest.raises(expected) as failure:
         await evaluate_homework_job(
             {"evaluate_use_case": use_case, "job_try": job_try}, str(uuid4())
         )
+    if should_retry:
+        assert failure.value.defer_score == 20000
+    use_case.execute.assert_awaited_once()
+    assert use_case.execute.call_args.kwargs == {}
 
 
 @pytest.mark.asyncio
@@ -321,12 +331,13 @@ async def test_cron_does_not_count_deduplicated_jobs_as_new():
     repo.list_stale_submission_ids.return_value = [uuid4()]
     redis = AsyncMock()
     redis.enqueue_job.return_value = None
-    result = await RetryStaleHomeworkUseCase(repo, "arq:homework").execute(redis)
+    queue = ArqHomeworkGradingQueue(redis, "arq:homework")
+    result = await RetryStaleHomeworkUseCase(repo, queue).execute()
     assert result == {"homeworks_enqueued": 0, "submissions_enqueued": 0}
 
 
 @pytest.mark.asyncio
-async def test_cancelled_submission_saves_retry_metadata():
+async def test_cancelled_submission_saves_retry_metadata(retry_policy):
     from worker_evaluate_homework.application.use_cases.evaluate_submission import (
         EvaluateHomeworkSubmissionUseCase,
     )
@@ -334,6 +345,7 @@ async def test_cancelled_submission_saves_retry_metadata():
 
     submission_id, homework_id = uuid4(), uuid4()
     repo, reader, engine = AsyncMock(), AsyncMock(), AsyncMock()
+    repo.claim_submission.return_value = GradingAttempt(1, datetime(2026, 10, 11))
     repo.get_submission.return_value = SubmissionGradingRecord(
         submission_id, homework_id, 1, "sample.zip", "UPLOADED", None
     )
@@ -341,7 +353,49 @@ async def test_cancelled_submission_saves_retry_metadata():
         homework_id, "sample", "", None, rubric().model_dump()
     )
     reader.read_submission_sources.side_effect = asyncio.CancelledError
-    use_case = EvaluateHomeworkSubmissionUseCase(repo, reader, engine, AsyncMock(), 0.8)
+    use_case = EvaluateHomeworkSubmissionUseCase(
+        repo, reader, engine, AsyncMock(), 0.8, retry_policy
+    )
     with pytest.raises(asyncio.CancelledError):
-        await use_case.execute(submission_id, final_attempt=False)
+        await use_case.execute(submission_id)
     assert repo.save_submission_error.call_args.kwargs["retryable"] is True
+
+
+@pytest.fixture
+def gemini_client(monkeypatch):
+    sdk = AsyncMock()
+    monkeypatch.setattr("google.genai.Client", lambda **kwargs: sdk)
+    sdk.aio.models.count_tokens.return_value = SimpleNamespace(total_tokens=100)
+    return GeminiLLMClient(api_key="test"), sdk
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("status,retryable", [(400, False), (408, True), (429, True), (503, True)])
+@pytest.mark.parametrize("stage", ["count_tokens", "generate_content"])
+async def test_gemini_adapter_translates_provider_failures(gemini_client, status, retryable, stage):
+    from google.genai.errors import APIError
+
+    client, sdk = gemini_client
+    getattr(sdk.aio.models, stage).side_effect = APIError(status, {"error": {"message": "failure"}})
+    with pytest.raises(LLMError) as failure:
+        await client.generate_structured("short", ChecklistEvaluation)
+    assert failure.value.retryable is retryable
+
+
+@pytest.mark.asyncio
+async def test_gemini_adapter_translates_transport_failure(gemini_client):
+    client, sdk = gemini_client
+    sdk.aio.models.count_tokens.side_effect = httpx.ConnectError("Unavailable")
+    with pytest.raises(LLMError) as failure:
+        await client.generate_structured("short", ChecklistEvaluation)
+    assert failure.value.retryable is True
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("content", ["", '{"evaluations":[', '{"wrong": true}'])
+async def test_gemini_invalid_json_is_a_bounded_retryable_failure(gemini_client, content):
+    client, sdk = gemini_client
+    sdk.aio.models.generate_content.return_value = SimpleNamespace(text=content)
+    with pytest.raises(LLMError) as failure:
+        await client.generate_structured("short", ChecklistEvaluation)
+    assert failure.value.retryable is True

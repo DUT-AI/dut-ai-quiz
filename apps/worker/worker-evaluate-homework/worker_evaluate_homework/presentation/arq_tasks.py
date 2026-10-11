@@ -1,3 +1,4 @@
+from datetime import timedelta
 from typing import ClassVar
 from urllib.parse import urlparse
 from uuid import UUID
@@ -9,13 +10,14 @@ from arq import Retry, cron
 from arq.connections import RedisSettings
 from loguru import logger
 
+from worker_evaluate_homework.application.retry import RetryGradingRequested
 from worker_evaluate_homework.application.use_cases import (
     EvaluateHomeworkSubmissionUseCase,
     RegisterHomeworkUseCase,
     RetryStaleHomeworkUseCase,
 )
 from worker_evaluate_homework.domain import InvalidArtifactError
-from worker_evaluate_homework.domain.errors import is_retryable_error
+from worker_evaluate_homework.domain.retry import GradingRetryPolicy
 from worker_evaluate_homework.infrastructure import (
     GeminiLLMClient,
     HomeworkGradingEngine,
@@ -23,12 +25,17 @@ from worker_evaluate_homework.infrastructure import (
     PostgresHomeworkGradingRepository,
     S3HomeworkArtifactReader,
 )
+from worker_evaluate_homework.infrastructure.arq_queue import ArqHomeworkGradingQueue
 
 
 async def startup(ctx):
     logger.info("Starting homework evaluation worker...")
     http_client = httpx.AsyncClient()
-    repository = PostgresHomeworkGradingRepository()
+    retry_policy = GradingRetryPolicy(
+        max_attempts=settings.homework_grading_max_attempts,
+        lease_duration=timedelta(seconds=settings.homework_grading_timeout_seconds + 60),
+    )
+    repository = PostgresHomeworkGradingRepository(retry_policy)
     artifact_reader = S3HomeworkArtifactReader(
         http_client,
         MinioClient(),
@@ -42,6 +49,7 @@ async def startup(ctx):
         repository,
         artifact_reader,
         grading_engine,
+        retry_policy,
     )
     ctx["http_client"] = http_client
     ctx["register_use_case"] = register_use_case
@@ -51,10 +59,11 @@ async def startup(ctx):
         grading_engine,
         register_use_case,
         settings.homework_plagiarism_threshold,
+        retry_policy,
     )
     ctx["retry_stale_use_case"] = RetryStaleHomeworkUseCase(
         repository=repository,
-        queue_name=settings.homework_queue_name,
+        queue=ArqHomeworkGradingQueue(ctx["redis"], settings.homework_queue_name),
         stale_homework_minutes=10,
         stale_submission_minutes=15,
         days_limit=7,
@@ -72,44 +81,35 @@ async def shutdown(ctx):
 
 async def register_homework_job(ctx, homework_id: str):
     use_case: RegisterHomeworkUseCase = ctx["register_use_case"]
-    job_try = int(ctx.get("job_try", 1))
     try:
         await use_case.execute(UUID(homework_id))
     except InvalidArtifactError as exc:
         logger.warning("Homework registration {} rejected: {}", homework_id, exc)
         return
-    except Exception as exc:
+    except RetryGradingRequested as exc:
+        raise Retry(defer=exc.delay_seconds) from exc
+    except Exception:
         logger.exception("Homework registration {} failed", homework_id)
-        if is_retryable_error(exc) and job_try < settings.homework_grading_max_attempts:
-            raise Retry(defer=10 * job_try) from exc
         raise
 
 
 async def evaluate_homework_job(ctx, submission_id: str):
     use_case: EvaluateHomeworkSubmissionUseCase = ctx["evaluate_use_case"]
-    job_try = int(ctx.get("job_try", 1))
     try:
-        return await use_case.execute(
-            UUID(submission_id),
-            final_attempt=job_try >= settings.homework_grading_max_attempts,
-        )
+        return await use_case.execute(UUID(submission_id))
     except InvalidArtifactError as exc:
         logger.warning(f"Homework evaluation {submission_id} rejected: {exc}")
         return
+    except RetryGradingRequested as exc:
+        raise Retry(defer=exc.delay_seconds) from exc
     except Exception as exc:
         logger.exception(f"Homework evaluation {submission_id} failed: {exc}")
-        if is_retryable_error(exc) and job_try < settings.homework_grading_max_attempts:
-            raise Retry(defer=10 * job_try) from exc
         raise
 
 
 async def sweep_stale_homework_and_submissions_job(ctx):
     use_case: RetryStaleHomeworkUseCase = ctx["retry_stale_use_case"]
-    redis = ctx.get("redis")
-    if not redis:
-        logger.warning("Redis client không tồn tại trong context của cron job")
-        return {"homeworks_enqueued": 0, "submissions_enqueued": 0}
-    return await use_case.execute(redis)
+    return await use_case.execute()
 
 
 def _redis_settings_from_config() -> RedisSettings:

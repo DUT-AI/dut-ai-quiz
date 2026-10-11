@@ -2,7 +2,6 @@ from datetime import timedelta
 from typing import Any
 from uuid import UUID
 
-from app.config import settings
 from app.core.datetime_utils import now_ict
 from app.infrastructure.database import AsyncSessionLocal
 from app.infrastructure.persistence.models.homework import (
@@ -11,6 +10,7 @@ from app.infrastructure.persistence.models.homework import (
     HomeworkSubmissionFingerprint,
 )
 from sqlalchemy import and_, delete, func, or_, select, update
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from worker_evaluate_homework.domain import (
     GradeResult,
@@ -19,14 +19,23 @@ from worker_evaluate_homework.domain import (
     SubmissionGradingRecord,
     SubmissionGradingStatus,
 )
+from worker_evaluate_homework.domain.retry import GradingAttempt, GradingRetryPolicy
 
 
 class PostgresHomeworkGradingRepository:
+    def __init__(
+        self,
+        retry_policy: GradingRetryPolicy,
+        session_factory: async_sessionmaker[AsyncSession] | None = None,
+    ) -> None:
+        self._retry_policy = retry_policy
+        self._sessions = session_factory or AsyncSessionLocal
+
     async def get_homework(
         self,
         homework_id: UUID,
     ) -> HomeworkGradingRecord | None:
-        async with AsyncSessionLocal() as session:
+        async with self._sessions() as session:
             model = await session.get(Homework, homework_id)
             if model is None:
                 return None
@@ -38,71 +47,79 @@ class PostgresHomeworkGradingRepository:
                 grading_rubric=model.grading_rubric,
             )
 
-    async def set_homework_processing(self, homework_id: UUID) -> bool:
+    async def claim_homework(self, homework_id: UUID) -> GradingAttempt | None:
         now = now_ict()
-        expired = now - timedelta(seconds=settings.homework_grading_timeout_seconds + 60)
-        async with AsyncSessionLocal() as session:
-            claimed = await session.scalar(
-                update(Homework)
-                .where(
-                    Homework.id == homework_id,
-                    Homework.grading_status != "READY",
-                    Homework.grading_retryable.is_(True),
-                    Homework.grading_attempts < settings.homework_grading_max_attempts,
-                    or_(
-                        Homework.grading_status != "PROCESSING",
-                        Homework.grading_started_at.is_(None),
-                        Homework.grading_started_at < expired,
-                    ),
+        expired = now - self._retry_policy.lease_duration
+        async with self._sessions() as session:
+            claimed = (
+                await session.execute(
+                    update(Homework)
+                    .where(
+                        Homework.id == homework_id,
+                        Homework.archived_at.is_(None),
+                        Homework.grading_status.in_(["PENDING", "PROCESSING", "FAILED"]),
+                        Homework.grading_retryable.is_(True),
+                        Homework.grading_attempts < self._retry_policy.max_attempts,
+                        or_(
+                            Homework.grading_status != "PROCESSING",
+                            Homework.grading_started_at.is_(None),
+                            Homework.grading_started_at < expired,
+                        ),
+                    )
+                    .values(
+                        grading_status="PROCESSING",
+                        grading_error=None,
+                        grading_started_at=now,
+                        grading_attempts=Homework.grading_attempts + 1,
+                    )
+                    .returning(Homework.grading_attempts, Homework.grading_started_at)
                 )
-                .values(
-                    grading_status="PROCESSING",
-                    grading_error=None,
-                    grading_started_at=now,
-                    grading_attempts=Homework.grading_attempts + 1,
-                )
-                .returning(Homework.id)
-            )
+            ).first()
             await session.commit()
-            return claimed is not None
+            return GradingAttempt(*claimed) if claimed is not None else None
 
     async def save_homework_rubric(
         self,
         homework_id: UUID,
         rubric: dict[str, Any],
-    ) -> None:
-        async with AsyncSessionLocal() as session:
-            model = await session.get(Homework, homework_id)
+        *,
+        attempt: GradingAttempt,
+    ) -> bool:
+        async with self._sessions() as session:
+            model = await self._owned_homework(session, homework_id, attempt)
             if model is None:
-                raise ValueError(f"Homework {homework_id} not found")
+                return False
             model.grading_rubric = rubric
             model.grading_status = "READY"
             model.grading_error = None
             model.grading_started_at = None
             await session.commit()
+            return True
 
     async def save_homework_error(
         self,
         homework_id: UUID,
         error: str,
         *,
+        attempt: GradingAttempt,
         retryable: bool = False,
-    ) -> None:
-        async with AsyncSessionLocal() as session:
-            model = await session.get(Homework, homework_id)
+    ) -> bool:
+        async with self._sessions() as session:
+            model = await self._owned_homework(session, homework_id, attempt)
             if model is None:
-                return
+                return False
             model.grading_status = "FAILED"
             model.grading_error = error[:2000]
             model.grading_retryable = retryable
             model.grading_started_at = None
             await session.commit()
+            return True
 
     async def get_submission(
         self,
         submission_id: UUID,
     ) -> SubmissionGradingRecord | None:
-        async with AsyncSessionLocal() as session:
+        async with self._sessions() as session:
             model = await session.get(HomeworkSubmission, submission_id)
             if model is None:
                 return None
@@ -115,33 +132,37 @@ class PostgresHomeworkGradingRepository:
                 score=model.score,
             )
 
-    async def set_submission_grading(self, submission_id: UUID) -> bool:
+    async def claim_submission(self, submission_id: UUID) -> GradingAttempt | None:
         now = now_ict()
-        expired = now - timedelta(seconds=settings.homework_grading_timeout_seconds + 60)
-        async with AsyncSessionLocal() as session:
-            claimed = await session.scalar(
-                update(HomeworkSubmission)
-                .where(
-                    HomeworkSubmission.id == submission_id,
-                    HomeworkSubmission.status != SubmissionGradingStatus.GRADED.value,
-                    HomeworkSubmission.grading_retryable.is_(True),
-                    HomeworkSubmission.grading_attempts < settings.homework_grading_max_attempts,
-                    or_(
-                        HomeworkSubmission.status != SubmissionGradingStatus.GRADING.value,
-                        HomeworkSubmission.grading_started_at.is_(None),
-                        HomeworkSubmission.grading_started_at < expired,
-                    ),
+        expired = now - self._retry_policy.lease_duration
+        async with self._sessions() as session:
+            claimed = (
+                await session.execute(
+                    update(HomeworkSubmission)
+                    .where(
+                        HomeworkSubmission.id == submission_id,
+                        HomeworkSubmission.status.in_(["UPLOADED", "GRADING", "FAILED"]),
+                        HomeworkSubmission.grading_retryable.is_(True),
+                        HomeworkSubmission.grading_attempts < self._retry_policy.max_attempts,
+                        or_(
+                            HomeworkSubmission.status != SubmissionGradingStatus.GRADING.value,
+                            HomeworkSubmission.grading_started_at.is_(None),
+                            HomeworkSubmission.grading_started_at < expired,
+                        ),
+                    )
+                    .values(
+                        status=SubmissionGradingStatus.GRADING.value,
+                        grading_error=None,
+                        grading_started_at=now,
+                        grading_attempts=HomeworkSubmission.grading_attempts + 1,
+                    )
+                    .returning(
+                        HomeworkSubmission.grading_attempts, HomeworkSubmission.grading_started_at
+                    )
                 )
-                .values(
-                    status=SubmissionGradingStatus.GRADING.value,
-                    grading_error=None,
-                    grading_started_at=now,
-                    grading_attempts=HomeworkSubmission.grading_attempts + 1,
-                )
-                .returning(HomeworkSubmission.id)
-            )
+            ).first()
             await session.commit()
-            return claimed is not None
+            return GradingAttempt(*claimed) if claimed is not None else None
 
     async def save_submission_result(
         self,
@@ -149,11 +170,14 @@ class PostgresHomeworkGradingRepository:
         result: GradeResult,
         plagiarism: list[dict[str, Any]],
         copied_user_id: int | None,
-    ) -> None:
-        async with AsyncSessionLocal() as session:
-            model = await session.get(HomeworkSubmission, submission_id)
+        *,
+        attempt: GradingAttempt,
+        fingerprints: list[dict[str, Any]],
+    ) -> bool:
+        async with self._sessions() as session:
+            model = await self._owned_submission(session, submission_id, attempt)
             if model is None:
-                raise ValueError(f"Submission {submission_id} not found")
+                return False
             model.status = SubmissionGradingStatus.GRADED.value
             model.is_pass = result.is_pass
             model.score = result.score
@@ -164,21 +188,41 @@ class PostgresHomeworkGradingRepository:
             model.plagiarized_from_user_id = copied_user_id
             model.grading_error = None
             model.grading_started_at = None
+            # Fingerprints and the result belong to the same claim and transaction.
+            await session.execute(
+                delete(HomeworkSubmissionFingerprint).where(
+                    HomeworkSubmissionFingerprint.submission_id == submission_id
+                )
+            )
+            session.add_all(
+                [
+                    HomeworkSubmissionFingerprint(
+                        submission_id=submission_id,
+                        homework_id=model.homework_id,
+                        user_id=model.user_id,
+                        file_name=value["file_name"],
+                        code_hash=value["code_hash"],
+                        fingerprints=value["fingerprints"],
+                    )
+                    for value in fingerprints
+                ]
+            )
             await session.commit()
+            return True
 
     async def save_submission_error(
         self,
         submission_id: UUID,
         error: str,
         *,
+        attempt: GradingAttempt,
         final: bool,
         retryable: bool = False,
-    ) -> None:
-        async with AsyncSessionLocal() as session:
-            model = await session.get(HomeworkSubmission, submission_id)
+    ) -> bool:
+        async with self._sessions() as session:
+            model = await self._owned_submission(session, submission_id, attempt)
             if model is None:
-                return
-            final = final or model.grading_attempts >= settings.homework_grading_max_attempts
+                return False
             model.status = (
                 SubmissionGradingStatus.FAILED.value
                 if final
@@ -191,6 +235,37 @@ class PostgresHomeworkGradingRepository:
             model.grading_retryable = retryable
             model.grading_started_at = None
             await session.commit()
+            return True
+
+    @staticmethod
+    async def _owned_homework(
+        session: AsyncSession, homework_id: UUID, attempt: GradingAttempt
+    ) -> Homework | None:
+        return await session.scalar(
+            select(Homework)
+            .where(
+                Homework.id == homework_id,
+                Homework.grading_status == "PROCESSING",
+                Homework.grading_attempts == attempt.number,
+                Homework.grading_started_at == attempt.started_at,
+            )
+            .with_for_update()
+        )
+
+    @staticmethod
+    async def _owned_submission(
+        session: AsyncSession, submission_id: UUID, attempt: GradingAttempt
+    ) -> HomeworkSubmission | None:
+        return await session.scalar(
+            select(HomeworkSubmission)
+            .where(
+                HomeworkSubmission.id == submission_id,
+                HomeworkSubmission.status == SubmissionGradingStatus.GRADING.value,
+                HomeworkSubmission.grading_attempts == attempt.number,
+                HomeworkSubmission.grading_started_at == attempt.started_at,
+            )
+            .with_for_update()
+        )
 
     async def list_previous_fingerprints(
         self,
@@ -201,7 +276,7 @@ class PostgresHomeworkGradingRepository:
         if not file_names:
             return []
         normalized_file_names = {name.casefold() for name in file_names}
-        async with AsyncSessionLocal() as session:
+        async with self._sessions() as session:
             rows = (
                 await session.scalars(
                     select(HomeworkSubmissionFingerprint).where(
@@ -222,32 +297,6 @@ class PostgresHomeworkGradingRepository:
                 for row in rows
             ]
 
-    async def replace_fingerprints(
-        self,
-        submission: SubmissionGradingRecord,
-        values: list[dict[str, Any]],
-    ) -> None:
-        async with AsyncSessionLocal() as session:
-            await session.execute(
-                delete(HomeworkSubmissionFingerprint).where(
-                    HomeworkSubmissionFingerprint.submission_id == submission.id
-                )
-            )
-            session.add_all(
-                [
-                    HomeworkSubmissionFingerprint(
-                        submission_id=submission.id,
-                        homework_id=submission.homework_id,
-                        user_id=submission.user_id,
-                        file_name=value["file_name"],
-                        code_hash=value["code_hash"],
-                        fingerprints=value["fingerprints"],
-                    )
-                    for value in values
-                ]
-            )
-            await session.commit()
-
     async def list_stale_homework_ids(
         self,
         stale_minutes: int = 10,
@@ -256,11 +305,8 @@ class PostgresHomeworkGradingRepository:
     ) -> list[UUID]:
         now = now_ict()
         cutoff_created = now - timedelta(days=days_limit)
-        cutoff_stale = now - timedelta(
-            seconds=max(
-                stale_minutes * 60,
-                settings.homework_grading_timeout_seconds + 60,
-            )
+        cutoff_stale = now - max(
+            timedelta(minutes=stale_minutes), self._retry_policy.lease_duration
         )
 
         stmt = (
@@ -269,7 +315,7 @@ class PostgresHomeworkGradingRepository:
                 Homework.archived_at.is_(None),
                 Homework.created_at >= cutoff_created,
                 Homework.grading_retryable.is_(True),
-                Homework.grading_attempts < settings.homework_grading_max_attempts,
+                Homework.grading_attempts < self._retry_policy.max_attempts,
                 or_(
                     Homework.grading_status == "PENDING",
                     and_(
@@ -282,15 +328,13 @@ class PostgresHomeworkGradingRepository:
                             ),
                         ),
                     ),
-                    and_(
-                        Homework.grading_status == "FAILED",
-                    ),
+                    Homework.grading_status == "FAILED",
                 ),
             )
             .order_by(Homework.created_at.asc())
             .limit(limit)
         )
-        async with AsyncSessionLocal() as session:
+        async with self._sessions() as session:
             result = await session.execute(stmt)
             return list(result.scalars().all())
 
@@ -302,11 +346,8 @@ class PostgresHomeworkGradingRepository:
     ) -> list[UUID]:
         now = now_ict()
         cutoff_submitted = now - timedelta(days=days_limit)
-        cutoff_stale = now - timedelta(
-            seconds=max(
-                stale_minutes * 60,
-                settings.homework_grading_timeout_seconds + 60,
-            )
+        cutoff_stale = now - max(
+            timedelta(minutes=stale_minutes), self._retry_policy.lease_duration
         )
 
         stmt = (
@@ -317,7 +358,7 @@ class PostgresHomeworkGradingRepository:
                 Homework.grading_status == "READY",
                 HomeworkSubmission.submitted_at >= cutoff_submitted,
                 HomeworkSubmission.grading_retryable.is_(True),
-                HomeworkSubmission.grading_attempts < settings.homework_grading_max_attempts,
+                HomeworkSubmission.grading_attempts < self._retry_policy.max_attempts,
                 or_(
                     HomeworkSubmission.status == SubmissionGradingStatus.UPLOADED.value,
                     and_(
@@ -336,6 +377,6 @@ class PostgresHomeworkGradingRepository:
             .order_by(HomeworkSubmission.submitted_at.asc())
             .limit(limit)
         )
-        async with AsyncSessionLocal() as session:
+        async with self._sessions() as session:
             result = await session.execute(stmt)
             return list(result.scalars().all())

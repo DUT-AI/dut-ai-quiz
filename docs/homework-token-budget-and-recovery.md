@@ -42,6 +42,19 @@ API và cron dùng job ID cố định `homework-register:<id>` / `homework-eval
 Worker không giữ result ARQ sau khi hoàn thành, để yêu cầu chấm lại hợp lệ có thể
 enqueue cùng ID. Kết quả thật vẫn được lưu trong PostgreSQL.
 
+Chính sách retry nằm trong `domain/retry.py` và được inject tại worker startup.
+Use case quyết định retry/kết thúc bằng attempts vừa claim trong PostgreSQL,
+không dùng `job_try` làm lượt chấm cuối. Task ARQ chỉ chuyển yêu cầu retry của
+use case thành `Retry`; giới hạn `max_tries` vẫn là giới hạn bảo vệ của queue.
+Cron gọi queue interface; adapter infrastructure giữ tên task, job ID và dedup.
+Lỗi HTTP/SDK được adapter đổi sang lỗi domain có phân loại retry.
+
+Mỗi claim trả số lượt và thời điểm bắt đầu. Lưu rubric, lỗi hoặc kết quả phải
+khớp cả hai giá trị và trạng thái đang chấm dưới row lock. Worker cũ không thể
+ghi đè sau khi bài được claim lại hoặc reset metadata. Fingerprints và kết quả
+được lưu trong cùng transaction; use case không ghi lỗi nếu chưa claim được bài.
+Refactor này dùng ba cột hiện có, không thêm revision hoặc thay đổi schema.
+
 Request gửi JSON schema của Pydantic tới native server, gồm kiểu dữ liệu và giới
 hạn độ dài bằng chứng. Chỉ đặt `json_object` không ràng buộc các giới hạn đó.
 Request chấm bài tắt thinking (`reasoning_effort=none`,
