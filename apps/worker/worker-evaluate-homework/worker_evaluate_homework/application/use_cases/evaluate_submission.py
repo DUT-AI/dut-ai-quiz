@@ -1,12 +1,12 @@
 import asyncio
 from uuid import UUID
 
+from worker_evaluate_homework.application.retry import RetryGradingRequested
 from worker_evaluate_homework.domain import (
     HomeworkRubric,
     IHomeworkArtifactReader,
     IHomeworkGradingEngine,
     IHomeworkGradingRepository,
-    InvalidArtifactError,
     SubmissionGradingStatus,
 )
 from worker_evaluate_homework.domain.errors import LLMError, is_retryable_error
@@ -14,6 +14,7 @@ from worker_evaluate_homework.domain.fingerprints import (
     build_fingerprint,
     find_plagiarism,
 )
+from worker_evaluate_homework.domain.retry import GradingRetryPolicy
 
 from .register_homework import RegisterHomeworkUseCase
 
@@ -26,28 +27,29 @@ class EvaluateHomeworkSubmissionUseCase:
         grading_engine: IHomeworkGradingEngine,
         register_homework: RegisterHomeworkUseCase,
         plagiarism_threshold: float,
+        retry_policy: GradingRetryPolicy,
     ) -> None:
         self._repository = repository
         self._artifact_reader = artifact_reader
         self._grading_engine = grading_engine
         self._register_homework = register_homework
         self._plagiarism_threshold = plagiarism_threshold
+        self._retry_policy = retry_policy
 
     async def execute(
         self,
         submission_id: UUID,
-        *,
-        final_attempt: bool,
     ) -> float | None:
-        try:
-            submission = await self._repository.get_submission(submission_id)
-            if submission is None:
-                raise ValueError(f"Submission {submission_id} not found")
-            if submission.status == SubmissionGradingStatus.GRADED.value:
-                return submission.score
+        submission = await self._repository.get_submission(submission_id)
+        if submission is None:
+            raise ValueError(f"Submission {submission_id} not found")
+        if submission.status == SubmissionGradingStatus.GRADED.value:
+            return submission.score
 
-            if not await self._repository.set_submission_grading(submission_id):
-                return None
+        attempt = await self._repository.claim_submission(submission_id)
+        if attempt is None:
+            return None
+        try:
             homework = await self._repository.get_homework(submission.homework_id)
             if homework is None:
                 raise ValueError(f"Homework {submission.homework_id} not found")
@@ -76,39 +78,48 @@ class EvaluateHomeworkSubmissionUseCase:
                 HomeworkRubric.model_validate(homework.grading_rubric),
                 sources,
             )
-            await self._repository.replace_fingerprints(
-                submission,
-                fingerprints,
-            )
             copied_user_id = copied_user_id if similarity >= self._plagiarism_threshold else None
-            await self._repository.save_submission_result(
+            saved = await self._repository.save_submission_result(
                 submission_id,
                 result,
                 plagiarism,
                 copied_user_id,
+                attempt=attempt,
+                fingerprints=fingerprints,
             )
-            return result.score
-        except InvalidArtifactError as exc:
-            await self._repository.save_submission_error(
-                submission_id,
-                str(exc),
-                final=True,
-            )
-            raise
+            return result.score if saved else None
         except asyncio.CancelledError:
+            should_retry = self._retry_policy.can_retry(attempt, retryable=True)
             await self._repository.save_submission_error(
                 submission_id,
                 "Worker grading timeout hoặc bị dừng",
-                final=final_attempt,
-                retryable=True,
+                attempt=attempt,
+                final=not should_retry,
+                retryable=should_retry,
             )
             raise
         except Exception as exc:
-            retryable = is_retryable_error(exc)
-            await self._repository.save_submission_error(
-                submission_id,
-                str(exc),
-                final=final_attempt or not retryable,
-                retryable=retryable,
+            # Registration can request its own retry. The submission still has to
+            # apply its independent persisted limit before requesting another job.
+            failure = (
+                exc.__cause__
+                if isinstance(exc, RetryGradingRequested) and isinstance(exc.__cause__, Exception)
+                else exc
             )
+            should_retry = self._retry_policy.can_retry(
+                attempt, retryable=is_retryable_error(failure)
+            )
+            saved = await self._repository.save_submission_error(
+                submission_id,
+                str(failure),
+                attempt=attempt,
+                final=not should_retry,
+                retryable=should_retry,
+            )
+            if not saved:
+                return None
+            if should_retry:
+                raise RetryGradingRequested(self._retry_policy.delay_seconds(attempt)) from failure
+            if failure is not exc:
+                raise failure from None
             raise

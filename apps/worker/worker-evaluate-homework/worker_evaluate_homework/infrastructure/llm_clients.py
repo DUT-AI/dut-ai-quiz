@@ -1,5 +1,6 @@
 import hashlib
 from collections import OrderedDict
+from collections.abc import Awaitable
 from typing import Any, TypeVar
 
 import httpx
@@ -9,6 +10,8 @@ from pydantic import BaseModel
 
 from worker_evaluate_homework.domain.errors import ContextLimitError, LLMError
 from worker_evaluate_homework.domain.interfaces import ILLMClient
+
+from .http_errors import is_transient_http_error, is_transient_http_status
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -148,11 +151,10 @@ class OpenAILLMClient(ILLMClient):
                 raise ValueError("Expected JSON object")
             return data
         except httpx.HTTPStatusError as exc:
-            retryable = exc.response.status_code in {408, 429} or exc.response.status_code >= 500
             raise LLMError(
                 f"Lỗi LLM tokenizer ({exc.response.status_code}) tại {path}; "
                 "kiểm tra HOMEWORK_LLM_TOKENIZER_URL và native endpoints",
-                retryable=retryable,
+                retryable=is_transient_http_error(exc),
             ) from exc
         except httpx.TransportError as exc:
             raise LLMError(
@@ -221,7 +223,7 @@ class OpenAILLMClient(ILLMClient):
                 raise ContextLimitError(f"Lỗi khi gọi LLM (400): {error_body}") from exc
             raise LLMError(
                 f"Lỗi khi gọi LLM ({exc.response.status_code}): {error_body[:2000]}",
-                retryable=exc.response.status_code in {408, 429} or exc.response.status_code >= 500,
+                retryable=is_transient_http_error(exc),
             ) from exc
         except httpx.TransportError as exc:
             raise LLMError(f"Lỗi kết nối LLM: {type(exc).__name__}", retryable=True) from exc
@@ -277,11 +279,30 @@ class GeminiLLMClient(ILLMClient):
         )
 
     async def count_tokens(self, prompt: str, system_instruction: str = "") -> int:
-        response = await self._client.aio.models.count_tokens(
-            model=self._model,
-            contents=[system_instruction, prompt] if system_instruction else prompt,
+        response = await self._request(
+            self._client.aio.models.count_tokens(
+                model=self._model,
+                contents=[system_instruction, prompt] if system_instruction else prompt,
+            )
         )
         return response.total_tokens or 0
+
+    @staticmethod
+    async def _request(request: Awaitable[Any]) -> Any:
+        from google.genai.errors import APIError
+
+        try:
+            return await request
+        except APIError as exc:
+            raise LLMError(
+                f"Lỗi khi gọi Gemini ({exc.code}): {str(exc)[:2000]}",
+                retryable=is_transient_http_status(exc.code),
+            ) from exc
+        except httpx.HTTPError as exc:
+            raise LLMError(
+                f"Lỗi kết nối Gemini: {type(exc).__name__}",
+                retryable=is_transient_http_error(exc),
+            ) from exc
 
     async def generate_structured(
         self,
@@ -299,20 +320,25 @@ class GeminiLLMClient(ILLMClient):
             raise ContextLimitError(
                 f"LLM prompt có {token_count} token, vượt ngân sách {self.input_token_budget}"
             )
-        response = await self._client.aio.models.generate_content(
-            model=self._model,
-            contents=prompt,
-            config=genai_types.GenerateContentConfig(
-                system_instruction=system_instruction or None,
-                response_mime_type="application/json",
-                response_schema=schema_dict,
-                temperature=0.1,
-                max_output_tokens=settings.homework_llm_max_output_tokens,
-            ),
+        response = await self._request(
+            self._client.aio.models.generate_content(
+                model=self._model,
+                contents=prompt,
+                config=genai_types.GenerateContentConfig(
+                    system_instruction=system_instruction or None,
+                    response_mime_type="application/json",
+                    response_schema=schema_dict,
+                    temperature=0.1,
+                    max_output_tokens=settings.homework_llm_max_output_tokens,
+                ),
+            )
         )
         if not response.text:
-            raise RuntimeError("Gemini không trả về nội dung")
-        return schema.model_validate_json(_strip_code_fence(response.text))
+            raise LLMError("Gemini không trả về nội dung", retryable=True)
+        try:
+            return schema.model_validate_json(_strip_code_fence(response.text))
+        except ValueError as exc:
+            raise LLMError("Gemini trả về JSON không hợp lệ", retryable=True) from exc
 
 
 def _clean_schema(value: Any) -> Any:

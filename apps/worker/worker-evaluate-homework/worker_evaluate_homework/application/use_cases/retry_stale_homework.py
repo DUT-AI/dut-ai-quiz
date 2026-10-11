@@ -1,6 +1,7 @@
 from loguru import logger
 
 from worker_evaluate_homework.domain import IHomeworkGradingRepository
+from worker_evaluate_homework.domain.interfaces import IHomeworkGradingQueue
 
 
 class RetryStaleHomeworkUseCase:
@@ -9,7 +10,7 @@ class RetryStaleHomeworkUseCase:
     def __init__(
         self,
         repository: IHomeworkGradingRepository,
-        queue_name: str,
+        queue: IHomeworkGradingQueue,
         stale_homework_minutes: int = 10,
         stale_submission_minutes: int = 15,
         days_limit: int = 7,
@@ -17,14 +18,14 @@ class RetryStaleHomeworkUseCase:
         submission_batch_limit: int = 20,
     ) -> None:
         self._repository = repository
-        self._queue_name = queue_name
+        self._queue = queue
         self._stale_homework_minutes = stale_homework_minutes
         self._stale_submission_minutes = stale_submission_minutes
         self._days_limit = days_limit
         self._homework_batch_limit = homework_batch_limit
         self._submission_batch_limit = submission_batch_limit
 
-    async def execute(self, arq_redis) -> dict[str, int]:
+    async def execute(self) -> dict[str, int]:
         enqueued_homeworks = 0
         enqueued_submissions = 0
 
@@ -37,14 +38,7 @@ class RetryStaleHomeworkUseCase:
             )
             for hw_id in homework_ids:
                 try:
-                    job = await arq_redis.enqueue_job(
-                        "register_homework_job",
-                        homework_id=str(hw_id),
-                        _queue_name=self._queue_name,
-                        _job_id=f"homework-register:{hw_id}",
-                        _defer_by=1,
-                    )
-                    enqueued_homeworks += int(job is not None)
+                    enqueued_homeworks += int(await self._queue.enqueue_registration(hw_id))
                 except Exception as exc:
                     logger.warning("Không thể enqueue retry cho homework {}: {}", hw_id, exc)
         except Exception as exc:
@@ -59,14 +53,7 @@ class RetryStaleHomeworkUseCase:
             )
             for sub_id in submission_ids:
                 try:
-                    job = await arq_redis.enqueue_job(
-                        "evaluate_homework_job",
-                        submission_id=str(sub_id),
-                        _queue_name=self._queue_name,
-                        _job_id=f"homework-evaluate:{sub_id}",
-                        _defer_by=1,
-                    )
-                    enqueued_submissions += int(job is not None)
+                    enqueued_submissions += int(await self._queue.enqueue_evaluation(sub_id))
                 except Exception as exc:
                     logger.warning("Không thể enqueue retry cho submission {}: {}", sub_id, exc)
         except Exception as exc:

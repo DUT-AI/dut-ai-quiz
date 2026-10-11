@@ -11,6 +11,7 @@ from .models import (
     StoredFingerprint,
     SubmissionGradingRecord,
 )
+from .retry import GradingAttempt
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -58,28 +59,31 @@ class IHomeworkGradingRepository(Protocol):
         homework_id: UUID,
     ) -> HomeworkGradingRecord | None: ...
 
-    async def set_homework_processing(self, homework_id: UUID) -> bool: ...
+    async def claim_homework(self, homework_id: UUID) -> GradingAttempt | None: ...
 
     async def save_homework_rubric(
         self,
         homework_id: UUID,
         rubric: dict[str, Any],
-    ) -> None: ...
+        *,
+        attempt: GradingAttempt,
+    ) -> bool: ...
 
     async def save_homework_error(
         self,
         homework_id: UUID,
         error: str,
         *,
+        attempt: GradingAttempt,
         retryable: bool = False,
-    ) -> None: ...
+    ) -> bool: ...
 
     async def get_submission(
         self,
         submission_id: UUID,
     ) -> SubmissionGradingRecord | None: ...
 
-    async def set_submission_grading(self, submission_id: UUID) -> bool: ...
+    async def claim_submission(self, submission_id: UUID) -> GradingAttempt | None: ...
 
     async def save_submission_result(
         self,
@@ -87,16 +91,20 @@ class IHomeworkGradingRepository(Protocol):
         result: GradeResult,
         plagiarism: list[dict[str, Any]],
         copied_user_id: int | None,
-    ) -> None: ...
+        *,
+        attempt: GradingAttempt,
+        fingerprints: list[dict[str, Any]],
+    ) -> bool: ...
 
     async def save_submission_error(
         self,
         submission_id: UUID,
         error: str,
         *,
+        attempt: GradingAttempt,
         final: bool,
         retryable: bool = False,
-    ) -> None: ...
+    ) -> bool: ...
 
     async def list_previous_fingerprints(
         self,
@@ -104,12 +112,6 @@ class IHomeworkGradingRepository(Protocol):
         user_id: int,
         file_names: list[str],
     ) -> list[StoredFingerprint]: ...
-
-    async def replace_fingerprints(
-        self,
-        submission: SubmissionGradingRecord,
-        values: list[dict[str, Any]],
-    ) -> None: ...
 
     async def list_stale_homework_ids(
         self,
@@ -124,3 +126,11 @@ class IHomeworkGradingRepository(Protocol):
         days_limit: int = 7,
         limit: int = 20,
     ) -> list[UUID]: ...
+
+
+class IHomeworkGradingQueue(Protocol):
+    """Return False when an equivalent job is already queued."""
+
+    async def enqueue_registration(self, homework_id: UUID) -> bool: ...
+
+    async def enqueue_evaluation(self, submission_id: UUID) -> bool: ...

@@ -1,16 +1,21 @@
-import httpx
-
-
 class InvalidArtifactError(ValueError):
     """The homework attachment or submission archive cannot be graded."""
 
 
-class LLMError(RuntimeError):
-    """An LLM failure with an explicit retry policy."""
+class GradingError(RuntimeError):
+    """An infrastructure failure translated into a provider-independent error."""
 
     def __init__(self, message: str, *, retryable: bool = False) -> None:
         super().__init__(message)
         self.retryable = retryable
+
+
+class LLMError(GradingError):
+    """The grading model could not produce a valid response."""
+
+
+class ArtifactStorageError(GradingError):
+    """The artifact could not be downloaded from storage."""
 
 
 class ContextLimitError(LLMError):
@@ -18,8 +23,4 @@ class ContextLimitError(LLMError):
 
 
 def is_retryable_error(error: Exception) -> bool:
-    if isinstance(error, LLMError):
-        return error.retryable
-    if isinstance(error, httpx.HTTPStatusError):
-        return error.response.status_code in {408, 429} or error.response.status_code >= 500
-    return isinstance(error, httpx.TransportError)
+    return isinstance(error, GradingError) and error.retryable

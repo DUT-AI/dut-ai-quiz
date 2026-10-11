@@ -20,6 +20,9 @@ from app.infrastructure.clients.minio_client import MinioClient
 from py7zr.io import BytesIOFactory
 
 from worker_evaluate_homework.domain import InvalidArtifactError, SourceFile
+from worker_evaluate_homework.domain.errors import ArtifactStorageError
+
+from .http_errors import is_transient_http_error
 
 SUPPORTED_SUBMISSION_SUFFIXES = (".zip", ".rar", ".7z", ".tar.gz", ".gz")
 SUPPORTED_SOURCE_SUFFIXES = (".py", ".ipynb")
@@ -81,6 +84,15 @@ class S3HomeworkArtifactReader:
         )
 
     async def _download(self, object_key: str, max_bytes: int) -> bytes:
+        try:
+            return await self._download_bytes(object_key, max_bytes)
+        except httpx.HTTPError as exc:
+            raise ArtifactStorageError(
+                f"Không thể tải file bài tập: {type(exc).__name__}",
+                retryable=is_transient_http_error(exc),
+            ) from exc
+
+    async def _download_bytes(self, object_key: str, max_bytes: int) -> bytes:
         parsed = urlparse(object_key)
         url = (
             object_key
