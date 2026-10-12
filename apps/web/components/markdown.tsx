@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { rehypeHeadingIds } from "@/features/lessons/utils/theory-parser";
 import { CodeBlock } from "@/features/lessons/components/code-block";
+import { MermaidBlock } from "@/features/lessons/components/mermaid-block";
 
 interface MarkdownProps {
   content: string;
@@ -70,6 +71,8 @@ function findHighlightRanges(content: string, chunks: string[]): HighlightRange[
   }
   return ranges;
 }
+
+const PreContext = React.createContext<boolean>(false);
 
 export const markdownComponents = {
   h1: ({ children, id }: any) => (
@@ -223,13 +226,22 @@ export const markdownComponents = {
       className="mx-auto rounded-2xl border border-slate-200/80 dark:border-zinc-800 shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer my-4 max-w-full h-auto"
     />
   ),
+  pre: ({ children }: any) => (
+    <PreContext.Provider value={true}>
+      <div className="my-4 not-prose">{children}</div>
+    </PreContext.Provider>
+  ),
   code: ({ node, inline, className, children, ...props }: any) => {
+    const isBlock = React.useContext(PreContext);
     const match = /language-(\w+)/.exec(className || "");
     const lang = match ? match[1] : "";
     const codeString = String(children).replace(/\n$/, "");
 
-    if (!inline && match) {
-      return <CodeBlock code={codeString} language={lang} />;
+    if (isBlock || (!inline && match)) {
+      if (lang === "mermaid") {
+        return <MermaidBlock code={codeString} />;
+      }
+      return <CodeBlock code={codeString} language={lang || "plaintext"} />;
     }
 
     return (
@@ -243,11 +255,34 @@ export const markdownComponents = {
   },
 };
 
+const normalizeTabs = (text: string) => {
+  if (!text) return "";
+  return text.replace(/\t/g, "    ");
+};
+
+function remarkDisableIndentedCode(this: any) {
+  const data = this.data();
+  const extensions = data.micromarkExtensions || (data.micromarkExtensions = []);
+  extensions.push({
+    disable: { null: ["codeIndented"] },
+  });
+}
+
 const preprocessMath = (text: string) => {
   if (!text) return "";
-  // Ensure $$ math $$ has newlines before, after, and inside so remark-math parses it as block display math
-  return text.replace(/\$\$([\s\S]+?)\$\$/g, (match, math) => {
-    return `\n\n$$\n${math.trim()}\n$$\n\n`;
+  const normalized = normalizeTabs(text);
+  // Match $$...$$ while preserving any leading indentation if it starts a line
+  return normalized.replace(/([ \t]*)\$\$([\s\S]+?)\$\$/g, (match, indent, math, offset, string) => {
+    const prevChar = offset > 0 ? string[offset - 1] : "\n";
+    const isStartOfLine = prevChar === "\n" || prevChar === "\r" || offset === 0;
+    const lineIndent = isStartOfLine ? indent : "";
+    const trimmed = math.trim();
+    const mathLines = trimmed
+      .split("\n")
+      .map((line: string) => `${lineIndent}${line.trim()}`)
+      .join("\n");
+
+    return `\n\n${lineIndent}$$\n${mathLines}\n${lineIndent}$$\n\n`;
   });
 };
 
@@ -337,7 +372,7 @@ export const Markdown = React.memo(function Markdown({ content, className = "", 
         `,
       }} />
       <ReactMarkdown
-        remarkPlugins={[remarkGfm, remarkMath]}
+        remarkPlugins={[remarkDisableIndentedCode, remarkGfm, remarkMath]}
         rehypePlugins={[rehypeRaw, rehypeKatex, rehypeHeadingIds]}
         components={customComponents}
       >
