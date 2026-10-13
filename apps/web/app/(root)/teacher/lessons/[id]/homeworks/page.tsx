@@ -36,7 +36,7 @@ export default function LessonHomeworksPage() {
   const archive = useArchiveHomework();
 
   const lesson = lessons.find((l) => l.id === lessonId);
-  const homeworks = homeworksData?.data || [];
+  const homeworks = useMemo(() => homeworksData?.data || [], [homeworksData?.data]);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [formOpen, setFormOpen] = useState(false);

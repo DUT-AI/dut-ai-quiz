@@ -74,6 +74,29 @@ function findHighlightRanges(content: string, chunks: string[]): HighlightRange[
 
 const PreContext = React.createContext<boolean>(false);
 
+const MarkdownCode = ({ node, inline, className, children, ...props }: any) => {
+  const isBlock = React.useContext(PreContext);
+  const match = /language-(\w+)/.exec(className || "");
+  const lang = match ? match[1] : "";
+  const codeString = String(children).replace(/\n$/, "");
+
+  if (isBlock || (!inline && match)) {
+    if (lang === "mermaid") {
+      return <MermaidBlock code={codeString} />;
+    }
+    return <CodeBlock code={codeString} language={lang || "plaintext"} />;
+  }
+
+  return (
+    <code
+      className="font-mono text-sm font-semibold text-pink-600 dark:text-pink-400 bg-slate-100 dark:bg-slate-800/80 border border-slate-200/50 dark:border-zinc-700/50 px-1.5 py-0.5 rounded-md"
+      {...props}
+    >
+      {children}
+    </code>
+  );
+};
+
 export const markdownComponents = {
   h1: ({ children, id }: any) => (
     <h1 id={id} className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white mt-8 mb-4 leading-tight scroll-mt-24">
@@ -231,28 +254,7 @@ export const markdownComponents = {
       <div className="my-4 not-prose">{children}</div>
     </PreContext.Provider>
   ),
-  code: ({ node, inline, className, children, ...props }: any) => {
-    const isBlock = React.useContext(PreContext);
-    const match = /language-(\w+)/.exec(className || "");
-    const lang = match ? match[1] : "";
-    const codeString = String(children).replace(/\n$/, "");
-
-    if (isBlock || (!inline && match)) {
-      if (lang === "mermaid") {
-        return <MermaidBlock code={codeString} />;
-      }
-      return <CodeBlock code={codeString} language={lang || "plaintext"} />;
-    }
-
-    return (
-      <code
-        className="font-mono text-sm font-semibold text-pink-600 dark:text-pink-400 bg-slate-100 dark:bg-slate-800/80 border border-slate-200/50 dark:border-zinc-700/50 px-1.5 py-0.5 rounded-md"
-        {...props}
-      >
-        {children}
-      </code>
-    );
-  },
+  code: MarkdownCode,
 };
 
 const normalizeTabs = (text: string) => {
