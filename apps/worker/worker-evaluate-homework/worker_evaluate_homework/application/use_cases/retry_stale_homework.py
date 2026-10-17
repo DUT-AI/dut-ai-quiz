@@ -40,9 +40,9 @@ class RetryStaleHomeworkUseCase:
                 try:
                     enqueued_homeworks += int(await self._queue.enqueue_registration(hw_id))
                 except Exception as exc:
-                    logger.warning("Không thể enqueue retry cho homework {}: {}", hw_id, exc)
+                    logger.warning(f"Không thể enqueue retry cho homework {hw_id}: {exc}")
         except Exception as exc:
-            logger.error("Lỗi khi truy vấn stale homeworks: {}", exc)
+            logger.error(f"Lỗi khi truy vấn stale homeworks: {exc}")
 
         # 2. Quét và enqueue các submission chưa GRADED (thuộc homework đã READY)
         try:
@@ -55,15 +55,13 @@ class RetryStaleHomeworkUseCase:
                 try:
                     enqueued_submissions += int(await self._queue.enqueue_evaluation(sub_id))
                 except Exception as exc:
-                    logger.warning("Không thể enqueue retry cho submission {}: {}", sub_id, exc)
+                    logger.warning(f"Không thể enqueue retry cho submission {sub_id}: {exc}")
         except Exception as exc:
-            logger.error("Lỗi khi truy vấn stale submissions: {}", exc)
+            logger.error(f"Lỗi khi truy vấn stale submissions: {exc}")
 
         if enqueued_homeworks > 0 or enqueued_submissions > 0:
             logger.info(
-                "Cron retry sweep hoàn tất: {} homeworks, {} submissions đã được enqueue.",
-                enqueued_homeworks,
-                enqueued_submissions,
+                f"Cron retry sweep hoàn tất: {enqueued_homeworks} homeworks, {enqueued_submissions} submissions đã được enqueue.",
             )
 
         return {

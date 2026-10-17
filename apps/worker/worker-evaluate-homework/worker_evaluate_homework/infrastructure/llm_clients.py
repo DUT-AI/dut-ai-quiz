@@ -12,7 +12,7 @@ from worker_evaluate_homework.domain.errors import ContextLimitError, LLMError
 from worker_evaluate_homework.domain.interfaces import ILLMClient
 
 from .http_errors import is_transient_http_error, is_transient_http_status
-
+from google.genai.errors import APIError
 T = TypeVar("T", bound=BaseModel)
 
 
@@ -94,14 +94,17 @@ class OpenAILLMClient(ILLMClient):
             > settings.homework_llm_max_tokenizer_bytes
         ):
             raise ContextLimitError(
-                "LLM tokenizer payload quá lớn; cần chia nội dung trước khi đếm token"
+                f"LLM tokenizer payload quá lớn; cần chia nội dung trước khi đếm token ({len(system_instruction) + len(prompt)} chars > {settings.homework_llm_max_tokenizer_bytes} bytes)"
             )
         client = await self._get_client()
         if not self._context_checked:
-            props = await self._request_json(client, "GET", "/props")
-            context = props.get("default_generation_settings", {}).get("n_ctx")
-            if isinstance(context, int) and context > 0:
-                self._context_tokens = min(self._context_tokens, context)
+            try:
+                props = await self._request_json(client, "GET", "/props")
+                context = props.get("default_generation_settings", {}).get("n_ctx")
+                if isinstance(context, int) and context > 0:
+                    self._context_tokens = min(self._context_tokens, context)
+            except Exception as exc:
+                logger.debug(f"Không thể lấy /props từ LLM server: {exc}")
             self._context_checked = True
         key = hashlib.sha256((system_instruction + "\0" + prompt).encode()).hexdigest()
         if key in self._token_counts:
@@ -289,8 +292,6 @@ class GeminiLLMClient(ILLMClient):
 
     @staticmethod
     async def _request(request: Awaitable[Any]) -> Any:
-        from google.genai.errors import APIError
-
         try:
             return await request
         except APIError as exc:

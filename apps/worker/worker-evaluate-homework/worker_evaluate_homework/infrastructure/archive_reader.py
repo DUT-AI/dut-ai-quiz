@@ -518,17 +518,17 @@ def _notebook_output_text(output: Any) -> str:
 
 
 def _compact_training_output(text: str) -> str:
-    """Bound repetitive epoch logs; retain arbitrary results for chunked reading."""
+    """Bound repetitive epoch logs and large outputs; retain head and tail."""
     limit = settings.homework_notebook_output_max_chars
-    if len(text) <= limit or len(re.findall(r"(?im)^\s*Epoch\s+\d+[/\s]", text)) < 3:
+    if len(text) <= limit:
         return text
     head_end = text.rfind("\n", 0, limit // 2)
     tail_start = text.find("\n", len(text) - limit // 2)
     if head_end < 0 or tail_start < 0 or head_end >= tail_start:
-        return text
+        return text[:limit] + "\n[OUTPUT COMPACTED: text exceeded character limit]\n"
     omitted = len(text[head_end:tail_start].splitlines())
     marker = (
-        f"\n[TRAINING LOG COMPACTED: omitted {omitted} middle lines; first/last epochs retained]\n"
+        f"\n[OUTPUT COMPACTED: omitted {omitted} middle lines; head/tail retained]\n"
     )
     return text[:head_end] + marker + text[tail_start + 1 :]
 

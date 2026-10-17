@@ -1,7 +1,7 @@
 import ast
 import json
 import sys
-from pathlib import PurePath, PurePosixPath
+from pathlib import PurePosixPath
 from typing import Any
 
 from app.config import settings
@@ -80,7 +80,6 @@ Quy tắc:
 - topic: Tên chủ đề của bài tập (dựa trên tiêu đề và nội dung bài tập).
 - objective: Mục tiêu của bài tập và kỹ năng cần đạt được.
 - notes: Danh sách ghi chú thêm (để rỗng [] nếu không có).
-- required_files: Danh sách các tên file code bắt buộc (ví dụ: ["main.py"] hoặc ["bai1.ipynb"]). Không tự bịa nếu đề không yêu cầu rõ (để rỗng [] nếu đề không quy định cụ thể).
 - requirements: Danh sách các yêu cầu có thể đối chiếu với nội dung bài nộp (mỗi phần tử là một string).
 - allowed_libraries và forbidden_libraries: Danh sách tên thư viện (để rỗng [] nếu đề không quy định).
 - criteria: Danh sách từ 3 đến 10 tiêu chí riêng cho đúng bài tập này.
@@ -97,7 +96,6 @@ BẮT BUỘC TRẢ VỀ JSON theo cấu trúc mẫu sau (chỉ trả về JSON, 
   "topic": "{homework.title}",
   "objective": "Mục tiêu bài tập",
   "notes": [],
-  "required_files": [],
   "allowed_libraries": [],
   "forbidden_libraries": [],
   "requirements": ["..."],
@@ -188,12 +186,19 @@ BẮT BUỘC TRẢ VỀ JSON theo cấu trúc sau:
         expected_ids = {item.id for item in rubric.criteria}
         actual_ids = {item.id for item in evaluated.evaluations}
         if actual_ids != expected_ids:
-            raise LLMError(
-                "LLM trả về sai bộ tiêu chí chấm: "
-                f"thiếu={sorted(expected_ids - actual_ids)}, "
-                f"thừa={sorted(actual_ids - expected_ids)}",
-                retryable=True,
-            )
+            missing_ids = expected_ids - actual_ids
+            extra_ids = actual_ids - expected_ids
+            if extra_ids:
+                evaluated.evaluations = [e for e in evaluated.evaluations if e.id in expected_ids]
+            if missing_ids:
+                for mid in missing_ids:
+                    evaluated.evaluations.append(
+                        CriterionEvaluation(
+                            id=mid,
+                            status=False,
+                            description="Không tìm thấy bằng chứng đáp ứng tiêu chí này trong bài nộp.",
+                        )
+                    )
         _override_library_policy(evaluated, static, rubric)
         score_details: list[dict[str, Any]] = []
         score = 0.0
@@ -250,6 +255,7 @@ BẮT BUỘC TRẢ VỀ JSON theo cấu trúc sau:
             "Không chấm điểm, không kết luận thiếu chức năng vì không thấy trong phần này. "
             "Chỉ ghi bằng chứng cụ thể, tên file/cell, code liên quan và giới hạn quan sát. "
             "Chỉ dùng id trong rubric; bỏ qua id không có bằng chứng. "
+            "QUAN TRỌNG: Mỗi id chỉ xuất hiện tối đa một lần trong danh sách findings (nếu có nhiều bằng chứng thì gộp chung). "
             "Mỗi evidence tối đa 1200 ký tự. Trả JSON: "
             '{"findings":[{"id":"criterion_id","evidence":"..."}]}\n'
             f"RUBRIC:\n{rubric_text}\nFRAGMENT:\n"
@@ -287,15 +293,13 @@ BẮT BUỘC TRẢ VỀ JSON theo cấu trúc sau:
                 raise ContextLimitError(
                     "Bài nộp cần quá nhiều lượt đọc LLM; không chấm thiếu nội dung"
                 )
-            ids = [finding.id for finding in evidence.findings]
-            if len(ids) != len(set(ids)) or not set(ids) <= expected_ids:
-                raise LLMError("LLM trả bằng chứng sai bộ tiêu chí", retryable=True)
+            valid_findings = [f for f in evidence.findings if f.id in expected_ids]
             summaries.append(
                 {
                     "file": name,
                     "start": start,
                     "end": start + len(content),
-                    "findings": evidence.model_dump()["findings"],
+                    "findings": [f.model_dump() for f in valid_findings],
                 }
             )
         if not summaries:
@@ -328,15 +332,21 @@ BẮT BUỘC TRẢ VỀ JSON theo cấu trúc sau:
                 merge_prompt = (
                     "Hợp nhất bằng chứng cho từng id từ hai nhóm phần bài nộp. "
                     "Giữ tên file/cell, code quan trọng, phụ thuộc giữa các phần và giới hạn quan sát. "
-                    "Không chấm điểm, không tạo bằng chứng mới. Mỗi id tối đa 1200 ký tự. "
+                    "Không chấm điểm, không tạo bằng chứng mới. "
+                    "QUAN TRỌNG: Mỗi id chỉ xuất hiện đúng một lần trong findings. Mỗi evidence tối đa 1200 ký tự. "
                     'Trả JSON {"findings":[{"id":"criterion_id","evidence":"..."}]}.\n'
                     + json.dumps(pair, ensure_ascii=False)
                 )
                 evidence = await self._generate_structured(merge_prompt, ChunkEvidence)
                 pair_ids = {item["id"] for part in pair for item in part["findings"]}
-                if {item.id for item in evidence.findings} != pair_ids:
-                    raise LLMError("LLM làm mất tiêu chí khi hợp nhất bằng chứng", retryable=True)
-                merged.append({"findings": evidence.model_dump()["findings"]})
+                merged_findings = {f.id: f.evidence for f in evidence.findings if f.id in pair_ids}
+                # Preserve original evidence if LLM omitted any pair_id during merge
+                for part in pair:
+                    for item in part.get("findings", []):
+                        pid = item.get("id")
+                        if pid in pair_ids and pid not in merged_findings:
+                            merged_findings[pid] = item.get("evidence", "")
+                merged.append({"findings": [{"id": k, "evidence": v} for k, v in merged_findings.items()]})
             summaries = merged
 
 
@@ -348,11 +358,7 @@ def _analyze_sources(
     rubric: HomeworkRubric,
     sources: list[SourceFile],
 ) -> dict[str, Any]:
-    source_names = {PurePath(source.name).name.casefold() for source in sources}
     local_modules = _local_module_names(sources)
-    missing = [
-        name for name in rubric.required_files if PurePath(name).name.casefold() not in source_names
-    ]
     syntax_errors: list[str] = []
     imported_modules: set[str] = set()
     function_count = 0
@@ -384,13 +390,11 @@ def _analyze_sources(
         else []
     )
     blocking_errors = []
-    if missing:
-        blocking_errors.append(f"Thiếu file bắt buộc: {', '.join(missing)}")
     if syntax_errors:
         blocking_errors.append("Source có lỗi cú pháp: " + "; ".join(syntax_errors))
     return {
         "files": sorted(source.name for source in sources),
-        "missing_required_files": missing,
+        "missing_required_files": [],
         "syntax_errors": syntax_errors,
         "imports": sorted(imported_modules),
         "local_modules": sorted(local_modules),
@@ -482,6 +486,7 @@ def _blocking_result(
 
 
 def _normalize_rubric(rubric: HomeworkRubric) -> HomeworkRubric:
+    rubric.required_files = []
     if (rubric.allowed_libraries or rubric.forbidden_libraries) and not any(
         item.id == "library_policy" for item in rubric.criteria
     ):

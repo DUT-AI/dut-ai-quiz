@@ -61,6 +61,30 @@ class CriterionEvaluation(BaseModel):
 class ChecklistEvaluation(BaseModel):
     evaluations: list[CriterionEvaluation]
 
+    @model_validator(mode="before")
+    @classmethod
+    def deduplicate_evaluations(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+        raw = data.get("evaluations")
+        if not isinstance(raw, list):
+            return data
+        seen: dict[str, dict[str, Any]] = {}
+        order: list[str] = []
+        for item in raw:
+            if not isinstance(item, dict):
+                continue
+            item_id = item.get("id")
+            if not item_id or not isinstance(item_id, str):
+                continue
+            clean_id = item_id.strip()
+            item["id"] = clean_id
+            seen[clean_id] = item
+            if clean_id not in order:
+                order.append(clean_id)
+        data["evaluations"] = [seen[k] for k in order]
+        return data
+
     @model_validator(mode="after")
     def require_unique_criteria(self) -> "ChecklistEvaluation":
         ids = [item.id for item in self.evaluations]
@@ -82,6 +106,33 @@ class CriterionEvidence(BaseModel):
 
 class ChunkEvidence(BaseModel):
     findings: list[CriterionEvidence] = Field(max_length=10)
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_and_merge_findings(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+        raw = data.get("findings")
+        if not isinstance(raw, list):
+            return data
+        merged: dict[str, str] = {}
+        order: list[str] = []
+        for item in raw:
+            if not isinstance(item, dict):
+                continue
+            item_id = item.get("id")
+            if not item_id or not isinstance(item_id, str):
+                continue
+            clean_id = item_id.strip()
+            evidence = str(item.get("evidence", "")).strip()
+            if clean_id not in merged:
+                merged[clean_id] = evidence[:1200]
+                order.append(clean_id)
+            else:
+                combined = f"{merged[clean_id]}\n---\n{evidence}"
+                merged[clean_id] = combined[:1200]
+        data["findings"] = [{"id": k, "evidence": merged[k]} for k in order[:10]]
+        return data
 
     @model_validator(mode="after")
     def require_unique_ids(self) -> "ChunkEvidence":

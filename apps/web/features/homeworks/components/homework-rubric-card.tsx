@@ -89,43 +89,24 @@ export function HomeworkRubricCard({
         </p>
       )}
 
-      {/* Requirements / Allowed / Forbidden libraries */}
-      {(rubric.required_files?.length > 0 || rubric.allowed_libraries?.length > 0) && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs">
-          {rubric.required_files?.length > 0 && (
-            <div className="p-3 rounded-xl bg-gray-100 dark:bg-white/5 space-y-1">
-              <span className="font-bold text-gray-navy dark:text-light-blue text-[11px] uppercase">
-                Tệp bắt buộc:
-              </span>
-              <div className="flex flex-wrap gap-1">
-                {rubric.required_files.map((f, i) => (
-                  <span
-                    key={i}
-                    className="font-mono text-[11px] bg-white dark:bg-black/30 px-2 py-0.5 rounded border border-gray-200 dark:border-white/10"
-                  >
-                    {f}
-                  </span>
-                ))}
-              </div>
+      {/* Allowed libraries */}
+      {rubric.allowed_libraries?.length > 0 && (
+        <div className="pt-2 text-xs">
+          <div className="p-3 rounded-xl bg-gray-100 dark:bg-white/5 space-y-1">
+            <span className="font-bold text-gray-navy dark:text-light-blue text-[11px] uppercase">
+              Thư viện cho phép:
+            </span>
+            <div className="flex flex-wrap gap-1">
+              {rubric.allowed_libraries.map((lib, i) => (
+                <span
+                  key={i}
+                  className="font-mono text-[11px] bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded border border-emerald-500/20"
+                >
+                  {lib}
+                </span>
+              ))}
             </div>
-          )}
-          {rubric.allowed_libraries?.length > 0 && (
-            <div className="p-3 rounded-xl bg-gray-100 dark:bg-white/5 space-y-1">
-              <span className="font-bold text-gray-navy dark:text-light-blue text-[11px] uppercase">
-                Thư viện cho phép:
-              </span>
-              <div className="flex flex-wrap gap-1">
-                {rubric.allowed_libraries.map((lib, i) => (
-                  <span
-                    key={i}
-                    className="font-mono text-[11px] bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded border border-emerald-500/20"
-                  >
-                    {lib}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
+          </div>
         </div>
       )}
     </div>
