@@ -430,6 +430,52 @@ def test_zip_source_reader_extracts_all_gradable_notebook_content() -> None:
     ]
 
 
+def test_zip_source_reader_strips_embedded_base64_images() -> None:
+    notebook = {
+        "cells": [
+            {
+                "cell_type": "markdown",
+                "source": [
+                    "## Báo cáo\n",
+                    "![screenshot](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==)\n",
+                    "Hình ảnh minh họa kết quả.",
+                ],
+            },
+            {
+                "cell_type": "code",
+                "source": "print('done')",
+                "outputs": [
+                    {
+                        "output_type": "display_data",
+                        "data": {
+                            "text/html": [
+                                '<img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD" />'
+                            ]
+                        },
+                    }
+                ],
+            },
+        ],
+        "metadata": {},
+        "nbformat": 4,
+    }
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as archive:
+        archive.writestr("submission.ipynb", json.dumps(notebook))
+
+    sources = S3HomeworkArtifactReader._read_python_sources(
+        buffer.getvalue(),
+        "submission.zip",
+    )
+
+    assert len(sources) == 1
+    content = sources[0].content
+    assert "data:image/" not in content
+    assert "[image: base64 omitted]" in content
+    assert "## Báo cáo" in content
+    assert "Hình ảnh minh họa kết quả." in content
+
+
 def test_markdown_only_notebook_is_accepted_for_theory_answers() -> None:
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, "w") as archive:

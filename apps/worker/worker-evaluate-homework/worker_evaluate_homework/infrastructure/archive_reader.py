@@ -406,11 +406,23 @@ def _decode_source(name: str, content: bytes) -> str:
             raise InvalidArtifactError(f"File {name} phải sử dụng bảng mã UTF-8") from exc
 
 
+_BASE64_IMAGE_URI_PATTERN = re.compile(
+    r"data:image/[a-zA-Z0-9.+-]+;base64,\s*[A-Za-z0-9+/=]+(?:\r?\n[A-Za-z0-9+/=]{60,})*",
+    re.IGNORECASE,
+)
+
+
+def _strip_embedded_images(text: str) -> str:
+    if "data:image/" not in text.casefold():
+        return text
+    return _BASE64_IMAGE_URI_PATTERN.sub("[image: base64 omitted]", text)
+
+
 def _decode_source_file(name: str, content: bytes) -> str:
     decoded = _decode_source(name, content)
-    if not name.casefold().endswith(".ipynb"):
-        return decoded
-    return _extract_notebook_content(name, decoded)
+    if name.casefold().endswith(".ipynb"):
+        decoded = _extract_notebook_content(name, decoded)
+    return _strip_embedded_images(decoded)
 
 
 def _extract_notebook_content(name: str, content: str) -> str:
@@ -430,9 +442,11 @@ def _extract_notebook_content(name: str, content: str) -> str:
         cell_type = cell.get("cell_type")
         if cell_type not in {"code", "markdown", "raw"}:
             continue
-        source = _notebook_text(
-            cell.get("source", ""),
-            error_message=f"Notebook {name} có {cell_type} cell #{index} không hợp lệ",
+        source = _strip_embedded_images(
+            _notebook_text(
+                cell.get("source", ""),
+                error_message=f"Notebook {name} có {cell_type} cell #{index} không hợp lệ",
+            )
         )
 
         if cell_type == "code":
@@ -446,7 +460,7 @@ def _extract_notebook_content(name: str, content: str) -> str:
                     f"Notebook {name} có outputs của cell #{index} không hợp lệ"
                 )
             for output_index, output in enumerate(outputs, start=1):
-                output_text = _notebook_output_text(output)
+                output_text = _strip_embedded_images(_notebook_output_text(output))
                 if output_text.strip():
                     rendered_cells.append(
                         _comment_notebook_text(
