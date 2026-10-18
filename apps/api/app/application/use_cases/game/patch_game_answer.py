@@ -139,8 +139,9 @@ class PatchGameAnswerUseCase:
             if self._cache:
                 await self._cache.invalidate(lesson_slug)
 
-            # Kiểm tra tiêu chuẩn hoàn thành game: đúng 100% câu hỏi
-            if snap.is_100_percent_correct() and session.status == GameSessionStatus.COMPLETED:
+            # Kiểm tra tiêu chuẩn hoàn thành game: trả lời đến câu cuối cùng và còn mạng (không bị Game Over giữa chừng)
+            is_completed = snap.is_all_answered() and state.lives > 0
+            if is_completed and session.status == GameSessionStatus.COMPLETED:
                 dispatch_manage_submission_webhook(
                     lesson_slug=lesson_slug,
                     user_id=user_id,

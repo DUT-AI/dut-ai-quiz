@@ -175,8 +175,6 @@ class GameSessionRepository(IGameSessionRepository):
 
 
     async def list_completed_sessions_for_sync(self, lesson_slug: str) -> list[dict]:
-
-
         stmt = (
             select(GameSession)
             .where(
@@ -198,7 +196,11 @@ class GameSessionRepository(IGameSessionRepository):
             total_q = len(questions) if questions else (s.question_limit or 0)
             correct_q = int(ps.get("correct_count", 0))
 
-            is_100_percent = total_q > 0 and correct_q >= total_q
+            lives = int(ps.get("lives", 0))
+            last_idx = int(ps.get("last_question_index", 0))
+
+            # Hoàn thành game: trả lời đến câu cuối cùng và còn mạng (không bị Game Over giữa chừng)
+            is_completed = total_q > 0 and last_idx >= total_q and lives > 0
 
             results.append(
                 {
@@ -211,7 +213,7 @@ class GameSessionRepository(IGameSessionRepository):
 
                     "gold": int(ps.get("gold", 0)),
                     "attempt_count": int(ps.get("attempt_count", 1)),
-                    "is_completed": is_100_percent,
+                    "is_completed": is_completed,
                     "total_questions": total_q,
                     "correct_count": correct_q,
                 }
