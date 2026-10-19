@@ -250,9 +250,7 @@ class GameSessionSnapshot:
             return cls()
         return cls(
             lesson_slug=str(data.get("lesson_slug", "")),
-            questions=[
-                QuestionSnapshot.from_dict(q) for q in data.get("questions", [])
-            ],
+            questions=[QuestionSnapshot.from_dict(q) for q in data.get("questions", [])],
             answers=dict(data.get("answers", {}) or {}),
             gamification=GamificationState.from_dict(data.get("gamification", {}) or {}),
         )

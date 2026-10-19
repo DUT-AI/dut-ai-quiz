@@ -3,7 +3,6 @@ from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
-
 from app.application.dtos.user import UserOut
 from app.application.services.user_service import UserService
 from app.application.use_cases.game.get_user_match_history import GetUserMatchHistoryUseCase
@@ -59,8 +58,7 @@ async def test_get_user_match_history_with_sessions(mock_repo, mock_user_service
                 "last_question_index": 10,
             },
             "questions": [
-                {"id": f"q{i}", "content": f"Secret Question {i}", "options": []}
-                for i in range(10)
+                {"id": f"q{i}", "content": f"Secret Question {i}", "options": []} for i in range(10)
             ],
             "answers": {f"q{i}": f"opt{i}" for i in range(10)},
         },

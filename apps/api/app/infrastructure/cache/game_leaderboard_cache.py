@@ -32,11 +32,8 @@ class GameLeaderboardCache:
     async def set(self, lesson_slug: str, leaderboard: list[GameLeaderboardRowDTO]) -> None:
         key = self._make_key(lesson_slug)
         payload = [row.model_dump(mode="json") for row in leaderboard]
-        await self._redis.set(
-            key, json.dumps(payload, default=_json_serializer), ex=self._ttl
-        )
+        await self._redis.set(key, json.dumps(payload, default=_json_serializer), ex=self._ttl)
 
     async def invalidate(self, lesson_slug: str) -> None:
         key = self._make_key(lesson_slug)
         await self._redis.delete(key)
-

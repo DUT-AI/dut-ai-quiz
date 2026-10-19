@@ -541,9 +541,7 @@ def _compact_training_output(text: str) -> str:
     if head_end < 0 or tail_start < 0 or head_end >= tail_start:
         return text[:limit] + "\n[OUTPUT COMPACTED: text exceeded character limit]\n"
     omitted = len(text[head_end:tail_start].splitlines())
-    marker = (
-        f"\n[OUTPUT COMPACTED: omitted {omitted} middle lines; head/tail retained]\n"
-    )
+    marker = f"\n[OUTPUT COMPACTED: omitted {omitted} middle lines; head/tail retained]\n"
     return text[:head_end] + marker + text[tail_start + 1 :]
 
 

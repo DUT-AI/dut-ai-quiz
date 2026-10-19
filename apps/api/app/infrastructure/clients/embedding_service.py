@@ -42,7 +42,9 @@ class LocalHashingEmbeddingService(IEmbeddingService):
         words = self._word_pattern.findall(normalized)
 
         features: list[tuple[str, float]] = [(f"word:{word}", 1.0) for word in words]
-        features.extend((f"bigram:{left}:{right}", 1.35) for left, right in zip(words, words[1:], strict=False))
+        features.extend(
+            (f"bigram:{left}:{right}", 1.35) for left, right in zip(words, words[1:], strict=False)
+        )
 
         compact = " ".join(words)
         for size in (3, 4, 5):

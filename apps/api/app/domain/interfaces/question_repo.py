@@ -73,4 +73,3 @@ class IQuestionRepository(Protocol):
     ) -> int:
         """Count questions assigned to a lesson, optionally filtered by pool_type."""
         ...
-

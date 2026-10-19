@@ -346,7 +346,9 @@ BẮT BUỘC TRẢ VỀ JSON theo cấu trúc sau:
                         pid = item.get("id")
                         if pid in pair_ids and pid not in merged_findings:
                             merged_findings[pid] = item.get("evidence", "")
-                merged.append({"findings": [{"id": k, "evidence": v} for k, v in merged_findings.items()]})
+                merged.append(
+                    {"findings": [{"id": k, "evidence": v} for k, v in merged_findings.items()]}
+                )
             summaries = merged
 
 

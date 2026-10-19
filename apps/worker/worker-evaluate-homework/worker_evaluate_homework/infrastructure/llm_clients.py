@@ -5,6 +5,7 @@ from typing import Any, TypeVar
 
 import httpx
 from app.config import settings
+from google.genai.errors import APIError
 from loguru import logger
 from pydantic import BaseModel
 
@@ -12,7 +13,7 @@ from worker_evaluate_homework.domain.errors import ContextLimitError, LLMError
 from worker_evaluate_homework.domain.interfaces import ILLMClient
 
 from .http_errors import is_transient_http_error, is_transient_http_status
-from google.genai.errors import APIError
+
 T = TypeVar("T", bound=BaseModel)
 
 

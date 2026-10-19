@@ -89,9 +89,7 @@ async def _send_webhook_request(
                     f"⚠️ [Manage Webhook] Server returned status {resp.status_code}: {resp.text}"
                 )
     except Exception as exc:
-        logger.warning(
-            f"⚠️ [Manage Webhook] Failed to connect to Manage ({url}): {exc}"
-        )
+        logger.warning(f"⚠️ [Manage Webhook] Failed to connect to Manage ({url}): {exc}")
 
 
 def dispatch_manage_submission_webhook(
@@ -147,4 +145,3 @@ def dispatch_manage_submission_webhook(
         )
     except RuntimeError:
         pass
-

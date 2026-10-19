@@ -64,9 +64,7 @@ def test_jwt_user_source_extraction(monkeypatch):
     assert ctx.is_manage_user is True
 
     # Google/Internal JWT
-    token_google = create_access_token(
-        {"user_id": 10, "roles": ["GUEST"], "user_source": "GOOGLE"}
-    )
+    token_google = create_access_token({"user_id": 10, "roles": ["GUEST"], "user_source": "GOOGLE"})
     scope_g = {
         "type": "http",
         "headers": [(b"authorization", f"Bearer {token_google}".encode())],

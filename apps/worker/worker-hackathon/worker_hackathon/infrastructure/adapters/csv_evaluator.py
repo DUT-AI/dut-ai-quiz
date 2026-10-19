@@ -22,7 +22,9 @@ class CsvEvaluator(IEvaluator):
     def calculate_accuracy(y_true: list[str], y_pred: list[str]) -> float:
         if not y_true or len(y_true) != len(y_pred):
             return 0.0
-        correct = sum(1 for gt, pred in zip(y_true, y_pred, strict=False) if gt.strip() == pred.strip())
+        correct = sum(
+            1 for gt, pred in zip(y_true, y_pred, strict=False) if gt.strip() == pred.strip()
+        )
         return correct / len(y_true)
 
     @staticmethod

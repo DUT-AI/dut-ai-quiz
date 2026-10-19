@@ -80,7 +80,6 @@ class LessonExercisesMetadataOutDTO(BaseModel):
     exercises: list[ExerciseItemDTO]
 
 
-
 class HomeworkSubmissionOutDTO(BaseModel):
     id: UUID
     homework_id: UUID

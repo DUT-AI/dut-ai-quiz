@@ -270,4 +270,3 @@ class QuestionRepository(IQuestionRepository):
         if pool_type is not None:
             stmt = stmt.where(Question.pool_type == pool_type)
         return int(await self._s.scalar(stmt) or 0)
-

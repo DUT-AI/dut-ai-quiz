@@ -88,16 +88,16 @@ from app.application.use_cases.hackathon.submissions import (
 from app.application.use_cases.homeworks import (
     ArchiveHomeworkUseCase,
     CreateHomeworkUseCase,
-    GetHomeworkUseCase,
     GetHomeworkAttachmentUrlUseCase,
     GetHomeworkSubmissionDownloadUrlUseCase,
+    GetHomeworkUseCase,
     GetMyHomeworkSubmissionUseCase,
     ListCompletedHomeworkMembersUseCase,
     ListHomeworkSubmissionsForSyncUseCase,
     ListHomeworkSubmissionsUseCase,
     ListHomeworksUseCase,
-    ListMyHomeworksUseCase,
     ListMyHomeworkSubmissionsUseCase,
+    ListMyHomeworksUseCase,
     PresignHomeworkSubmissionUseCase,
     RetryHomeworkRubricUseCase,
     RetryHomeworkSubmissionUseCase,
@@ -355,7 +355,9 @@ class UseCaseProvider(Provider):
     get_game_history_summary_use_case = provide(GetGameHistorySummaryUseCase, scope=Scope.REQUEST)
     get_game_leaderboard_use_case = provide(GetGameLeaderboardUseCase, scope=Scope.REQUEST)
     get_user_match_history_use_case = provide(GetUserMatchHistoryUseCase, scope=Scope.REQUEST)
-    list_game_sessions_for_sync_use_case = provide(ListGameSessionsForSyncUseCase, scope=Scope.REQUEST)
+    list_game_sessions_for_sync_use_case = provide(
+        ListGameSessionsForSyncUseCase, scope=Scope.REQUEST
+    )
 
     list_lessons_use_case = provide(ListLessonsUseCase, scope=Scope.REQUEST)
     create_lesson_use_case = provide(CreateLessonUseCase, scope=Scope.REQUEST)

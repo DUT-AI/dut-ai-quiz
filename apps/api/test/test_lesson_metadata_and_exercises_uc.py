@@ -92,16 +92,30 @@ class MockHomeworkRepository(IHomeworkRepository):
     async def archive_homework(self, homework_id: UUID) -> bool:
         return True
 
-    async def create_submission(self, submission: HomeworkSubmissionEntity) -> HomeworkSubmissionEntity:
+    async def create_submission(
+        self, submission: HomeworkSubmissionEntity
+    ) -> HomeworkSubmissionEntity:
         return submission
 
     async def get_submission(self, submission_id: UUID) -> HomeworkSubmissionEntity | None:
         return None
 
-    async def get_latest_submission(self, homework_id: UUID, user_id: int) -> HomeworkSubmissionEntity | None:
+    async def get_latest_submission(
+        self, homework_id: UUID, user_id: int
+    ) -> HomeworkSubmissionEntity | None:
         return None
 
-    async def retry_failed_submission(self, submission_id: UUID, allow_any_non_grading: bool = False) -> HomeworkSubmissionEntity | None:
+    async def list_my_submissions(
+        self, homework_id: UUID, user_id: int
+    ) -> list[HomeworkSubmissionEntity]:
+        return []
+
+    async def reset_homework_grading(self, homework_id: UUID) -> Any:
+        return None
+
+    async def retry_failed_submission(
+        self, submission_id: UUID, allow_any_non_grading: bool = False
+    ) -> HomeworkSubmissionEntity | None:
         return None
 
     async def list_submissions(self, homework_id: UUID) -> list[HomeworkSubmissionEntity]:
@@ -130,7 +144,16 @@ class MockQuestionRepository(IQuestionRepository):
     async def get(self, question_id):
         return None
 
-    async def list_all(self, offset=0, limit=50, pool_type=None, difficulty=None, tag=None, lesson_id=None, tag_ids=None):
+    async def list_all(
+        self,
+        offset=0,
+        limit=50,
+        pool_type=None,
+        difficulty=None,
+        tag=None,
+        lesson_id=None,
+        tag_ids=None,
+    ):
         res = self.questions
         if lesson_id:
             res = [q for q in res if q.lesson_id == lesson_id]
@@ -139,7 +162,9 @@ class MockQuestionRepository(IQuestionRepository):
         return res
 
     async def count_by_lesson_and_pool(self, lesson_id, pool_type) -> int:
-        return len([q for q in self.questions if q.lesson_id == lesson_id and q.pool_type == pool_type])
+        return len(
+            [q for q in self.questions if q.lesson_id == lesson_id and q.pool_type == pool_type]
+        )
 
     async def add(self, entity):
         return entity

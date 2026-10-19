@@ -27,4 +27,3 @@ class GameSessionStatus(StrEnum):
 class ExamAccessScope(StrEnum):
     PUBLIC = "PUBLIC"
     RESTRICTED = "RESTRICTED"
-

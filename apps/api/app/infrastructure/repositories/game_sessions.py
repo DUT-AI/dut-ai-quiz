@@ -52,7 +52,6 @@ class GameSessionRepository(IGameSessionRepository):
         self, user_id: int, lesson_slug: str
     ) -> GameSessionEntity | None:
 
-
         r = await self._s.execute(
             select(GameSession)
             .where(GameSession.user_id == user_id)
@@ -66,7 +65,6 @@ class GameSessionRepository(IGameSessionRepository):
 
     async def count_completed_by_lesson(self, user_id: int, lesson_slug: str) -> int:
 
-
         r = await self._s.execute(
             select(func.count(GameSession.id))
             .where(GameSession.user_id == user_id)
@@ -77,7 +75,6 @@ class GameSessionRepository(IGameSessionRepository):
         return r.scalar() or 0
 
     async def get_leaderboard_by_lesson(self, lesson_slug: str, limit: int = 100) -> list[dict]:
-
 
         subq = (
             select(GameSession.id)
@@ -173,7 +170,6 @@ class GameSessionRepository(IGameSessionRepository):
 
         return result
 
-
     async def list_completed_sessions_for_sync(self, lesson_slug: str) -> list[dict]:
         stmt = (
             select(GameSession)
@@ -206,11 +202,8 @@ class GameSessionRepository(IGameSessionRepository):
                 {
                     "session_id": str(s.id),
                     "user_id": s.user_id,
-                    "completed_at": s.completed_at.isoformat()
-                    if s.completed_at
-                    else None,
+                    "completed_at": s.completed_at.isoformat() if s.completed_at else None,
                     "final_score": float(ps.get("final_score", 0)),
-
                     "gold": int(ps.get("gold", 0)),
                     "attempt_count": int(ps.get("attempt_count", 1)),
                     "is_completed": is_completed,

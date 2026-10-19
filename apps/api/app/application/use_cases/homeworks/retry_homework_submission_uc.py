@@ -21,7 +21,6 @@ class RetryHomeworkSubmissionUseCase:
     async def execute(
         self,
         submission_id: UUID,
-
     ) -> HomeworkSubmissionOutDTO:
         submission = await self._repository.get_submission(submission_id)
         if submission is None:

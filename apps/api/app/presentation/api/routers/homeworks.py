@@ -13,16 +13,16 @@ from app.application.dtos.homework import (
 from app.application.use_cases.homeworks import (
     ArchiveHomeworkUseCase,
     CreateHomeworkUseCase,
-    GetHomeworkUseCase,
     GetHomeworkAttachmentUrlUseCase,
     GetHomeworkSubmissionDownloadUrlUseCase,
+    GetHomeworkUseCase,
     GetMyHomeworkSubmissionUseCase,
     ListCompletedHomeworkMembersUseCase,
     ListHomeworkSubmissionsForSyncUseCase,
     ListHomeworkSubmissionsUseCase,
     ListHomeworksUseCase,
-    ListMyHomeworksUseCase,
     ListMyHomeworkSubmissionsUseCase,
+    ListMyHomeworksUseCase,
     PresignHomeworkSubmissionUseCase,
     RetryHomeworkRubricUseCase,
     RetryHomeworkSubmissionUseCase,
@@ -30,7 +30,7 @@ from app.application.use_cases.homeworks import (
     UpdateHomeworkUseCase,
 )
 from app.config import settings
-from app.domain.entities.auth_enums import SystemPermission, UserRole
+from app.domain.entities.auth_enums import SystemPermission
 from app.domain.exceptions.exceptions import AppException
 from app.presentation.api.deps import CurrentUser, EducatorUser
 from app.presentation.schemas.homeworks import (
@@ -232,9 +232,7 @@ async def retry_homework_submission(
     user: CurrentUser,
     use_case: FromDishka[RetryHomeworkSubmissionUseCase],
 ) -> SubmissionResponse:
-    return SubmissionResponse(
-        data=await use_case.execute(submission_id)
-    )
+    return SubmissionResponse(data=await use_case.execute(submission_id))
 
 
 @router.get(

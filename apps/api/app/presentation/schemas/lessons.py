@@ -93,4 +93,3 @@ class LessonMetadataOut(BaseModel):
     coding_count: int
     game_question_count: int
     is_ready: bool
-

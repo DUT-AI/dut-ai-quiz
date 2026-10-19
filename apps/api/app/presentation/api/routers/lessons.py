@@ -283,5 +283,3 @@ async def get_lesson_exercises(
     Used by DUT-AI Manager to track multi-exercise completion progress.
     """
     return await use_case.execute(lesson_slug)
-
-

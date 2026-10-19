@@ -5,19 +5,18 @@ Revises: f2280fa41e46
 Create Date: 2026-09-29 10:20:04.117687
 
 """
+
 from collections.abc import Sequence
 
 import sqlalchemy as sa
 from alembic import op
+from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = '2f77daa7bb6f'
-down_revision: str | None = 'f2280fa41e46'
+revision: str = "2f77daa7bb6f"
+down_revision: str | None = "f2280fa41e46"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
-
-
-from sqlalchemy.dialects import postgresql
 
 
 def upgrade() -> None:
@@ -49,4 +48,3 @@ def downgrade() -> None:
     op.drop_index("ix_exams_access_scope", table_name="exams")
     op.drop_column("exams", "access_scope")
     postgresql.ENUM(name="examaccessscope").drop(op.get_bind(), checkfirst=True)
-

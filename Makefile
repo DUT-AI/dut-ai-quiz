@@ -4,7 +4,7 @@
 .PHONY: help db-up db-down db-logs api-sync api-dev api-lint \
 	migrate migrate-down alembic-revision alembic-history alembic-current \
 	dev-web web-dev worker-hackathon worker-lesson-index worker-evaluate-homework \
-	lint lint-fix type-check check hooks-install
+	lint lint-fix type-check check hooks-install test
 
 API_DIR := apps/api
 WEB_DIR := apps/web
@@ -33,6 +33,9 @@ help:
 	@echo "  type-check       - kiểm tra TypeScript types cho apps/web"
 	@echo "  check            - chạy kiểm tra toàn diện chất lượng tất cả module"
 	@echo "  hooks-install    - cài đặt và kích hoạt Git Pre-commit Hook"
+
+test:
+	cd $(API_DIR) && uv run pytest
 
 api-sync:
 	cd $(API_DIR) && uv sync --group dev

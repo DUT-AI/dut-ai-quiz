@@ -27,14 +27,10 @@ class GetLessonMetadataUseCase:
     async def execute(self, lesson_slug: str) -> LessonMetadataOutDTO:
         lesson = await self._lesson_repo.get_by_identifier(lesson_slug)
         if not lesson or not lesson.id:
-            raise NotFoundException(
-                f"Bài học '{lesson_slug}' không tồn tại trên hệ thống Quiz."
-            )
+            raise NotFoundException(f"Bài học '{lesson_slug}' không tồn tại trên hệ thống Quiz.")
 
         coding_count = await self._homework_repo.count_active_by_lesson(lesson.id)
-        game_count = await self._question_repo.count_by_lesson_and_pool(
-            lesson.id, PoolType.GAME
-        )
+        game_count = await self._question_repo.count_by_lesson_and_pool(lesson.id, PoolType.GAME)
 
         has_coding = coding_count > 0
         has_game = game_count > 0

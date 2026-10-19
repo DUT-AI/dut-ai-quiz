@@ -86,7 +86,6 @@ class SubmitHomeworkUseCase:
             await self._queue.enqueue_evaluation(submission.id)
         except Exception as e:
             logger.warning(f"Error enqueuing homework evaluation: {e}")
-            
 
         # Bắn webhook sang Manage nếu học viên thuộc hệ thống Manage (UserSource.MANAGE)
         if homework.lesson_id:
@@ -117,6 +116,5 @@ class SubmitHomeworkUseCase:
                     )
             except Exception as e:
                 logger.warning(f"Error dispatching coding submission webhook: {e}")
-
 
         return HomeworkSubmissionOutDTO.from_entity(submission)

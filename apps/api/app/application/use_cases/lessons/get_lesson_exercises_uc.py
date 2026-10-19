@@ -26,9 +26,7 @@ class GetLessonExercisesUseCase:
     async def execute(self, lesson_slug: str) -> LessonExercisesMetadataOutDTO:
         lesson = await self._lesson_repo.get_by_identifier(lesson_slug)
         if not lesson or not lesson.id:
-            raise NotFoundException(
-                f"Bài học '{lesson_slug}' không tồn tại trên hệ thống Quiz."
-            )
+            raise NotFoundException(f"Bài học '{lesson_slug}' không tồn tại trên hệ thống Quiz.")
 
         homeworks = await self._homework_repo.list_homeworks(lesson_id=lesson.id)
         exercises = [

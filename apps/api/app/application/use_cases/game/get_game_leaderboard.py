@@ -26,6 +26,7 @@ class GetGameLeaderboardUseCase:
 
         missing_uids = list({row["user_id"] for row in raw_leaderboard if not row.get("username")})
         if missing_uids:
+
             async def fetch_one(uid: int):
                 try:
                     return uid, await self._user_service.get_user_info(uid)

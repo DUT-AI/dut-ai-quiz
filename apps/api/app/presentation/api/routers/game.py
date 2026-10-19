@@ -1,5 +1,5 @@
-from uuid import UUID
 import copy
+from uuid import UUID
 
 from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import APIRouter, HTTPException
@@ -32,10 +32,11 @@ from app.presentation.schemas.game import (
 
 router = APIRouter(prefix="/game", tags=["game"])
 
+
 def sanitize_game_snapshot(snapshot: dict | None) -> dict | None:
     if not snapshot:
         return snapshot
-    
+
     snap_copy = copy.deepcopy(snapshot)
     questions = snap_copy.get("questions", [])
     last_idx = snap_copy.get("gamification", {}).get("last_question_index", 0)

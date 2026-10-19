@@ -64,7 +64,10 @@ class HomeworkRepositoryStub:
             and self.submission.id == submission_id
             and (
                 self.submission.status == HomeworkSubmissionStatus.FAILED
-                or (allow_any_non_grading and self.submission.status != HomeworkSubmissionStatus.GRADING)
+                or (
+                    allow_any_non_grading
+                    and self.submission.status != HomeworkSubmissionStatus.GRADING
+                )
             )
         ):
             self.submission = replace(
@@ -172,7 +175,7 @@ async def test_failed_submission_can_be_retried_without_new_attempt(
     queue = AsyncMock()
     use_case = RetryHomeworkSubmissionUseCase(repository, queue)
 
-    result = await use_case.execute(repository.submission.id, user_id=99)
+    result = await use_case.execute(repository.submission.id)
 
     assert result.id == repository.submission.id
     assert result.attempt_number == 2
@@ -195,17 +198,17 @@ async def test_submission_retry_is_limited_to_owner_and_failed_status(
         submitted_at=now_ict(),
         is_late=False,
         attempt_number=1,
-        status=HomeworkSubmissionStatus.GRADED,
+        status=HomeworkSubmissionStatus.GRADING,
     )
     use_case = RetryHomeworkSubmissionUseCase(repository, AsyncMock())
-
-    with pytest.raises(AppException) as owner_error:
-        await use_case.execute(repository.submission.id)
-    assert owner_error.value.status_code == 404
 
     with pytest.raises(AppException) as status_error:
         await use_case.execute(repository.submission.id)
     assert status_error.value.status_code == 409
+
+    with pytest.raises(AppException) as not_found_error:
+        await use_case.execute(uuid4())
+    assert not_found_error.value.status_code == 404
 
 
 @pytest.mark.asyncio
