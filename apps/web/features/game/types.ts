@@ -111,3 +111,33 @@ export const GameLeaderboardRowOutSchema = z.object({
   answered_questions: z.number().default(0),
 });
 export type GameLeaderboardRowOut = z.infer<typeof GameLeaderboardRowOutSchema>;
+
+export const UserMatchHistoryItemSchema = z.object({
+  id: z.string(),
+  attempt_number: z.number(),
+  started_at: z.string(),
+  completed_at: z.string().nullable().optional(),
+  final_score: z.number(),
+  raw_points: z.number(),
+  gold: z.number(),
+  total_time_response: z.number(),
+  correct_count: z.number(),
+  total_questions: z.number(),
+  accuracy_percentage: z.number(),
+  max_streak: z.number().default(0),
+  lives_left: z.number().default(0),
+  is_completed: z.boolean().default(true),
+});
+export type UserMatchHistoryItem = z.infer<typeof UserMatchHistoryItemSchema>;
+
+export const UserMatchHistoryResponseSchema = z.object({
+  user_id: z.number(),
+  username: z.string().nullable().optional(),
+  avatar_url: z.string().nullable().optional(),
+  lesson_slug: z.string(),
+  total_attempts: z.number(),
+  highest_score: z.number(),
+  total_gold: z.number(),
+  history: z.array(UserMatchHistoryItemSchema),
+});
+export type UserMatchHistoryResponse = z.infer<typeof UserMatchHistoryResponseSchema>;

@@ -54,6 +54,34 @@ class GameLeaderboardRowOut(BaseModel):
     completed_at: datetime | None = None
 
 
+class UserMatchHistoryItem(BaseModel):
+    id: str
+    attempt_number: int
+    started_at: datetime
+    completed_at: datetime | None = None
+    final_score: float
+    raw_points: int
+    gold: int
+    total_time_response: float
+    correct_count: int
+    total_questions: int
+    accuracy_percentage: float
+    max_streak: int = 0
+    lives_left: int = 0
+    is_completed: bool = True
+
+
+class UserMatchHistoryResponse(BaseModel):
+    user_id: int
+    username: str | None = None
+    avatar_url: str | None = None
+    lesson_slug: str
+    total_attempts: int
+    highest_score: float
+    total_gold: int
+    history: list[UserMatchHistoryItem]
+
+
 class GameSessionSyncOutDTO(BaseModel):
     session_id: str
     user_id: int

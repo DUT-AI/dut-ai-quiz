@@ -1,4 +1,5 @@
 from uuid import UUID
+import copy
 
 from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import APIRouter, HTTPException
@@ -9,6 +10,7 @@ from app.application.use_cases.game import (
     GetGameHistorySummaryUseCase,
     GetGameLeaderboardUseCase,
     GetGameSessionUseCase,
+    GetUserMatchHistoryUseCase,
     ListGameHistoryUseCase,
     ListGameSessionsForSyncUseCase,
     PatchGameAnswerUseCase,
@@ -25,16 +27,15 @@ from app.presentation.schemas.game import (
     GamificationAnswerResultOut,
     GamificationStartIn,
     GamificationUseItemIn,
+    UserMatchHistoryResponse,
 )
 
 router = APIRouter(prefix="/game", tags=["game"])
 
-
 def sanitize_game_snapshot(snapshot: dict | None) -> dict | None:
     if not snapshot:
         return snapshot
-    import copy
-
+    
     snap_copy = copy.deepcopy(snapshot)
     questions = snap_copy.get("questions", [])
     last_idx = snap_copy.get("gamification", {}).get("last_question_index", 0)
@@ -157,6 +158,16 @@ async def get_user_game_summary_for_manage(
 @inject
 async def get_game_leaderboard(lesson_slug: str, use_case: FromDishka[GetGameLeaderboardUseCase]):
     return await use_case.execute(lesson_slug)
+
+
+@router.get("/{lesson_slug}/history/{user_id}", response_model=UserMatchHistoryResponse)
+@inject
+async def get_user_game_history(
+    lesson_slug: str,
+    user_id: int,
+    use_case: FromDishka[GetUserMatchHistoryUseCase],
+):
+    return await use_case.execute(user_id=user_id, lesson_slug=lesson_slug)
 
 
 @router.get("/{lesson_slug}/sessions-for-sync", response_model=GameSessionsSyncResponse)

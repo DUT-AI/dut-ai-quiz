@@ -3,6 +3,7 @@ from .get_active_game_session import GetActiveGameSessionUseCase
 from .get_game_history_summary import GetGameHistorySummaryUseCase
 from .get_game_leaderboard import GetGameLeaderboardUseCase
 from .get_game_session import GetGameSessionUseCase
+from .get_user_match_history import GetUserMatchHistoryUseCase
 from .list_game_history import ListGameHistoryUseCase
 from .list_game_sessions_for_sync_uc import ListGameSessionsForSyncUseCase
 from .patch_game_answer import PatchGameAnswerUseCase
@@ -17,6 +18,7 @@ __all__ = [
     "ListGameSessionsForSyncUseCase",
     "GetGameHistorySummaryUseCase",
     "GetGameLeaderboardUseCase",
+    "GetUserMatchHistoryUseCase",
     "StartGameSessionUseCase",
     "UseItemGameUseCase",
     "PatchGameAnswerUseCase",

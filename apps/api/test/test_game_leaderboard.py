@@ -2,6 +2,8 @@ from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
+from app.application.dtos import GameLeaderboardRowDTO
+from app.application.services.user_service import UserService
 from app.application.use_cases.game import (
     FinishGameSessionUseCase,
     GetGameLeaderboardUseCase,
@@ -23,26 +25,33 @@ def mock_cache():
     return AsyncMock(spec=GameLeaderboardCache)
 
 
+@pytest.fixture
+def mock_user_service():
+    return AsyncMock(spec=UserService)
+
+
 @pytest.mark.asyncio
-async def test_get_leaderboard_cache_hit(mock_repo, mock_cache):
+async def test_get_leaderboard_cache_hit(mock_repo, mock_cache, mock_user_service):
     """Test GetGameLeaderboardUseCase returns data from cache if available."""
     lesson_slug = "test-lesson"
     cached_data = [
-        {
-            "user_id": 1,
-            "username": "User1",
-            "final_score": 100,
-            "gold": 50,
-            "total_time_response": 20,
-            "attempt_count": 1,
-            "is_completed": True,
-            "total_questions": 10,
-            "answered_questions": 10,
-        }
+        GameLeaderboardRowDTO(
+            user_id=1,
+            username="User1",
+            final_score=100,
+            gold=50,
+            total_time_response=20,
+            attempt_count=1,
+            is_completed=True,
+            total_questions=10,
+            answered_questions=10,
+        )
     ]
     mock_cache.get.return_value = cached_data
 
-    use_case = GetGameLeaderboardUseCase(ps_repo=mock_repo, cache=mock_cache)
+    use_case = GetGameLeaderboardUseCase(
+        ps_repo=mock_repo, cache=mock_cache, user_service=mock_user_service
+    )
 
     result = await use_case.execute(lesson_slug)
 
@@ -53,7 +62,7 @@ async def test_get_leaderboard_cache_hit(mock_repo, mock_cache):
 
 
 @pytest.mark.asyncio
-async def test_get_leaderboard_cache_miss(mock_repo, mock_cache):
+async def test_get_leaderboard_cache_miss(mock_repo, mock_cache, mock_user_service):
     """Test GetGameLeaderboardUseCase queries DB and updates cache on miss."""
     lesson_slug = "test-lesson"
     db_data = [
@@ -73,14 +82,17 @@ async def test_get_leaderboard_cache_miss(mock_repo, mock_cache):
     mock_cache.get.return_value = None
     mock_repo.get_leaderboard_by_lesson.return_value = db_data
 
-    use_case = GetGameLeaderboardUseCase(ps_repo=mock_repo, cache=mock_cache)
+    use_case = GetGameLeaderboardUseCase(
+        ps_repo=mock_repo, cache=mock_cache, user_service=mock_user_service
+    )
 
     result = await use_case.execute(lesson_slug, limit=50)
 
-    assert result == db_data
+    expected = [GameLeaderboardRowDTO.model_validate(row) for row in db_data]
+    assert result == expected
     mock_cache.get.assert_called_once_with(lesson_slug)
     mock_repo.get_leaderboard_by_lesson.assert_called_once_with(lesson_slug, 50)
-    mock_cache.set.assert_called_once_with(lesson_slug, db_data)
+    mock_cache.set.assert_called_once_with(lesson_slug, expected)
 
 
 @pytest.mark.asyncio

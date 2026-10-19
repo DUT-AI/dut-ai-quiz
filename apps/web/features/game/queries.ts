@@ -7,11 +7,13 @@ import {
   GamificationAnswerResultOutSchema,
   GameLeaderboardRowOutSchema,
   GameLessonSummaryOutSchema,
+  UserMatchHistoryResponseSchema,
   type StartGameSessionResponse,
   type GameSession,
   type GamificationAnswerResultOut,
   type GameLeaderboardRowOut,
   type GameLessonSummaryOut,
+  type UserMatchHistoryResponse,
 } from "./types";
 
 export function useActiveGameSession(lessonSlug: string, options?: any) {
@@ -136,6 +138,24 @@ export function useGameHistorySummary(options?: any) {
         z.array(GameLessonSummaryOutSchema)
       ),
     staleTime: 5000,
+    ...options,
+  });
+}
+
+export function useUserMatchHistory(
+  lessonSlug: string,
+  userId: number | null,
+  options?: any
+) {
+  return useQuery<UserMatchHistoryResponse>({
+    queryKey: ["game", "history", lessonSlug, userId],
+    queryFn: () =>
+      apiGet<UserMatchHistoryResponse>(
+        `/api/v1/game/${encodeURIComponent(lessonSlug)}/history/${userId!}`,
+        UserMatchHistoryResponseSchema
+      ),
+    enabled: !!lessonSlug && !!userId,
+    staleTime: 10_000,
     ...options,
   });
 }

@@ -40,3 +40,9 @@ class IGameSessionRepository(Protocol):
     async def list_completed_sessions_for_sync(self, lesson_slug: str) -> list[dict]:
         """List all completed game sessions for a lesson to synchronize to Manage."""
         ...
+
+    async def list_completed_by_user_and_lesson(
+        self, user_id: int, lesson_slug: str, limit: int = 50
+    ) -> list[GameSessionEntity]:
+        """List completed game sessions for a user and lesson slug, ordered by starting time descending."""
+        ...

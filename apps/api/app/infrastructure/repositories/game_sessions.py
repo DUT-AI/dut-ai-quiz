@@ -219,3 +219,18 @@ class GameSessionRepository(IGameSessionRepository):
                 }
             )
         return results
+
+    async def list_completed_by_user_and_lesson(
+        self, user_id: int, lesson_slug: str, limit: int = 50
+    ) -> list[GameSessionEntity]:
+        stmt = (
+            select(GameSession)
+            .where(GameSession.user_id == user_id)
+            .where(GameSession.status == GameSessionStatus.COMPLETED)
+            .where(GameSession.tags_filter.contains([lesson_slug]))
+            .where(GameSession.question_limit > 0)
+            .order_by(GameSession.started_at.desc())
+            .limit(limit)
+        )
+        r = await self._s.execute(stmt)
+        return [m.to_entity() for m in r.scalars().all()]

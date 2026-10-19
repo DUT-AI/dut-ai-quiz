@@ -6,3 +6,4 @@ class UserOut(BaseModel):
     name: str
     email: str
     avatar_url: str | None = None
+    role: str = "guest"

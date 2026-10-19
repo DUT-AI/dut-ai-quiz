@@ -1,4 +1,5 @@
 from .auth import AuthTokens, LoginPayload
+from .game import GameLeaderboardRowDTO
 from .hackathon import (
     HackathonRegistrationOutDTO,
     HackathonRegistrationStatusOutDTO,
@@ -24,6 +25,7 @@ __all__ = [
     "CompletedHomeworkMemberOutDTO",
     "CreateHomeworkDTO",
     "ExerciseItemDTO",
+    "GameLeaderboardRowDTO",
     "HackathonRegistrationOutDTO",
     "HackathonRegistrationStatusOutDTO",
     "HackathonTeamOutDTO",
