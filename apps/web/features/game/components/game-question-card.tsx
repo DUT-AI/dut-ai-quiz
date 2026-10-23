@@ -36,10 +36,10 @@ export default function GameQuestionCard({
   correctOptionId,
 }: GameQuestionCardProps) {
   return (
-    <div className="w-full lg:h-full flex flex-col items-center">
+    <div className="w-full flex-1 flex flex-col items-center min-h-0">
 
       {/* ─── QUESTION CARD & ANSWERS GRID (Cartoon White Box Style) ─── */}
-      <div className="w-full lg:h-full bg-white dark:bg-navy-blue border-3 border-zinc-900 dark:border-zinc-700 p-4 md:p-6 rounded-none relative shadow-lg text-zinc-900 dark:text-zinc-100 font-mono flex flex-col flex-1 overflow-y-auto custom-scrollbar">
+      <div className="w-full bg-white dark:bg-navy-blue border-3 border-zinc-900 dark:border-zinc-700 p-4 md:p-6 rounded-none relative shadow-lg text-zinc-900 dark:text-zinc-100 font-mono flex flex-col flex-1 min-h-0 overflow-y-auto custom-scrollbar">
         {/* Active Double Points Buff Indicator */}
         {doubleActive && (
           <div className="absolute -top-3.5 -left-3.5 bg-amber-400 text-zinc-900 border-2 border-zinc-900 font-extrabold text-[9px] md:text-[10px] px-2 py-1 flex items-center gap-1 shadow-sm z-20 animate-bounce">

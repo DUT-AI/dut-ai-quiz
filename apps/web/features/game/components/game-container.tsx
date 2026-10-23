@@ -557,17 +557,8 @@ export default function GameContainer({ lessonSlug, initialSession }: GameContai
         .game-right-column {
           scrollbar-gutter: stable;
         }
-        @media (min-width: 1024px) and (max-height: 920px) {
-          .game-layout-container {
-            overflow-y: auto !important;
-          }
-          .game-main-content {
-            height: auto !important;
-            flex: none !important;
-          }
-          .game-grid-layout {
-            height: auto !important;
-          }
+        .game-grid-layout {
+          min-height: 100%;
         }
       `}</style>
 
@@ -642,8 +633,8 @@ export default function GameContainer({ lessonSlug, initialSession }: GameContai
           </header>
 
           {/* ─── MAIN CONTENT WINDOW (RPG HUD VIEWPORT) ─── */}
-          <main className="flex-1 min-h-0 w-full max-w-[98%] mx-auto flex flex-col items-center justify-start relative z-10 py-2 game-main-content">
-            <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-6 items-start lg:items-stretch game-grid-layout">
+          <main className="flex-1 min-h-0 w-full max-w-[98%] mx-auto flex flex-col items-center justify-start relative z-10 py-1 md:py-2 game-main-content">
+            <div className="w-full flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start lg:items-stretch game-grid-layout">
               {/* ─── LEFT COLUMN: BATTLE ARENA, HP STATS & ITEM HOTBAR ─── */}
               <div className="lg:col-span-5 flex flex-col gap-4 w-full">
                 <BossHud
@@ -677,10 +668,10 @@ export default function GameContainer({ lessonSlug, initialSession }: GameContai
               {/* ─── RIGHT COLUMN: TIMER, QUESTIONS & ITEMS ─── */}
               <div
                 ref={rightColRef}
-                className="lg:col-span-7 w-full relative lg:h-full overflow-hidden game-right-column"
+                className="lg:col-span-7 w-full flex flex-col min-h-0 game-right-column"
               >
                 {questions[currentIdx] && (
-                  <div className="lg:absolute lg:inset-0 lg:flex lg:flex-col lg:pr-2 custom-scrollbar overflow-y-hidden">
+                  <div className="w-full flex-1 flex flex-col">
                     <GameQuestionCard
                       currentQuestion={questions[currentIdx]}
                       currentIdx={currentIdx}
