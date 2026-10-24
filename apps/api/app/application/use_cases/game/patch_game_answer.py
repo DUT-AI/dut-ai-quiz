@@ -1,4 +1,3 @@
-from datetime import datetime
 from uuid import UUID
 
 from app.core.datetime_utils import now_ict

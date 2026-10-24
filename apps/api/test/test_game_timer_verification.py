@@ -42,7 +42,9 @@ async def test_patch_game_answer_client_duration_success():
     q_snap_1 = QuestionSnapshot(id=str(uuid4()), content="Next question", options=[], time_limit=60)
 
     gamification = GamificationState(last_question_index=0, lives=3)
-    snap = GameSessionSnapshot(lesson_slug="numpy", questions=[q_snap_0, q_snap_1], answers={}, gamification=gamification)
+    snap = GameSessionSnapshot(
+        lesson_slug="numpy", questions=[q_snap_0, q_snap_1], answers={}, gamification=gamification
+    )
 
     session = GameSessionEntity(
         id=uuid4(),
@@ -99,7 +101,9 @@ async def test_patch_game_answer_client_duration_exceeded_fails():
     q_snap_0 = QuestionSnapshot(id=str(q_id), content="Numpy code", options=[], time_limit=60)
 
     gamification = GamificationState(last_question_index=0, lives=3)
-    snap = GameSessionSnapshot(lesson_slug="numpy", questions=[q_snap_0], answers={}, gamification=gamification)
+    snap = GameSessionSnapshot(
+        lesson_slug="numpy", questions=[q_snap_0], answers={}, gamification=gamification
+    )
 
     session = GameSessionEntity(
         id=uuid4(),

@@ -159,7 +159,10 @@ class StartGameSessionUseCase:
         # Final fill-up from any remaining pool to reach 10 if bank has available questions
         if (len(selected_easy) + len(selected_med) + len(selected_hard)) < 10:
             all_remaining = remaining_easy + remaining_med + remaining_hard
-            fill_count = min(10 - (len(selected_easy) + len(selected_med) + len(selected_hard)), len(all_remaining))
+            fill_count = min(
+                10 - (len(selected_easy) + len(selected_med) + len(selected_hard)),
+                len(all_remaining),
+            )
             selected_med.extend(all_remaining[:fill_count])
 
         def clean_options(options):
@@ -174,7 +177,7 @@ class StartGameSessionUseCase:
 
         # Tier 1 (Easy): Last question is Boss Fight of Tier 1
         for i, q in enumerate(selected_easy):
-            is_boss = (i == len(selected_easy) - 1)
+            is_boss = i == len(selected_easy) - 1
             questions.append(
                 QuestionSnapshot(
                     id=str(q.id),
@@ -189,7 +192,7 @@ class StartGameSessionUseCase:
 
         # Tier 2 (Medium): Last question is Boss Fight of Tier 2
         for i, q in enumerate(selected_med):
-            is_boss = (i == len(selected_med) - 1)
+            is_boss = i == len(selected_med) - 1
             questions.append(
                 QuestionSnapshot(
                     id=str(q.id),
@@ -204,7 +207,7 @@ class StartGameSessionUseCase:
 
         # Tier 3 (Hard): Last question is Boss Fight of Tier 3 (Final Boss)
         for i, q in enumerate(selected_hard):
-            is_boss = (i == len(selected_hard) - 1)
+            is_boss = i == len(selected_hard) - 1
             questions.append(
                 QuestionSnapshot(
                     id=str(q.id),

@@ -1,10 +1,7 @@
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
 from enum import StrEnum
 from typing import Any
 from uuid import UUID
-
-from app.core.datetime_utils import now_ict
 
 
 class GamificationItem(StrEnum):
