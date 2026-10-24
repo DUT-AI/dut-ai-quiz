@@ -141,3 +141,17 @@ export const UserMatchHistoryResponseSchema = z.object({
   history: z.array(UserMatchHistoryItemSchema),
 });
 export type UserMatchHistoryResponse = z.infer<typeof UserMatchHistoryResponseSchema>;
+
+// Shared Game UI & Hook types
+export type ItemType = "50-50" | "freeze" | "double" | "shield";
+export type BossStatus = "idle" | "attack" | "damage" | "defeat";
+export type ScreenState = "start" | "playing" | "result";
+export type GameResultState = "playing" | "victory" | "defeat";
+export type StageProgressStatus = "correct" | "incorrect" | "idle";
+
+export const getBossName = (stageNum: number): string => {
+  if (stageNum === 1) return "SLIME CHÚA";
+  if (stageNum === 2) return "MA BÀN THẠCH";
+  return "MA NHÃN TỐI THƯỢNG";
+};
+

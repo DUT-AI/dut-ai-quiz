@@ -4,7 +4,8 @@ import React from "react";
 import { Microscope, Snowflake, Trophy, Shield, Lock } from "lucide-react";
 import { motion } from "framer-motion";
 
-export type ItemType = "50-50" | "freeze" | "double" | "shield";
+import { type ItemType } from "../types";
+export type { ItemType };
 
 interface ItemDef {
   type: ItemType;
