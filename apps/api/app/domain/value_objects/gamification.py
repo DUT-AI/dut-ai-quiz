@@ -165,6 +165,19 @@ class GamificationState:
     def reset_question_timer(self) -> None:
         self.current_question_started_at = now_ict().isoformat()
 
+    def clear_question_timer(self) -> None:
+        self.current_question_started_at = None
+
+    def is_question_timer_stale(self, time_limit: int, buffer: float = 10.0) -> bool:
+        if not self.current_question_started_at:
+            return True
+        try:
+            started_at = datetime.fromisoformat(self.current_question_started_at)
+            elapsed = (now_ict() - started_at).total_seconds()
+            return elapsed > time_limit + buffer
+        except Exception:
+            return True
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "lives": self.lives,

@@ -76,13 +76,16 @@ class PatchGameAnswerUseCase:
 
         # Anti-cheat check: allow 10 seconds buffer for network latency/UI animations
         if state.current_question_started_at:
-            started_at = datetime.fromisoformat(state.current_question_started_at)
-            elapsed = (now_ict() - started_at).total_seconds()
-            time_limit = current_q.time_limit
+            try:
+                started_at = datetime.fromisoformat(state.current_question_started_at)
+                elapsed = (now_ict() - started_at).total_seconds()
+                time_limit = current_q.time_limit
 
-            if elapsed > time_limit + 10.0:
-                is_correct = False
-                payload.time_response = float(time_limit)
+                if elapsed > time_limit + 10.0:
+                    is_correct = False
+                    payload.time_response = float(time_limit)
+            except Exception:
+                pass
 
         # Calculate item costs
         cost = 0
@@ -157,8 +160,8 @@ class PatchGameAnswerUseCase:
                     user_source=user_source,
                 )
 
-        # Set started_at for next question
-        state.reset_question_timer()
+        # Clear started_at for next question until user advances to next question via active session fetch
+        state.clear_question_timer()
 
         session.set_snapshot_state(snap)
         await self._ps_repo.save(session)

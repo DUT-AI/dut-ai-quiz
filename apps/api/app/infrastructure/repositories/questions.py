@@ -3,7 +3,7 @@ from uuid import UUID
 from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domain.entities.question import QuestionEntity, QuestionStatus
+from app.domain.entities.question import DuplicateStatus, QuestionEntity, QuestionStatus
 from app.domain.interfaces import IQuestionRepository, QuestionSimilarityMatch
 from app.domain.value_objects import Difficulty, PoolType
 from app.infrastructure.persistence.models import Question, Tag
@@ -116,8 +116,6 @@ class QuestionRepository(IQuestionRepository):
             ent = model.to_entity()
             ent.tags = [tag_map[tid] for tid in model.tags if tid in tag_map]
             if has_duplicate:
-                from app.domain.entities.question import DuplicateStatus
-
                 ent.duplicate_status = DuplicateStatus.POSSIBLE_DUPLICATE
             entities.append(ent)
         return entities
