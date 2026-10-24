@@ -121,12 +121,18 @@ export default function GameContainer({ lessonSlug, initialSession }: GameContai
     return () => clearInterval(interval);
   }, [countdown]);
 
-  // Scroll to bottom of right column when question is answered
+  // Scroll to bottom when question is answered
   useEffect(() => {
-    if (isAnswered && rightColRef.current) {
+    if (isAnswered) {
       const timer = setTimeout(() => {
-        rightColRef.current?.scrollTo({
-          top: rightColRef.current.scrollHeight,
+        if (rightColRef.current && rightColRef.current.scrollHeight > rightColRef.current.clientHeight) {
+          rightColRef.current.scrollTo({
+            top: rightColRef.current.scrollHeight,
+            behavior: "smooth",
+          });
+        }
+        window.scrollTo({
+          top: document.body.scrollHeight,
           behavior: "smooth",
         });
       }, 100);
@@ -142,6 +148,10 @@ export default function GameContainer({ lessonSlug, initialSession }: GameContai
         behavior: "smooth",
       });
     }
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   }, [currentIdx]);
 
   // Visual effects
@@ -512,18 +522,16 @@ export default function GameContainer({ lessonSlug, initialSession }: GameContai
 
   return (
     <div
-      className={`text-zinc-955 dark:text-zinc-100 flex flex-col font-sans relative select-none p-2 md:p-4 px-1.5 md:px-2 transition-all duration-300 h-screen overflow-y-auto custom-scrollbar game-layout-container ${screen === "playing" ? "lg:overflow-hidden" : ""
-        } ${screenShake ? "animate-[shake_0.5s_infinite]" : ""}`}
+      className={`text-zinc-955 dark:text-zinc-100 flex flex-col font-sans relative select-none p-2 md:p-4 px-1.5 md:px-2 transition-all duration-300 min-h-screen overflow-y-auto custom-scrollbar game-layout-container ${screenShake ? "animate-[shake_0.5s_infinite]" : ""}`}
       style={gameBackgroundStyle}
     >
       <style jsx global>{`
         html, body {
-          height: 100% !important;
-          overflow: hidden !important;
+          min-height: 100% !important;
+          overflow-y: auto !important;
         }
-        #__next, main, [data-nextjs-scroll-focus-boundary], #root, .dark, body > div {
-          height: 100% !important;
-          overflow: hidden !important;
+        #__next, [data-nextjs-scroll-focus-boundary], #root, .dark, body > div {
+          min-height: 100% !important;
         }
         @keyframes shake {
           0%, 100% { transform: translate(0, 0) rotate(0deg); }
@@ -633,8 +641,8 @@ export default function GameContainer({ lessonSlug, initialSession }: GameContai
           </header>
 
           {/* ─── MAIN CONTENT WINDOW (RPG HUD VIEWPORT) ─── */}
-          <main className="flex-1 min-h-0 w-full max-w-[98%] mx-auto flex flex-col items-center justify-start relative z-10 py-1 md:py-2 game-main-content">
-            <div className="w-full flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start lg:items-stretch game-grid-layout">
+          <main className="flex-1 w-full max-w-[98%] mx-auto flex flex-col items-center justify-start relative z-10 py-1 md:py-2 game-main-content">
+            <div className="w-full flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start lg:items-stretch game-grid-layout">
               {/* ─── LEFT COLUMN: BATTLE ARENA, HP STATS & ITEM HOTBAR ─── */}
               <div className="lg:col-span-5 flex flex-col gap-4 w-full">
                 <BossHud
