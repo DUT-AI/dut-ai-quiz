@@ -76,7 +76,6 @@ class UseItemGameUseCase:
             result["eliminated_option_ids"] = eliminated
         elif item == GamificationItem.TIME_FREEZE:
             result["time_freeze_active"] = True
-            state.apply_time_freeze(seconds=30)
         else:
             raise DomainValidationException(
                 f"Item {item.value} must be activated when submitting your answer"

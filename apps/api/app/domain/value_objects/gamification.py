@@ -65,7 +65,6 @@ class GamificationState:
     last_question_index: int = 0
     boss_hp: int = 0
     shield_used_in_tier: dict[str, bool] = field(default_factory=dict)
-    current_question_started_at: str | None = None
     total_time_response: float = 0.0
     correct_count: int = 0
     final_score: float = 0.0
@@ -81,12 +80,6 @@ class GamificationState:
 
     def deduct_gold(self, amount: int) -> None:
         self.gold = max(0, self.gold - amount)
-
-    def apply_time_freeze(self, seconds: int = 30) -> None:
-        if self.current_question_started_at:
-            started_at = datetime.fromisoformat(self.current_question_started_at)
-            new_started_at = started_at + timedelta(seconds=seconds)
-            self.current_question_started_at = new_started_at.isoformat()
 
     def can_use_shield_in_tier(self, tier: int) -> bool:
         return not self.shield_used_in_tier.get(str(tier), False)
@@ -162,22 +155,6 @@ class GamificationState:
         self.final_score = self.points * decay
         self.attempt_count = count_completed + 1
 
-    def reset_question_timer(self) -> None:
-        self.current_question_started_at = now_ict().isoformat()
-
-    def clear_question_timer(self) -> None:
-        self.current_question_started_at = None
-
-    def is_question_timer_stale(self, time_limit: int, buffer: float = 10.0) -> bool:
-        if not self.current_question_started_at:
-            return True
-        try:
-            started_at = datetime.fromisoformat(self.current_question_started_at)
-            elapsed = (now_ict() - started_at).total_seconds()
-            return elapsed > time_limit + buffer
-        except Exception:
-            return True
-
     def to_dict(self) -> dict[str, Any]:
         return {
             "lives": self.lives,
@@ -187,7 +164,6 @@ class GamificationState:
             "last_question_index": self.last_question_index,
             "boss_hp": self.boss_hp,
             "shield_used_in_tier": dict(self.shield_used_in_tier),
-            "current_question_started_at": self.current_question_started_at,
             "total_time_response": self.total_time_response,
             "correct_count": self.correct_count,
             "final_score": self.final_score,
@@ -206,7 +182,6 @@ class GamificationState:
             last_question_index=int(data.get("last_question_index", 0)),
             boss_hp=int(data.get("boss_hp", 0)),
             shield_used_in_tier=dict(data.get("shield_used_in_tier", {}) or {}),
-            current_question_started_at=data.get("current_question_started_at"),
             total_time_response=float(data.get("total_time_response", 0.0)),
             correct_count=int(data.get("correct_count", 0)),
             final_score=float(data.get("final_score", 0.0)),

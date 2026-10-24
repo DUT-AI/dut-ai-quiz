@@ -1,19 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiGet, apiPost, apiPatch } from "@/lib/api";
-import { z } from "zod";
-import {
-  StartGameSessionResponseSchema,
-  GameSessionSchema,
-  GamificationAnswerResultOutSchema,
-  GameLeaderboardRowOutSchema,
-  GameLessonSummaryOutSchema,
-  UserMatchHistoryResponseSchema,
-  type StartGameSessionResponse,
-  type GameSession,
-  type GamificationAnswerResultOut,
-  type GameLeaderboardRowOut,
-  type GameLessonSummaryOut,
-  type UserMatchHistoryResponse,
+import type {
+  StartGameSessionResponse,
+  GameSession,
+  GamificationAnswerResult,
+  GameLeaderboardRow,
+  GameLessonSummary,
+  UserMatchHistoryResponse,
 } from "./types";
 
 export function useActiveGameSession(lessonSlug: string, options?: any) {
@@ -21,8 +14,7 @@ export function useActiveGameSession(lessonSlug: string, options?: any) {
     queryKey: ["game", "sessions", "active", lessonSlug],
     queryFn: () =>
       apiGet<StartGameSessionResponse>(
-        `/api/v1/game/sessions/active?lesson_slug=${encodeURIComponent(lessonSlug)}`,
-        StartGameSessionResponseSchema
+        `/api/v1/game/sessions/active?lesson_slug=${encodeURIComponent(lessonSlug)}`
       ),
     staleTime: 0,
     gcTime: 0, // Disable caching so it's always fetched fresh when component mounts
@@ -37,11 +29,7 @@ export function useStartGameSession() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: { lesson_slug: string }) =>
-      apiPost<StartGameSessionResponse>(
-        "/api/v1/game/sessions",
-        body,
-        StartGameSessionResponseSchema
-      ),
+      apiPost<StartGameSessionResponse>("/api/v1/game/sessions", body),
     onSuccess: (data, variables) => {
       // Pre-populate the active session cache with the newly created session
       qc.setQueryData(
@@ -58,8 +46,7 @@ export function useStartGameSession() {
 export function useGetGameSession(sessionId: string, options?: any) {
   return useQuery<GameSession>({
     queryKey: ["game", "sessions", sessionId],
-    queryFn: () =>
-      apiGet<GameSession>(`/api/v1/game/sessions/${sessionId}`, GameSessionSchema),
+    queryFn: () => apiGet<GameSession>(`/api/v1/game/sessions/${sessionId}`),
     enabled: !!sessionId,
     ...options,
   });
@@ -77,10 +64,9 @@ export function usePatchGameAnswer() {
       activate_double_points?: boolean;
     }) => {
       const { session_id, ...payload } = body;
-      return apiPatch<GamificationAnswerResultOut>(
+      return apiPatch<GamificationAnswerResult>(
         `/api/v1/game/sessions/${session_id}/answers`,
-        payload,
-        GamificationAnswerResultOutSchema
+        payload
       );
     },
     onSuccess: (data) => {
@@ -116,12 +102,11 @@ export function useFinishGameSession() {
 }
 
 export function useGameLeaderboard(lessonSlug: string, options?: any) {
-  return useQuery<GameLeaderboardRowOut[]>({
+  return useQuery<GameLeaderboardRow[]>({
     queryKey: ["game", "leaderboard", lessonSlug],
     queryFn: () =>
-      apiGet<GameLeaderboardRowOut[]>(
-        `/api/v1/game/${encodeURIComponent(lessonSlug)}/leaderboard`,
-        z.array(GameLeaderboardRowOutSchema)
+      apiGet<GameLeaderboardRow[]>(
+        `/api/v1/game/${encodeURIComponent(lessonSlug)}/leaderboard`
       ),
     enabled: !!lessonSlug,
     staleTime: 10_000,
@@ -130,13 +115,10 @@ export function useGameLeaderboard(lessonSlug: string, options?: any) {
 }
 
 export function useGameHistorySummary(options?: any) {
-  return useQuery<GameLessonSummaryOut[]>({
+  return useQuery<GameLessonSummary[]>({
     queryKey: ["game", "history", "summary"],
     queryFn: () =>
-      apiGet<GameLessonSummaryOut[]>(
-        "/api/v1/game/history/summary",
-        z.array(GameLessonSummaryOutSchema)
-      ),
+      apiGet<GameLessonSummary[]>("/api/v1/game/history/summary"),
     staleTime: 5000,
     ...options,
   });
@@ -151,8 +133,7 @@ export function useUserMatchHistory(
     queryKey: ["game", "history", lessonSlug, userId],
     queryFn: () =>
       apiGet<UserMatchHistoryResponse>(
-        `/api/v1/game/${encodeURIComponent(lessonSlug)}/history/${userId!}`,
-        UserMatchHistoryResponseSchema
+        `/api/v1/game/${encodeURIComponent(lessonSlug)}/history/${userId!}`
       ),
     enabled: !!lessonSlug && !!userId,
     staleTime: 10_000,

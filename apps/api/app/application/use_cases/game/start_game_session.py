@@ -88,21 +88,79 @@ class StartGameSessionUseCase:
                     if "id" in q:
                         seen_question_ids.add(q["id"])
 
-        def prioritize_and_limit(q_list, limit):
+        def prioritize_and_order(q_list):
             unseen = [q for q in q_list if str(q.id) not in seen_question_ids]
             seen = [q for q in q_list if str(q.id) in seen_question_ids]
             random.shuffle(unseen)
             random.shuffle(seen)
-            return (unseen + seen)[:limit]
+            return unseen + seen
 
-        # Select questions for each tier
-        easy_qs = [q for q in questions if q.difficulty == Difficulty.EASY]
-        med_qs = [q for q in questions if q.difficulty == Difficulty.MEDIUM]
-        hard_qs = [q for q in questions if q.difficulty == Difficulty.HARD]
+        # Target distribution: 3 EASY (Tier 1), 3 MEDIUM (Tier 2), 4 HARD (Tier 3) -> Total 10
+        easy_pool = prioritize_and_order([q for q in questions if q.difficulty == Difficulty.EASY])
+        med_pool = prioritize_and_order([q for q in questions if q.difficulty == Difficulty.MEDIUM])
+        hard_pool = prioritize_and_order([q for q in questions if q.difficulty == Difficulty.HARD])
 
-        tier1_qs = prioritize_and_limit(easy_qs, 10)
-        tier2_qs = prioritize_and_limit(med_qs, 5)
-        tier3_qs = prioritize_and_limit(hard_qs, 5)
+        target_easy = min(3, len(easy_pool))
+        target_med = min(3, len(med_pool))
+        target_hard = min(4, len(hard_pool))
+
+        selected_easy = easy_pool[:target_easy]
+        remaining_easy = easy_pool[target_easy:]
+
+        selected_med = med_pool[:target_med]
+        remaining_med = med_pool[target_med:]
+
+        selected_hard = hard_pool[:target_hard]
+        remaining_hard = hard_pool[target_hard:]
+
+        # Smart replenishment if any tier is deficient
+        total_selected = len(selected_easy) + len(selected_med) + len(selected_hard)
+        needed = 10 - total_selected
+
+        if needed > 0 and len(selected_hard) < 4:
+            # Need hard -> borrow from medium, then easy
+            take_from_med = min(4 - len(selected_hard), len(remaining_med))
+            selected_hard.extend(remaining_med[:take_from_med])
+            remaining_med = remaining_med[take_from_med:]
+            needed = 10 - (len(selected_easy) + len(selected_med) + len(selected_hard))
+
+            if needed > 0 and len(selected_hard) < 4:
+                take_from_easy = min(4 - len(selected_hard), len(remaining_easy))
+                selected_hard.extend(remaining_easy[:take_from_easy])
+                remaining_easy = remaining_easy[take_from_easy:]
+                needed = 10 - (len(selected_easy) + len(selected_med) + len(selected_hard))
+
+        if needed > 0 and len(selected_med) < 3:
+            # Need med -> borrow from hard, then easy
+            take_from_hard = min(3 - len(selected_med), len(remaining_hard))
+            selected_med.extend(remaining_hard[:take_from_hard])
+            remaining_hard = remaining_hard[take_from_hard:]
+            needed = 10 - (len(selected_easy) + len(selected_med) + len(selected_hard))
+
+            if needed > 0 and len(selected_med) < 3:
+                take_from_easy = min(3 - len(selected_med), len(remaining_easy))
+                selected_med.extend(remaining_easy[:take_from_easy])
+                remaining_easy = remaining_easy[take_from_easy:]
+                needed = 10 - (len(selected_easy) + len(selected_med) + len(selected_hard))
+
+        if needed > 0 and len(selected_easy) < 3:
+            # Need easy -> borrow from medium, then hard
+            take_from_med = min(3 - len(selected_easy), len(remaining_med))
+            selected_easy.extend(remaining_med[:take_from_med])
+            remaining_med = remaining_med[take_from_med:]
+            needed = 10 - (len(selected_easy) + len(selected_med) + len(selected_hard))
+
+            if needed > 0 and len(selected_easy) < 3:
+                take_from_hard = min(3 - len(selected_easy), len(remaining_hard))
+                selected_easy.extend(remaining_hard[:take_from_hard])
+                remaining_hard = remaining_hard[take_from_hard:]
+                needed = 10 - (len(selected_easy) + len(selected_med) + len(selected_hard))
+
+        # Final fill-up from any remaining pool to reach 10 if bank has available questions
+        if (len(selected_easy) + len(selected_med) + len(selected_hard)) < 10:
+            all_remaining = remaining_easy + remaining_med + remaining_hard
+            fill_count = min(10 - (len(selected_easy) + len(selected_med) + len(selected_hard)), len(all_remaining))
+            selected_med.extend(all_remaining[:fill_count])
 
         def clean_options(options):
             cleaned = []
@@ -114,8 +172,9 @@ class StartGameSessionUseCase:
 
         questions: list[QuestionSnapshot] = []
 
-        for i, q in enumerate(tier1_qs):
-            is_boss = (i == len(tier1_qs) - 1) and len(tier1_qs) > 0
+        # Tier 1 (Easy): Last question is Boss Fight of Tier 1
+        for i, q in enumerate(selected_easy):
+            is_boss = (i == len(selected_easy) - 1)
             questions.append(
                 QuestionSnapshot(
                     id=str(q.id),
@@ -128,8 +187,9 @@ class StartGameSessionUseCase:
                 )
             )
 
-        for i, q in enumerate(tier2_qs):
-            is_boss = (i == len(tier2_qs) - 1) and len(tier2_qs) > 0
+        # Tier 2 (Medium): Last question is Boss Fight of Tier 2
+        for i, q in enumerate(selected_med):
+            is_boss = (i == len(selected_med) - 1)
             questions.append(
                 QuestionSnapshot(
                     id=str(q.id),
@@ -142,8 +202,9 @@ class StartGameSessionUseCase:
                 )
             )
 
-        for i, q in enumerate(tier3_qs):
-            is_boss = (i == len(tier3_qs) - 1) and len(tier3_qs) > 0
+        # Tier 3 (Hard): Last question is Boss Fight of Tier 3 (Final Boss)
+        for i, q in enumerate(selected_hard):
+            is_boss = (i == len(selected_hard) - 1)
             questions.append(
                 QuestionSnapshot(
                     id=str(q.id),
@@ -168,7 +229,6 @@ class StartGameSessionUseCase:
                 last_question_index=0,
                 boss_hp=1 if (questions and questions[0].is_boss) else 0,
                 shield_used_in_tier={},
-                current_question_started_at=now_ict().isoformat(),
             ),
         )
 

@@ -16,7 +16,7 @@ export interface UseGameItemsProps {
   gold: number;
   stage: number;
   gamification: GamificationState | null;
-  isAnswered: boolean;
+  canInteract: boolean;
   gameResult: string;
   showBossWarning: boolean;
   isBossMode: boolean;
@@ -31,7 +31,7 @@ export function useGameItems({
   gold,
   stage,
   gamification,
-  isAnswered,
+  canInteract,
   gameResult,
   showBossWarning,
   isBossMode,
@@ -54,101 +54,152 @@ export function useGameItems({
 
   const handleUseItem = useCallback(
     (type: ItemType) => {
-      if (!gamification || !currentQuestion || isAnswered || showBossWarning || gameResult !== "playing") {
+      if (!gamification || !currentQuestion || !canInteract || showBossWarning || gameResult !== "playing") {
         return;
       }
 
-      // Calculate cost (doubled during boss battles)
-      let cost = type === "50-50" ? 50 : type === "freeze" ? 40 : type === "double" ? 100 : 80;
-      if (isBossMode) cost *= 2;
-
-      if (gold < cost) {
-        toast.error("Không đủ vàng rồi!");
-        return;
-      }
-
-      // Shield limit check (max 1 per tier)
-      if (type === "shield") {
-        const shieldUsed = gamification.shield_used_in_tier?.[String(stage)] || false;
-        if (shieldUsed || shieldActive) {
-          toast.error("Mỗi tầng chỉ được dùng tối đa 1 Khiên Hộ Mệnh!");
+      // 1. Kính Hiển Vi (50-50)
+      if (type === "50-50") {
+        const itemCost = 50;
+        if (gold < itemCost) {
+          toast.error("Không đủ vàng để sử dụng Kính Hiển Vi!");
           return;
         }
-      }
 
-      // 50-50 and Freeze call backend mutation immediately
-      if (type === "50-50" || type === "freeze") {
-        const itemName = type === "50-50" ? "microscope" : "time_freeze";
         useItemMutation.mutate(
-          {
-            session_id: sessionId,
-            item_name: itemName,
-            question_id: currentQuestion.id,
-          },
+          { session_id: sessionId, item_name: "microscope", question_id: currentQuestion.id },
           {
             onSuccess: (data) => {
-              setGold(data.gold);
-              setGamification((prev) =>
-                prev
-                  ? {
-                      ...prev,
-                      gold: data.gold,
-                    }
-                  : null
-              );
-
-              if (type === "50-50") {
-                setHiddenOptions(data.eliminated_option_ids);
-                toast.info("Kính Hiển Vi kích hoạt! Loại bỏ 2 đáp án sai.");
-              } else {
-                onFreezeTimer();
-                toast.info("Đóng Băng kích hoạt! Thời gian suy nghĩ tạm dừng (cộng 30s).");
+              toast.success("Đã dùng Kính Hiển Vi! 2 đáp án sai đã bị làm mờ.");
+              if (data?.hidden_options) {
+                setHiddenOptions(data.hidden_options);
+              }
+              if (data?.updated_gamification) {
+                setGamification(data.updated_gamification);
+                setGold(data.updated_gamification.gold);
               }
             },
             onError: (err: any) => {
-              toast.error(err.message || "Không thể sử dụng vật phẩm!");
+              toast.error(err.message || "Không thể sử dụng vật phẩm lúc này!");
             },
           }
         );
-      } else {
-        // Shield and Double Points are activated client-side and submitted with answer
-        setGold((prev) => prev - cost);
-        if (type === "shield") {
-          setShieldActive(true);
-          toast.info("Khiên Hộ Mệnh đã kích hoạt! Bảo vệ dũng sĩ ở câu trả lời này.");
-        } else {
-          setDoubleActive(true);
-          toast.info("Bùa Nhân Phẩm đã kích hoạt! Nhân đôi điểm số câu hỏi này.");
+        return;
+      }
+
+      // 2. Đóng Băng Thời Gian (+30s)
+      if (type === "freeze") {
+        const itemCost = 40;
+        if (gold < itemCost) {
+          toast.error("Không đủ vàng để Đóng Băng Thời Gian!");
+          return;
         }
+
+        useItemMutation.mutate(
+          { session_id: sessionId, item_name: "time_freeze", question_id: currentQuestion.id },
+          {
+            onSuccess: (data) => {
+              toast.success("Thời gian đã bị đóng băng! Bạn có thêm +30 giây.");
+              onFreezeTimer();
+              if (data?.updated_gamification) {
+                setGamification(data.updated_gamification);
+                setGold(data.updated_gamification.gold);
+              }
+            },
+            onError: (err: any) => {
+              toast.error(err.message || "Không thể sử dụng vật phẩm lúc này!");
+            },
+          }
+        );
+        return;
+      }
+
+      // 3. Nhân Phẩm (x2 Điểm)
+      if (type === "double") {
+        const itemCost = 100;
+        if (gold < itemCost) {
+          toast.error("Không đủ vàng để mua Nhân Phẩm X2!");
+          return;
+        }
+
+        useItemMutation.mutate(
+          { session_id: sessionId, item_name: "double_points", question_id: currentQuestion.id },
+          {
+            onSuccess: (data) => {
+              toast.success("Kích hoạt bùa Nhân Phẩm! Câu này sẽ được X2 điểm số.");
+              setDoubleActive(true);
+              if (data?.updated_gamification) {
+                setGamification(data.updated_gamification);
+                setGold(data.updated_gamification.gold);
+              }
+            },
+            onError: (err: any) => {
+              toast.error(err.message || "Không thể sử dụng vật phẩm lúc này!");
+            },
+          }
+        );
+        return;
+      }
+
+      // 4. Khiên Hộ Mệnh (Chống mất mạng)
+      if (type === "shield") {
+        const itemCost = 80;
+        const shieldUsedInCurrentTier = gamification.shield_used_in_tier?.[String(stage)] || false;
+
+        if (shieldUsedInCurrentTier) {
+          toast.error(`Bạn đã sử dụng Khiên ở Tầng ${stage} rồi! Mỗi tầng chỉ được dùng 1 lần.`);
+          return;
+        }
+
+        if (gold < itemCost) {
+          toast.error("Không đủ vàng để tạo Khiên Hộ Mệnh!");
+          return;
+        }
+
+        useItemMutation.mutate(
+          { session_id: sessionId, item_name: "shield", question_id: currentQuestion.id },
+          {
+            onSuccess: (data) => {
+              toast.success("Khiên Hộ Mệnh đã dựng lên! Bảo toàn mạng nếu trả lời sai.");
+              setShieldActive(true);
+              if (data?.updated_gamification) {
+                setGamification(data.updated_gamification);
+                setGold(data.updated_gamification.gold);
+              }
+            },
+            onError: (err: any) => {
+              toast.error(err.message || "Không thể sử dụng vật phẩm lúc này!");
+            },
+          }
+        );
+        return;
       }
     },
     [
       gamification,
       currentQuestion,
-      isAnswered,
+      canInteract,
       showBossWarning,
       gameResult,
-      isBossMode,
       gold,
-      stage,
-      shieldActive,
       useItemMutation,
       sessionId,
-      setGold,
-      setGamification,
+      stage,
       onFreezeTimer,
+      setGamification,
+      setGold,
     ]
   );
 
   return {
     shieldActive,
-    doubleActive,
-    hiddenOptions,
-    handleUseItem,
-    resetItemBuffs,
     setShieldActive,
+    doubleActive,
     setDoubleActive,
+    hiddenOptions,
     setHiddenOptions,
+    resetItemBuffs,
+    handleUseItem,
   };
 }
 

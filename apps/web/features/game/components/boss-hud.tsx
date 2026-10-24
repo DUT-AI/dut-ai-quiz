@@ -20,7 +20,7 @@ interface BossHudProps {
   // Timer props
   timerMax: number;
   timerFrozen: boolean;
-  isAnswered: boolean;
+  isTimerActive: boolean;
   questionId: string;
   timeLeftRef: React.MutableRefObject<number>;
   onTimeOut: () => void;
@@ -269,7 +269,7 @@ export default function BossHud({
   playerLvl,
   timerMax,
   timerFrozen,
-  isAnswered,
+  isTimerActive,
   questionId,
   timeLeftRef,
   onTimeOut,
@@ -428,7 +428,7 @@ export default function BossHud({
           <CircularTimer
             timerMax={timerMax}
             timerFrozen={timerFrozen}
-            isAnswered={isAnswered}
+            isActive={isTimerActive}
             questionId={questionId}
             timeLeftRef={timeLeftRef}
             onTimeOut={onTimeOut}

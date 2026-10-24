@@ -4,6 +4,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Zap, Swords } from "lucide-react";
 import { type GameQuestion } from "../types";
+import { type GameTurnStatus } from "../hooks/game-turn-reducer";
 import { Markdown } from "@/components/markdown";
 
 interface GameQuestionCardProps {
@@ -13,7 +14,7 @@ interface GameQuestionCardProps {
   stage: number;
   doubleActive: boolean;
   selectedOptionId: string | null;
-  isAnswered: boolean;
+  status: GameTurnStatus;
   isSelectedCorrect: boolean;
   hiddenOptions: string[];
   onSubmitAnswer: (optionId: string) => void;
@@ -28,13 +29,17 @@ export default function GameQuestionCard({
   stage,
   doubleActive,
   selectedOptionId,
-  isAnswered,
+  status,
   isSelectedCorrect,
   hiddenOptions,
   onSubmitAnswer,
   onNextQuestion,
   correctOptionId,
 }: GameQuestionCardProps) {
+  const isQuestionActive = status === "QUESTION_ACTIVE";
+  const isTurnResult = status === "TURN_RESULT" || status === "GAME_OVER";
+  const isSubmitting = status === "SUBMITTING";
+
   return (
     <div className="w-full flex-1 flex flex-col items-center">
 
@@ -61,24 +66,25 @@ export default function GameQuestionCard({
           <Markdown content={currentQuestion.content} />
         </div>
 
-        {/* Answers Options Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 shrink-0">
+        {/* Answers List */}
+        <div className="grid grid-cols-1 gap-3.5 mt-auto w-full">
           {currentQuestion.options.map((option, idx) => {
             const isSelected = selectedOptionId === option.id;
             const isHidden = hiddenOptions.includes(option.id);
 
             let btnStyles = "border-zinc-900 dark:border-zinc-700 hover:bg-amber-50 dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-100 bg-stone-50 dark:bg-zinc-950 shadow-sm active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all duration-200";
-            
-            if (isAnswered) {
+
+            if (isTurnResult) {
               if (isSelected) {
                 btnStyles = isSelectedCorrect 
                   ? "border-emerald-500 bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 shadow-sm shadow-emerald-500/20" 
                   : "border-rose-500 bg-rose-100 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 shadow-sm shadow-rose-500/20";
+              } else if (correctOptionId && option.id === correctOptionId) {
+                btnStyles = "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-300 shadow-sm";
               } else {
-                // Dim non-selected answers but make them more readable (opacity-60 and text-zinc-700 / dark:text-zinc-300)
                 btnStyles = "border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 bg-zinc-50 dark:bg-zinc-950 opacity-60 cursor-default shadow-none pointer-events-none";
               }
-            } else if (selectedOptionId) {
+            } else if (isSubmitting) {
               if (isSelected) {
                 btnStyles = "border-amber-500 bg-amber-55/20 dark:bg-amber-950/20 text-zinc-900 dark:text-white animate-pulse shadow-sm";
               } else {
@@ -92,7 +98,7 @@ export default function GameQuestionCard({
               <button
                 key={option.id}
                 type="button"
-                disabled={isAnswered || !!selectedOptionId || isHidden}
+                disabled={!isQuestionActive || isHidden}
                 onClick={() => onSubmitAnswer(option.id)}
                 className={`w-full text-left p-3.5 border-2 transition-all duration-200 flex items-start gap-3 rounded-none relative group overflow-hidden ${btnStyles}`}
               >
@@ -109,7 +115,7 @@ export default function GameQuestionCard({
         </div>
 
         {/* Continue/Next Action Button */}
-        {isAnswered && (
+        {isTurnResult && (
           <motion.div
             className="mt-6 flex justify-end shrink-0"
             initial={{ opacity: 0, y: 10 }}

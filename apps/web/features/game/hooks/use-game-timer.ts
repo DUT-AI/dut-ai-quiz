@@ -6,15 +6,11 @@ import { type GameQuestion } from "../types";
 export interface UseGameTimerProps {
   currentQuestion: GameQuestion | null;
   currentIdx: number;
-  isAnswered: boolean;
-  onTimeOut: () => void;
 }
 
 export function useGameTimer({
   currentQuestion,
   currentIdx,
-  isAnswered,
-  onTimeOut,
 }: UseGameTimerProps) {
   const timeLeftRef = useRef<number>(60);
   const [timerFrozen, setTimerFrozen] = useState(false);

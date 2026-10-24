@@ -18,6 +18,7 @@ from app.domain.value_objects.gamification import GamificationItem
 from app.infrastructure.cache.game_leaderboard_cache import GameLeaderboardCache
 from app.infrastructure.services.manage_webhook import dispatch_manage_submission_webhook
 from app.presentation.schemas.game import (
+    GameQuestionSnapshotOut,
     GamificationAnswerPatchIn,
     GamificationAnswerResultOut,
 )
@@ -59,6 +60,32 @@ class PatchGameAnswerUseCase:
             raise DomainValidationException("All questions already answered")
 
         if current_q.id != str(payload.question_id):
+            # If the user's answer for this question was already recorded (e.g. network retry or concurrent submission),
+            # return current gamification state gracefully instead of throwing an error.
+            if str(payload.question_id) in snap.answers:
+                # Find if recorded answer was correct
+                q_db_prev = await self._question_repo.get(payload.question_id)
+                correct_prev_id = None
+                if q_db_prev:
+                    for opt in q_db_prev.options:
+                        if opt.is_correct:
+                            correct_prev_id = opt.id
+                            break
+                is_correct_prev = str(payload.option_id) == str(correct_prev_id)
+                next_q_out = None
+                next_q = snap.current_question()
+                if next_q and not snap.is_game_over():
+                    next_q_out = GameQuestionSnapshotOut.model_validate(next_q.to_dict())
+
+                return GamificationAnswerResultOut(
+                    is_correct=is_correct_prev,
+                    points_gained=0,
+                    coins_gained=0,
+                    updated_gamification=state.to_dict(),
+                    is_game_over=snap.is_game_over(),
+                    correct_option_id=str(correct_prev_id) if correct_prev_id else None,
+                    next_question=next_q_out,
+                )
             raise DomainValidationException("Question ID does not match current question index")
 
         # Verify answer correctness from DB
@@ -74,18 +101,11 @@ class PatchGameAnswerUseCase:
 
         is_correct = str(payload.option_id) == str(correct_opt_id)
 
-        # Anti-cheat check: allow 10 seconds buffer for network latency/UI animations
-        if state.current_question_started_at:
-            try:
-                started_at = datetime.fromisoformat(state.current_question_started_at)
-                elapsed = (now_ict() - started_at).total_seconds()
-                time_limit = current_q.time_limit
-
-                if elapsed > time_limit + 10.0:
-                    is_correct = False
-                    payload.time_response = float(time_limit)
-            except Exception:
-                pass
+        # Validate time_response from client within bounds
+        time_limit = current_q.time_limit
+        if payload.time_response > time_limit:
+            is_correct = False
+            payload.time_response = float(time_limit)
 
         # Calculate item costs
         cost = 0
@@ -160,11 +180,14 @@ class PatchGameAnswerUseCase:
                     user_source=user_source,
                 )
 
-        # Clear started_at for next question until user advances to next question via active session fetch
-        state.clear_question_timer()
-
         session.set_snapshot_state(snap)
         await self._ps_repo.save(session)
+
+        # Resolve next question snapshot if available
+        next_q_out = None
+        next_q = snap.current_question()
+        if next_q and not is_game_over:
+            next_q_out = GameQuestionSnapshotOut.model_validate(next_q.to_dict())
 
         return GamificationAnswerResultOut(
             is_correct=is_correct,
@@ -173,4 +196,5 @@ class PatchGameAnswerUseCase:
             updated_gamification=state.to_dict(),
             is_game_over=is_game_over,
             correct_option_id=str(correct_opt_id) if correct_opt_id else None,
+            next_question=next_q_out,
         )

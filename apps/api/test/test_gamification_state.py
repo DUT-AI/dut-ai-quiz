@@ -30,13 +30,6 @@ def test_gamification_state_item_pricing_and_gold():
     assert state.has_enough_gold(50) is False
 
 
-def test_gamification_state_time_freeze():
-    initial_iso = "2026-10-06T12:00:00"
-    state = GamificationState(current_question_started_at=initial_iso)
-    state.apply_time_freeze(seconds=30)
-    assert state.current_question_started_at == "2026-10-06T12:00:30"
-
-
 def test_gamification_state_shield():
     state = GamificationState()
     assert state.can_use_shield_in_tier(1) is True

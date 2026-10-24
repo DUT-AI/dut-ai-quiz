@@ -111,10 +111,10 @@ async def test_TC_G01_patch_gamification_answer_correct():
     result = await use_case.execute(session_id, user_id=1, payload=payload)
 
     assert result.is_correct is True
-    assert result.updated_gamification["points"] > 0
-    assert result.updated_gamification["gold"] > 100
-    assert result.updated_gamification["lives"] == 3  # Máu không đổi
-    assert result.updated_gamification["last_question_index"] == 1  # Tiến độ tăng
+    assert result.updated_gamification.points > 0
+    assert result.updated_gamification.gold > 100
+    assert result.updated_gamification.lives == 3  # Máu không đổi
+    assert result.updated_gamification.last_question_index == 1  # Tiến độ tăng
 
 
 @pytest.mark.asyncio
@@ -177,8 +177,8 @@ async def test_TC_G02_patch_gamification_answer_incorrect_lose_life():
     result = await use_case.execute(session_id, user_id=1, payload=payload)
 
     assert result.is_correct is False
-    assert result.updated_gamification["lives"] == 2  # 3 - 1
-    assert result.updated_gamification["last_question_index"] == 1
+    assert result.updated_gamification.lives == 2  # 3 - 1
+    assert result.updated_gamification.last_question_index == 1
 
 
 # ==============================================================================
@@ -241,8 +241,8 @@ async def test_TC_P01_boss_defeated_advances_tier():
     assert result.is_correct is True
     # Kiểm tra phần thưởng qua màn (Nếu có logic +2 mạng)
     # Lưu ý: Sẽ FAIL nếu chưa implement logic thưởng +2 lives khi qua tầng
-    assert result.updated_gamification["lives"] == 4
-    assert result.updated_gamification["current_tier"] == 2
+    assert result.updated_gamification.lives == 4
+    assert result.updated_gamification.current_tier == 2
 
 
 @pytest.mark.asyncio
@@ -294,7 +294,7 @@ async def test_TC_P02_user_loses_all_lives_game_over():
     )
     result = await use_case.execute(session_id, user_id=1, payload=payload)
 
-    assert result.updated_gamification["lives"] == 0
+    assert result.updated_gamification.lives == 0
     assert result.is_game_over is True
     assert session.status == GameSessionStatus.COMPLETED
 
@@ -458,14 +458,14 @@ async def test_TC_S03_timeout_fails_automatically():
     ps_repo.count_completed_by_lesson.return_value = 0
     use_case = PatchGameAnswerUseCase(ps_repo, question_repo)
 
-    # User cố tình truyền thời gian giả (15s) nhưng hệ thống lấy thời gian thực (100s) > 60s
+    # User gửi time_response (65s) vượt quá time_limit (60s) -> tính là Timeout/Sai
     payload = GamificationAnswerPatchIn(
-        question_id=q_id, option_id=opt_correct_id, time_response=15.0
+        question_id=q_id, option_id=opt_correct_id, time_response=65.0
     )
     result = await use_case.execute(session_id, user_id=1, payload=payload)
 
     assert result.is_correct is False  # Mặc dù chọn đúng option, nhưng do timeout nên tính là Sai
-    assert result.updated_gamification["lives"] == 2  # Bị trừ mạng
+    assert result.updated_gamification.lives == 2  # Bị trừ mạng
 
 
 @pytest.mark.asyncio

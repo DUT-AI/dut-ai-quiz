@@ -5,7 +5,7 @@ import React, { useEffect, useRef } from "react";
 interface CircularTimerProps {
   timerMax: number;
   timerFrozen: boolean;
-  isAnswered: boolean;
+  isActive: boolean;
   questionId: string;
   timeLeftRef: React.MutableRefObject<number>;
   onTimeOut: () => void;
@@ -14,7 +14,7 @@ interface CircularTimerProps {
 export default function CircularTimer({
   timerMax,
   timerFrozen,
-  isAnswered,
+  isActive,
   questionId,
   timeLeftRef,
   onTimeOut,
@@ -66,8 +66,8 @@ export default function CircularTimer({
 
     // 2. Define the tick loop
     const tick = () => {
-      if (isAnswered) {
-        // Stop ticking but keep UI state intact
+      if (!isActive) {
+        // Stop ticking when question is not actively counting down
         return;
       }
 
@@ -174,7 +174,7 @@ export default function CircularTimer({
         cancelAnimationFrame(rafRef.current);
       }
     };
-  }, [questionId, timerMax, timerFrozen, isAnswered, circumference, onTimeOut, timeLeftRef]);
+  }, [questionId, timerMax, timerFrozen, isActive, circumference, onTimeOut, timeLeftRef]);
 
   return (
     <div

@@ -87,6 +87,9 @@ lint-fix:
 type-check:
 	cd $(WEB_DIR) && npm run type-check
 
+generate-api:
+	cd $(WEB_DIR) && npm run generate:api
+
 check:
 	@bash .githooks/pre-commit
 

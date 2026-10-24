@@ -1,31 +1,35 @@
 "use client";
 
-import React, { useRef, useEffect, useMemo } from "react";
+import { useMemo, useEffect, useRef, useCallback } from "react";
 import { toast } from "sonner";
 
+import { useGameSession, useGameTimer, useGameItems, useGameTurn } from "../hooks";
+import { useAntiCheat } from "@/hooks/use-anti-cheat";
+import { type GameSession, getBossName } from "../types";
+
+import GameTopBar from "./game-top-bar";
+import GameHeaderHud from "./game-header-hud";
 import BossHud from "./boss-hud";
 import ItemHotbar from "./item-hotbar";
 import GameQuestionCard from "./game-question-card";
 import GameResult from "./game-result";
-import GameTopBar from "./game-top-bar";
-import GameHeaderHud from "./game-header-hud";
 import GameAlertOverlay from "./game-alert-overlay";
 import GameAntiCheatModal from "./game-anti-cheat-modal";
 
-import { useThemeStore } from "@/store/theme-store";
-import { useAntiCheat } from "@/hooks/use-anti-cheat";
-import { useGameSession, useGameTimer, useGameItems, useGameTurn } from "../hooks";
-import { getBossName } from "../types";
-
 interface GameContainerProps {
   lessonSlug: string;
-  initialSession: any;
+  initialSession?: GameSession | null;
+  darkMode?: boolean;
 }
 
-export default function GameContainer({ lessonSlug, initialSession }: GameContainerProps) {
-  const { darkMode } = useThemeStore();
-  const rightColRef = useRef<HTMLDivElement | null>(null);
+export default function GameContainer({
+  lessonSlug,
+  initialSession = null,
+  darkMode = false,
+}: GameContainerProps) {
+  const rightColRef = useRef<HTMLDivElement>(null);
 
+  // Background visual style
   const gameBackgroundStyle = useMemo(() => ({
     backgroundImage: darkMode
       ? `radial-gradient(circle, rgba(255,255,255,0.02) 1.5px, transparent 1.5px), linear-gradient(to bottom right, #09090b, #030712)`
@@ -34,21 +38,30 @@ export default function GameContainer({ lessonSlug, initialSession }: GameContai
     backgroundAttachment: "fixed" as const,
   }), [darkMode]);
 
-  // Decoupled Business Logic Hooks
+  // 1. Session state
   const session = useGameSession({ lessonSlug, initialSession });
+
+  // 2. Turn State Machine hook (Độc lập, không phụ thuộc timer/items lúc khởi tạo)
+  const turn = useGameTurn({ session, lessonSlug });
+
+  // Trạng thái cho phép tương tác (chỉ khi đang ở câu hỏi tích cực)
+  const isQuestionActive = turn.status === "QUESTION_ACTIVE";
+  const isTurnDone = turn.status === "TURN_RESULT" || turn.status === "GAME_OVER";
+
+  // 3. Timer hook
   const timer = useGameTimer({
     currentQuestion: session.currentQuestion,
     currentIdx: session.currentIdx,
-    isAnswered: false,
-    onTimeOut: () => {},
   });
+
+  // 4. Items hook
   const items = useGameItems({
     sessionId: session.sessionId,
     currentQuestion: session.currentQuestion,
     gold: session.gold,
     stage: session.stage,
     gamification: session.gamification,
-    isAnswered: false,
+    canInteract: isQuestionActive,
     gameResult: session.gameResult,
     showBossWarning: session.showBossWarning,
     isBossMode: session.isBossMode,
@@ -56,7 +69,40 @@ export default function GameContainer({ lessonSlug, initialSession }: GameContai
     setGamification: session.setGamification,
     onFreezeTimer: timer.freezeTimerFor30Seconds,
   });
-  const turn = useGameTurn({ session, timer, items, lessonSlug });
+
+  // Handler submit từ UI (User click option)
+  const handleSubmitOption = useCallback((optionId: string) => {
+    const timeResponse = timer.timerMax - timer.timeLeftRef.current;
+    turn.submitAnswer({
+      optionId,
+      timeResponse,
+      shieldActive: items.shieldActive,
+      doubleActive: items.doubleActive,
+      onResetBuffs: items.resetItemBuffs,
+    });
+  }, [timer.timerMax, timer.timeLeftRef, turn, items.shieldActive, items.doubleActive, items.resetItemBuffs]);
+
+  // Handler khi hết giờ (Timer Timeout)
+  const handleTimeOut = useCallback(() => {
+    if (!isQuestionActive) return;
+    toast.error("Hết thời gian suy nghĩ mất rồi!");
+    const timeResponse = timer.timerMax;
+    turn.submitAnswer({
+      optionId: "",
+      timeResponse,
+      shieldActive: items.shieldActive,
+      doubleActive: items.doubleActive,
+      onResetBuffs: items.resetItemBuffs,
+    });
+  }, [isQuestionActive, timer.timerMax, turn, items.shieldActive, items.doubleActive, items.resetItemBuffs]);
+
+  // Handler chuyển sang câu tiếp theo
+  const handleNextQuestion = useCallback(() => {
+    turn.nextQuestion(() => {
+      items.resetItemBuffs();
+      timer.setTimerFrozen(false);
+    });
+  }, [turn, items, timer]);
 
   // Anti-Cheat system
   const antiCheat = useAntiCheat({
@@ -69,9 +115,9 @@ export default function GameContainer({ lessonSlug, initialSession }: GameContai
     },
   });
 
-  // Auto-scroll on answering and question transition
+  // Auto-scroll on turn result and question transition
   useEffect(() => {
-    if (turn.isAnswered) {
+    if (isTurnDone) {
       const t = setTimeout(() => {
         if (rightColRef.current && rightColRef.current.scrollHeight > rightColRef.current.clientHeight) {
           rightColRef.current.scrollTo({ top: rightColRef.current.scrollHeight, behavior: "smooth" });
@@ -80,7 +126,7 @@ export default function GameContainer({ lessonSlug, initialSession }: GameContai
       }, 100);
       return () => clearTimeout(t);
     }
-  }, [turn.isAnswered]);
+  }, [isTurnDone]);
 
   useEffect(() => {
     if (rightColRef.current) rightColRef.current.scrollTo({ top: 0, behavior: "smooth" });
@@ -127,15 +173,15 @@ export default function GameContainer({ lessonSlug, initialSession }: GameContai
                   playerLvl={session.stage}
                   timerMax={timer.timerMax}
                   timerFrozen={timer.timerFrozen}
-                  isAnswered={turn.isAnswered}
+                  isTimerActive={isQuestionActive}
                   questionId={session.currentQuestion?.id || ""}
                   timeLeftRef={timer.timeLeftRef}
-                  onTimeOut={turn.handleTimeOut}
+                  onTimeOut={handleTimeOut}
                 />
                 <ItemHotbar
                   gold={session.gold}
                   onUseItem={items.handleUseItem}
-                  disabled={session.showBossWarning || turn.isAnswered || session.gameResult !== "playing"}
+                  disabled={session.showBossWarning || !isQuestionActive || session.gameResult !== "playing"}
                   maxShieldLimitReached={session.gamification ? (session.gamification.shield_used_in_tier?.[String(session.stage)] || false) : false}
                   isBossMode={session.isBossMode}
                 />
@@ -150,11 +196,11 @@ export default function GameContainer({ lessonSlug, initialSession }: GameContai
                     stage={session.stage}
                     doubleActive={items.doubleActive}
                     selectedOptionId={turn.selectedOptionId}
-                    isAnswered={turn.isAnswered}
+                    status={turn.status}
                     isSelectedCorrect={turn.isSelectedCorrect}
                     hiddenOptions={items.hiddenOptions}
-                    onSubmitAnswer={turn.submitAnswer}
-                    onNextQuestion={turn.nextQuestion}
+                    onSubmitAnswer={handleSubmitOption}
+                    onNextQuestion={handleNextQuestion}
                     correctOptionId={turn.correctOptionId}
                   />
                 )}

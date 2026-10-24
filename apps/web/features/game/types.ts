@@ -1,146 +1,41 @@
-import { z } from "zod";
+import type { Schema } from "@/types/api";
 
-export const GamificationStartInSchema = z.object({
-  lesson_slug: z.string(),
-});
-export type GamificationStartIn = z.infer<typeof GamificationStartInSchema>;
+// Core Domain Types mapped directly from FastAPI OpenAPI Contract
+export type GamificationStartIn = Schema<"GamificationStartIn">;
+export type GamificationAnswerPatchIn = Schema<"GamificationAnswerPatchIn">;
+export type GamificationUseItemIn = Schema<"GamificationUseItemIn">;
+export type GamificationState = Schema<"GamificationStateOut">;
+export type GameOption = Schema<"GameQuestionOptionOut">;
 
-export const GamificationAnswerPatchInSchema = z.object({
-  question_id: z.string(),
-  option_id: z.string(),
-  time_response: z.number(),
-  activate_shield: z.boolean().default(false),
-  activate_double_points: z.boolean().default(false),
-});
-export type GamificationAnswerPatchIn = z.infer<typeof GamificationAnswerPatchInSchema>;
+export type GameQuestion = Omit<Schema<"GameQuestionSnapshotOut">, "options"> & {
+  options: GameOption[];
+};
 
-export const GamificationUseItemInSchema = z.object({
-  item_name: z.string(),
-  question_id: z.string(),
-});
-export type GamificationUseItemIn = z.infer<typeof GamificationUseItemInSchema>;
+export type GameSnapshot = Omit<Schema<"GameSessionSnapshotOut">, "questions"> & {
+  questions: GameQuestion[];
+};
 
-export const GamificationStateSchema = z.object({
-  lives: z.number(),
-  gold: z.number(),
-  points: z.number(),
-  current_tier: z.number(),
-  last_question_index: z.number(),
-  boss_hp: z.number(),
-  shield_used_in_tier: z.record(z.string(), z.boolean()),
-  current_question_started_at: z.string(),
-  total_time_response: z.number().optional(),
-  final_score: z.number().optional(),
-  attempt_count: z.number().optional(),
-});
-export type GamificationState = z.infer<typeof GamificationStateSchema>;
+export type GamificationAnswerResult = Schema<"GamificationAnswerResultOut">;
+export type GameLessonSummary = Schema<"GameLessonSummaryOut">;
+export type GameLeaderboardRow = Schema<"GameLeaderboardRowOut">;
+export type UserMatchHistoryItem = Schema<"UserMatchHistoryItem">;
+export type UserMatchHistoryResponse = Schema<"UserMatchHistoryResponse">;
 
-export const GameOptionSchema = z.object({
-  id: z.string(),
-  text: z.string(),
-});
-export type GameOption = z.infer<typeof GameOptionSchema>;
+export interface StartGameSessionResponse {
+  session_id: string;
+  snapshot: GameSnapshot;
+}
 
-export const GameQuestionSchema = z.object({
-  id: z.string(),
-  content: z.string(),
-  options: z.array(GameOptionSchema),
-  time_limit: z.number(),
-  time_response: z.number(),
-  tier: z.number(),
-  is_boss: z.boolean(),
-});
-export type GameQuestion = z.infer<typeof GameQuestionSchema>;
-
-export const GamificationAnswerResultOutSchema = z.object({
-  is_correct: z.boolean(),
-  points_gained: z.number(),
-  coins_gained: z.number(),
-  updated_gamification: GamificationStateSchema,
-  is_game_over: z.boolean(),
-  correct_option_id: z.string().nullable().optional(),
-});
-export type GamificationAnswerResultOut = z.infer<typeof GamificationAnswerResultOutSchema>;
-
-export const GameSnapshotSchema = z.object({
-  lesson_slug: z.string(),
-  questions: z.array(GameQuestionSchema),
-  answers: z.record(z.string(), z.string()),
-  gamification: GamificationStateSchema,
-});
-export type GameSnapshot = z.infer<typeof GameSnapshotSchema>;
-
-export const GameSessionSchema = z.object({
-  id: z.string(),
-  user_id: z.number(),
-  started_at: z.string(),
-  completed_at: z.string().nullable().optional(),
-  status: z.enum(["IN_PROGRESS", "COMPLETED"]),
-  snapshot: GameSnapshotSchema.nullable().optional(),
-  tags_filter: z.array(z.string()),
-  question_limit: z.number(),
-});
-export type GameSession = z.infer<typeof GameSessionSchema>;
-
-export const StartGameSessionResponseSchema = z.object({
-  session_id: z.string(),
-  snapshot: GameSnapshotSchema,
-});
-export type StartGameSessionResponse = z.infer<typeof StartGameSessionResponseSchema>;
-
-export const GameLessonSummaryOutSchema = z.object({
-  lesson_slug: z.string(),
-  total_sessions: z.number(),
-  completed_sessions: z.number(),
-  highest_points: z.number(),
-  total_gold_earned: z.number(),
-  highest_tier: z.number(),
-});
-export type GameLessonSummaryOut = z.infer<typeof GameLessonSummaryOutSchema>;
-
-export const GameLeaderboardRowOutSchema = z.object({
-  user_id: z.number(),
-  username: z.string().nullable().optional(),
-  avatar_url: z.string().nullable().optional(),
-  final_score: z.number(),
-  gold: z.number(),
-  total_time_response: z.number(),
-  attempt_count: z.number(),
-  is_completed: z.boolean().default(false),
-  total_questions: z.number().default(0),
-  answered_questions: z.number().default(0),
-});
-export type GameLeaderboardRowOut = z.infer<typeof GameLeaderboardRowOutSchema>;
-
-export const UserMatchHistoryItemSchema = z.object({
-  id: z.string(),
-  attempt_number: z.number(),
-  started_at: z.string(),
-  completed_at: z.string().nullable().optional(),
-  final_score: z.number(),
-  raw_points: z.number(),
-  gold: z.number(),
-  total_time_response: z.number(),
-  correct_count: z.number(),
-  total_questions: z.number(),
-  accuracy_percentage: z.number(),
-  max_streak: z.number().default(0),
-  lives_left: z.number().default(0),
-  is_completed: z.boolean().default(true),
-});
-export type UserMatchHistoryItem = z.infer<typeof UserMatchHistoryItemSchema>;
-
-export const UserMatchHistoryResponseSchema = z.object({
-  user_id: z.number(),
-  username: z.string().nullable().optional(),
-  avatar_url: z.string().nullable().optional(),
-  lesson_slug: z.string(),
-  total_attempts: z.number(),
-  highest_score: z.number(),
-  total_gold: z.number(),
-  history: z.array(UserMatchHistoryItemSchema),
-});
-export type UserMatchHistoryResponse = z.infer<typeof UserMatchHistoryResponseSchema>;
+export interface GameSession {
+  id: string;
+  user_id: number;
+  started_at: string;
+  completed_at?: string | null;
+  status: "IN_PROGRESS" | "COMPLETED";
+  snapshot?: GameSnapshot | null;
+  tags_filter: string[];
+  question_limit: number;
+}
 
 // Shared Game UI & Hook types
 export type ItemType = "50-50" | "freeze" | "double" | "shield";
@@ -154,4 +49,3 @@ export const getBossName = (stageNum: number): string => {
   if (stageNum === 2) return "MA BÀN THẠCH";
   return "MA NHÃN TỐI THƯỢNG";
 };
-
