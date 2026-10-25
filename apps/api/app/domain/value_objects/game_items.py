@@ -1,9 +1,13 @@
+from __future__ import annotations
+
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
-from app.domain.interfaces.question_repo import IQuestionRepository
 from app.domain.value_objects.gamification import QuestionMeta
+
+if TYPE_CHECKING:
+    from app.domain.interfaces.question_repo import IQuestionRepository
 
 
 @dataclass(frozen=True)
