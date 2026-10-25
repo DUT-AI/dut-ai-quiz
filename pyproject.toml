@@ -8,7 +8,6 @@ workspace = { members = [
 ] }
 
 [tool.ruff]
-line-length = 100
 target-version = "py311"
 
 [tool.ruff.lint]
@@ -24,4 +23,9 @@ ignore = [
   "E501", # line too long (handled by formatter)
   "B008", # do not perform function calls in argument defaults (FastAPI Depends)
 ]
+
+[tool.pyrefly]
+python-interpreter-path = ".venv/bin/python"
+search-path = ["apps/api"]
+
 
