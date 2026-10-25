@@ -526,3 +526,41 @@ async def test_TC_S05_submit_after_game_over(mock_answer_repo):
     with pytest.raises(DomainValidationException) as exc:
         await use_case.execute(session_id, user_id=1, payload=payload)
     assert exc.value.status_code == 400
+
+
+def test_game_session_model_reconciliation_preserves_sql_metrics():
+    """Test that to_entity reconciles metrics from SQL columns if JSONB gamification_state is empty/default."""
+    from app.infrastructure.persistence.models.game import GameSession
+
+    model = GameSession(
+        id=uuid4(),
+        user_id=1,
+        lesson_slug="reconcile-test",
+        started_at=now_ict(),
+        completed_at=None,
+        status=GameSessionStatus.COMPLETED,
+        question_limit=10,
+        final_score=85.0,
+        gold_earned=50,
+        total_time_response=30.0,
+        attempt_count=2,
+        current_tier=3,
+        question_sequence=[],
+        gamification_state={},  # Empty gamification state
+    )
+
+    entity = model.to_entity()
+
+    # GamificationState must receive the reconciled metrics
+    assert entity.gamification.final_score == 85.0
+    assert entity.gamification.gold == 50
+    assert entity.gamification.total_time_response == 30.0
+    assert entity.gamification.attempt_count == 2
+    assert entity.gamification.current_tier == 3
+
+    # Entity dynamic properties must match GamificationState exactly
+    assert entity.final_score == 85.0
+    assert entity.gold_earned == 50
+    assert entity.total_time_response == 30.0
+    assert entity.attempt_count == 2
+    assert entity.current_tier == 3

@@ -1,6 +1,5 @@
 import dataclasses
 from datetime import datetime
-from typing import Any
 from uuid import UUID
 
 from app.core.datetime_utils import now_ict
@@ -20,11 +19,6 @@ class GameSessionEntity:
     completed_at: datetime | None
     status: GameSessionStatus
     question_limit: int = 10
-    final_score: float = 0.0
-    gold_earned: int = 0
-    total_time_response: float = 0.0
-    attempt_count: int = 1
-    current_tier: int = 1
     question_sequence: list[QuestionMeta] = dataclasses.field(default_factory=list)
     gamification: GamificationState = dataclasses.field(default_factory=GamificationState)
 
@@ -37,38 +31,55 @@ class GameSessionEntity:
         completed_at: datetime | None = None,
         status: GameSessionStatus = GameSessionStatus.IN_PROGRESS,
         question_limit: int = 10,
-        final_score: float = 0.0,
-        gold_earned: int = 0,
-        total_time_response: float = 0.0,
-        attempt_count: int = 1,
-        current_tier: int = 1,
         question_sequence: list[QuestionMeta] | None = None,
         gamification: GamificationState | None = None,
-        **kwargs: Any,
+        final_score: float | None = None,
+        gold_earned: int | None = None,
+        total_time_response: float | None = None,
+        attempt_count: int | None = None,
+        current_tier: int | None = None,
     ) -> None:
         self.id = id
         self.user_id = user_id
         self.started_at = started_at or now_ict()
         self.completed_at = completed_at
         self.status = status
-        self.lesson_slug = str(lesson_slug or kwargs.get("lesson_slug", ""))
+        self.lesson_slug = str(lesson_slug)
         self.question_limit = question_limit
-        self.final_score = final_score
-        self.gold_earned = gold_earned
-        self.total_time_response = total_time_response
-        self.attempt_count = attempt_count
-        self.current_tier = current_tier
         self.question_sequence = question_sequence or []
         self.gamification = gamification or GamificationState()
-        self.sync_metrics()
 
-    def sync_metrics(self) -> None:
-        """Synchronize native scoring/ranking columns with gamification state."""
-        self.final_score = float(self.gamification.final_score)
-        self.gold_earned = int(self.gamification.gold)
-        self.total_time_response = float(self.gamification.total_time_response)
-        self.attempt_count = int(self.gamification.attempt_count)
-        self.current_tier = int(self.gamification.current_tier)
+        # Seed metrics into gamification if caller passed legacy keyword arguments
+        if final_score is not None and not self.gamification.final_score:
+            self.gamification.final_score = float(final_score)
+        if gold_earned is not None and not self.gamification.gold:
+            self.gamification.gold = int(gold_earned)
+        if total_time_response is not None and not self.gamification.total_time_response:
+            self.gamification.total_time_response = float(total_time_response)
+        if attempt_count is not None and self.gamification.attempt_count == 1:
+            self.gamification.attempt_count = int(attempt_count)
+        if current_tier is not None and self.gamification.current_tier == 1:
+            self.gamification.current_tier = int(current_tier)
+
+    @property
+    def final_score(self) -> float:
+        return float(self.gamification.final_score)
+
+    @property
+    def gold_earned(self) -> int:
+        return int(self.gamification.gold)
+
+    @property
+    def total_time_response(self) -> float:
+        return float(self.gamification.total_time_response)
+
+    @property
+    def attempt_count(self) -> int:
+        return int(self.gamification.attempt_count)
+
+    @property
+    def current_tier(self) -> int:
+        return int(self.gamification.current_tier)
 
     @property
     def current_question_meta(self) -> QuestionMeta | None:

@@ -65,7 +65,6 @@ export default function GameContainer({
     gameResult: session.gameResult,
     showBossWarning: session.showBossWarning,
     isBossMode: session.isBossMode,
-    setGold: session.setGold,
     setGamification: session.setGamification,
     onFreezeTimer: timer.freezeTimerFor30Seconds,
   });
@@ -76,11 +75,10 @@ export default function GameContainer({
     turn.submitAnswer({
       optionId,
       timeResponse,
-      shieldActive: items.shieldActive,
-      doubleActive: items.doubleActive,
+      activeBuffs: items.activeBuffs,
       onResetBuffs: items.resetItemBuffs,
     });
-  }, [timer.timerMax, timer.timeLeftRef, turn, items.shieldActive, items.doubleActive, items.resetItemBuffs]);
+  }, [timer.timerMax, timer.timeLeftRef, turn, items.activeBuffs, items.resetItemBuffs]);
 
   // Handler khi hết giờ (Timer Timeout)
   const handleTimeOut = useCallback(() => {
@@ -90,11 +88,10 @@ export default function GameContainer({
     turn.submitAnswer({
       optionId: "",
       timeResponse,
-      shieldActive: items.shieldActive,
-      doubleActive: items.doubleActive,
+      activeBuffs: items.activeBuffs,
       onResetBuffs: items.resetItemBuffs,
     });
-  }, [isQuestionActive, timer.timerMax, turn, items.shieldActive, items.doubleActive, items.resetItemBuffs]);
+  }, [isQuestionActive, timer.timerMax, turn, items.activeBuffs, items.resetItemBuffs]);
 
   // Handler chuyển sang câu tiếp theo
   const handleNextQuestion = useCallback(() => {
@@ -184,6 +181,7 @@ export default function GameContainer({
                   disabled={session.showBossWarning || !isQuestionActive || session.gameResult !== "playing"}
                   maxShieldLimitReached={session.gamification ? (session.gamification.shield_used_in_tier?.[String(session.stage)] || false) : false}
                   isBossMode={session.isBossMode}
+                  activeBuffs={items.activeBuffs}
                 />
               </div>
 
@@ -212,7 +210,7 @@ export default function GameContainer({
         <GameResult
           lessonSlug={lessonSlug}
           gameResult={session.gameResult === "victory" ? "victory" : "defeat"}
-          score={session.gamification?.final_score ?? session.score}
+          score={session.score}
           gold={session.gold}
           highestIdx={session.currentIdx + 1}
           onRetry={session.handleRetry}

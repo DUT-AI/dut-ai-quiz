@@ -33,11 +33,13 @@ export function useGameSession({ lessonSlug, initialSession }: UseGameSessionPro
 
   // Gameplay progress states
   const [currentIdx, setCurrentIdx] = useState(0);
-  const [hp, setHp] = useState(3);
-  const [gold, setGold] = useState(0);
-  const [score, setScore] = useState(0);
   const [gameResult, setGameResult] = useState<GameResultState>("playing");
   const [stageProgress, setStageProgress] = useState<StageProgressStatus[]>([]);
+
+  // Derived metrics from GamificationState (Single Source of Truth)
+  const hp = gamification?.lives ?? 3;
+  const gold = gamification?.gold ?? 0;
+  const score = gamification?.points ?? 0;
 
   // Boss states
   const [bossHp, setBossHp] = useState(5);
@@ -70,10 +72,6 @@ export function useGameSession({ lessonSlug, initialSession }: UseGameSessionPro
         } else {
           setCountdown(null);
         }
-
-        setHp(gamificationState?.lives ?? 3);
-        setGold(gamificationState?.gold ?? 0);
-        setScore(gamificationState?.points ?? 0);
 
         // Reconstruct progress dots based on answers and question_limit
         const totalQCount = sessionData.question_limit || 10;
@@ -173,9 +171,6 @@ export function useGameSession({ lessonSlug, initialSession }: UseGameSessionPro
     // Updaters
     setScreen,
     setGameResult,
-    setHp,
-    setGold,
-    setScore,
     setStageProgress,
     setCurrentIdx,
     setQuestions,

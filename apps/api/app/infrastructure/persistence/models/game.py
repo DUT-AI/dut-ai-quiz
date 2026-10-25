@@ -51,6 +51,18 @@ class GameSession(Base):
         ]
         gamification = GamificationState.from_dict(self.gamification_state or {})
 
+        # Reconciliation: Bảo toàn dữ liệu cột SQL nếu JSON state bị thiếu/mặc định
+        if gamification.final_score == 0.0 and self.final_score > 0.0:
+            gamification.final_score = float(self.final_score)
+        if gamification.gold == 0 and self.gold_earned > 0:
+            gamification.gold = int(self.gold_earned)
+        if gamification.total_time_response == 0.0 and self.total_time_response > 0.0:
+            gamification.total_time_response = float(self.total_time_response)
+        if gamification.attempt_count == 1 and self.attempt_count > 1:
+            gamification.attempt_count = int(self.attempt_count)
+        if gamification.current_tier == 1 and self.current_tier > 1:
+            gamification.current_tier = int(self.current_tier)
+
         return GameSessionEntity(
             id=self.id,
             user_id=self.user_id,
@@ -59,18 +71,12 @@ class GameSession(Base):
             completed_at=self.completed_at,
             status=self.status,
             question_limit=self.question_limit,
-            final_score=self.final_score,
-            gold_earned=self.gold_earned,
-            total_time_response=self.total_time_response,
-            attempt_count=self.attempt_count,
-            current_tier=self.current_tier,
             question_sequence=question_sequence,
             gamification=gamification,
         )
 
     @classmethod
     def from_entity(cls, entity: GameSessionEntity) -> "GameSession":
-        entity.sync_metrics()
         return cls(
             id=entity.id,
             user_id=entity.user_id,

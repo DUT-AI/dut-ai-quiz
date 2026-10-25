@@ -103,13 +103,3 @@ class GameHydrationService:
             current_question=None,
             gamification=GamificationStateOut.model_validate(session.gamification.to_dict()),
         )
-
-    # Legacy method aliases during use case refactoring
-    async def hydrate_session_start_out(self, session: GameSessionEntity) -> GameSessionOut:
-        return await self.to_session_out(session)
-
-    async def hydrate_session_detail_out(self, session: GameSessionEntity) -> GameSessionOut:
-        return await self.to_session_out(session)
-
-    def to_history_detail_out(self, session: GameSessionEntity) -> GameSessionOut:
-        return self.to_history_out(session)

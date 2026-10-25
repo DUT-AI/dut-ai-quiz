@@ -2,7 +2,6 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
-from uuid import UUID
 
 
 class GamificationItem(StrEnum):
@@ -42,40 +41,6 @@ class QuestionMeta:
             tier=int(data.get("tier", 1)),
             is_boss=bool(data.get("is_boss", False)),
             time_limit=int(data.get("time_limit", 60)),
-        )
-
-
-@dataclass
-class QuestionSnapshot:
-    id: str
-    content: str
-    options: list[dict[str, Any]] = field(default_factory=list)
-    time_limit: int = 60
-    time_response: float = 0.0
-    tier: int = 1
-    is_boss: bool = False
-
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            "id": self.id,
-            "content": self.content,
-            "options": self.options,
-            "time_limit": self.time_limit,
-            "time_response": self.time_response,
-            "tier": self.tier,
-            "is_boss": self.is_boss,
-        }
-
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "QuestionSnapshot":
-        return cls(
-            id=str(data.get("id", "")),
-            content=str(data.get("content", "")),
-            options=list(data.get("options", [])),
-            time_limit=int(data.get("time_limit", 60)),
-            time_response=float(data.get("time_response", 0.0)),
-            tier=int(data.get("tier", 1)),
-            is_boss=bool(data.get("is_boss", False)),
         )
 
 
@@ -209,59 +174,4 @@ class GamificationState:
             correct_count=int(data.get("correct_count", 0)),
             final_score=float(data.get("final_score", 0.0)),
             attempt_count=int(data.get("attempt_count", 1)),
-        )
-
-
-@dataclass
-class GameSessionSnapshot:
-    lesson_slug: str = ""
-    questions: list[QuestionSnapshot] = field(default_factory=list)
-    answers: dict[str, str] = field(default_factory=dict)
-    gamification: GamificationState = field(default_factory=GamificationState)
-
-    def current_question(self) -> QuestionSnapshot | None:
-        idx = self.gamification.last_question_index
-        if 0 <= idx < len(self.questions):
-            return self.questions[idx]
-        return None
-
-    def record_answer(
-        self,
-        question_id: str | UUID,
-        option_id: str | UUID,
-        time_response: float,
-    ) -> None:
-        qid_str = str(question_id)
-        self.answers[qid_str] = str(option_id)
-        curr = self.current_question()
-        if curr and curr.id == qid_str:
-            curr.time_response = time_response
-        self.gamification.add_time_response(time_response)
-
-    def is_all_answered(self) -> bool:
-        return self.gamification.last_question_index >= len(self.questions)
-
-    def is_game_over(self) -> bool:
-        return self.gamification.is_game_over(len(self.questions))
-
-    def is_100_percent_correct(self) -> bool:
-        return len(self.questions) > 0 and self.gamification.correct_count >= len(self.questions)
-
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            "lesson_slug": self.lesson_slug,
-            "questions": [q.to_dict() for q in self.questions],
-            "answers": self.answers,
-            "gamification": self.gamification.to_dict(),
-        }
-
-    @classmethod
-    def from_dict(cls, data: dict[str, Any] | None) -> "GameSessionSnapshot":
-        if not data:
-            return cls()
-        return cls(
-            lesson_slug=str(data.get("lesson_slug", "")),
-            questions=[QuestionSnapshot.from_dict(q) for q in data.get("questions", [])],
-            answers=dict(data.get("answers", {}) or {}),
-            gamification=GamificationState.from_dict(data.get("gamification", {}) or {}),
         )

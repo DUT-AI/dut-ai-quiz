@@ -38,7 +38,6 @@ class GameSessionRepository(IGameSessionRepository):
         return model.to_entity()
 
     async def save(self, entity: GameSessionEntity) -> GameSessionEntity:
-        entity.sync_metrics()
         r = await self._s.execute(select(GameSession).where(GameSession.id == entity.id))
         model = r.scalar_one_or_none()
         if model:

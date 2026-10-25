@@ -66,6 +66,15 @@ class GamificationAnswerResultOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class GamificationUseItemResultOut(BaseModel):
+    item_name: str
+    eliminated_option_ids: list[str] = Field(default_factory=list)
+    time_freeze_active: bool = False
+    updated_gamification: GamificationStateOut
+
+    model_config = {"from_attributes": True}
+
+
 class GameSessionOut(BaseModel):
     id: UUID
     user_id: int

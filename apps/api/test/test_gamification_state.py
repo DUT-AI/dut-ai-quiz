@@ -1,11 +1,7 @@
-from uuid import uuid4
-
 from app.domain.value_objects.gamification import (
-    GameSessionSnapshot,
     GamificationItem,
     GamificationState,
     QuestionMeta,
-    QuestionSnapshot,
 )
 
 
@@ -118,35 +114,18 @@ def test_gamification_state_finalize_score():
     assert state.attempt_count == 2
 
 
-def test_game_session_snapshot_roundtrip():
-    q_id = str(uuid4())
-    snapshot = GameSessionSnapshot(
-        lesson_slug="lesson-1",
-        questions=[
-            QuestionSnapshot(
-                id=q_id,
-                content="What is Python?",
-                options=[{"id": "opt1", "text": "Language"}],
-                time_limit=60,
-                tier=1,
-            )
-        ],
-        answers={},
-        gamification=GamificationState(lives=3, gold=50, points=20),
-    )
+def test_question_meta_and_gamification_state_roundtrip():
+    meta = QuestionMeta(id="q1", tier=2, is_boss=True, time_limit=90)
+    meta_dict = meta.to_dict()
+    reconstructed_meta = QuestionMeta.from_dict(meta_dict)
+    assert reconstructed_meta.id == "q1"
+    assert reconstructed_meta.tier == 2
+    assert reconstructed_meta.is_boss is True
+    assert reconstructed_meta.time_limit == 90
 
-    d = snapshot.to_dict()
-    assert d["lesson_slug"] == "lesson-1"
-    assert len(d["questions"]) == 1
-    assert d["gamification"]["gold"] == 50
-
-    reconstructed = GameSessionSnapshot.from_dict(d)
-    assert reconstructed.lesson_slug == "lesson-1"
-    assert reconstructed.questions[0].content == "What is Python?"
-    assert reconstructed.gamification.gold == 50
-
-    # Test record answer
-    reconstructed.record_answer(q_id, "opt1", 12.5)
-    assert reconstructed.answers[q_id] == "opt1"
-    assert reconstructed.questions[0].time_response == 12.5
-    assert reconstructed.gamification.total_time_response == 12.5
+    state = GamificationState(lives=2, gold=75, points=120)
+    state_dict = state.to_dict()
+    reconstructed_state = GamificationState.from_dict(state_dict)
+    assert reconstructed_state.lives == 2
+    assert reconstructed_state.gold == 75
+    assert reconstructed_state.points == 120

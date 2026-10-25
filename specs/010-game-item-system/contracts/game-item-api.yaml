@@ -1,0 +1,148 @@
+openapi: 3.1.0
+info:
+  title: DUT-AI Quiz Game Item API
+  version: 1.0.0
+  description: API contract for executing game support items during arena sessions.
+
+paths:
+  /api/v1/game/sessions/{session_id}/use-item:
+    post:
+      summary: Use Game Support Item
+      description: Activates an instant game item (e.g. microscope, time_freeze) during an active question turn.
+      operationId: use_item_game
+      tags:
+        - Game
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Unique identifier of the game session.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GamificationUseItemIn'
+      responses:
+        '200':
+          description: Item successfully executed and session updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GamificationUseItemResultOut'
+        '400':
+          description: Domain validation failure (e.g. not enough gold, wrong question, item is turn-based buff).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Session or question not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    GamificationUseItemIn:
+      type: object
+      required:
+        - item_name
+        - question_id
+      properties:
+        item_name:
+          type: string
+          description: Name of the item to activate (e.g. microscope, time_freeze).
+          example: microscope
+        question_id:
+          type: string
+          format: uuid
+          description: ID of the active question being answered.
+          example: "a8098c1a-f86e-11da-bd1a-00112444be1e"
+
+    GamificationUseItemResultOut:
+      type: object
+      required:
+        - item_name
+        - eliminated_option_ids
+        - time_freeze_active
+        - updated_gamification
+      properties:
+        item_name:
+          type: string
+          example: microscope
+        eliminated_option_ids:
+          type: array
+          items:
+            type: string
+          description: IDs of incorrect options eliminated by items like microscope.
+          example: ["opt-1", "opt-2"]
+        time_freeze_active:
+          type: boolean
+          description: True if time freeze was activated for the current question.
+          example: false
+        updated_gamification:
+          $ref: '#/components/schemas/GamificationStateOut'
+
+    GamificationStateOut:
+      type: object
+      required:
+        - lives
+        - gold
+        - points
+        - current_tier
+        - last_question_index
+        - boss_hp
+        - shield_used_in_tier
+        - total_time_response
+        - correct_count
+        - final_score
+        - attempt_count
+      properties:
+        lives:
+          type: integer
+          example: 3
+        gold:
+          type: integer
+          example: 120
+        points:
+          type: integer
+          example: 500
+        current_tier:
+          type: integer
+          example: 1
+        last_question_index:
+          type: integer
+          example: 2
+        boss_hp:
+          type: integer
+          example: 0
+        shield_used_in_tier:
+          type: object
+          additionalProperties:
+            type: boolean
+        total_time_response:
+          type: number
+          example: 12.5
+        correct_count:
+          type: integer
+          example: 2
+        final_score:
+          type: number
+          example: 500.0
+        attempt_count:
+          type: integer
+          example: 1
+
+    ErrorResponse:
+      type: object
+      required:
+        - detail
+      properties:
+        detail:
+          type: string
+          example: "Not enough gold to use this item"

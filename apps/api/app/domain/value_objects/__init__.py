@@ -5,6 +5,7 @@ from .enums import (
     GameSessionStatus,
     PoolType,
 )
+from .game_items import ItemExecutionContext, ItemExecutionResult
 from .lesson_chunk import LessonChunkDraft, LessonChunkMatch
 from .shuffled_exam import (
     ShuffledExamResult,
@@ -25,6 +26,8 @@ __all__ = [
     "PoolType",
     "GameSessionStatus",
     "SubmissionStorageInfo",
+    "ItemExecutionContext",
+    "ItemExecutionResult",
     "LessonChunkDraft",
     "LessonChunkMatch",
 ]

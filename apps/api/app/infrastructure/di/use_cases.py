@@ -3,6 +3,10 @@ from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.application.services.game_hydration import GameHydrationService
+from app.application.services.game_items.microscope import MicroscopeItemStrategy
+from app.application.services.game_items.registry import GameItemRegistry
+from app.application.services.game_items.time_freeze import TimeFreezeItemStrategy
+from app.application.services.game_items.turn_buff import TurnBuffItemStrategy
 from app.application.services.hackathon_leaderboard import (
     HackathonLeaderboardAppService,
 )
@@ -187,6 +191,7 @@ from app.domain.interfaces import (
     IUserRepository,
 )
 from app.domain.services.hackathon_leaderboard import HackathonLeaderboardDomainService
+from app.domain.value_objects.gamification import GamificationItem
 from app.infrastructure.cache.redis_client import ProfileCache
 
 
@@ -349,6 +354,21 @@ class UseCaseProvider(Provider):
     # game
     game_hydration_service = provide(GameHydrationService, scope=Scope.REQUEST)
     start_game_session_use_case = provide(StartGameSessionUseCase, scope=Scope.REQUEST)
+
+    @provide(scope=Scope.REQUEST)
+    def provide_game_item_registry(
+        self,
+        question_repo: IQuestionRepository,
+    ) -> GameItemRegistry:
+        return GameItemRegistry(
+            [
+                MicroscopeItemStrategy(question_repo),
+                TimeFreezeItemStrategy(),
+                TurnBuffItemStrategy(GamificationItem.DOUBLE_POINTS),
+                TurnBuffItemStrategy(GamificationItem.SHIELD),
+            ]
+        )
+
     use_item_game_use_case = provide(UseItemGameUseCase, scope=Scope.REQUEST)
     patch_game_answer_use_case = provide(PatchGameAnswerUseCase, scope=Scope.REQUEST)
     get_game_session_use_case = provide(GetGameSessionUseCase, scope=Scope.REQUEST)

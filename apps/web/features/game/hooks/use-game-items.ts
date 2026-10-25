@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useReducer, useCallback } from "react";
 import { toast } from "sonner";
 
 import { useUseGameItem } from "../queries";
@@ -9,6 +9,47 @@ import {
   type GamificationState,
   type ItemType,
 } from "../types";
+import { GAME_ITEMS_CONFIG } from "../game-items.config";
+
+export interface GameItemsState {
+  activeBuffs: Partial<Record<ItemType, boolean>>;
+  hiddenOptions: string[];
+}
+
+export type GameItemsAction =
+  | { type: "ACTIVATE_BUFF"; item: ItemType }
+  | { type: "SET_HIDDEN_OPTIONS"; optionIds: string[] }
+  | { type: "RESET_BUFFS" };
+
+export const initialGameItemsState: GameItemsState = {
+  activeBuffs: {},
+  hiddenOptions: [],
+};
+
+export function gameItemsReducer(
+  state: GameItemsState,
+  action: GameItemsAction
+): GameItemsState {
+  switch (action.type) {
+    case "ACTIVATE_BUFF":
+      return {
+        ...state,
+        activeBuffs: {
+          ...state.activeBuffs,
+          [action.item]: true,
+        },
+      };
+    case "SET_HIDDEN_OPTIONS":
+      return {
+        ...state,
+        hiddenOptions: action.optionIds,
+      };
+    case "RESET_BUFFS":
+      return initialGameItemsState;
+    default:
+      return state;
+  }
+}
 
 export interface UseGameItemsProps {
   sessionId: string;
@@ -20,7 +61,6 @@ export interface UseGameItemsProps {
   gameResult: string;
   showBossWarning: boolean;
   isBossMode: boolean;
-  setGold: React.Dispatch<React.SetStateAction<number>>;
   setGamification: React.Dispatch<React.SetStateAction<GamificationState | null>>;
   onFreezeTimer: () => void;
 }
@@ -35,136 +75,95 @@ export function useGameItems({
   gameResult,
   showBossWarning,
   isBossMode,
-  setGold,
   setGamification,
   onFreezeTimer,
 }: UseGameItemsProps) {
   const useItemMutation = useUseGameItem();
-
-  const [shieldActive, setShieldActive] = useState(false);
-  const [doubleActive, setDoubleActive] = useState(false);
-  const [hiddenOptions, setHiddenOptions] = useState<string[]>([]);
+  const [state, dispatch] = useReducer(gameItemsReducer, initialGameItemsState);
 
   // Reset temporary item buffs (called on question change)
   const resetItemBuffs = useCallback(() => {
-    setHiddenOptions([]);
-    setShieldActive(false);
-    setDoubleActive(false);
+    dispatch({ type: "RESET_BUFFS" });
   }, []);
 
   const handleUseItem = useCallback(
     (type: ItemType) => {
-      if (!gamification || !currentQuestion || !canInteract || showBossWarning || gameResult !== "playing") {
+      if (
+        !gamification ||
+        !currentQuestion ||
+        !canInteract ||
+        showBossWarning ||
+        gameResult !== "playing"
+      ) {
         return;
       }
 
-      // 1. Kính Hiển Vi (50-50)
-      if (type === "50-50") {
-        const itemCost = 50;
-        if (gold < itemCost) {
-          toast.error("Không đủ vàng để sử dụng Kính Hiển Vi!");
+      const config = GAME_ITEMS_CONFIG[type];
+      if (!config) return;
+
+      const multiplier = isBossMode ? 2 : 1;
+      const itemCost = config.cost * multiplier;
+
+      // 1. BUFF THEO LƯỢT (Turn Buff: Khiên, Nhân Phẩm, ...)
+      if (config.category === "turn_buff") {
+        if (state.activeBuffs[type]) {
+          toast.info(`${config.name} đã được kích hoạt cho câu hỏi này!`);
           return;
         }
 
-        useItemMutation.mutate(
-          { session_id: sessionId, item_name: "microscope", question_id: currentQuestion.id },
-          {
-            onSuccess: (data) => {
-              toast.success("Đã dùng Kính Hiển Vi! 2 đáp án sai đã bị làm mờ.");
-              if (data?.hidden_options) {
-                setHiddenOptions(data.hidden_options);
-              }
-              if (data?.updated_gamification) {
-                setGamification(data.updated_gamification);
-                setGold(data.updated_gamification.gold);
-              }
-            },
-            onError: (err: any) => {
-              toast.error(err.message || "Không thể sử dụng vật phẩm lúc này!");
-            },
-          }
+        const validationError = config.validate?.({ gamification, stage });
+        if (validationError) {
+          toast.error(validationError);
+          return;
+        }
+
+        // Tính tổng vàng cam kết của các bùa đang bật khác
+        const currentCommittedCost = Object.entries(state.activeBuffs).reduce(
+          (sum, [buffType, isActive]) => {
+            if (!isActive || buffType === type) return sum;
+            const buffConfig = GAME_ITEMS_CONFIG[buffType as ItemType];
+            return sum + (buffConfig ? buffConfig.cost * multiplier : 0);
+          },
+          0
         );
+
+        if (gold < itemCost + currentCommittedCost) {
+          toast.error(`Không đủ vàng để mua ${config.name}!`);
+          return;
+        }
+
+        dispatch({ type: "ACTIVATE_BUFF", item: type });
+        toast.success(config.successMessage || `Đã kích hoạt ${config.name}!`);
         return;
       }
 
-      // 2. Đóng Băng Thời Gian (+30s)
-      if (type === "freeze") {
-        const itemCost = 40;
+      // 2. VẬT PHẨM TỨC THỜI (Instant Items: Kính hiển vi, Đóng băng thời gian, ...)
+      if (config.category === "instant") {
         if (gold < itemCost) {
-          toast.error("Không đủ vàng để Đóng Băng Thời Gian!");
+          toast.error(`Không đủ vàng để sử dụng ${config.name}!`);
           return;
         }
 
         useItemMutation.mutate(
-          { session_id: sessionId, item_name: "time_freeze", question_id: currentQuestion.id },
+          {
+            session_id: sessionId,
+            item_name: config.apiItemName || type,
+            question_id: currentQuestion.id,
+          },
           {
             onSuccess: (data) => {
-              toast.success("Thời gian đã bị đóng băng! Bạn có thêm +30 giây.");
-              onFreezeTimer();
-              if (data?.updated_gamification) {
-                setGamification(data.updated_gamification);
-                setGold(data.updated_gamification.gold);
+              toast.success(config.successMessage || `Đã sử dụng ${config.name}!`);
+              if (data?.eliminated_option_ids) {
+                dispatch({
+                  type: "SET_HIDDEN_OPTIONS",
+                  optionIds: data.eliminated_option_ids,
+                });
               }
-            },
-            onError: (err: any) => {
-              toast.error(err.message || "Không thể sử dụng vật phẩm lúc này!");
-            },
-          }
-        );
-        return;
-      }
-
-      // 3. Nhân Phẩm (x2 Điểm)
-      if (type === "double") {
-        const itemCost = 100;
-        if (gold < itemCost) {
-          toast.error("Không đủ vàng để mua Nhân Phẩm X2!");
-          return;
-        }
-
-        useItemMutation.mutate(
-          { session_id: sessionId, item_name: "double_points", question_id: currentQuestion.id },
-          {
-            onSuccess: (data) => {
-              toast.success("Kích hoạt bùa Nhân Phẩm! Câu này sẽ được X2 điểm số.");
-              setDoubleActive(true);
-              if (data?.updated_gamification) {
-                setGamification(data.updated_gamification);
-                setGold(data.updated_gamification.gold);
+              if (config.apiItemName === "time_freeze") {
+                onFreezeTimer();
               }
-            },
-            onError: (err: any) => {
-              toast.error(err.message || "Không thể sử dụng vật phẩm lúc này!");
-            },
-          }
-        );
-        return;
-      }
-
-      // 4. Khiên Hộ Mệnh (Chống mất mạng)
-      if (type === "shield") {
-        const itemCost = 80;
-        const shieldUsedInCurrentTier = gamification.shield_used_in_tier?.[String(stage)] || false;
-
-        if (shieldUsedInCurrentTier) {
-          toast.error(`Bạn đã sử dụng Khiên ở Tầng ${stage} rồi! Mỗi tầng chỉ được dùng 1 lần.`);
-          return;
-        }
-
-        if (gold < itemCost) {
-          toast.error("Không đủ vàng để tạo Khiên Hộ Mệnh!");
-          return;
-        }
-
-        useItemMutation.mutate(
-          { session_id: sessionId, item_name: "shield", question_id: currentQuestion.id },
-          {
-            onSuccess: (data) => {
-              toast.success("Khiên Hộ Mệnh đã dựng lên! Bảo toàn mạng nếu trả lời sai.");
-              setShieldActive(true);
               if (data?.updated_gamification) {
                 setGamification(data.updated_gamification);
-                setGold(data.updated_gamification.gold);
               }
             },
             onError: (err: any) => {
@@ -181,23 +180,30 @@ export function useGameItems({
       canInteract,
       showBossWarning,
       gameResult,
+      isBossMode,
       gold,
+      state.activeBuffs,
       useItemMutation,
       sessionId,
       stage,
       onFreezeTimer,
       setGamification,
-      setGold,
     ]
   );
 
   return {
-    shieldActive,
-    setShieldActive,
-    doubleActive,
-    setDoubleActive,
-    hiddenOptions,
-    setHiddenOptions,
+    activeBuffs: state.activeBuffs,
+    shieldActive: Boolean(state.activeBuffs.shield),
+    doubleActive: Boolean(state.activeBuffs.double),
+    setShieldActive: (active: boolean) => {
+      if (active) dispatch({ type: "ACTIVATE_BUFF", item: "shield" });
+    },
+    setDoubleActive: (active: boolean) => {
+      if (active) dispatch({ type: "ACTIVATE_BUFF", item: "double" });
+    },
+    hiddenOptions: state.hiddenOptions,
+    setHiddenOptions: (optionIds: string[]) =>
+      dispatch({ type: "SET_HIDDEN_OPTIONS", optionIds }),
     resetItemBuffs,
     handleUseItem,
   };

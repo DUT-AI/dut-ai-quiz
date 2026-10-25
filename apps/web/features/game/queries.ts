@@ -3,6 +3,7 @@ import { apiGet, apiPost, apiPatch } from "@/lib/api";
 import type {
   GameSession,
   GamificationAnswerResult,
+  GamificationUseItemResult,
   GameLeaderboardRow,
   GameLessonSummary,
   UserMatchHistoryResponse,
@@ -93,7 +94,10 @@ export function useUseGameItem() {
   return useMutation({
     mutationFn: (body: { session_id: string; item_name: string; question_id: string }) => {
       const { session_id, ...payload } = body;
-      return apiPost<any>(`/api/v1/game/sessions/${session_id}/use-item`, payload);
+      return apiPost<GamificationUseItemResult>(
+        `/api/v1/game/sessions/${session_id}/use-item`,
+        payload
+      );
     },
   });
 }

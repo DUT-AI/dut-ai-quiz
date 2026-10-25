@@ -29,6 +29,7 @@ from app.presentation.schemas.game import (
     GamificationAnswerResultOut,
     GamificationStartIn,
     GamificationUseItemIn,
+    GamificationUseItemResultOut,
     UserMatchHistoryResponse,
 )
 
@@ -96,18 +97,15 @@ async def patch_game_answers(
     return await use_case.execute(session_id, user.id, body, user_source=user.user_source)
 
 
-@router.post("/sessions/{session_id}/use-item")
+@router.post("/sessions/{session_id}/use-item", response_model=GamificationUseItemResultOut)
 @inject
 async def use_item_game(
     user: CurrentUser,
     session_id: UUID,
     body: GamificationUseItemIn,
     use_case: FromDishka[UseItemGameUseCase],
-):
-    result = await use_case.execute(session_id, user.id, body)
-    if result is None:
-        raise HTTPException(status_code=400, detail="Cannot use item")
-    return result
+) -> GamificationUseItemResultOut:
+    return await use_case.execute(session_id, user.id, body)
 
 
 @router.post("/sessions/{session_id}/finish", response_model=GameSessionOut)

@@ -2,7 +2,7 @@ import { useReducer, useState, useCallback } from "react";
 import { toast } from "sonner";
 
 import { usePatchGameAnswer, useActiveGameSession } from "../queries";
-import { type BossStatus, getBossName } from "../types";
+import { type BossStatus, type ItemType, getBossName } from "../types";
 import { type UseGameSessionReturn } from "./use-game-session";
 import {
   gameTurnReducer,
@@ -34,11 +34,8 @@ export function useGameTurn({ session, lessonSlug }: UseGameTurnProps) {
     stage,
     isBossMode,
     gamification,
-    setHp,
     setBossHp,
     setBossMaxHp,
-    setScore,
-    setGold,
     setStageProgress,
     setCurrentIdx,
     setQuestions,
@@ -53,6 +50,7 @@ export function useGameTurn({ session, lessonSlug }: UseGameTurnProps) {
     (params: {
       optionId: string;
       timeResponse: number;
+      activeBuffs?: Partial<Record<ItemType, boolean>>;
       shieldActive?: boolean;
       doubleActive?: boolean;
       onResetBuffs?: () => void;
@@ -62,7 +60,17 @@ export function useGameTurn({ session, lessonSlug }: UseGameTurnProps) {
         return;
       }
 
-      const { optionId, timeResponse, shieldActive = false, doubleActive = false, onResetBuffs } = params;
+      const {
+        optionId,
+        timeResponse,
+        activeBuffs,
+        shieldActive = false,
+        doubleActive = false,
+        onResetBuffs,
+      } = params;
+
+      const isShieldActive = Boolean(activeBuffs?.shield ?? shieldActive);
+      const isDoubleActive = Boolean(activeBuffs?.double ?? doubleActive);
 
       dispatch({ type: "START_SUBMIT", optionId });
 
@@ -72,17 +80,14 @@ export function useGameTurn({ session, lessonSlug }: UseGameTurnProps) {
           question_id: currentQuestion.id,
           option_id: optionId,
           time_response: timeResponse,
-          activate_shield: shieldActive,
-          activate_double_points: doubleActive,
+          activate_shield: isShieldActive,
+          activate_double_points: isDoubleActive,
         },
         {
           onSuccess: (data) => {
             dispatch({ type: "SUBMIT_SUCCESS", result: data });
 
             setGamification(data.updated_gamification);
-            setGold(data.updated_gamification.gold);
-            setScore(data.updated_gamification.points);
-            setHp(data.updated_gamification.lives);
 
             if (data.is_correct) {
               toast.success("Chính xác! Bạn nhận được vàng thưởng.");
@@ -160,9 +165,6 @@ export function useGameTurn({ session, lessonSlug }: UseGameTurnProps) {
       patchAnswerMutation,
       sessionId,
       setGamification,
-      setGold,
-      setScore,
-      setHp,
       isBossMode,
       stage,
       currentIdx,

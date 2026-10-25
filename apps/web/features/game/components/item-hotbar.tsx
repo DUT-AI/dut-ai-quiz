@@ -1,20 +1,12 @@
 "use client";
 
 import React from "react";
-import { Microscope, Snowflake, Trophy, Shield, Lock } from "lucide-react";
+import { Lock } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { type ItemType } from "../types";
+import { GAME_ITEMS } from "../game-items.config";
 export type { ItemType };
-
-interface ItemDef {
-  type: ItemType;
-  name: string;
-  description: string;
-  cost: number;
-  icon: React.ReactNode;
-  color: string; // Cartoon color styles
-}
 
 interface ItemHotbarProps {
   gold: number;
@@ -22,6 +14,9 @@ interface ItemHotbarProps {
   disabled: boolean; // lock hotbar during boss battles or alerts
   maxShieldLimitReached: boolean;
   isBossMode: boolean;
+  activeBuffs?: Partial<Record<ItemType, boolean>>;
+  doubleActive?: boolean;
+  shieldActive?: boolean;
 }
 
 export default function ItemHotbar({
@@ -30,44 +25,10 @@ export default function ItemHotbar({
   disabled,
   maxShieldLimitReached,
   isBossMode,
+  activeBuffs,
+  doubleActive,
+  shieldActive,
 }: ItemHotbarProps) {
-  // Items matching backend ITEM_PRICES in gamification.py
-  // microscope: 50, time_freeze: 40, double_points: 100, shield: 80
-  const items: ItemDef[] = [
-    {
-      type: "50-50",
-      name: "Kính Hiển Vi",
-      description: "Loại bỏ 2 đáp án sai ngẫu nhiên",
-      cost: 50,
-      icon: <Microscope className="w-4 h-4 md:w-5 md:h-5" />,
-      color: "text-cyan-500 dark:text-cyan-400 border-zinc-900 dark:border-zinc-700 bg-cyan-50 dark:bg-cyan-950/40 shadow-sm hover:bg-cyan-100 dark:hover:bg-cyan-950/70",
-    },
-    {
-      type: "freeze",
-      name: "Đóng Băng",
-      description: "Ngừng thời gian đếm ngược và cộng thêm 30s",
-      cost: 40,
-      icon: <Snowflake className="w-4 h-4 md:w-5 md:h-5" />,
-      color: "text-blue-500 dark:text-blue-400 border-zinc-900 dark:border-zinc-700 bg-blue-50 dark:bg-blue-950/40 shadow-sm hover:bg-blue-100 dark:hover:bg-blue-950/70",
-    },
-    {
-      type: "double",
-      name: "Nhân Phẩm",
-      description: "Nhân đôi số điểm nhận được câu này",
-      cost: 100,
-      icon: <Trophy className="w-4 h-4 md:w-5 md:h-5" />,
-      color: "text-amber-500 dark:text-amber-400 border-zinc-900 dark:border-zinc-700 bg-amber-50 dark:bg-amber-950/40 shadow-sm hover:bg-amber-100 dark:hover:bg-amber-950/70",
-    },
-    {
-      type: "shield",
-      name: "Khiên Hộ Mệnh",
-      description: "Bảo toàn sinh mệnh khi chọn sai (Mỗi tầng tối đa 1)",
-      cost: 80,
-      icon: <Shield className="w-4 h-4 md:w-5 md:h-5" />,
-      color: "text-emerald-500 dark:text-emerald-400 border-zinc-900 dark:border-zinc-700 bg-emerald-50 dark:bg-emerald-950/40 shadow-sm hover:bg-emerald-100 dark:hover:bg-emerald-950/70",
-    },
-  ];
-
   return (
     <div className="relative w-full py-3 px-3 md:px-4 bg-white dark:bg-navy-blue border-3 border-zinc-900 dark:border-zinc-700 rounded-none shadow-md shadow-stone-800/10 dark:shadow-none select-none text-zinc-900 dark:text-zinc-100">
       {/* ─── LOCK / CHAIN OVERLAY WHEN DISABLED ─── */}
@@ -93,22 +54,30 @@ export default function ItemHotbar({
       </div>
 
       <div className="grid grid-cols-4 gap-2">
-        {items.map((item) => {
+        {GAME_ITEMS.map((item) => {
+          const isItemActive = Boolean(
+            activeBuffs?.[item.type] ??
+            (item.type === "double" ? doubleActive : item.type === "shield" ? shieldActive : false)
+          );
           const actualCost = item.cost * (isBossMode ? 2 : 1);
           const isAffordable = gold >= actualCost;
-          const isShieldLimited = item.type === "shield" && maxShieldLimitReached;
-          const canUse = isAffordable && !isShieldLimited;
+          const isShieldLimited = item.type === "shield" && maxShieldLimitReached && !isItemActive;
+          const canUse = isItemActive || (isAffordable && !isShieldLimited);
 
           return (
             <div
               key={item.type}
-              className="flex flex-col items-center border-2 border-zinc-900 dark:border-zinc-700 p-1.5 md:p-2 rounded-none relative transition-all duration-300 bg-stone-50 dark:bg-zinc-950 group/item"
+              className={`flex flex-col items-center border-2 border-zinc-900 dark:border-zinc-700 p-1.5 md:p-2 rounded-none relative transition-all duration-300 bg-stone-50 dark:bg-zinc-950 group/item ${
+                isItemActive ? "ring-2 ring-amber-400 dark:ring-amber-500" : ""
+              }`}
             >
               {/* Icon Container with Custom Tooltip */}
               <div className="relative flex items-center justify-center mb-2 mt-1">
-                <div className={`p-1.5 md:p-2 border-2 rounded-none ${item.color.split(" ")[0]} ${item.color.split(" ")[1]} ${item.color.split(" ")[2]} cursor-help transition-all duration-300 ${
-                  canUse ? "opacity-100" : "opacity-60 filter grayscale"
-                }`}>
+                <div
+                  className={`p-1.5 md:p-2 border-2 rounded-none ${item.color.split(" ")[0]} ${item.color.split(" ")[1]} ${item.color.split(" ")[2]} cursor-help transition-all duration-300 ${
+                    canUse ? "opacity-100" : "opacity-60 filter grayscale"
+                  }`}
+                >
                   {item.icon}
                 </div>
 
@@ -117,24 +86,30 @@ export default function ItemHotbar({
                   {/* Arrow */}
                   <div className="absolute top-full left-1/2 -translate-x-1/2 border-x-4 border-x-transparent border-t-4 border-t-zinc-900 dark:border-t-zinc-700" />
                   <div className="absolute top-full left-1/2 -translate-x-1/2 border-x-4 border-x-transparent border-t-4 border-t-white dark:border-t-zinc-800 -mt-[2.5px]" />
-                  
-                  <span className="text-[11px] md:text-sm font-extrabold border-b border-zinc-200 dark:border-zinc-700 pb-1 mb-1">{item.name}</span>
-                  <span className="text-[10px] md:text-xs text-zinc-500 dark:text-zinc-400 leading-normal font-medium">{item.description}</span>
+
+                  <span className="text-[11px] md:text-sm font-extrabold border-b border-zinc-200 dark:border-zinc-700 pb-1 mb-1">
+                    {item.name}
+                  </span>
+                  <span className="text-[10px] md:text-xs text-zinc-500 dark:text-zinc-400 leading-normal font-medium">
+                    {item.description}
+                  </span>
                 </div>
               </div>
 
               {/* Action Button */}
               <button
                 type="button"
-                disabled={!canUse}
+                disabled={!canUse || isItemActive}
                 onClick={() => onUseItem(item.type)}
                 className={`w-full py-1 text-[10px] md:text-xs font-mono font-bold tracking-wider rounded-none border-2 border-zinc-900 dark:border-zinc-700 transition-all ${
-                  canUse
+                  isItemActive
+                    ? "text-white bg-amber-500 dark:bg-amber-600 shadow-sm cursor-default"
+                    : canUse
                     ? "text-white bg-emerald-500 hover:bg-emerald-400 dark:bg-emerald-600 dark:hover:bg-emerald-500 shadow-sm active:translate-x-[0.5px] active:translate-y-[0.5px] active:shadow-none"
                     : "text-zinc-400 dark:text-zinc-500 bg-zinc-150 dark:bg-zinc-800 cursor-not-allowed"
                 }`}
               >
-                🪙{actualCost}
+                {isItemActive ? "ĐÃ BẬT" : `🪙${actualCost}`}
               </button>
 
               {/* Shield Limit Overlay warning */}

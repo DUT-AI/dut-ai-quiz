@@ -9,6 +9,12 @@ export type GameOption = Schema<"GameQuestionOptionOut">;
 
 export type GameQuestion = Schema<"GameQuestionSnapshotOut">;
 export type GamificationAnswerResult = Schema<"GamificationAnswerResultOut">;
+export interface GamificationUseItemResult {
+  item_name: string;
+  eliminated_option_ids: string[];
+  time_freeze_active: boolean;
+  updated_gamification: GamificationState;
+}
 export type GameLessonSummary = Schema<"GameLessonSummaryOut">;
 export type GameLeaderboardRow = Schema<"GameLeaderboardRowOut">;
 export type UserMatchHistoryItem = Schema<"UserMatchHistoryItem">;
