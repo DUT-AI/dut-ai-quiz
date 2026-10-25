@@ -5,6 +5,7 @@ from .comment import Comment
 from .comment_reaction import CommentReaction
 from .exam import Exam, ExamQuestion
 from .game import GameSession
+from .game_answer import GameSessionAnswer
 from .hackathon import (
     Hackathon,
     HackathonRegistration,
@@ -31,6 +32,7 @@ __all__ = [
     "ExamQuestion",
     "FocusEvent",
     "GameSession",
+    "GameSessionAnswer",
     "Hackathon",
     "HackathonRegistration",
     "HackathonSubmission",

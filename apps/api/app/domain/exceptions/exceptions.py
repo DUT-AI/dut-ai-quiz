@@ -14,8 +14,8 @@ class DomainValidationException(AppException):
     status_code = 400
     message = "Dữ liệu không hợp lệ"
 
-    def __init__(self, message: str | None = None) -> None:
-        super().__init__(message or self.message, 400)
+    def __init__(self, message: str | None = None, status_code: int = 400) -> None:
+        super().__init__(message or self.message, status_code)
 
 
 class BadRequestException(DomainValidationException):

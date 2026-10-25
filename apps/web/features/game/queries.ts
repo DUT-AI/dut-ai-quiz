@@ -7,6 +7,7 @@ import type {
   GameLeaderboardRow,
   GameLessonSummary,
   UserMatchHistoryResponse,
+  GameSessionReview,
 } from "./types";
 
 export function useActiveGameSession(lessonSlug: string, options?: any) {
@@ -48,6 +49,16 @@ export function useGetGameSession(sessionId: string, options?: any) {
     queryKey: ["game", "sessions", sessionId],
     queryFn: () => apiGet<GameSession>(`/api/v1/game/sessions/${sessionId}`),
     enabled: !!sessionId,
+    ...options,
+  });
+}
+
+export function useGameSessionReview(sessionId: string, options?: any) {
+  return useQuery<GameSessionReview>({
+    queryKey: ["game", "sessions", sessionId, "review"],
+    queryFn: () => apiGet<GameSessionReview>(`/api/v1/game/sessions/${sessionId}/review`),
+    enabled: !!sessionId,
+    staleTime: 60_000,
     ...options,
   });
 }

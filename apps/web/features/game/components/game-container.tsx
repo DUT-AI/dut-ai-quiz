@@ -5,7 +5,7 @@ import { toast } from "sonner";
 
 import { useGameSession, useGameTimer, useGameItems, useGameTurn } from "../hooks";
 import { useAntiCheat } from "@/hooks/use-anti-cheat";
-import { type GameSession, getBossName } from "../types";
+import { type GameSession, type StartGameSessionResponse, getBossName } from "../types";
 
 import GameTopBar from "./game-top-bar";
 import GameHeaderHud from "./game-header-hud";
@@ -18,7 +18,7 @@ import GameAntiCheatModal from "./game-anti-cheat-modal";
 
 interface GameContainerProps {
   lessonSlug: string;
-  initialSession?: GameSession | null;
+  initialSession?: StartGameSessionResponse | GameSession | null;
   darkMode?: boolean;
 }
 

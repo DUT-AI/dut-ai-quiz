@@ -10,6 +10,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.core.datetime_utils import now_ict
 from app.domain.entities.game import GameSessionEntity
 from app.domain.value_objects import GameSessionStatus
+from app.domain.value_objects.gamification import GamificationState, QuestionMeta
 
 from .base import Base
 
@@ -29,13 +30,33 @@ class GameSession(Base):
     question_limit: Mapped[int] = mapped_column(default=10, server_default="10")
 
     def to_entity(self) -> GameSessionEntity:
+        snap = self.snapshot or {}
+        # Parse question sequence from new format or legacy questions array
+        raw_seq = snap.get("question_sequence")
+        if raw_seq is not None:
+            question_sequence = [QuestionMeta.from_dict(q) for q in raw_seq]
+        else:
+            # Fallback for legacy snapshot records during transition
+            question_sequence = [
+                QuestionMeta(
+                    id=str(q.get("id", "")),
+                    tier=int(q.get("tier", 1)),
+                    is_boss=bool(q.get("is_boss", False)),
+                    time_limit=int(q.get("time_limit", 60)),
+                )
+                for q in snap.get("questions", [])
+            ]
+
+        gamification = GamificationState.from_dict(snap.get("gamification", {}))
+
         return GameSessionEntity(
             id=self.id,
             user_id=self.user_id,
             started_at=self.started_at,
             completed_at=self.completed_at,
             status=self.status,
-            snapshot=self.snapshot,
+            question_sequence=question_sequence,
+            gamification=gamification,
             tags_filter=self.tags_filter,
             question_limit=self.question_limit,
         )

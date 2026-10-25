@@ -11,9 +11,8 @@ from app.domain.interfaces import (
 )
 from app.domain.value_objects import Difficulty, GameSessionStatus, PoolType
 from app.domain.value_objects.gamification import (
-    GameSessionSnapshot,
     GamificationState,
-    QuestionSnapshot,
+    QuestionMeta,
 )
 from app.infrastructure.cache.game_leaderboard_cache import GameLeaderboardCache
 from app.presentation.schemas.game import GamificationStartIn
@@ -40,18 +39,12 @@ class StartGameSessionUseCase:
             existing.status = GameSessionStatus.COMPLETED
             existing.completed_at = now_ict()
             lesson_slug_for_decay = (
-                existing.snapshot.get("lesson_slug", payload.lesson_slug)
-                if existing.snapshot
-                else payload.lesson_slug
+                existing.tags_filter[0] if existing.tags_filter else payload.lesson_slug
             )
             count_completed = await self._ps_repo.count_completed_by_lesson(
                 user_id, lesson_slug_for_decay
             )
-            decay = max(0.2, 1.0 - (count_completed * 0.2))
-            if existing.snapshot and "gamification" in existing.snapshot:
-                base_points = existing.snapshot["gamification"].get("points", 0)
-                existing.snapshot["gamification"]["final_score"] = base_points * decay
-                existing.snapshot["gamification"]["attempt_count"] = count_completed + 1
+            existing.gamification.finalize_score(count_completed)
             await self._ps_repo.save(existing)
             if self._cache:
                 await self._cache.invalidate(lesson_slug_for_decay)
@@ -62,10 +55,6 @@ class StartGameSessionUseCase:
             lesson = await self._lesson_repo.get_by_identifier(payload.lesson_slug)
             if lesson:
                 target_lesson_id = lesson.id
-
-        # We can still proceed even if target_lesson_id is None, it just won't filter by lesson.
-        # But if the user provided a slug, we might want to restrict it or raise an error.
-        # For safety, let's just use it to filter questions.
 
         questions = await self._question_repo.list_all(
             pool_type=PoolType.GAME,
@@ -83,10 +72,9 @@ class StartGameSessionUseCase:
         history = await self._ps_repo.list_history(user_id)
         seen_question_ids = set()
         for session in history:
-            if session.snapshot and "questions" in session.snapshot:
-                for q in session.snapshot["questions"]:
-                    if "id" in q:
-                        seen_question_ids.add(q["id"])
+            for q in session.question_sequence:
+                if q.id:
+                    seen_question_ids.add(str(q.id))
 
         def prioritize_and_order(q_list):
             unseen = [q for q in q_list if str(q.id) not in seen_question_ids]
@@ -118,7 +106,6 @@ class StartGameSessionUseCase:
         needed = 10 - total_selected
 
         if needed > 0 and len(selected_hard) < 4:
-            # Need hard -> borrow from medium, then easy
             take_from_med = min(4 - len(selected_hard), len(remaining_med))
             selected_hard.extend(remaining_med[:take_from_med])
             remaining_med = remaining_med[take_from_med:]
@@ -131,7 +118,6 @@ class StartGameSessionUseCase:
                 needed = 10 - (len(selected_easy) + len(selected_med) + len(selected_hard))
 
         if needed > 0 and len(selected_med) < 3:
-            # Need med -> borrow from hard, then easy
             take_from_hard = min(3 - len(selected_med), len(remaining_hard))
             selected_med.extend(remaining_hard[:take_from_hard])
             remaining_hard = remaining_hard[take_from_hard:]
@@ -144,7 +130,6 @@ class StartGameSessionUseCase:
                 needed = 10 - (len(selected_easy) + len(selected_med) + len(selected_hard))
 
         if needed > 0 and len(selected_easy) < 3:
-            # Need easy -> borrow from medium, then hard
             take_from_med = min(3 - len(selected_easy), len(remaining_med))
             selected_easy.extend(remaining_med[:take_from_med])
             remaining_med = remaining_med[take_from_med:]
@@ -165,74 +150,52 @@ class StartGameSessionUseCase:
             )
             selected_med.extend(all_remaining[:fill_count])
 
-        def clean_options(options):
-            cleaned = []
-            for opt in options:
-                o_dict = opt.to_dict()
-                o_dict.pop("is_correct", None)
-                cleaned.append(o_dict)
-            return cleaned
-
-        questions: list[QuestionSnapshot] = []
+        question_sequence: list[QuestionMeta] = []
 
         # Tier 1 (Easy): Last question is Boss Fight of Tier 1
         for i, q in enumerate(selected_easy):
             is_boss = i == len(selected_easy) - 1
-            questions.append(
-                QuestionSnapshot(
+            question_sequence.append(
+                QuestionMeta(
                     id=str(q.id),
-                    content=q.content,
-                    options=clean_options(q.options),
-                    time_limit=30 if is_boss else 60,
-                    time_response=0.0,
                     tier=1,
                     is_boss=is_boss,
+                    time_limit=30 if is_boss else 60,
                 )
             )
 
         # Tier 2 (Medium): Last question is Boss Fight of Tier 2
         for i, q in enumerate(selected_med):
             is_boss = i == len(selected_med) - 1
-            questions.append(
-                QuestionSnapshot(
+            question_sequence.append(
+                QuestionMeta(
                     id=str(q.id),
-                    content=q.content,
-                    options=clean_options(q.options),
-                    time_limit=60 if is_boss else 120,
-                    time_response=0.0,
                     tier=2,
                     is_boss=is_boss,
+                    time_limit=60 if is_boss else 120,
                 )
             )
 
         # Tier 3 (Hard): Last question is Boss Fight of Tier 3 (Final Boss)
         for i, q in enumerate(selected_hard):
             is_boss = i == len(selected_hard) - 1
-            questions.append(
-                QuestionSnapshot(
+            question_sequence.append(
+                QuestionMeta(
                     id=str(q.id),
-                    content=q.content,
-                    options=clean_options(q.options),
-                    time_limit=120 if is_boss else 300,
-                    time_response=0.0,
                     tier=3,
                     is_boss=is_boss,
+                    time_limit=120 if is_boss else 300,
                 )
             )
 
-        snapshot_state = GameSessionSnapshot(
-            lesson_slug=payload.lesson_slug,
-            questions=questions,
-            answers={},
-            gamification=GamificationState(
-                lives=3,
-                gold=0,
-                points=0,
-                current_tier=1,
-                last_question_index=0,
-                boss_hp=1 if (questions and questions[0].is_boss) else 0,
-                shield_used_in_tier={},
-            ),
+        gamification = GamificationState(
+            lives=3,
+            gold=0,
+            points=0,
+            current_tier=1,
+            last_question_index=0,
+            boss_hp=1 if (question_sequence and question_sequence[0].is_boss) else 0,
+            shield_used_in_tier={},
         )
 
         entity = GameSessionEntity(
@@ -241,8 +204,9 @@ class StartGameSessionUseCase:
             started_at=now_ict(),
             completed_at=None,
             status=GameSessionStatus.IN_PROGRESS,
-            snapshot=snapshot_state.to_dict(),
+            question_sequence=question_sequence,
+            gamification=gamification,
             tags_filter=[payload.lesson_slug],
-            question_limit=len(questions),
+            question_limit=len(question_sequence),
         )
         return await self._ps_repo.add(entity)

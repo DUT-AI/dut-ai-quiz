@@ -68,7 +68,7 @@ export default function GameQuestionCard({
 
         {/* Answers List */}
         <div className="grid grid-cols-1 gap-3.5 mt-auto w-full">
-          {currentQuestion.options.map((option, idx) => {
+          {(currentQuestion.options || []).map((option, idx) => {
             const isSelected = selectedOptionId === option.id;
             const isHidden = hiddenOptions.includes(option.id);
 

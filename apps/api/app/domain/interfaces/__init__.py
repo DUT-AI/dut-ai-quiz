@@ -7,6 +7,7 @@ from .embedding_service import EmbeddingServiceError, IEmbeddingService
 from .exam_question_repo import IExamQuestionRepository
 from .exam_repo import IExamRepository
 from .focus_event_repo import IFocusEventRepository
+from .game_answer_repo import IGameSessionAnswerRepository
 from .game_session_repo import IGameSessionRepository
 from .hackathon_event_subscriber import IHackathonEventSubscriber
 from .hackathon_leaderboard_cache import IHackathonLeaderboardCache
@@ -49,6 +50,7 @@ __all__ = [
     "RerankServiceError",
     "RerankItem",
     "IModuleRepository",
+    "IGameSessionAnswerRepository",
     "IGameSessionRepository",
     "IQuestionRepository",
     "QuestionSimilarityMatch",

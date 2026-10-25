@@ -4,6 +4,7 @@ from .comments import CommentRepository
 from .exam_questions import ExamQuestionRepository
 from .exams import ExamRepository
 from .focus_events import FocusEventRepository
+from .game_answers import GameSessionAnswerRepository
 from .game_sessions import GameSessionRepository
 from .hackathons import (
     HackathonRegistrationRepository,
@@ -32,6 +33,7 @@ __all__ = [
     "AttemptRepository",
     "AttemptAnswerRepository",
     "FocusEventRepository",
+    "GameSessionAnswerRepository",
     "GameSessionRepository",
     "HackathonRepository",
     "HackathonTaskRepository",

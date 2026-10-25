@@ -11,11 +11,13 @@ import {
   type ScreenState,
   type GameResultState,
   type StageProgressStatus,
+  type StartGameSessionResponse,
+  type GameSession,
 } from "../types";
 
 export interface UseGameSessionProps {
   lessonSlug: string;
-  initialSession: any; // StartGameSessionResponse | null
+  initialSession: StartGameSessionResponse | GameSession | null;
 }
 
 export function useGameSession({ lessonSlug, initialSession }: UseGameSessionProps) {
@@ -50,19 +52,20 @@ export function useGameSession({ lessonSlug, initialSession }: UseGameSessionPro
 
   // Initialize game state from snapshot data
   const initializeGame = useCallback(
-    (sessionData: { session_id: string; snapshot: any }) => {
+    (sessionData: StartGameSessionResponse | GameSession) => {
       try {
         const snap = sessionData?.snapshot;
         if (!snap) {
           throw new Error("Dữ liệu snapshot không hợp lệ (null/undefined)!");
         }
 
-        setSessionId(sessionData.session_id);
-        setQuestions(snap.questions || []);
-        setGamification(snap.gamification);
+        const sid = "session_id" in sessionData ? sessionData.session_id : sessionData.id;
+        setSessionId(sid);
+        setQuestions((snap.questions || []) as GameQuestion[]);
+        setGamification(snap.gamification ?? null);
 
-        const gamificationState = snap.gamification || {};
-        const idx = gamificationState.last_question_index || 0;
+        const gamificationState = snap.gamification;
+        const idx = gamificationState?.last_question_index || 0;
         setCurrentIdx(idx);
 
         if (idx === 0) {
@@ -71,9 +74,9 @@ export function useGameSession({ lessonSlug, initialSession }: UseGameSessionPro
           setCountdown(null);
         }
 
-        setHp(gamificationState.lives ?? 3);
-        setGold(gamificationState.gold ?? 0);
-        setScore(gamificationState.points ?? 0);
+        setHp(gamificationState?.lives ?? 3);
+        setGold(gamificationState?.gold ?? 0);
+        setScore(gamificationState?.points ?? 0);
 
         // Reconstruct progress dots based on answers
         const totalQCount = (snap.questions || []).length;
@@ -88,7 +91,7 @@ export function useGameSession({ lessonSlug, initialSession }: UseGameSessionPro
         if (currentQ) {
           const bossMode = currentQ.is_boss;
           setIsBossMode(bossMode);
-          setBossHp(gamificationState.boss_hp === 1 ? 5 : 0);
+          setBossHp(gamificationState?.boss_hp === 1 ? 5 : 0);
           setBossMaxHp(5);
         }
 

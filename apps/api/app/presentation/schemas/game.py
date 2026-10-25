@@ -74,6 +74,48 @@ class GamificationAnswerResultOut(BaseModel):
     snapshot: GameSessionSnapshotOut | None = None
 
 
+class GameSessionStartOut(BaseModel):
+    session_id: str
+    snapshot: GameSessionSnapshotOut
+
+    model_config = {"from_attributes": True}
+
+
+class GameSessionDetailOut(BaseModel):
+    id: UUID
+    user_id: int
+    started_at: datetime
+    completed_at: datetime | None = None
+    status: str
+    snapshot: GameSessionSnapshotOut | None = None
+    tags_filter: list[str] = Field(default_factory=list)
+    question_limit: int = 10
+
+    model_config = {"from_attributes": True}
+
+
+class GameSessionReviewItemOut(BaseModel):
+    question_id: str
+    question_content: str
+    explanation: str | None = None
+    selected_option_id: str
+    correct_option_id: str
+    is_correct: bool
+    time_response: float
+    points_gained: int
+    options: list[GameQuestionOptionOut] = Field(default_factory=list)
+
+
+class GameSessionReviewOut(BaseModel):
+    session_id: str
+    user_id: int
+    completed_at: datetime | None = None
+    final_score: float
+    total_questions: int
+    correct_count: int
+    answers: list[GameSessionReviewItemOut] = Field(default_factory=list)
+
+
 class GameLessonSummaryOut(BaseModel):
     lesson_slug: str
     total_sessions: int

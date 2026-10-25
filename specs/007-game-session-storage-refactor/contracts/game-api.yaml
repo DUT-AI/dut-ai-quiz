@@ -1,0 +1,294 @@
+openapi: 3.1.0
+info:
+  title: DUT-AI Quiz Game API Contract
+  version: 2.0.0
+  description: Clean Contract-Driven API for Game Sessions, Turn Answering, and Match Reviews.
+
+paths:
+  /api/v1/game/sessions:
+    post:
+      summary: Start a new game session
+      operationId: startGameSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GamificationStartIn'
+      responses:
+        '200':
+          description: Session created with initial question hydrated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameSessionStartOut'
+
+  /api/v1/game/sessions/active:
+    get:
+      summary: Retrieve active session for a lesson
+      operationId: getActiveGameSession
+      parameters:
+        - name: lesson_slug
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Active session with current question hydrated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameSessionStartOut'
+        '404':
+          description: No active game session found
+
+  /api/v1/game/sessions/{session_id}/answers:
+    patch:
+      summary: Submit turn answer
+      operationId: patchGameAnswer
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GamificationAnswerPatchIn'
+      responses:
+        '200':
+          description: Answer evaluated, reward computed, and next question hydrated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GamificationAnswerResultOut'
+        '409':
+          description: Question already answered (Idempotency conflict)
+
+  /api/v1/game/sessions/{session_id}/review:
+    get:
+      summary: Review completed game session with question-by-question timeline
+      operationId: getGameSessionReview
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Full review breakdown
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameSessionReviewOut'
+
+components:
+  schemas:
+    GamificationStartIn:
+      type: object
+      required:
+        - lesson_slug
+      properties:
+        lesson_slug:
+          type: string
+
+    GameOptionOut:
+      type: object
+      required:
+        - id
+        - content
+      properties:
+        id:
+          type: string
+        content:
+          type: string
+
+    GameQuestionSnapshotOut:
+      type: object
+      required:
+        - id
+        - content
+        - options
+        - time_limit
+        - tier
+        - is_boss
+      properties:
+        id:
+          type: string
+        content:
+          type: string
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/GameOptionOut'
+        time_limit:
+          type: integer
+        tier:
+          type: integer
+        is_boss:
+          type: boolean
+
+    GamificationStateOut:
+      type: object
+      required:
+        - lives
+        - gold
+        - points
+        - current_tier
+        - last_question_index
+      properties:
+        lives:
+          type: integer
+        gold:
+          type: integer
+        points:
+          type: integer
+        current_tier:
+          type: integer
+        last_question_index:
+          type: integer
+        boss_hp:
+          type: integer
+          default: 0
+        final_score:
+          type: number
+          default: 0.0
+
+    GameSessionStartOut:
+      type: object
+      required:
+        - session_id
+        - current_question
+        - gamification
+        - total_questions
+        - current_index
+      properties:
+        session_id:
+          type: string
+          format: uuid
+        current_question:
+          $ref: '#/components/schemas/GameQuestionSnapshotOut'
+        gamification:
+          $ref: '#/components/schemas/GamificationStateOut'
+        total_questions:
+          type: integer
+        current_index:
+          type: integer
+
+    GamificationAnswerPatchIn:
+      type: object
+      required:
+        - question_id
+        - option_id
+        - time_response
+      properties:
+        question_id:
+          type: string
+        option_id:
+          type: string
+        time_response:
+          type: number
+        activate_shield:
+          type: boolean
+          default: false
+        activate_double_points:
+          type: boolean
+          default: false
+
+    GamificationAnswerResultOut:
+      type: object
+      required:
+        - is_correct
+        - points_gained
+        - coins_gained
+        - updated_gamification
+        - is_game_over
+      properties:
+        is_correct:
+          type: boolean
+        points_gained:
+          type: integer
+        coins_gained:
+          type: integer
+        updated_gamification:
+          $ref: '#/components/schemas/GamificationStateOut'
+        is_game_over:
+          type: boolean
+        correct_option_id:
+          type: string
+          nullable: true
+        next_question:
+          $ref: '#/components/schemas/GameQuestionSnapshotOut'
+          nullable: true
+
+    GameSessionReviewItemOut:
+      type: object
+      required:
+        - question_id
+        - question_content
+        - selected_option_id
+        - correct_option_id
+        - is_correct
+        - time_response
+        - points_gained
+        - options
+      properties:
+        question_id:
+          type: string
+        question_content:
+          type: string
+        explanation:
+          type: string
+          nullable: true
+        selected_option_id:
+          type: string
+        correct_option_id:
+          type: string
+        is_correct:
+          type: boolean
+        time_response:
+          type: number
+        points_gained:
+          type: integer
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/GameOptionOut'
+
+    GameSessionReviewOut:
+      type: object
+      required:
+        - session_id
+        - user_id
+        - completed_at
+        - final_score
+        - total_questions
+        - correct_count
+        - answers
+      properties:
+        session_id:
+          type: string
+          format: uuid
+        user_id:
+          type: integer
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        final_score:
+          type: number
+        total_questions:
+          type: integer
+        correct_count:
+          type: integer
+        answers:
+          type: array
+          items:
+            $ref: '#/components/schemas/GameSessionReviewItemOut'

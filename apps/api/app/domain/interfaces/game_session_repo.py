@@ -7,8 +7,8 @@ from app.domain.entities.game import GameSessionEntity
 class IGameSessionRepository(Protocol):
     """Interface protocol for GameSessionRepository database operations."""
 
-    async def get(self, session_id: UUID) -> GameSessionEntity | None:
-        """Get a game session entity by its UUID."""
+    async def get(self, session_id: UUID, for_update: bool = False) -> GameSessionEntity | None:
+        """Get a game session entity by its UUID, optionally applying row-level lock."""
         ...
 
     async def list_history(self, user_id: int) -> list[GameSessionEntity]:

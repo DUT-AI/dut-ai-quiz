@@ -1228,6 +1228,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/game/sessions/{session_id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Game Session Review */
+        get: operations["get_game_session_review_api_v1_game_sessions__session_id__review_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/game/sessions/{session_id}/answers": {
         parameters: {
             query?: never;
@@ -2547,6 +2564,71 @@ export interface components {
              */
             is_boss: boolean;
         };
+        /** GameSessionDetailOut */
+        GameSessionDetailOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** User Id */
+            user_id: number;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            /** Completed At */
+            completed_at?: string | null;
+            /** Status */
+            status: string;
+            snapshot?: components["schemas"]["GameSessionSnapshotOut"] | null;
+            /** Tags Filter */
+            tags_filter?: string[];
+            /**
+             * Question Limit
+             * @default 10
+             */
+            question_limit: number;
+        };
+        /** GameSessionReviewItemOut */
+        GameSessionReviewItemOut: {
+            /** Question Id */
+            question_id: string;
+            /** Question Content */
+            question_content: string;
+            /** Explanation */
+            explanation?: string | null;
+            /** Selected Option Id */
+            selected_option_id: string;
+            /** Correct Option Id */
+            correct_option_id: string;
+            /** Is Correct */
+            is_correct: boolean;
+            /** Time Response */
+            time_response: number;
+            /** Points Gained */
+            points_gained: number;
+            /** Options */
+            options?: components["schemas"]["GameQuestionOptionOut"][];
+        };
+        /** GameSessionReviewOut */
+        GameSessionReviewOut: {
+            /** Session Id */
+            session_id: string;
+            /** User Id */
+            user_id: number;
+            /** Completed At */
+            completed_at?: string | null;
+            /** Final Score */
+            final_score: number;
+            /** Total Questions */
+            total_questions: number;
+            /** Correct Count */
+            correct_count: number;
+            /** Answers */
+            answers?: components["schemas"]["GameSessionReviewItemOut"][];
+        };
         /** GameSessionSnapshotOut */
         GameSessionSnapshotOut: {
             /**
@@ -2561,6 +2643,12 @@ export interface components {
                 [key: string]: string;
             };
             gamification?: components["schemas"]["GamificationStateOut"];
+        };
+        /** GameSessionStartOut */
+        GameSessionStartOut: {
+            /** Session Id */
+            session_id: string;
+            snapshot: components["schemas"]["GameSessionSnapshotOut"];
         };
         /** GameSessionSyncOutDTO */
         GameSessionSyncOutDTO: {
@@ -6761,7 +6849,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["GameSessionStartOut"];
                 };
             };
             /** @description Validation Error */
@@ -6792,7 +6880,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["GameSessionStartOut"];
                 };
             };
             /** @description Validation Error */
@@ -6823,7 +6911,38 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["GameSessionDetailOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_game_session_review_api_v1_game_sessions__session_id__review_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GameSessionReviewOut"];
                 };
             };
             /** @description Validation Error */
@@ -6860,6 +6979,13 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["GamificationAnswerResultOut"];
                 };
+            };
+            /** @description Turn already answered */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -6924,7 +7050,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["GameSessionDetailOut"];
                 };
             };
             /** @description Validation Error */
@@ -6953,7 +7079,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["GameSessionDetailOut"][];
                 };
             };
         };

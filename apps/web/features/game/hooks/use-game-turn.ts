@@ -221,19 +221,16 @@ export function useGameTurn({ session, lessonSlug }: UseGameTurnProps) {
         return;
       }
 
-      // Dự phòng: Nếu chưa có sẵn trong memory thì mới lấy từ GET
+      // Dự phòng: Lấy câu tiếp theo từ active session nếu chưa có sẵn trong memory
       refetchActiveSession().then(({ data: updatedSession }: any) => {
-        if (updatedSession?.snapshot) {
-          const updatedQuestions = updatedSession.snapshot.questions || [];
+        const nextQ = updatedSession?.snapshot?.questions?.[nextIdx];
+        if (nextQ && nextQ.content) {
           setQuestions((prevQuestions) => {
-            return updatedQuestions.map((q: any, i: number) => {
-              if (q.content && q.options && q.options.length > 0) {
-                return q;
-              }
-              return prevQuestions[i] || q;
-            });
+            const nextList = [...prevQuestions];
+            nextList[nextIdx] = nextQ;
+            return nextList;
           });
-          activateNextQuestion(updatedQuestions[nextIdx]);
+          activateNextQuestion(nextQ);
         } else {
           dispatch({ type: "RESET_FOR_NEXT_QUESTION" });
         }

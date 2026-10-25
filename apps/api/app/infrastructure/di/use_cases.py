@@ -49,6 +49,7 @@ from app.application.use_cases.game import (
     GetActiveGameSessionUseCase,
     GetGameHistorySummaryUseCase,
     GetGameLeaderboardUseCase,
+    GetGameSessionReviewUseCase,
     GetGameSessionUseCase,
     GetUserMatchHistoryUseCase,
     ListGameHistoryUseCase,
@@ -349,6 +350,7 @@ class UseCaseProvider(Provider):
     use_item_game_use_case = provide(UseItemGameUseCase, scope=Scope.REQUEST)
     patch_game_answer_use_case = provide(PatchGameAnswerUseCase, scope=Scope.REQUEST)
     get_game_session_use_case = provide(GetGameSessionUseCase, scope=Scope.REQUEST)
+    get_game_session_review_use_case = provide(GetGameSessionReviewUseCase, scope=Scope.REQUEST)
     finish_game_session_use_case = provide(FinishGameSessionUseCase, scope=Scope.REQUEST)
     get_active_game_session_use_case = provide(GetActiveGameSessionUseCase, scope=Scope.REQUEST)
     list_game_history_use_case = provide(ListGameHistoryUseCase, scope=Scope.REQUEST)

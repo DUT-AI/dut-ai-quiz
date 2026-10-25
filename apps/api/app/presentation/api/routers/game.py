@@ -1,14 +1,15 @@
-import copy
 from uuid import UUID
 
 from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import APIRouter, HTTPException
 
+from app.application.services.game_hydration import hydrate_session_start_out
 from app.application.use_cases.game import (
     FinishGameSessionUseCase,
     GetActiveGameSessionUseCase,
     GetGameHistorySummaryUseCase,
     GetGameLeaderboardUseCase,
+    GetGameSessionReviewUseCase,
     GetGameSessionUseCase,
     GetUserMatchHistoryUseCase,
     ListGameHistoryUseCase,
@@ -17,11 +18,15 @@ from app.application.use_cases.game import (
     StartGameSessionUseCase,
     UseItemGameUseCase,
 )
+from app.domain.interfaces import IQuestionRepository
 from app.presentation.api.deps import CurrentUser, ManageService
 from app.presentation.schemas.game import (
     GameLeaderboardRowOut,
     GameLessonSummaryOut,
+    GameSessionDetailOut,
+    GameSessionReviewOut,
     GameSessionsSyncResponse,
+    GameSessionStartOut,
     GameSessionSyncOutDTO,
     GamificationAnswerPatchIn,
     GamificationAnswerResultOut,
@@ -33,65 +38,80 @@ from app.presentation.schemas.game import (
 router = APIRouter(prefix="/game", tags=["game"])
 
 
-def sanitize_game_snapshot(snapshot: dict | None) -> dict | None:
-    if not snapshot:
-        return snapshot
-
-    snap_copy = copy.deepcopy(snapshot)
-    questions = snap_copy.get("questions", [])
-    last_idx = snap_copy.get("gamification", {}).get("last_question_index", 0)
-    for i, q in enumerate(questions):
-        if i != last_idx:
-            q["content"] = ""
-            q["options"] = []
-    return snap_copy
-
-
-@router.post("/sessions")
+@router.post("/sessions", response_model=GameSessionStartOut)
 @inject
 async def start_game(
-    user: CurrentUser, body: GamificationStartIn, use_case: FromDishka[StartGameSessionUseCase]
-):
+    user: CurrentUser,
+    body: GamificationStartIn,
+    use_case: FromDishka[StartGameSessionUseCase],
+    question_repo: FromDishka[IQuestionRepository],
+) -> GameSessionStartOut:
     row = await use_case.execute(user.id, body)
     if not row:
         raise HTTPException(status_code=400, detail="No game questions")
-    return {"session_id": str(row.id), "snapshot": sanitize_game_snapshot(row.snapshot)}
+    return await hydrate_session_start_out(row, question_repo)
 
 
-@router.get("/sessions/active")
+@router.get("/sessions/active", response_model=GameSessionStartOut)
 @inject
 async def get_active_game(
-    user: CurrentUser, lesson_slug: str, use_case: FromDishka[GetActiveGameSessionUseCase]
-):
+    user: CurrentUser,
+    lesson_slug: str,
+    use_case: FromDishka[GetActiveGameSessionUseCase],
+    question_repo: FromDishka[IQuestionRepository],
+) -> GameSessionStartOut:
     row = await use_case.execute(user.id, lesson_slug)
     if not row:
         raise HTTPException(status_code=404, detail="No active game session found")
-    return {"session_id": str(row.id), "snapshot": sanitize_game_snapshot(row.snapshot)}
+    return await hydrate_session_start_out(row, question_repo)
 
 
-@router.get("/sessions/{session_id}")
+@router.get("/sessions/{session_id}", response_model=GameSessionDetailOut)
 @inject
 async def get_game(
-    user: CurrentUser, session_id: UUID, use_case: FromDishka[GetGameSessionUseCase]
-):
+    user: CurrentUser,
+    session_id: UUID,
+    use_case: FromDishka[GetGameSessionUseCase],
+    question_repo: FromDishka[IQuestionRepository],
+) -> GameSessionDetailOut:
     row = await use_case.execute(session_id, user.id)
     if not row:
         raise HTTPException(status_code=404, detail="Not found")
-    import copy
+    start_dto = await hydrate_session_start_out(row, question_repo)
+    return GameSessionDetailOut(
+        id=row.id,
+        user_id=row.user_id,
+        started_at=row.started_at,
+        completed_at=row.completed_at,
+        status=row.status.value if hasattr(row.status, "value") else str(row.status),
+        snapshot=start_dto.snapshot,
+        tags_filter=row.tags_filter,
+        question_limit=row.question_limit,
+    )
 
-    row_copy = copy.copy(row)
-    row_copy.snapshot = sanitize_game_snapshot(row.snapshot)
-    return row_copy
+
+@router.get("/sessions/{session_id}/review", response_model=GameSessionReviewOut)
+@inject
+async def get_game_session_review(
+    user: CurrentUser,
+    session_id: UUID,
+    use_case: FromDishka[GetGameSessionReviewUseCase],
+) -> GameSessionReviewOut:
+    return await use_case.execute(session_id, user.id)
 
 
-@router.patch("/sessions/{session_id}/answers", response_model=GamificationAnswerResultOut)
+@router.patch(
+    "/sessions/{session_id}/answers",
+    response_model=GamificationAnswerResultOut,
+    responses={409: {"description": "Turn already answered"}},
+)
 @inject
 async def patch_game_answers(
     user: CurrentUser,
     session_id: UUID,
     body: GamificationAnswerPatchIn,
     use_case: FromDishka[PatchGameAnswerUseCase],
-):
+) -> GamificationAnswerResultOut:
     return await use_case.execute(session_id, user.id, body, user_source=user.user_source)
 
 
@@ -109,33 +129,54 @@ async def use_item_game(
     return result
 
 
-@router.post("/sessions/{session_id}/finish")
+@router.post("/sessions/{session_id}/finish", response_model=GameSessionDetailOut)
 @inject
 async def finish_game(
-    user: CurrentUser, session_id: UUID, use_case: FromDishka[FinishGameSessionUseCase]
-):
+    user: CurrentUser,
+    session_id: UUID,
+    use_case: FromDishka[FinishGameSessionUseCase],
+    question_repo: FromDishka[IQuestionRepository],
+) -> GameSessionDetailOut:
     row = await use_case.execute(session_id, user.id)
     if not row:
         raise HTTPException(status_code=404, detail="Not found")
-    import copy
+    start_dto = await hydrate_session_start_out(row, question_repo)
+    return GameSessionDetailOut(
+        id=row.id,
+        user_id=row.user_id,
+        started_at=row.started_at,
+        completed_at=row.completed_at,
+        status=row.status.value if hasattr(row.status, "value") else str(row.status),
+        snapshot=start_dto.snapshot,
+        tags_filter=row.tags_filter,
+        question_limit=row.question_limit,
+    )
 
-    row_copy = copy.copy(row)
-    row_copy.snapshot = sanitize_game_snapshot(row.snapshot)
-    return row_copy
 
-
-@router.get("/history")
+@router.get("/history", response_model=list[GameSessionDetailOut])
 @inject
-async def game_history(user: CurrentUser, use_case: FromDishka[ListGameHistoryUseCase]):
+async def game_history(
+    user: CurrentUser,
+    use_case: FromDishka[ListGameHistoryUseCase],
+    question_repo: FromDishka[IQuestionRepository],
+) -> list[GameSessionDetailOut]:
     rows = await use_case.execute(user.id)
-    import copy
-
-    sanitized_rows = []
+    results = []
     for row in rows:
-        row_copy = copy.copy(row)
-        row_copy.snapshot = sanitize_game_snapshot(row.snapshot)
-        sanitized_rows.append(row_copy)
-    return sanitized_rows
+        start_dto = await hydrate_session_start_out(row, question_repo)
+        results.append(
+            GameSessionDetailOut(
+                id=row.id,
+                user_id=row.user_id,
+                started_at=row.started_at,
+                completed_at=row.completed_at,
+                status=row.status.value if hasattr(row.status, "value") else str(row.status),
+                snapshot=start_dto.snapshot,
+                tags_filter=row.tags_filter,
+                question_limit=row.question_limit,
+            )
+        )
+    return results
 
 
 @router.get("/history/summary", response_model=list[GameLessonSummaryOut])

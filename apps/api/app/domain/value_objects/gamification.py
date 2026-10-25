@@ -19,6 +19,31 @@ ITEM_PRICES: dict[GamificationItem, int] = {
 }
 
 
+@dataclass(frozen=True)
+class QuestionMeta:
+    id: str
+    tier: int = 1
+    is_boss: bool = False
+    time_limit: int = 60
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "id": str(self.id),
+            "tier": int(self.tier),
+            "is_boss": bool(self.is_boss),
+            "time_limit": int(self.time_limit),
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "QuestionMeta":
+        return cls(
+            id=str(data.get("id", "")),
+            tier=int(data.get("tier", 1)),
+            is_boss=bool(data.get("is_boss", False)),
+            time_limit=int(data.get("time_limit", 60)),
+        )
+
+
 @dataclass
 class QuestionSnapshot:
     id: str
@@ -131,7 +156,7 @@ class GamificationState:
     def add_time_response(self, time_response: float) -> None:
         self.total_time_response += time_response
 
-    def advance_question(self, questions: list[QuestionSnapshot]) -> None:
+    def advance_question(self, questions: list[Any]) -> None:
         next_idx = self.last_question_index + 1
         self.last_question_index = next_idx
 

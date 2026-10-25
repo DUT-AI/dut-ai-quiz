@@ -27,15 +27,11 @@ class FinishGameSessionUseCase:
         session.status = GameSessionStatus.COMPLETED
         session.completed_at = now_ict()
 
-        snap = session.get_snapshot_state()
-        lesson_slug = snap.lesson_slug or (
-            session.tags_filter[0] if session.tags_filter else "unknown"
-        )
+        lesson_slug = session.tags_filter[0] if session.tags_filter else "unknown"
         count_completed = await self._ps_repo.count_completed_by_lesson(user_id, lesson_slug)
-        snap.gamification.finalize_score(count_completed)
+        session.gamification.finalize_score(count_completed)
 
         if self._cache:
             await self._cache.invalidate(lesson_slug)
 
-        session.set_snapshot_state(snap)
         return await self._ps_repo.save(session)

@@ -24,24 +24,19 @@ class UseItemGameUseCase:
     async def execute(
         self, session_id: UUID, user_id: int, payload: GamificationUseItemIn
     ) -> dict[str, Any] | None:
-        session = await self._ps_repo.get(session_id)
+        session = await self._ps_repo.get(session_id, for_update=True)
         if not session or session.user_id != user_id:
             raise EntityNotFoundException("Game session not found")
 
         if session.status != GameSessionStatus.IN_PROGRESS:
             raise DomainValidationException("Session is not in progress")
 
-        if not session.snapshot:
-            raise DomainValidationException("Not a gamified session")
-
-        snap = session.get_snapshot_state()
-        state = snap.gamification
-
-        current_q = snap.current_question()
+        state = session.gamification
+        current_q = session.current_question_meta
         if not current_q:
             raise DomainValidationException("All questions already answered")
 
-        if current_q.id != str(payload.question_id):
+        if str(current_q.id) != str(payload.question_id):
             raise DomainValidationException("Question ID does not match current question index")
 
         try:
@@ -83,7 +78,6 @@ class UseItemGameUseCase:
 
         # Deduct gold and save
         state.deduct_gold(price)
-        session.set_snapshot_state(snap)
         await self._ps_repo.save(session)
 
         result["gold"] = state.gold

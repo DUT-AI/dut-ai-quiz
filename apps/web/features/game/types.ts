@@ -8,11 +8,11 @@ export type GamificationState = Schema<"GamificationStateOut">;
 export type GameOption = Schema<"GameQuestionOptionOut">;
 
 export type GameQuestion = Omit<Schema<"GameQuestionSnapshotOut">, "options"> & {
-  options: GameOption[];
+  options?: GameOption[];
 };
 
 export type GameSnapshot = Omit<Schema<"GameSessionSnapshotOut">, "questions"> & {
-  questions: GameQuestion[];
+  questions?: GameQuestion[];
 };
 
 export type GamificationAnswerResult = Schema<"GamificationAnswerResultOut">;
@@ -21,10 +21,12 @@ export type GameLeaderboardRow = Schema<"GameLeaderboardRowOut">;
 export type UserMatchHistoryItem = Schema<"UserMatchHistoryItem">;
 export type UserMatchHistoryResponse = Schema<"UserMatchHistoryResponse">;
 
-export interface StartGameSessionResponse {
-  session_id: string;
-  snapshot: GameSnapshot;
-}
+export type GameSessionStart = Schema<"GameSessionStartOut">;
+export type GameSessionDetail = Schema<"GameSessionDetailOut">;
+export type GameSessionReviewItem = Schema<"GameSessionReviewItemOut">;
+export type GameSessionReview = Schema<"GameSessionReviewOut">;
+
+export type StartGameSessionResponse = GameSessionStart;
 
 export interface GameSession {
   id: string;

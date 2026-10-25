@@ -14,8 +14,11 @@ class GameSessionRepository(IGameSessionRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._s = session
 
-    async def get(self, session_id: UUID) -> GameSessionEntity | None:
-        r = await self._s.execute(select(GameSession).where(GameSession.id == session_id))
+    async def get(self, session_id: UUID, for_update: bool = False) -> GameSessionEntity | None:
+        stmt = select(GameSession).where(GameSession.id == session_id)
+        if for_update:
+            stmt = stmt.with_for_update()
+        r = await self._s.execute(stmt)
         model = r.scalar_one_or_none()
         return model.to_entity() if model else None
 
