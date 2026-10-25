@@ -3,7 +3,6 @@ from uuid import UUID
 from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import APIRouter, HTTPException
 
-from app.application.services.game_hydration import hydrate_session_start_out
 from app.application.use_cases.game import (
     FinishGameSessionUseCase,
     GetActiveGameSessionUseCase,
@@ -18,15 +17,13 @@ from app.application.use_cases.game import (
     StartGameSessionUseCase,
     UseItemGameUseCase,
 )
-from app.domain.interfaces import IQuestionRepository
 from app.presentation.api.deps import CurrentUser, ManageService
 from app.presentation.schemas.game import (
     GameLeaderboardRowOut,
     GameLessonSummaryOut,
-    GameSessionDetailOut,
+    GameSessionOut,
     GameSessionReviewOut,
     GameSessionsSyncResponse,
-    GameSessionStartOut,
     GameSessionSyncOutDTO,
     GamificationAnswerPatchIn,
     GamificationAnswerResultOut,
@@ -38,56 +35,40 @@ from app.presentation.schemas.game import (
 router = APIRouter(prefix="/game", tags=["game"])
 
 
-@router.post("/sessions", response_model=GameSessionStartOut)
+@router.post("/sessions", response_model=GameSessionOut)
 @inject
 async def start_game(
     user: CurrentUser,
     body: GamificationStartIn,
     use_case: FromDishka[StartGameSessionUseCase],
-    question_repo: FromDishka[IQuestionRepository],
-) -> GameSessionStartOut:
-    row = await use_case.execute(user.id, body)
-    if not row:
-        raise HTTPException(status_code=400, detail="No game questions")
-    return await hydrate_session_start_out(row, question_repo)
+) -> GameSessionOut:
+    return await use_case.execute(user.id, body)
 
 
-@router.get("/sessions/active", response_model=GameSessionStartOut)
+@router.get("/sessions/active", response_model=GameSessionOut)
 @inject
 async def get_active_game(
     user: CurrentUser,
     lesson_slug: str,
     use_case: FromDishka[GetActiveGameSessionUseCase],
-    question_repo: FromDishka[IQuestionRepository],
-) -> GameSessionStartOut:
-    row = await use_case.execute(user.id, lesson_slug)
-    if not row:
+) -> GameSessionOut:
+    result = await use_case.execute(user.id, lesson_slug)
+    if not result:
         raise HTTPException(status_code=404, detail="No active game session found")
-    return await hydrate_session_start_out(row, question_repo)
+    return result
 
 
-@router.get("/sessions/{session_id}", response_model=GameSessionDetailOut)
+@router.get("/sessions/{session_id}", response_model=GameSessionOut)
 @inject
 async def get_game(
     user: CurrentUser,
     session_id: UUID,
     use_case: FromDishka[GetGameSessionUseCase],
-    question_repo: FromDishka[IQuestionRepository],
-) -> GameSessionDetailOut:
-    row = await use_case.execute(session_id, user.id)
-    if not row:
+) -> GameSessionOut:
+    result = await use_case.execute(session_id, user.id)
+    if not result:
         raise HTTPException(status_code=404, detail="Not found")
-    start_dto = await hydrate_session_start_out(row, question_repo)
-    return GameSessionDetailOut(
-        id=row.id,
-        user_id=row.user_id,
-        started_at=row.started_at,
-        completed_at=row.completed_at,
-        status=row.status.value if hasattr(row.status, "value") else str(row.status),
-        snapshot=start_dto.snapshot,
-        tags_filter=row.tags_filter,
-        question_limit=row.question_limit,
-    )
+    return result
 
 
 @router.get("/sessions/{session_id}/review", response_model=GameSessionReviewOut)
@@ -129,54 +110,26 @@ async def use_item_game(
     return result
 
 
-@router.post("/sessions/{session_id}/finish", response_model=GameSessionDetailOut)
+@router.post("/sessions/{session_id}/finish", response_model=GameSessionOut)
 @inject
 async def finish_game(
     user: CurrentUser,
     session_id: UUID,
     use_case: FromDishka[FinishGameSessionUseCase],
-    question_repo: FromDishka[IQuestionRepository],
-) -> GameSessionDetailOut:
-    row = await use_case.execute(session_id, user.id)
-    if not row:
+) -> GameSessionOut:
+    result = await use_case.execute(session_id, user.id)
+    if not result:
         raise HTTPException(status_code=404, detail="Not found")
-    start_dto = await hydrate_session_start_out(row, question_repo)
-    return GameSessionDetailOut(
-        id=row.id,
-        user_id=row.user_id,
-        started_at=row.started_at,
-        completed_at=row.completed_at,
-        status=row.status.value if hasattr(row.status, "value") else str(row.status),
-        snapshot=start_dto.snapshot,
-        tags_filter=row.tags_filter,
-        question_limit=row.question_limit,
-    )
+    return result
 
 
-@router.get("/history", response_model=list[GameSessionDetailOut])
+@router.get("/history", response_model=list[GameSessionOut])
 @inject
 async def game_history(
     user: CurrentUser,
     use_case: FromDishka[ListGameHistoryUseCase],
-    question_repo: FromDishka[IQuestionRepository],
-) -> list[GameSessionDetailOut]:
-    rows = await use_case.execute(user.id)
-    results = []
-    for row in rows:
-        start_dto = await hydrate_session_start_out(row, question_repo)
-        results.append(
-            GameSessionDetailOut(
-                id=row.id,
-                user_id=row.user_id,
-                started_at=row.started_at,
-                completed_at=row.completed_at,
-                status=row.status.value if hasattr(row.status, "value") else str(row.status),
-                snapshot=start_dto.snapshot,
-                tags_filter=row.tags_filter,
-                question_limit=row.question_limit,
-            )
-        )
-    return results
+) -> list[GameSessionOut]:
+    return await use_case.execute(user.id)
 
 
 @router.get("/history/summary", response_model=list[GameLessonSummaryOut])

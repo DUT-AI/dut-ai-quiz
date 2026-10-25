@@ -10,13 +10,10 @@ class GetGameHistorySummaryUseCase:
 
         summary = {}
         for s in sessions:
-            if not s.snapshot or s.question_limit == 0:
+            if not s.lesson_slug or s.question_limit == 0:
                 continue
 
-            slug = s.snapshot.get("lesson_slug")
-            if not slug:
-                # Fallback to tags if lesson_slug is not explicitly in snapshot
-                slug = s.tags_filter[0] if s.tags_filter else "unknown"
+            slug = s.lesson_slug
 
             if slug not in summary:
                 summary[slug] = {
@@ -33,10 +30,9 @@ class GetGameHistorySummaryUseCase:
             if s.status == "COMPLETED":
                 st["completed_sessions"] += 1
 
-            gamification = s.snapshot.get("gamification", {})
-            points = gamification.get("points", 0)
-            gold = gamification.get("gold", 0)
-            tier = gamification.get("current_tier", 1)
+            points = int(s.final_score)
+            gold = int(s.gold_earned)
+            tier = int(s.current_tier)
 
             if points > st["highest_points"]:
                 st["highest_points"] = points

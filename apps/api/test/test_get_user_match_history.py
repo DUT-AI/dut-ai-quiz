@@ -9,6 +9,7 @@ from app.application.use_cases.game.get_user_match_history import GetUserMatchHi
 from app.domain.entities.game import GameSessionEntity
 from app.domain.interfaces import IGameSessionRepository
 from app.domain.value_objects import GameSessionStatus
+from app.domain.value_objects.gamification import GamificationState, QuestionMeta
 
 
 @pytest.fixture
@@ -46,24 +47,20 @@ async def test_get_user_match_history_with_sessions(mock_repo, mock_user_service
         started_at=datetime(2026, 10, 19, 10, 0),
         completed_at=datetime(2026, 10, 19, 10, 5),
         status=GameSessionStatus.COMPLETED,
-        snapshot={
-            "lesson_slug": "tong-quan-ve-python",
-            "gamification": {
-                "final_score": 100.0,
-                "points": 120,
-                "gold": 50,
-                "total_time_response": 30.5,
-                "correct_count": 8,
-                "lives": 2,
-                "last_question_index": 10,
-            },
-            "questions": [
-                {"id": f"q{i}", "content": f"Secret Question {i}", "options": []} for i in range(10)
-            ],
-            "answers": {f"q{i}": f"opt{i}" for i in range(10)},
-        },
-        tags_filter=["tong-quan-ve-python"],
+        lesson_slug="tong-quan-ve-python",
         question_limit=10,
+        question_sequence=[
+            QuestionMeta(id=f"q{i}", tier=1, is_boss=False, time_limit=60) for i in range(10)
+        ],
+        gamification=GamificationState(
+            final_score=100.0,
+            points=120,
+            gold=50,
+            total_time_response=30.5,
+            correct_count=8,
+            lives=2,
+            last_question_index=10,
+        ),
     )
 
     mock_repo.list_completed_by_user_and_lesson.return_value = [s1]

@@ -1,6 +1,7 @@
 import random
 from uuid import uuid4
 
+from app.application.services.game_hydration import GameHydrationService
 from app.core.datetime_utils import now_ict
 from app.domain.entities.game import GameSessionEntity
 from app.domain.exceptions import DomainValidationException
@@ -15,7 +16,7 @@ from app.domain.value_objects.gamification import (
     QuestionMeta,
 )
 from app.infrastructure.cache.game_leaderboard_cache import GameLeaderboardCache
-from app.presentation.schemas.game import GamificationStartIn
+from app.presentation.schemas.game import GameSessionOut, GamificationStartIn
 
 
 class StartGameSessionUseCase:
@@ -24,23 +25,23 @@ class StartGameSessionUseCase:
         ps_repo: IGameSessionRepository,
         question_repo: IQuestionRepository,
         lesson_repo: ILessonRepository,
+        hydration: GameHydrationService,
         cache: GameLeaderboardCache | None = None,
     ):
         self._ps_repo = ps_repo
         self._question_repo = question_repo
         self._lesson_repo = lesson_repo
+        self._hydration = hydration
         self._cache = cache
 
-    async def execute(self, user_id: int, payload: GamificationStartIn) -> GameSessionEntity:
+    async def execute(self, user_id: int, payload: GamificationStartIn) -> GameSessionOut:
         # Auto-finish any existing IN_PROGRESS session for this lesson+user
         # so that the client never needs to call finishSession separately.
         existing = await self._ps_repo.get_active_by_lesson(user_id, payload.lesson_slug)
         if existing and existing.status == GameSessionStatus.IN_PROGRESS:
             existing.status = GameSessionStatus.COMPLETED
             existing.completed_at = now_ict()
-            lesson_slug_for_decay = (
-                existing.tags_filter[0] if existing.tags_filter else payload.lesson_slug
-            )
+            lesson_slug_for_decay = existing.lesson_slug or payload.lesson_slug
             count_completed = await self._ps_repo.count_completed_by_lesson(
                 user_id, lesson_slug_for_decay
             )
@@ -201,12 +202,13 @@ class StartGameSessionUseCase:
         entity = GameSessionEntity(
             id=uuid4(),
             user_id=user_id,
+            lesson_slug=payload.lesson_slug,
             started_at=now_ict(),
             completed_at=None,
             status=GameSessionStatus.IN_PROGRESS,
             question_sequence=question_sequence,
             gamification=gamification,
-            tags_filter=[payload.lesson_slug],
             question_limit=len(question_sequence),
         )
-        return await self._ps_repo.add(entity)
+        created = await self._ps_repo.add(entity)
+        return await self._hydration.to_session_out(created)

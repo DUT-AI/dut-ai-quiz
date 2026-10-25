@@ -4,6 +4,7 @@ from app.domain.value_objects.gamification import (
     GameSessionSnapshot,
     GamificationItem,
     GamificationState,
+    QuestionMeta,
     QuestionSnapshot,
 )
 
@@ -83,9 +84,9 @@ def test_gamification_state_incorrect_answer_lives():
 
 
 def test_gamification_state_advance_question_and_tier():
-    q1 = QuestionSnapshot(id="1", content="Q1", tier=1, is_boss=False)
-    q2 = QuestionSnapshot(id="2", content="Q2", tier=1, is_boss=True)
-    q3 = QuestionSnapshot(id="3", content="Q3", tier=2, is_boss=False)
+    q1 = QuestionMeta(id="1", tier=1, is_boss=False)
+    q2 = QuestionMeta(id="2", tier=1, is_boss=True)
+    q3 = QuestionMeta(id="3", tier=2, is_boss=False)
     questions = [q1, q2, q3]
 
     state = GamificationState(lives=2, current_tier=1, last_question_index=0)

@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
@@ -156,7 +157,7 @@ class GamificationState:
     def add_time_response(self, time_response: float) -> None:
         self.total_time_response += time_response
 
-    def advance_question(self, questions: list[Any]) -> None:
+    def advance_question(self, questions: Sequence[QuestionMeta]) -> None:
         next_idx = self.last_question_index + 1
         self.last_question_index = next_idx
 

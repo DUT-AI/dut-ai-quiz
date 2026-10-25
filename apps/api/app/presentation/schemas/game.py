@@ -54,15 +54,6 @@ class GamificationStateOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
-class GameSessionSnapshotOut(BaseModel):
-    lesson_slug: str = ""
-    questions: list[GameQuestionSnapshotOut] = Field(default_factory=list)
-    answers: dict[str, str] = Field(default_factory=dict)
-    gamification: GamificationStateOut = Field(default_factory=GamificationStateOut)
-
-    model_config = {"from_attributes": True}
-
-
 class GamificationAnswerResultOut(BaseModel):
     is_correct: bool
     points_gained: int
@@ -71,25 +62,21 @@ class GamificationAnswerResultOut(BaseModel):
     is_game_over: bool
     correct_option_id: str | None = None
     next_question: GameQuestionSnapshotOut | None = None
-    snapshot: GameSessionSnapshotOut | None = None
-
-
-class GameSessionStartOut(BaseModel):
-    session_id: str
-    snapshot: GameSessionSnapshotOut
 
     model_config = {"from_attributes": True}
 
 
-class GameSessionDetailOut(BaseModel):
+class GameSessionOut(BaseModel):
     id: UUID
     user_id: int
+    lesson_slug: str
+    status: str
     started_at: datetime
     completed_at: datetime | None = None
-    status: str
-    snapshot: GameSessionSnapshotOut | None = None
-    tags_filter: list[str] = Field(default_factory=list)
     question_limit: int = 10
+    current_question_index: int = 0
+    current_question: GameQuestionSnapshotOut | None = None
+    gamification: GamificationStateOut = Field(default_factory=GamificationStateOut)
 
     model_config = {"from_attributes": True}
 

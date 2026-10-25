@@ -2564,8 +2564,8 @@ export interface components {
              */
             is_boss: boolean;
         };
-        /** GameSessionDetailOut */
-        GameSessionDetailOut: {
+        /** GameSessionOut */
+        GameSessionOut: {
             /**
              * Id
              * Format: uuid
@@ -2573,6 +2573,10 @@ export interface components {
             id: string;
             /** User Id */
             user_id: number;
+            /** Lesson Slug */
+            lesson_slug: string;
+            /** Status */
+            status: string;
             /**
              * Started At
              * Format: date-time
@@ -2580,16 +2584,18 @@ export interface components {
             started_at: string;
             /** Completed At */
             completed_at?: string | null;
-            /** Status */
-            status: string;
-            snapshot?: components["schemas"]["GameSessionSnapshotOut"] | null;
-            /** Tags Filter */
-            tags_filter?: string[];
             /**
              * Question Limit
              * @default 10
              */
             question_limit: number;
+            /**
+             * Current Question Index
+             * @default 0
+             */
+            current_question_index: number;
+            current_question?: components["schemas"]["GameQuestionSnapshotOut"] | null;
+            gamification?: components["schemas"]["GamificationStateOut"];
         };
         /** GameSessionReviewItemOut */
         GameSessionReviewItemOut: {
@@ -2628,27 +2634,6 @@ export interface components {
             correct_count: number;
             /** Answers */
             answers?: components["schemas"]["GameSessionReviewItemOut"][];
-        };
-        /** GameSessionSnapshotOut */
-        GameSessionSnapshotOut: {
-            /**
-             * Lesson Slug
-             * @default
-             */
-            lesson_slug: string;
-            /** Questions */
-            questions?: components["schemas"]["GameQuestionSnapshotOut"][];
-            /** Answers */
-            answers?: {
-                [key: string]: string;
-            };
-            gamification?: components["schemas"]["GamificationStateOut"];
-        };
-        /** GameSessionStartOut */
-        GameSessionStartOut: {
-            /** Session Id */
-            session_id: string;
-            snapshot: components["schemas"]["GameSessionSnapshotOut"];
         };
         /** GameSessionSyncOutDTO */
         GameSessionSyncOutDTO: {
@@ -2729,7 +2714,6 @@ export interface components {
             /** Correct Option Id */
             correct_option_id?: string | null;
             next_question?: components["schemas"]["GameQuestionSnapshotOut"] | null;
-            snapshot?: components["schemas"]["GameSessionSnapshotOut"] | null;
         };
         /** GamificationStartIn */
         GamificationStartIn: {
@@ -6849,7 +6833,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["GameSessionStartOut"];
+                    "application/json": components["schemas"]["GameSessionOut"];
                 };
             };
             /** @description Validation Error */
@@ -6880,7 +6864,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["GameSessionStartOut"];
+                    "application/json": components["schemas"]["GameSessionOut"];
                 };
             };
             /** @description Validation Error */
@@ -6911,7 +6895,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["GameSessionDetailOut"];
+                    "application/json": components["schemas"]["GameSessionOut"];
                 };
             };
             /** @description Validation Error */
@@ -7050,7 +7034,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["GameSessionDetailOut"];
+                    "application/json": components["schemas"]["GameSessionOut"];
                 };
             };
             /** @description Validation Error */
@@ -7079,7 +7063,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["GameSessionDetailOut"][];
+                    "application/json": components["schemas"]["GameSessionOut"][];
                 };
             };
         };

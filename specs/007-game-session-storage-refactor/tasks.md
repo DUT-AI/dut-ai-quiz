@@ -117,14 +117,14 @@
 
 **Purpose**: Synchronize OpenAPI contracts, remove obsolete fallback code in the Next.js frontend, and eliminate all deprecated backward-compatibility shims.
 
-- [ ] T030 Run `make generate-api` to regenerate `apps/web/types/api.generated.d.ts` from the updated FastAPI OpenAPI contract
-- [ ] T031 Update domain types in `apps/web/features/game/types.ts` to map new `GameSessionStartOut` and `GameSessionReviewOut` schemas
-- [ ] T032 Remove obsolete fallback re-stitching loop (`refetchActiveSession()` with `prevQuestions[i] || q`) in `apps/web/features/game/hooks/use-game-turn.ts`
-- [ ] T033 Update `apps/web/features/game/hooks/use-game-session.ts` to consume the streamlined `GameSessionStartOut` structure
-- [ ] T034 [P] Add React Query hook `useGameSessionReview(sessionId: string)` in `apps/web/features/game/queries.ts`
-- [ ] T035 Verify frontend type integrity via `cd apps/web && npm run type-check` (Must pass with 0 errors)
-- [ ] T036 Run full backend test suite via `uv run pytest test/test_game_storage_refactor.py test/test_game_unit.py test/test_gamification_state.py -v`
-- [ ] T037 Run full pre-commit verification suite via `make check`
+- [x] T030 Run `make generate-api` to regenerate `apps/web/types/api.generated.d.ts` from the updated FastAPI OpenAPI contract
+- [x] T031 Update domain types in `apps/web/features/game/types.ts` to map new `GameSessionStartOut` and `GameSessionReviewOut` schemas
+- [x] T032 Remove obsolete fallback re-stitching loop (`refetchActiveSession()` with `prevQuestions[i] || q`) in `apps/web/features/game/hooks/use-game-turn.ts`
+- [x] T033 Update `apps/web/features/game/hooks/use-game-session.ts` to consume the streamlined `GameSessionStartOut` structure
+- [x] T034 [P] Add React Query hook `useGameSessionReview(sessionId: string)` in `apps/web/features/game/queries.ts`
+- [x] T035 Verify frontend type integrity via `cd apps/web && npm run type-check` (Must pass with 0 errors)
+- [x] T036 Run full backend test suite via `uv run pytest test/test_game_storage_refactor.py test/test_game_unit.py test/test_gamification_state.py -v`
+- [x] T037 Run full pre-commit verification suite via `make check`
 
 ---
 

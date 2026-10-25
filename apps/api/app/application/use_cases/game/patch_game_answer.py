@@ -1,6 +1,6 @@
 from uuid import UUID, uuid4
 
-from app.application.services.game_hydration import hydrate_question_snapshot
+from app.application.services.game_hydration import GameHydrationService
 from app.core.datetime_utils import now_ict
 from app.domain.entities.game_answer import GameSessionAnswerEntity
 from app.domain.entities.homework import SubmissionType
@@ -24,7 +24,6 @@ from app.presentation.schemas.game import (
     GamificationAnswerResultOut,
     GamificationStateOut,
 )
-from sqlalchemy.exc import IntegrityError
 
 
 class PatchGameAnswerUseCase:
@@ -32,12 +31,14 @@ class PatchGameAnswerUseCase:
         self,
         ps_repo: IGameSessionRepository,
         question_repo: IQuestionRepository,
-        answer_repo: IGameSessionAnswerRepository = None,  # type: ignore[assignment]
+        answer_repo: IGameSessionAnswerRepository,
+        hydration: GameHydrationService,
         cache: GameLeaderboardCache | None = None,
     ):
         self._ps_repo = ps_repo
         self._question_repo = question_repo
         self._answer_repo = answer_repo
+        self._hydration = hydration
         self._cache = cache
 
     async def execute(
@@ -57,42 +58,21 @@ class PatchGameAnswerUseCase:
         state = session.gamification
 
         # Check if this question was already answered (Idempotency / duplicate check)
-        if self._answer_repo:
-            prev_answer = await self._answer_repo.get_by_turn(session_id, payload.question_id)
-            if prev_answer:
-                if str(prev_answer.option_id) == str(payload.option_id):
-                    next_q_out = None
-                    next_meta = session.current_question_meta
-                    if next_meta and not session.is_game_over:
-                        next_q_out = await hydrate_question_snapshot(next_meta, self._question_repo)
-
-                    return GamificationAnswerResultOut(
-                        is_correct=prev_answer.is_correct,
-                        points_gained=0,
-                        coins_gained=0,
-                        updated_gamification=GamificationStateOut.model_validate(state.to_dict()),
-                        is_game_over=session.is_game_over,
-                        correct_option_id=str(payload.option_id)
-                        if prev_answer.is_correct
-                        else None,
-                        next_question=next_q_out,
-                    )
-                raise DomainValidationException("Question already answered")
-        elif session.legacy_answers and str(payload.question_id) in session.legacy_answers:
-            prev_opt = session.legacy_answers.get(str(payload.question_id))
-            if str(prev_opt) == str(payload.option_id):
+        prev_answer = await self._answer_repo.get_by_turn(session_id, payload.question_id)
+        if prev_answer:
+            if str(prev_answer.option_id) == str(payload.option_id):
                 next_q_out = None
                 next_meta = session.current_question_meta
                 if next_meta and not session.is_game_over:
-                    next_q_out = await hydrate_question_snapshot(next_meta, self._question_repo)
+                    next_q_out = await self._hydration.hydrate_question_snapshot(next_meta)
 
                 return GamificationAnswerResultOut(
-                    is_correct=True,
+                    is_correct=prev_answer.is_correct,
                     points_gained=0,
                     coins_gained=0,
                     updated_gamification=GamificationStateOut.model_validate(state.to_dict()),
                     is_game_over=session.is_game_over,
-                    correct_option_id=str(payload.option_id),
+                    correct_option_id=str(payload.option_id) if prev_answer.is_correct else None,
                     next_question=next_q_out,
                 )
             raise DomainValidationException("Question already answered")
@@ -161,29 +141,19 @@ class PatchGameAnswerUseCase:
         state.add_time_response(payload.time_response)
 
         # Append answer record into game_session_answers table
-        if self._answer_repo:
-            try:
-                opt_uuid = UUID(str(payload.option_id))
-            except Exception:
-                opt_uuid = uuid4()
+        ans_entity = GameSessionAnswerEntity(
+            id=uuid4(),
+            session_id=session.id,
+            question_id=payload.question_id,
+            option_id=str(payload.option_id),
+            is_correct=is_correct,
+            time_response=payload.time_response,
+            points_gained=points_gained,
+            gold_gained=coins_gained,
+            answered_at=now_ict(),
+        )
 
-            ans_entity = GameSessionAnswerEntity(
-                id=uuid4(),
-                session_id=session.id,
-                question_id=payload.question_id,
-                option_id=opt_uuid,
-                is_correct=is_correct,
-                time_response=payload.time_response,
-                points_gained=points_gained,
-                gold_gained=coins_gained,
-                answered_at=now_ict(),
-            )
-            try:
-                await self._answer_repo.add(ans_entity)
-            except IntegrityError:
-                raise DomainValidationException(
-                    "Question already answered", status_code=409
-                ) from None
+        await self._answer_repo.add(ans_entity)
 
         # Advance question index
         state.advance_question(session.question_sequence)
@@ -194,7 +164,7 @@ class PatchGameAnswerUseCase:
             session.status = GameSessionStatus.COMPLETED
             session.completed_at = now_ict()
 
-            lesson_slug = session.tags_filter[0] if session.tags_filter else "unknown"
+            lesson_slug = session.lesson_slug or "unknown"
             count_completed = await self._ps_repo.count_completed_by_lesson(user_id, lesson_slug)
             state.finalize_score(count_completed)
 
@@ -202,8 +172,10 @@ class PatchGameAnswerUseCase:
                 await self._cache.invalidate(lesson_slug)
 
             # Check completion criteria: reached end with remaining lives
-            is_completed = session.is_all_answered and state.lives > 0
-            if is_completed and session.status == GameSessionStatus.COMPLETED:
+            is_completed = (
+                session.is_all_answered and state.lives > 0
+            ) and session.status == GameSessionStatus.COMPLETED
+            if is_completed:
                 dispatch_manage_submission_webhook(
                     lesson_slug=lesson_slug,
                     user_id=user_id,
@@ -225,7 +197,7 @@ class PatchGameAnswerUseCase:
         next_q_out = None
         next_meta = session.current_question_meta
         if next_meta and not is_game_over:
-            next_q_out = await hydrate_question_snapshot(next_meta, self._question_repo)
+            next_q_out = await self._hydration.hydrate_question_snapshot(next_meta)
 
         return GamificationAnswerResultOut(
             is_correct=is_correct,

@@ -7,8 +7,8 @@ class GetUserMatchHistoryUseCase:
     def __init__(
         self,
         ps_repo: IGameSessionRepository,
-        user_service: UserService = None,
-    ):
+        user_service: UserService,
+    ) -> None:
         self._ps_repo = ps_repo
         self._user_service = user_service
 
@@ -21,14 +21,13 @@ class GetUserMatchHistoryUseCase:
 
         username = None
         avatar_url = None
-        if self._user_service:
-            try:
-                user_info = await self._user_service.get_user_info(user_id)
-                if user_info:
-                    username = user_info.name
-                    avatar_url = user_info.avatar_url
-            except Exception:
-                pass
+        try:
+            user_info = await self._user_service.get_user_info(user_id)
+            if user_info:
+                username = user_info.name
+                avatar_url = user_info.avatar_url
+        except Exception:
+            pass
 
         history_items: list[UserMatchHistoryItem] = []
         highest_score = 0.0
@@ -40,20 +39,17 @@ class GetUserMatchHistoryUseCase:
             # Attempt number: 1 is the oldest attempt, total_attempts is the newest
             attempt_number = total_attempts - idx
 
-            snapshot = s.snapshot or {}
-            gamification = snapshot.get("gamification", {})
-            questions = snapshot.get("questions", [])
-
-            total_q = len(questions) if questions else (s.question_limit or 0)
-            correct_q = int(gamification.get("correct_count", 0))
+            gam = s.gamification
+            total_q = len(s.question_sequence) if s.question_sequence else (s.question_limit or 0)
+            correct_q = int(gam.correct_count)
             accuracy = round((correct_q / total_q) * 100, 1) if total_q > 0 else 0.0
 
-            final_score = float(gamification.get("final_score", 0.0))
-            raw_points = int(gamification.get("points", 0))
-            gold = int(gamification.get("gold", 0))
-            total_time_response = float(gamification.get("total_time_response", 0.0))
-            lives = int(gamification.get("lives", 0))
-            last_idx = int(gamification.get("last_question_index", 0))
+            final_score = float(s.final_score)
+            raw_points = int(gam.points)
+            gold = int(s.gold_earned)
+            total_time_response = float(s.total_time_response)
+            lives = int(gam.lives)
+            last_idx = int(gam.last_question_index)
 
             is_completed = total_q > 0 and last_idx >= total_q and lives > 0
 

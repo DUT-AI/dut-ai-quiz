@@ -8,7 +8,7 @@ class GameSessionAnswerEntity:
     id: UUID
     session_id: UUID
     question_id: UUID
-    option_id: UUID
+    option_id: str
     is_correct: bool
     time_response: float
     points_gained: int

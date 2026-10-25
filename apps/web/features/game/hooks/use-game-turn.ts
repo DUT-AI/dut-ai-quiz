@@ -223,7 +223,7 @@ export function useGameTurn({ session, lessonSlug }: UseGameTurnProps) {
 
       // Dự phòng: Lấy câu tiếp theo từ active session nếu chưa có sẵn trong memory
       refetchActiveSession().then(({ data: updatedSession }: any) => {
-        const nextQ = updatedSession?.snapshot?.questions?.[nextIdx];
+        const nextQ = updatedSession?.current_question;
         if (nextQ && nextQ.content) {
           setQuestions((prevQuestions) => {
             const nextList = [...prevQuestions];

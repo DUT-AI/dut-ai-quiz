@@ -24,9 +24,9 @@ export function GameTabHero({
   const startSessionMutation = useStartGameSession();
   const [isGameLoading, setIsGameLoading] = useState(false);
 
-  const hasActiveSession = !!activeSession?.session_id;
-  const completedCount = activeSession?.snapshot?.gamification?.last_question_index ?? 0;
-  const totalCount = activeSession?.snapshot?.questions?.length ?? 0;
+  const hasActiveSession = !!(activeSession?.id || activeSession?.session_id);
+  const completedCount = activeSession?.gamification?.last_question_index ?? 0;
+  const totalCount = activeSession?.question_limit ?? 10;
 
   const handleStartNewSession = () => {
     if (startSessionMutation.isPending || isGameLoading) return;

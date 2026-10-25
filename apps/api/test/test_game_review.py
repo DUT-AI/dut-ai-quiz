@@ -15,6 +15,7 @@ class MockOption:
     def __init__(self, id, content, is_correct=False):
         self.id = id
         self.content = content
+        self.text = content
         self.is_correct = is_correct
 
 
@@ -89,7 +90,7 @@ async def test_get_game_session_review_success():
             correct_count=2,
             final_score=180.0,
         ),
-        tags_filter=["python-basics"],
+        lesson_slug="python-basics",
         question_limit=2,
     )
     ps_repo.get.return_value = session
@@ -174,6 +175,7 @@ async def test_get_game_session_review_not_found_or_forbidden():
     ps_repo.get.return_value = GameSessionEntity(
         id=uuid4(),
         user_id=999,
+        lesson_slug="test-lesson",
         started_at=now_ict(),
         completed_at=now_ict(),
         status=GameSessionStatus.COMPLETED,

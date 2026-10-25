@@ -2,6 +2,7 @@ from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
+from app.application.services.game_hydration import GameHydrationService
 from app.application.use_cases.game import PatchGameAnswerUseCase
 from app.core.datetime_utils import now_ict
 from app.domain.entities.game import GameSessionEntity
@@ -10,13 +11,13 @@ from app.domain.exceptions import DomainValidationException
 from app.domain.value_objects import GameSessionStatus
 from app.domain.value_objects.gamification import GamificationState, QuestionMeta
 from app.presentation.schemas.game import GamificationAnswerPatchIn
-from sqlalchemy.exc import IntegrityError
 
 
 class MockOption:
     def __init__(self, id, content, is_correct=False):
         self.id = id
         self.content = content
+        self.text = content
         self.is_correct = is_correct
 
 
@@ -62,7 +63,7 @@ async def test_duplicate_submission_rejected_with_409():
         gamification=GamificationState(
             lives=3, gold=0, points=0, current_tier=1, last_question_index=1
         ),
-        tags_filter=["math"],
+        lesson_slug="math",
         question_limit=2,
     )
     ps_repo.get.return_value = session
@@ -85,6 +86,7 @@ async def test_duplicate_submission_rejected_with_409():
         ps_repo=ps_repo,
         question_repo=question_repo,
         answer_repo=answer_repo,
+        hydration=GameHydrationService(question_repo),
     )
 
     # Participant tries to submit a different option (opt2_id) for the same question
@@ -131,7 +133,7 @@ async def test_idempotent_network_retry_returns_previous_result():
         gamification=GamificationState(
             lives=2, gold=10, points=100, current_tier=1, last_question_index=1
         ),
-        tags_filter=["math"],
+        lesson_slug="math",
         question_limit=2,
     )
     ps_repo.get.return_value = session
@@ -153,6 +155,7 @@ async def test_idempotent_network_retry_returns_previous_result():
         ps_repo=ps_repo,
         question_repo=question_repo,
         answer_repo=answer_repo,
+        hydration=GameHydrationService(question_repo),
     )
 
     # Identical retry payload
@@ -203,20 +206,21 @@ async def test_race_condition_integrity_error_mapped_to_conflict():
         gamification=GamificationState(
             lives=3, gold=0, points=0, current_tier=1, last_question_index=0
         ),
-        tags_filter=["math"],
+        lesson_slug="math",
         question_limit=1,
     )
     ps_repo.get.return_value = session
     answer_repo.get_by_turn.return_value = None  # Passes preliminary check before race
-    # Database unique constraint fails on flush
-    answer_repo.add.side_effect = IntegrityError(
-        "Unique constraint violation", params=None, orig=Exception()
+    # Repository translates database unique constraint violation on flush
+    answer_repo.add.side_effect = DomainValidationException(
+        "Question already answered", status_code=409
     )
 
     use_case = PatchGameAnswerUseCase(
         ps_repo=ps_repo,
         question_repo=question_repo,
         answer_repo=answer_repo,
+        hydration=GameHydrationService(question_repo),
     )
 
     payload = GamificationAnswerPatchIn(

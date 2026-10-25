@@ -38,7 +38,7 @@ def upgrade() -> None:
             sa.ForeignKey("questions.id", ondelete="RESTRICT"),
             nullable=False,
         ),
-        sa.Column("option_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("option_id", sa.String(length=64), nullable=False),
         sa.Column("is_correct", sa.Boolean(), nullable=False),
         sa.Column("time_response", sa.Float(), nullable=False, server_default="0.0"),
         sa.Column("points_gained", sa.Integer(), nullable=False, server_default="0"),
@@ -56,6 +56,26 @@ def upgrade() -> None:
 
     # 2. Data backfill from legacy snapshots
     bind = op.get_bind()
+
+    # Preload correct options map from questions table for ground-truth correctness verification
+    q_rows = bind.execute(
+        sa.text("SELECT id, options FROM questions WHERE options IS NOT NULL")
+    ).fetchall()
+    valid_q_id_strings = {str(r[0]) for r in q_rows}
+    correct_options_map: dict[tuple[str, str], bool] = {}
+    for q_id, opts in q_rows:
+        if isinstance(opts, str):
+            try:
+                opts = json.loads(opts)
+            except Exception:
+                opts = []
+        if isinstance(opts, list):
+            for o in opts:
+                if isinstance(o, dict):
+                    oid = str(o.get("id", ""))
+                    is_c = bool(o.get("is_correct", False))
+                    correct_options_map[(str(q_id), oid)] = is_c
+
     sessions = bind.execute(
         sa.text("SELECT id, snapshot FROM game_sessions WHERE snapshot IS NOT NULL")
     ).fetchall()
@@ -100,18 +120,22 @@ def upgrade() -> None:
                 continue
             try:
                 q_uuid = uuid.UUID(qid_str)
-                opt_uuid = uuid.UUID(str(opt_id_str))
             except Exception:
                 continue
+            if str(q_uuid) not in valid_q_id_strings:
+                continue
+            opt_val = str(opt_id_str)
+
+            # Ground truth correctness from questions catalog, fallback to snapshot options
+            is_corr = correct_options_map.get((qid_str, opt_val), False)
+            if not is_corr:
+                q_info = q_map.get(qid_str, {})
+                for opt in q_info.get("options", []):
+                    if str(opt.get("id")) == opt_val and opt.get("is_correct") is True:
+                        is_corr = True
+                        break
 
             q_info = q_map.get(qid_str, {})
-            # Determine is_correct from question options if available
-            is_corr = False
-            for opt in q_info.get("options", []):
-                if str(opt.get("id")) == str(opt_id_str) and opt.get("is_correct") is True:
-                    is_corr = True
-                    break
-
             time_resp = float(q_info.get("time_response", 0.0))
 
             bind.execute(
@@ -125,7 +149,7 @@ def upgrade() -> None:
                     "id": uuid.uuid4(),
                     "session_id": session_id,
                     "question_id": q_uuid,
-                    "option_id": opt_uuid,
+                    "option_id": opt_val,
                     "is_correct": is_corr,
                     "time_response": time_resp,
                     "points": 10 if is_corr else 0,
@@ -133,16 +157,19 @@ def upgrade() -> None:
                 },
             )
 
-        # Update session snapshot to streamlined lightweight metadata
-        streamlined_snapshot = {
-            "lesson_slug": snap.get("lesson_slug", ""),
-            "question_sequence": new_sequence,
-            "gamification": snap.get("gamification", {}),
-        }
-        bind.execute(
-            sa.text("UPDATE game_sessions SET snapshot = :snap WHERE id = :sid"),
-            {"snap": json.dumps(streamlined_snapshot), "sid": session_id},
-        )
+        # Update session snapshot to streamlined lightweight metadata if legacy fields present
+        if "questions" in snap or "answers" in snap:
+            streamlined_snapshot = {
+                "lesson_slug": snap.get("lesson_slug", ""),
+                "question_sequence": new_sequence
+                if new_sequence
+                else snap.get("question_sequence", []),
+                "gamification": snap.get("gamification", {}),
+            }
+            bind.execute(
+                sa.text("UPDATE game_sessions SET snapshot = :snap WHERE id = :sid"),
+                {"snap": json.dumps(streamlined_snapshot), "sid": session_id},
+            )
 
 
 def downgrade() -> None:

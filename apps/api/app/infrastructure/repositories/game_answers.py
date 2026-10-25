@@ -1,9 +1,11 @@
 from uuid import UUID
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities.game_answer import GameSessionAnswerEntity
+from app.domain.exceptions import DomainValidationException
 from app.domain.interfaces.game_answer_repo import IGameSessionAnswerRepository
 from app.infrastructure.persistence.models.game_answer import GameSessionAnswer
 
@@ -15,7 +17,11 @@ class GameSessionAnswerRepository(IGameSessionAnswerRepository):
     async def add(self, entity: GameSessionAnswerEntity) -> GameSessionAnswerEntity:
         model = GameSessionAnswer.from_entity(entity)
         self._s.add(model)
-        await self._s.flush()
+        try:
+            await self._s.flush()
+        except IntegrityError:
+            await self._s.rollback()
+            raise DomainValidationException("Question already answered", status_code=409) from None
         await self._s.refresh(model)
         return model.to_entity()
 

@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import Float, Integer, cast, func, select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities.game import GameSessionEntity
@@ -38,14 +38,21 @@ class GameSessionRepository(IGameSessionRepository):
         return model.to_entity()
 
     async def save(self, entity: GameSessionEntity) -> GameSessionEntity:
+        entity.sync_metrics()
         r = await self._s.execute(select(GameSession).where(GameSession.id == entity.id))
         model = r.scalar_one_or_none()
         if model:
+            model.lesson_slug = entity.lesson_slug
             model.completed_at = entity.completed_at
             model.status = entity.status
-            model.snapshot = entity.snapshot
-            model.tags_filter = entity.tags_filter
             model.question_limit = entity.question_limit
+            model.final_score = entity.final_score
+            model.gold_earned = entity.gold_earned
+            model.total_time_response = entity.total_time_response
+            model.attempt_count = entity.attempt_count
+            model.current_tier = entity.current_tier
+            model.question_sequence = [q.to_dict() for q in entity.question_sequence]
+            model.gamification_state = entity.gamification.to_dict()
             await self._s.flush()
             await self._s.refresh(model)
             return model.to_entity()
@@ -54,12 +61,11 @@ class GameSessionRepository(IGameSessionRepository):
     async def get_active_by_lesson(
         self, user_id: int, lesson_slug: str
     ) -> GameSessionEntity | None:
-
         r = await self._s.execute(
             select(GameSession)
             .where(GameSession.user_id == user_id)
             .where(GameSession.status == GameSessionStatus.IN_PROGRESS)
-            .where(GameSession.tags_filter.contains([lesson_slug]))
+            .where(GameSession.lesson_slug == lesson_slug)
             .order_by(GameSession.started_at.desc())
             .limit(1)
         )
@@ -67,38 +73,28 @@ class GameSessionRepository(IGameSessionRepository):
         return model.to_entity() if model else None
 
     async def count_completed_by_lesson(self, user_id: int, lesson_slug: str) -> int:
-
         r = await self._s.execute(
             select(func.count(GameSession.id))
             .where(GameSession.user_id == user_id)
             .where(GameSession.status == GameSessionStatus.COMPLETED)
-            .where(GameSession.tags_filter.contains([lesson_slug]))
+            .where(GameSession.lesson_slug == lesson_slug)
             .where(GameSession.question_limit > 0)
         )
         return r.scalar() or 0
 
     async def get_leaderboard_by_lesson(self, lesson_slug: str, limit: int = 100) -> list[dict]:
-
         subq = (
             select(GameSession.id)
             .where(GameSession.status == GameSessionStatus.COMPLETED)
-            .where(GameSession.tags_filter.contains([lesson_slug]))
+            .where(GameSession.lesson_slug == lesson_slug)
             .where(GameSession.question_limit > 0)
             .distinct(GameSession.user_id)
             .order_by(
                 GameSession.user_id,
-                cast(GameSession.snapshot["gamification"]["final_score"].astext, Float)
-                .desc()
-                .nulls_last(),
-                cast(GameSession.snapshot["gamification"]["gold"].astext, Integer)
-                .desc()
-                .nulls_last(),
-                cast(GameSession.snapshot["gamification"]["total_time_response"].astext, Float)
-                .asc()
-                .nulls_last(),
-                cast(GameSession.snapshot["gamification"]["attempt_count"].astext, Integer)
-                .asc()
-                .nulls_last(),
+                GameSession.final_score.desc(),
+                GameSession.gold_earned.desc(),
+                GameSession.total_time_response.asc(),
+                GameSession.attempt_count.asc(),
             )
         ).subquery()
 
@@ -106,7 +102,7 @@ class GameSessionRepository(IGameSessionRepository):
         count_subq = (
             select(GameSession.user_id, func.count(GameSession.id).label("total_attempts"))
             .where(GameSession.status == GameSessionStatus.COMPLETED)
-            .where(GameSession.tags_filter.contains([lesson_slug]))
+            .where(GameSession.lesson_slug == lesson_slug)
             .where(GameSession.question_limit > 0)
             .group_by(GameSession.user_id)
         ).subquery()
@@ -117,18 +113,10 @@ class GameSessionRepository(IGameSessionRepository):
             .join(subq, GameSession.id == subq.c.id)
             .outerjoin(count_subq, GameSession.user_id == count_subq.c.user_id)
             .order_by(
-                cast(GameSession.snapshot["gamification"]["final_score"].astext, Float)
-                .desc()
-                .nulls_last(),
-                cast(GameSession.snapshot["gamification"]["gold"].astext, Integer)
-                .desc()
-                .nulls_last(),
-                cast(GameSession.snapshot["gamification"]["total_time_response"].astext, Float)
-                .asc()
-                .nulls_last(),
-                cast(GameSession.snapshot["gamification"]["attempt_count"].astext, Integer)
-                .asc()
-                .nulls_last(),
+                GameSession.final_score.desc(),
+                GameSession.gold_earned.desc(),
+                GameSession.total_time_response.asc(),
+                GameSession.attempt_count.asc(),
             )
             .limit(limit)
         )
@@ -138,17 +126,11 @@ class GameSessionRepository(IGameSessionRepository):
 
         result = []
         for row in rows:
-            snapshot = row.GameSession.snapshot or {}
-            ps = snapshot.get("gamification", {})
-            questions = snapshot.get("questions", [])
-            answers = snapshot.get("answers", {})
+            q_seq = row.GameSession.question_sequence or []
 
-            total_questions = len(questions) if questions else (row.GameSession.question_limit or 0)
-            answered_questions = len(answers) if isinstance(answers, dict) else 0
+            total_questions = len(q_seq) if q_seq else (row.GameSession.question_limit or 0)
             is_completed = bool(
-                row.GameSession.status == GameSessionStatus.COMPLETED
-                and total_questions > 0
-                and answered_questions >= total_questions
+                row.GameSession.status == GameSessionStatus.COMPLETED and total_questions > 0
             )
 
             result.append(
@@ -156,15 +138,15 @@ class GameSessionRepository(IGameSessionRepository):
                     "user_id": row.User.id if row.User else row.GameSession.user_id,
                     "username": row.User.name if row.User else None,
                     "avatar_url": row.User.avatar_url if row.User else None,
-                    "final_score": float(ps.get("final_score", 0)),
-                    "gold": int(ps.get("gold", 0)),
-                    "total_time_response": float(ps.get("total_time_response", 0)),
+                    "final_score": float(row.GameSession.final_score),
+                    "gold": int(row.GameSession.gold_earned),
+                    "total_time_response": float(row.GameSession.total_time_response),
                     "attempt_count": int(row.total_attempts)
                     if row.total_attempts is not None
-                    else int(ps.get("attempt_count", 0)),
+                    else int(row.GameSession.attempt_count),
                     "is_completed": is_completed,
                     "total_questions": total_questions,
-                    "answered_questions": answered_questions,
+                    "answered_questions": total_questions,
                     "completed_at": row.GameSession.completed_at.isoformat()
                     if row.GameSession.completed_at
                     else None,
@@ -178,7 +160,7 @@ class GameSessionRepository(IGameSessionRepository):
             select(GameSession)
             .where(
                 GameSession.status == GameSessionStatus.COMPLETED,
-                GameSession.tags_filter.contains([lesson_slug]),
+                GameSession.lesson_slug == lesson_slug,
                 GameSession.completed_at.is_not(None),
             )
             .order_by(GameSession.completed_at.asc())
@@ -188,17 +170,15 @@ class GameSessionRepository(IGameSessionRepository):
 
         results = []
         for s in sessions:
-            snapshot = s.snapshot or {}
-            ps = snapshot.get("gamification", {})
-            questions = snapshot.get("questions", [])
+            q_seq = s.question_sequence or []
+            ps = s.gamification_state or {}
 
-            total_q = len(questions) if questions else (s.question_limit or 0)
+            total_q = len(q_seq) if q_seq else (s.question_limit or 0)
             correct_q = int(ps.get("correct_count", 0))
 
             lives = int(ps.get("lives", 0))
             last_idx = int(ps.get("last_question_index", 0))
 
-            # Hoàn thành game: trả lời đến câu cuối cùng và còn mạng (không bị Game Over giữa chừng)
             is_completed = total_q > 0 and last_idx >= total_q and lives > 0
 
             results.append(
@@ -206,9 +186,9 @@ class GameSessionRepository(IGameSessionRepository):
                     "session_id": str(s.id),
                     "user_id": s.user_id,
                     "completed_at": s.completed_at.isoformat() if s.completed_at else None,
-                    "final_score": float(ps.get("final_score", 0)),
-                    "gold": int(ps.get("gold", 0)),
-                    "attempt_count": int(ps.get("attempt_count", 1)),
+                    "final_score": float(s.final_score),
+                    "gold": int(s.gold_earned),
+                    "attempt_count": int(s.attempt_count),
                     "is_completed": is_completed,
                     "total_questions": total_q,
                     "correct_count": correct_q,
@@ -223,7 +203,7 @@ class GameSessionRepository(IGameSessionRepository):
             select(GameSession)
             .where(GameSession.user_id == user_id)
             .where(GameSession.status == GameSessionStatus.COMPLETED)
-            .where(GameSession.tags_filter.contains([lesson_slug]))
+            .where(GameSession.lesson_slug == lesson_slug)
             .where(GameSession.question_limit > 0)
             .order_by(GameSession.started_at.desc())
             .limit(limit)

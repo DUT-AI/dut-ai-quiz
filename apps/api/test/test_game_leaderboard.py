@@ -3,6 +3,7 @@ from uuid import uuid4
 
 import pytest
 from app.application.dtos import GameLeaderboardRowDTO
+from app.application.services.game_hydration import GameHydrationService
 from app.application.services.user_service import UserService
 from app.application.use_cases.game import (
     FinishGameSessionUseCase,
@@ -12,6 +13,7 @@ from app.core.datetime_utils import now_ict
 from app.domain.entities.game import GameSessionEntity
 from app.domain.interfaces import IGameSessionRepository
 from app.domain.value_objects import GameSessionStatus
+from app.domain.value_objects.gamification import GamificationState
 from app.infrastructure.cache.game_leaderboard_cache import GameLeaderboardCache
 
 
@@ -23,6 +25,12 @@ def mock_repo():
 @pytest.fixture
 def mock_cache():
     return AsyncMock(spec=GameLeaderboardCache)
+
+
+@pytest.fixture
+def mock_hydration():
+    q_repo = AsyncMock()
+    return GameHydrationService(q_repo)
 
 
 @pytest.fixture
@@ -96,7 +104,9 @@ async def test_get_leaderboard_cache_miss(mock_repo, mock_cache, mock_user_servi
 
 
 @pytest.mark.asyncio
-async def test_finish_session_computes_decay_and_invalidates_cache(mock_repo, mock_cache):
+async def test_finish_session_computes_decay_and_invalidates_cache(
+    mock_repo, mock_cache, mock_hydration
+):
     """Test that when a session is finished, it calculates the decay factor properly and invalidates cache."""
     user_id = 1
     session_id = uuid4()
@@ -105,17 +115,11 @@ async def test_finish_session_computes_decay_and_invalidates_cache(mock_repo, mo
     mock_session = GameSessionEntity(
         id=session_id,
         user_id=user_id,
+        lesson_slug=lesson_slug,
         started_at=now_ict(),
         completed_at=None,
         status=GameSessionStatus.IN_PROGRESS,
-        snapshot={
-            "lesson_slug": lesson_slug,
-            "gamification": {
-                "points": 100,
-                "gold": 50,
-            },
-        },
-        tags_filter=[lesson_slug],
+        gamification=GamificationState(points=100, gold=50),
         question_limit=10,
     )
 
@@ -127,27 +131,29 @@ async def test_finish_session_computes_decay_and_invalidates_cache(mock_repo, mo
     # Decay should be: 1.0 - (2 * 0.2) = 0.6
     mock_repo.count_completed_by_lesson.return_value = 2
 
-    use_case = FinishGameSessionUseCase(ps_repo=mock_repo, cache=mock_cache)
+    use_case = FinishGameSessionUseCase(
+        ps_repo=mock_repo, hydration=mock_hydration, cache=mock_cache
+    )
 
     result = await use_case.execute(session_id, user_id)
 
     assert result is not None
-    assert result.status == GameSessionStatus.COMPLETED
+    assert result.status == GameSessionStatus.COMPLETED.value
     assert result.completed_at is not None
 
-    gamification = result.snapshot["gamification"]
+    gamification = result.gamification
 
     # 100 * 0.6 = 60.0
-    assert gamification["final_score"] == 60.0
+    assert gamification.final_score == 60.0
     # Attempt count is the count of previous completed + 1
-    assert gamification["attempt_count"] == 3
+    assert gamification.attempt_count == 3
 
     # Cache MUST be invalidated for the leaderboard to refresh
     mock_cache.invalidate.assert_called_once_with(lesson_slug)
 
 
 @pytest.mark.asyncio
-async def test_finish_session_decay_minimum_limit(mock_repo, mock_cache):
+async def test_finish_session_decay_minimum_limit(mock_repo, mock_cache, mock_hydration):
     """Test that the decay factor doesn't drop below 0.2 even after many attempts."""
     user_id = 1
     session_id = uuid4()
@@ -156,16 +162,11 @@ async def test_finish_session_decay_minimum_limit(mock_repo, mock_cache):
     mock_session = GameSessionEntity(
         id=session_id,
         user_id=user_id,
+        lesson_slug=lesson_slug,
         started_at=now_ict(),
         completed_at=None,
         status=GameSessionStatus.IN_PROGRESS,
-        snapshot={
-            "lesson_slug": lesson_slug,
-            "gamification": {
-                "points": 100,
-            },
-        },
-        tags_filter=[lesson_slug],
+        gamification=GamificationState(points=100),
         question_limit=10,
     )
 
@@ -176,12 +177,14 @@ async def test_finish_session_decay_minimum_limit(mock_repo, mock_cache):
     # But max(0.2, ...) should cap it at 0.2
     mock_repo.count_completed_by_lesson.return_value = 10
 
-    use_case = FinishGameSessionUseCase(ps_repo=mock_repo, cache=mock_cache)
+    use_case = FinishGameSessionUseCase(
+        ps_repo=mock_repo, hydration=mock_hydration, cache=mock_cache
+    )
     result = await use_case.execute(session_id, user_id)
 
-    gamification = result.snapshot["gamification"]
-    assert gamification["final_score"] == 20.0  # 100 * 0.2
-    assert gamification["attempt_count"] == 11
+    gamification = result.gamification
+    assert gamification.final_score == 20.0  # 100 * 0.2
+    assert gamification.attempt_count == 11
 
 
 def test_game_leaderboard_row_out_schema():

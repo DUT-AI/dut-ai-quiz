@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiGet, apiPost, apiPatch } from "@/lib/api";
 import type {
-  StartGameSessionResponse,
   GameSession,
   GamificationAnswerResult,
   GameLeaderboardRow,
@@ -11,10 +10,10 @@ import type {
 } from "./types";
 
 export function useActiveGameSession(lessonSlug: string, options?: any) {
-  return useQuery<StartGameSessionResponse, Error & { status?: number }>({
+  return useQuery<GameSession, Error & { status?: number }>({
     queryKey: ["game", "sessions", "active", lessonSlug],
     queryFn: () =>
-      apiGet<StartGameSessionResponse>(
+      apiGet<GameSession>(
         `/api/v1/game/sessions/active?lesson_slug=${encodeURIComponent(lessonSlug)}`
       ),
     staleTime: 0,
@@ -30,7 +29,7 @@ export function useStartGameSession() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: { lesson_slug: string }) =>
-      apiPost<StartGameSessionResponse>("/api/v1/game/sessions", body),
+      apiPost<GameSession>("/api/v1/game/sessions", body),
     onSuccess: (data, variables) => {
       // Pre-populate the active session cache with the newly created session
       qc.setQueryData(

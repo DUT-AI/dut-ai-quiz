@@ -7,37 +7,17 @@ export type GamificationUseItemIn = Schema<"GamificationUseItemIn">;
 export type GamificationState = Schema<"GamificationStateOut">;
 export type GameOption = Schema<"GameQuestionOptionOut">;
 
-export type GameQuestion = Omit<Schema<"GameQuestionSnapshotOut">, "options"> & {
-  options?: GameOption[];
-};
-
-export type GameSnapshot = Omit<Schema<"GameSessionSnapshotOut">, "questions"> & {
-  questions?: GameQuestion[];
-};
-
+export type GameQuestion = Schema<"GameQuestionSnapshotOut">;
 export type GamificationAnswerResult = Schema<"GamificationAnswerResultOut">;
 export type GameLessonSummary = Schema<"GameLessonSummaryOut">;
 export type GameLeaderboardRow = Schema<"GameLeaderboardRowOut">;
 export type UserMatchHistoryItem = Schema<"UserMatchHistoryItem">;
 export type UserMatchHistoryResponse = Schema<"UserMatchHistoryResponse">;
 
-export type GameSessionStart = Schema<"GameSessionStartOut">;
-export type GameSessionDetail = Schema<"GameSessionDetailOut">;
+export type GameSession = Schema<"GameSessionOut">;
+
 export type GameSessionReviewItem = Schema<"GameSessionReviewItemOut">;
 export type GameSessionReview = Schema<"GameSessionReviewOut">;
-
-export type StartGameSessionResponse = GameSessionStart;
-
-export interface GameSession {
-  id: string;
-  user_id: number;
-  started_at: string;
-  completed_at?: string | null;
-  status: "IN_PROGRESS" | "COMPLETED";
-  snapshot?: GameSnapshot | null;
-  tags_filter: string[];
-  question_limit: number;
-}
 
 // Shared Game UI & Hook types
 export type ItemType = "50-50" | "freeze" | "double" | "shield";

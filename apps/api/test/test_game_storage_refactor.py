@@ -2,6 +2,7 @@ from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
+from app.application.services.game_hydration import GameHydrationService
 from app.application.use_cases.game import (
     FinishGameSessionUseCase,
     PatchGameAnswerUseCase,
@@ -60,12 +61,17 @@ async def test_start_game_session_stores_metadata_only():
         for i in range(15)
     ]
     question_repo.list_all.return_value = mock_questions
+    question_repo.get.side_effect = lambda q_id: next(
+        (q for q in mock_questions if q.id == q_id), None
+    )
     ps_repo.add.side_effect = lambda entity: entity
 
+    hydration = GameHydrationService(question_repo)
     use_case = StartGameSessionUseCase(
         ps_repo=ps_repo,
         question_repo=question_repo,
         lesson_repo=lesson_repo,
+        hydration=hydration,
     )
 
     created_session = await use_case.execute(
@@ -73,9 +79,10 @@ async def test_start_game_session_stores_metadata_only():
     )
 
     assert created_session is not None
-    assert len(created_session.question_sequence) == 10
+    saved_entity = ps_repo.add.call_args[0][0]
+    assert len(saved_entity.question_sequence) == 10
     # Verify each item in question_sequence is QuestionMeta and does NOT contain options or content
-    for q_meta in created_session.question_sequence:
+    for q_meta in saved_entity.question_sequence:
         assert isinstance(q_meta, QuestionMeta)
         assert hasattr(q_meta, "id")
         assert hasattr(q_meta, "tier")
@@ -83,10 +90,11 @@ async def test_start_game_session_stores_metadata_only():
         assert not hasattr(q_meta, "content")
         assert not hasattr(q_meta, "options")
 
-    # Verify session.snapshot dictionary contains no static question content
-    snap_dict = created_session.snapshot
-    assert "question_sequence" in snap_dict
-    assert "gamification" in snap_dict
+    # Verify session contains flat fields and gamification
+    assert created_session.id == saved_entity.id
+    assert created_session.current_question is not None
+    assert created_session.gamification is not None
+    assert created_session.question_limit == 10
 
 
 @pytest.mark.asyncio
@@ -143,7 +151,7 @@ async def test_patch_answer_appends_to_answer_repo():
         gamification=GamificationState(
             lives=3, gold=10, points=0, current_tier=1, last_question_index=0
         ),
-        tags_filter=["math-101"],
+        lesson_slug="math-101",
         question_limit=2,
     )
     ps_repo.get.return_value = session
@@ -151,10 +159,12 @@ async def test_patch_answer_appends_to_answer_repo():
     answer_repo.get_by_turn.return_value = None
     answer_repo.add.side_effect = lambda a: a
 
+    hydration = GameHydrationService(question_repo)
     use_case = PatchGameAnswerUseCase(
         ps_repo=ps_repo,
         question_repo=question_repo,
         answer_repo=answer_repo,
+        hydration=hydration,
     )
 
     # 1. Answer Question 1 correctly
@@ -199,17 +209,53 @@ async def test_finish_game_session():
         gamification=GamificationState(
             lives=3, gold=50, points=100, current_tier=1, last_question_index=1
         ),
-        tags_filter=["math-101"],
+        lesson_slug="math-101",
         question_limit=1,
     )
     ps_repo.get.return_value = session
     ps_repo.save.side_effect = lambda s: s
     ps_repo.count_completed_by_lesson.return_value = 0
 
-    use_case = FinishGameSessionUseCase(ps_repo=ps_repo)
+    q_repo = AsyncMock()
+    hydration = GameHydrationService(q_repo)
+    use_case = FinishGameSessionUseCase(ps_repo=ps_repo, hydration=hydration)
     finished = await use_case.execute(session_id=session_id, user_id=1)
 
     assert finished is not None
-    assert finished.status == GameSessionStatus.COMPLETED
+    assert finished.status == GameSessionStatus.COMPLETED.value
     assert finished.completed_at is not None
+    assert finished.gamification is not None
     assert finished.gamification.final_score == 100.0
+
+
+@pytest.mark.asyncio
+async def test_game_session_answer_repository_integrity_error_mapped_to_conflict():
+    """Verify that GameSessionAnswerRepository catches IntegrityError and raises DomainValidationException 409."""
+    from app.domain.entities.game_answer import GameSessionAnswerEntity
+    from app.domain.exceptions import DomainValidationException
+    from app.infrastructure.repositories.game_answers import GameSessionAnswerRepository
+    from sqlalchemy.exc import IntegrityError
+
+    mock_session = AsyncMock()
+    mock_session.flush.side_effect = IntegrityError(
+        "Unique constraint violation", params=None, orig=Exception()
+    )
+
+    repo = GameSessionAnswerRepository(mock_session)
+    ans = GameSessionAnswerEntity(
+        id=uuid4(),
+        session_id=uuid4(),
+        question_id=uuid4(),
+        option_id=str(uuid4()),
+        is_correct=True,
+        time_response=1.5,
+        points_gained=10,
+        gold_gained=5,
+        answered_at=now_ict(),
+    )
+    with pytest.raises(DomainValidationException) as exc_info:
+        await repo.add(ans)
+
+    assert exc_info.value.status_code == 409
+    assert "already answered" in exc_info.value.message.lower()
+    mock_session.rollback.assert_awaited_once()

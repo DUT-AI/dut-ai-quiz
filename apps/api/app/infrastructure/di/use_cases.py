@@ -2,6 +2,7 @@ from dishka import Provider, Scope, provide
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.application.services.game_hydration import GameHydrationService
 from app.application.services.hackathon_leaderboard import (
     HackathonLeaderboardAppService,
 )
@@ -346,6 +347,7 @@ class UseCaseProvider(Provider):
     get_leaderboard_use_case = provide(GetLeaderboardUseCase, scope=Scope.REQUEST)
 
     # game
+    game_hydration_service = provide(GameHydrationService, scope=Scope.REQUEST)
     start_game_session_use_case = provide(StartGameSessionUseCase, scope=Scope.REQUEST)
     use_item_game_use_case = provide(UseItemGameUseCase, scope=Scope.REQUEST)
     patch_game_answer_use_case = provide(PatchGameAnswerUseCase, scope=Scope.REQUEST)

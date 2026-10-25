@@ -43,7 +43,7 @@ class GetGameSessionReviewUseCase:
                 for opt in q.options or []:
                     if opt.is_correct:
                         correct_opt_id = str(opt.id)
-                    text = getattr(opt, "content", getattr(opt, "text", ""))
+                    text = opt.text
                     options_out.append(GameQuestionOptionOut(id=str(opt.id), text=text))
 
             items_out.append(

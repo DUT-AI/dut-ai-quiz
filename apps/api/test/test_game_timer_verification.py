@@ -1,16 +1,17 @@
-from datetime import datetime
 from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
+from app.application.services.game_hydration import GameHydrationService
 from app.application.use_cases.game.patch_game_answer import PatchGameAnswerUseCase
+from app.core.datetime_utils import now_ict
 from app.domain.entities.game import GameSessionEntity
+from app.domain.entities.game_answer import GameSessionAnswerEntity
 from app.domain.entities.question import QuestionEntity, QuestionOptionEntity
 from app.domain.value_objects import Difficulty, GameSessionStatus, PoolType
 from app.domain.value_objects.gamification import (
-    GameSessionSnapshot,
     GamificationState,
-    QuestionSnapshot,
+    QuestionMeta,
 )
 from app.presentation.schemas.game import GamificationAnswerPatchIn
 
@@ -34,31 +35,37 @@ async def test_patch_game_answer_client_duration_success():
         lesson_id=None,
         tags=["numpy"],
         created_by=1,
-        created_at=datetime.utcnow(),
+        created_at=now_ict(),
     )
     q_repo.get.return_value = q_entity
 
-    q_snap_0 = QuestionSnapshot(id=str(q_id), content="Numpy code", options=[], time_limit=60)
-    q_snap_1 = QuestionSnapshot(id=str(uuid4()), content="Next question", options=[], time_limit=60)
-
     gamification = GamificationState(last_question_index=0, lives=3)
-    snap = GameSessionSnapshot(
-        lesson_slug="numpy", questions=[q_snap_0, q_snap_1], answers={}, gamification=gamification
-    )
 
     session = GameSessionEntity(
         id=uuid4(),
         user_id=1,
-        started_at=datetime.utcnow(),
+        lesson_slug="numpy",
+        started_at=now_ict(),
         completed_at=None,
         status=GameSessionStatus.IN_PROGRESS,
-        snapshot=snap.to_dict(),
-        tags_filter=["numpy"],
+        question_sequence=[
+            QuestionMeta(id=str(q_id), tier=1, is_boss=False, time_limit=60),
+            QuestionMeta(id=str(uuid4()), tier=1, is_boss=False, time_limit=60),
+        ],
+        gamification=gamification,
         question_limit=2,
     )
     ps_repo.get.return_value = session
+    ans_repo = AsyncMock()
+    ans_repo.get_by_turn.return_value = None
 
-    use_case = PatchGameAnswerUseCase(ps_repo=ps_repo, question_repo=q_repo, cache=None)
+    use_case = PatchGameAnswerUseCase(
+        ps_repo=ps_repo,
+        question_repo=q_repo,
+        answer_repo=ans_repo,
+        hydration=GameHydrationService(q_repo),
+        cache=None,
+    )
     payload = GamificationAnswerPatchIn(
         question_id=q_id,
         option_id="opt-c",
@@ -94,31 +101,38 @@ async def test_patch_game_answer_client_duration_exceeded_fails():
         lesson_id=None,
         tags=["numpy"],
         created_by=1,
-        created_at=datetime.utcnow(),
+        created_at=now_ict(),
     )
     q_repo.get.return_value = q_entity
 
-    q_snap_0 = QuestionSnapshot(id=str(q_id), content="Numpy code", options=[], time_limit=60)
-
     gamification = GamificationState(last_question_index=0, lives=3)
-    snap = GameSessionSnapshot(
-        lesson_slug="numpy", questions=[q_snap_0], answers={}, gamification=gamification
-    )
 
     session = GameSessionEntity(
         id=uuid4(),
         user_id=1,
-        started_at=datetime.utcnow(),
+        lesson_slug="numpy",
+        started_at=now_ict(),
         completed_at=None,
         status=GameSessionStatus.IN_PROGRESS,
-        snapshot=snap.to_dict(),
-        tags_filter=["numpy"],
+        question_sequence=[
+            QuestionMeta(id=str(q_id), tier=1, is_boss=False, time_limit=60),
+        ],
+        gamification=gamification,
         question_limit=1,
     )
     ps_repo.get.return_value = session
     ps_repo.count_completed_by_lesson.return_value = 0
 
-    use_case = PatchGameAnswerUseCase(ps_repo=ps_repo, question_repo=q_repo, cache=None)
+    ans_repo = AsyncMock()
+    ans_repo.get_by_turn.return_value = None
+
+    use_case = PatchGameAnswerUseCase(
+        ps_repo=ps_repo,
+        question_repo=q_repo,
+        answer_repo=ans_repo,
+        hydration=GameHydrationService(q_repo),
+        cache=None,
+    )
     # Client sends time_response exceeding time_limit
     payload = GamificationAnswerPatchIn(
         question_id=q_id,
@@ -153,34 +167,50 @@ async def test_patch_game_answer_idempotent_when_already_answered():
         lesson_id=None,
         tags=["numpy"],
         created_by=1,
-        created_at=datetime.utcnow(),
+        created_at=now_ict(),
     )
     q_repo.get.return_value = q_entity
 
-    q_snap_0 = QuestionSnapshot(id=str(q_id), content="Numpy code", options=[], time_limit=60)
-    q_snap_1 = QuestionSnapshot(id=str(uuid4()), content="Next question", options=[], time_limit=60)
-
     gamification = GamificationState(last_question_index=1, lives=3, points=100)
-    snap = GameSessionSnapshot(
-        lesson_slug="numpy",
-        questions=[q_snap_0, q_snap_1],
-        answers={str(q_id): "opt-c"},
-        gamification=gamification,
-    )
 
+    session_id = uuid4()
     session = GameSessionEntity(
-        id=uuid4(),
+        id=session_id,
         user_id=1,
-        started_at=datetime.utcnow(),
+        lesson_slug="numpy",
+        started_at=now_ict(),
         completed_at=None,
         status=GameSessionStatus.IN_PROGRESS,
-        snapshot=snap.to_dict(),
-        tags_filter=["numpy"],
+        question_sequence=[
+            QuestionMeta(id=str(q_id), tier=1, is_boss=False, time_limit=60),
+            QuestionMeta(id=str(uuid4()), tier=1, is_boss=False, time_limit=60),
+        ],
+        gamification=gamification,
         question_limit=2,
     )
     ps_repo.get.return_value = session
 
-    use_case = PatchGameAnswerUseCase(ps_repo=ps_repo, question_repo=q_repo, cache=None)
+    answer_repo = AsyncMock()
+    existing_answer = GameSessionAnswerEntity(
+        id=uuid4(),
+        session_id=session_id,
+        question_id=q_id,
+        option_id="opt-c",
+        is_correct=True,
+        time_response=5.0,
+        points_gained=100,
+        gold_gained=10,
+        answered_at=now_ict(),
+    )
+    answer_repo.get_by_turn.return_value = existing_answer
+
+    use_case = PatchGameAnswerUseCase(
+        ps_repo=ps_repo,
+        question_repo=q_repo,
+        answer_repo=answer_repo,
+        hydration=GameHydrationService(q_repo),
+        cache=None,
+    )
     payload = GamificationAnswerPatchIn(
         question_id=q_id,
         option_id="opt-c",

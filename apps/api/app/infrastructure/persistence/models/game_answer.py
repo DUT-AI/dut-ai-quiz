@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, UniqueConstraint
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID as pgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -27,7 +27,7 @@ class GameSessionAnswer(Base):
         index=True,
         nullable=False,
     )
-    option_id: Mapped[UUID] = mapped_column(pgUUID(as_uuid=True), nullable=False)
+    option_id: Mapped[str] = mapped_column(String(64), nullable=False)
     is_correct: Mapped[bool] = mapped_column(Boolean, nullable=False)
     time_response: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     points_gained: Mapped[int] = mapped_column(Integer, nullable=False, default=0)

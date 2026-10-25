@@ -1,0 +1,307 @@
+openapi: 3.0.3
+info:
+  title: DUT-AI Quiz Game API (Clean Contract)
+  version: 2.0.0
+  description: Simplified, flat, strongly-typed Game Session API without legacy snapshot wrappers.
+paths:
+  /game/sessions:
+    post:
+      summary: Start Game Session
+      description: Starts a new quiz session or returns the currently active one for the given lesson.
+      operationId: start_game_session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GamificationStartIn'
+      responses:
+        '200':
+          description: Session started successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameSessionOut'
+
+  /game/sessions/active:
+    get:
+      summary: Get Active Game Session
+      description: Resumes the currently active IN_PROGRESS session for a user and lesson.
+      operationId: get_active_game_session
+      parameters:
+        - name: lesson_slug
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Active session retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameSessionOut'
+        '404':
+          description: No active game session found
+
+  /game/sessions/{session_id}:
+    get:
+      summary: Get Game Session By ID
+      description: Fetches full game session details.
+      operationId: get_game_session
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Session details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameSessionOut'
+        '404':
+          description: Session not found
+
+  /game/sessions/{session_id}/finish:
+    post:
+      summary: Finish Game Session
+      description: Manually finishes or abandons an ongoing session, marking it COMPLETED.
+      operationId: finish_game_session
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Session finished
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameSessionOut'
+        '404':
+          description: Session not found
+
+  /game/sessions/{session_id}/answers:
+    patch:
+      summary: Submit Turn Answer
+      description: Evaluates user answer, applies gamification buffs/damage, and advances turn.
+      operationId: patch_game_answers
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GamificationAnswerPatchIn'
+      responses:
+        '200':
+          description: Answer evaluated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GamificationAnswerResultOut'
+        '409':
+          description: Turn already answered (Idempotent conflict)
+
+  /game/history:
+    get:
+      summary: List Game Session History
+      description: Retrieves completed sessions for the authenticated user with native performance metrics.
+      operationId: list_game_history
+      responses:
+        '200':
+          description: List of historical sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GameSessionOut'
+
+components:
+  schemas:
+    GamificationStartIn:
+      type: object
+      required:
+        - lesson_slug
+      properties:
+        lesson_slug:
+          type: string
+
+    GamificationAnswerPatchIn:
+      type: object
+      required:
+        - question_id
+        - selected_option_id
+        - time_response
+      properties:
+        question_id:
+          type: string
+          format: uuid
+        selected_option_id:
+          type: string
+          format: uuid
+        time_response:
+          type: number
+        activate_shield:
+          type: boolean
+          default: false
+        activate_double_points:
+          type: boolean
+          default: false
+
+    GameQuestionOptionOut:
+      type: object
+      required:
+        - id
+        - text
+      properties:
+        id:
+          type: string
+        text:
+          type: string
+
+    GameQuestionSnapshotOut:
+      type: object
+      required:
+        - id
+        - content
+      properties:
+        id:
+          type: string
+        content:
+          type: string
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/GameQuestionOptionOut'
+        time_limit:
+          type: integer
+          default: 60
+        time_response:
+          type: number
+          default: 0.0
+        tier:
+          type: integer
+          default: 1
+        is_boss:
+          type: boolean
+          default: false
+
+    GamificationStateOut:
+      type: object
+      properties:
+        lives:
+          type: integer
+          default: 3
+        gold:
+          type: integer
+          default: 0
+        points:
+          type: integer
+          default: 0
+        current_tier:
+          type: integer
+          default: 1
+        last_question_index:
+          type: integer
+          default: 0
+        boss_hp:
+          type: integer
+          default: 0
+        shield_used_in_tier:
+          type: object
+          additionalProperties:
+            type: boolean
+        total_time_response:
+          type: number
+          default: 0.0
+        correct_count:
+          type: integer
+          default: 0
+        final_score:
+          type: number
+          default: 0.0
+        attempt_count:
+          type: integer
+          default: 1
+
+    GameSessionOut:
+      type: object
+      required:
+        - id
+        - user_id
+        - lesson_slug
+        - status
+        - started_at
+        - question_limit
+        - current_question_index
+        - gamification
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: integer
+        lesson_slug:
+          type: string
+        status:
+          type: string
+          enum: [IN_PROGRESS, COMPLETED]
+        started_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        question_limit:
+          type: integer
+          default: 10
+        current_question_index:
+          type: integer
+          default: 0
+        current_question:
+          $ref: '#/components/schemas/GameQuestionSnapshotOut'
+          nullable: true
+        gamification:
+          $ref: '#/components/schemas/GamificationStateOut'
+
+    GamificationAnswerResultOut:
+      type: object
+      required:
+        - is_correct
+        - points_gained
+        - coins_gained
+        - updated_gamification
+        - is_game_over
+      properties:
+        is_correct:
+          type: boolean
+        points_gained:
+          type: integer
+        coins_gained:
+          type: integer
+        updated_gamification:
+          $ref: '#/components/schemas/GamificationStateOut'
+        is_game_over:
+          type: boolean
+        correct_option_id:
+          type: string
+          nullable: true
+        next_question:
+          $ref: '#/components/schemas/GameQuestionSnapshotOut'
+          nullable: true

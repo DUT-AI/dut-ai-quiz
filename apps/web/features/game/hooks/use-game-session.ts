@@ -11,13 +11,12 @@ import {
   type ScreenState,
   type GameResultState,
   type StageProgressStatus,
-  type StartGameSessionResponse,
   type GameSession,
 } from "../types";
 
 export interface UseGameSessionProps {
   lessonSlug: string;
-  initialSession: StartGameSessionResponse | GameSession | null;
+  initialSession: GameSession | null;
 }
 
 export function useGameSession({ lessonSlug, initialSession }: UseGameSessionProps) {
@@ -50,21 +49,19 @@ export function useGameSession({ lessonSlug, initialSession }: UseGameSessionPro
   const currentQuestion = questions[currentIdx] || null;
   const stage = currentQuestion?.tier || 1;
 
-  // Initialize game state from snapshot data
+  // Initialize game state from GameSession data
   const initializeGame = useCallback(
-    (sessionData: StartGameSessionResponse | GameSession) => {
+    (sessionData: GameSession) => {
       try {
-        const snap = sessionData?.snapshot;
-        if (!snap) {
-          throw new Error("Dữ liệu snapshot không hợp lệ (null/undefined)!");
+        if (!sessionData || !sessionData.id) {
+          throw new Error("Dữ liệu phiên chơi không hợp lệ (null/undefined)!");
         }
 
-        const sid = "session_id" in sessionData ? sessionData.session_id : sessionData.id;
+        const sid = sessionData.id;
         setSessionId(sid);
-        setQuestions((snap.questions || []) as GameQuestion[]);
-        setGamification(snap.gamification ?? null);
+        setGamification(sessionData.gamification ?? null);
 
-        const gamificationState = snap.gamification;
+        const gamificationState = sessionData.gamification;
         const idx = gamificationState?.last_question_index || 0;
         setCurrentIdx(idx);
 
@@ -78,22 +75,25 @@ export function useGameSession({ lessonSlug, initialSession }: UseGameSessionPro
         setGold(gamificationState?.gold ?? 0);
         setScore(gamificationState?.points ?? 0);
 
-        // Reconstruct progress dots based on answers
-        const totalQCount = (snap.questions || []).length;
+        // Reconstruct progress dots based on answers and question_limit
+        const totalQCount = sessionData.question_limit || 10;
         const progress: StageProgressStatus[] = Array.from({ length: totalQCount }).map(() => "idle");
         for (let i = 0; i < idx; i++) {
           progress[i] = "correct";
         }
         setStageProgress(progress);
 
-        // Check if current question is a boss fight
-        const currentQ = (snap.questions || [])[idx];
+        // Populate question sequence with current_question
+        const initialQuestions: GameQuestion[] = Array.from({ length: totalQCount });
+        const currentQ = sessionData.current_question;
         if (currentQ) {
-          const bossMode = currentQ.is_boss;
+          initialQuestions[idx] = currentQ;
+          const bossMode = Boolean(currentQ.is_boss);
           setIsBossMode(bossMode);
           setBossHp(gamificationState?.boss_hp === 1 ? 5 : 0);
           setBossMaxHp(5);
         }
+        setQuestions(initialQuestions);
 
         setGameResult("playing");
         setScreen("playing");
