@@ -71,4 +71,28 @@ export class ParticleSystem {
       emitter.destroy();
     });
   }
+
+  /**
+   * Emits spooky wraith ghost mist/soul flames when Grave Wraith attacks
+   */
+  emitGhostTrail(x: number, y: number): void {
+    if (!this.sparkTextureCreated) this.create();
+
+    const emitter = this.scene.add.particles(x, y, "spark_particle", {
+      speed: { min: 40, max: 140 },
+      angle: { min: 0, max: 360 },
+      scale: { start: 2.2, end: 0.1 },
+      alpha: { start: 0.9, end: 0 },
+      tint: 0x22d3ee, // Cyan spirit ghost energy
+      lifespan: 500,
+      quantity: 24,
+      emitting: false,
+    });
+
+    emitter.explode(24);
+
+    this.scene.time.delayedCall(550, () => {
+      emitter.destroy();
+    });
+  }
 }

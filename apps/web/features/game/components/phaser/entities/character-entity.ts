@@ -162,8 +162,8 @@ export class CharacterEntity {
         // Listen for standard animationcomplete event
         this.sprite.once("animationcomplete", returnToOrigin);
 
-        // Fallback safety timer
-        this.scene.time.delayedCall(650, returnToOrigin);
+        // Fallback safety timer based on anim length
+        this.scene.time.delayedCall(1200, returnToOrigin);
       },
     });
   }

@@ -34,6 +34,6 @@ export type StageProgressStatus = "correct" | "incorrect" | "idle";
 
 export const getBossName = (stageNum: number): string => {
   if (stageNum === 1) return "PHÁN QUAN BỘ CỐT";
-  if (stageNum === 2) return "BÓNG MA HẦM MỘ";
+  if (stageNum === 2) return "KỸ SƯ BÚA LÙN";
   return "TỬ THẦN HƯ KHÔNG";
 };

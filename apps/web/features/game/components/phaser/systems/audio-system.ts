@@ -26,7 +26,7 @@ export class AudioSystem {
   }
 
   preload(): void {
-    const bgmBase = "/assets/gegx-rpg-music-free-v1.0/music";
+    const bgmBase = "/assets/soundtrack/gegx-rpg-music-free-v1.0/music";
 
     // Round 1: Adventure / Forest
     this.scene.load.audio("bgm_round_1", [
@@ -91,7 +91,9 @@ export class AudioSystem {
         // Resume or start current stage music once unlocked
         if (this.currentStage !== null) {
           if (!this.currentMusic || !this.currentMusic.isPlaying) {
-            this.playStageMusic(this.currentStage);
+            const stageToPlay = this.currentStage;
+            this.currentStage = null; // force restart on unlock
+            this.playStageMusic(stageToPlay);
           }
         }
 

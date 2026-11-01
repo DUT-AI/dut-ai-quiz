@@ -43,11 +43,16 @@ export class AnimationSystem {
       this.scene.load.image(`inquisitor_strike_${i}`, `${inquisitorBase}/Inquisitor_Strike/west/frame_${pad}.png`);
     }
 
-    // 3. Preload Grave Wraith (Boss Stage 2) Idle (Facing West, frame_001 to frame_012)
-    const wraithBase = `${charBase}/grave-wraith-FREE/Animations/Idle/west`;
-    for (let i = 1; i <= 12; i++) {
+    // 3. Preload Dwarven Hammer Engineer (Boss Stage 2) Idle, Walk & Hammer_Smash (Facing West)
+    const dwarfBase = `${charBase}/dwarven-hammer-engineer-FREE/Animations`;
+    for (let i = 0; i < 13; i++) {
       const pad = String(i).padStart(3, "0");
-      this.scene.load.image(`wraith_idle_${i}`, `${wraithBase}/frame_${pad}.png`);
+      this.scene.load.image(`dwarf_idle_${i}`, `${dwarfBase}/Idle/west/frame_${pad}.png`);
+    }
+    for (let i = 0; i < 16; i++) {
+      const pad = String(i).padStart(3, "0");
+      this.scene.load.image(`dwarf_walk_${i}`, `${dwarfBase}/Walk/west/frame_${pad}.png`);
+      this.scene.load.image(`dwarf_smash_${i}`, `${dwarfBase}/Hammer_Smash/west/frame_${pad}.png`);
     }
 
     // 4. Preload Faceless Void Reaper (Boss Stage 3) Idle, Walk & Void_Strike (Facing West)
@@ -121,26 +126,35 @@ export class AnimationSystem {
       this.scene.anims.create({
         key: "inquisitor_attack",
         frames: Array.from({ length: 20 }, (_, i) => ({ key: `inquisitor_strike_${i}` })),
-        frameRate: 18,
+        frameRate: 24,
         repeat: 0,
       });
     }
 
-    // 3. Grave Wraith Animations (Boss Stage 2)
-    if (!this.scene.anims.exists("wraith_idle")) {
+    // 3. Corrupted Dark Knight Animations (Boss Stage 2)
+    if (!this.scene.anims.exists("dark_knight_idle")) {
       this.scene.anims.create({
-        key: "wraith_idle",
-        frames: Array.from({ length: 12 }, (_, i) => ({ key: `wraith_idle_${i + 1}` })),
+        key: "dark_knight_idle",
+        frames: Array.from({ length: 13 }, (_, i) => ({ key: `dark_knight_idle_${i}` })),
         frameRate: 10,
         repeat: -1,
       });
     }
 
-    if (!this.scene.anims.exists("wraith_attack")) {
+    if (!this.scene.anims.exists("dark_knight_walk")) {
       this.scene.anims.create({
-        key: "wraith_attack",
-        frames: Array.from({ length: 12 }, (_, i) => ({ key: `wraith_idle_${i + 1}` })),
-        frameRate: 16,
+        key: "dark_knight_walk",
+        frames: Array.from({ length: 12 }, (_, i) => ({ key: `dark_knight_walk_${i}` })),
+        frameRate: 12,
+        repeat: -1,
+      });
+    }
+
+    if (!this.scene.anims.exists("dark_knight_attack")) {
+      this.scene.anims.create({
+        key: "dark_knight_attack",
+        frames: Array.from({ length: 16 }, (_, i) => ({ key: `dark_knight_slash_${i}` })),
+        frameRate: 20,
         repeat: 0,
       });
     }

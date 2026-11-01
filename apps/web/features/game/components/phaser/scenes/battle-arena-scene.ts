@@ -154,12 +154,12 @@ export class BattleArenaScene extends Phaser.Scene {
     } else if (stage === 2) {
       return {
         name,
-        idleAnimKey: "wraith_idle",
-        walkAnimKey: "wraith_idle",
-        attackAnimKey: "wraith_attack",
-        initialFrameKey: "wraith_idle_1",
+        idleAnimKey: "dark_knight_idle",
+        walkAnimKey: "dark_knight_walk",
+        attackAnimKey: "dark_knight_attack",
+        initialFrameKey: "dark_knight_idle_0",
         scale: 1.25,
-        originY: 189 / 256,
+        originY: 190 / 256,
       };
     } else {
       return {
@@ -274,24 +274,33 @@ export class BattleArenaScene extends Phaser.Scene {
       );
     });
 
-    // 7. Direct Boss Attack on Player (Parallel Text Dialogue + Dark Whoosh + Heavy Hit SFX)
+    // 7. Direct Boss Attack on Player (SYNCHRONIZED: Text Dialogue + Audio + Strike Animation trigger together)
     this.bridge.on("react:boss_attack", (data: { damage: number; dialogue?: string }) => {
-      this.bossDialogue.showBubble(data.dialogue || "Trúng chiêu đi!", 1000);
-      this.audioSystem.playSfx("sfx_boss_attack");
+      // If Stage 2 Grave Wraith (ghost), spawn spectral mist trail
+      if (this.stage === 2) {
+        this.particleSystem.emitGhostTrail(this.boss.container.x, this.boss.container.y - 40);
+      }
 
+      // 1. Kick off boss attack dash & anim at tick 0
       this.boss.performAttack(
         this.player.container.x,
         () => {
+          // 2. Play impact sound, shake screen and trigger hit damage right when boss reaches player
           this.audioSystem.playSfx("sfx_boss_hit");
           this.player.takeDamage(data.damage);
           this.cameras.main.shake(250, 0.015);
-          this.particleSystem.emitHitSparks(this.player.container.x, this.player.container.y - 40, 0xf43f5e);
+          const hitColor = this.stage === 2 ? 0x22d3ee : 0xf43f5e;
+          this.particleSystem.emitHitSparks(this.player.container.x, this.player.container.y - 40, hitColor);
           this.playerDialogue.showBubble("Đau quá!", 900);
         },
         () => {
           this.bridge.emit("phaser:turn_anim_complete", { outcome: "incorrect" });
         }
       );
+
+      // 2. Synchronized: show dialogue bubble & whoosh sound at the exact same moment attack starts
+      this.bossDialogue.showBubble(data.dialogue || "Trúng chiêu đi!", 1000);
+      this.audioSystem.playSfx("sfx_boss_attack");
     });
 
     // 8. Boss Defeat
