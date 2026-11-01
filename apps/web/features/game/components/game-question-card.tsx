@@ -79,8 +79,6 @@ export default function GameQuestionCard({
                 btnStyles = isSelectedCorrect 
                   ? "border-emerald-500 bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 shadow-sm shadow-emerald-500/20" 
                   : "border-rose-500 bg-rose-100 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 shadow-sm shadow-rose-500/20";
-              } else if (correctOptionId && option.id === correctOptionId) {
-                btnStyles = "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-300 shadow-sm";
               } else {
                 btnStyles = "border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 bg-zinc-50 dark:bg-zinc-950 opacity-60 cursor-default shadow-none pointer-events-none";
               }

@@ -1,5 +1,6 @@
 import type { Config } from "tailwindcss";
 import plugin from "tailwindcss/plugin";
+import colors from "tailwindcss/colors";
 
 const config: Config = {
   darkMode: ["class"],
@@ -68,7 +69,10 @@ const config: Config = {
         "gray-navy": "#626C7F",
         green: "#26D782",
         white: "#F4F6FA",
-        red: "#EE5454",
+        red: {
+          ...colors.red,
+          DEFAULT: "#EE5454",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

@@ -1,11 +1,11 @@
 import { test, expect } from "@playwright/test";
 
-test.describe("Phaser 4 Game Arena V2 (/game_v2)", () => {
+test.describe("Phaser 4 Game Arena (/lessons/[slug]/game)", () => {
   const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3000";
 
-  test("should render the Phaser 2D Canvas Arena and characters smoothly", async ({ page }) => {
-    // Navigate to Game v2 route
-    await page.goto(`${BASE_URL}/lessons/bai-tap-1/game_v2`);
+  test("should render the Phaser 2D Canvas Arena and characters smoothly in main game route", async ({ page }) => {
+    // Navigate to standard Game route
+    await page.goto(`${BASE_URL}/lessons/bai-tap-1/game`);
 
     // Wait for the container to mount
     const arenaContainer = page.locator(".aspect-\\[16\\/9\\]");
@@ -27,13 +27,6 @@ test.describe("Phaser 4 Game Arena V2 (/game_v2)", () => {
     await muteButton.click();
 
     // Capture screenshot for visual inspection
-    await canvas.screenshot({ path: "apps/web/tests/e2e/screenshots/phaser-arena-v2.png" });
-  });
-
-  test("should maintain isolation from Game v1", async ({ page }) => {
-    await page.goto(`${BASE_URL}/lessons/bai-tap-1/game`);
-    // Ensure Game v1 continues rendering without errors
-    const v1Hero = page.locator("text=ĐẤU TRƯỜNG");
-    await expect(v1Hero).toBeVisible({ timeout: 10000 });
+    await canvas.screenshot({ path: "apps/web/tests/e2e/screenshots/phaser-arena.png" });
   });
 });

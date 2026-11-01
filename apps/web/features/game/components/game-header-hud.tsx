@@ -16,7 +16,7 @@ export default function GameHeaderHud({
   score,
 }: GameHeaderHudProps) {
   return (
-    <header className="relative w-full max-w-[98%] mx-auto flex justify-between items-center bg-white dark:bg-navy-blue border-3 border-zinc-900 dark:border-zinc-700 p-3 md:p-4 rounded-none mb-3 z-10 shadow-md select-none">
+    <header className="relative w-full flex justify-between items-center bg-white dark:bg-navy-blue border-3 border-zinc-900 dark:border-zinc-700 p-3 md:p-4 rounded-none mb-3 z-10 shadow-md select-none">
       {/* Left Side: Stage progress dots */}
       <div className="flex flex-col items-start select-none">
         <div className="text-[10px] md:text-xs text-zinc-500 dark:text-zinc-400 mb-1 tracking-wider font-extrabold font-mono">

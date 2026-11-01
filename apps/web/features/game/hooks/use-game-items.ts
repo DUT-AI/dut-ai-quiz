@@ -63,6 +63,7 @@ export interface UseGameItemsProps {
   isBossMode: boolean;
   setGamification: React.Dispatch<React.SetStateAction<GamificationState | null>>;
   onFreezeTimer: () => void;
+  onItemUsed?: (itemType: ItemType) => void;
 }
 
 export function useGameItems({
@@ -77,6 +78,7 @@ export function useGameItems({
   isBossMode,
   setGamification,
   onFreezeTimer,
+  onItemUsed,
 }: UseGameItemsProps) {
   const useItemMutation = useUseGameItem();
   const [state, dispatch] = useReducer(gameItemsReducer, initialGameItemsState);
@@ -133,6 +135,7 @@ export function useGameItems({
         }
 
         dispatch({ type: "ACTIVATE_BUFF", item: type });
+        onItemUsed?.(type);
         toast.success(config.successMessage || `Đã kích hoạt ${config.name}!`);
         return;
       }
@@ -152,6 +155,7 @@ export function useGameItems({
           },
           {
             onSuccess: (data) => {
+              onItemUsed?.(type);
               toast.success(config.successMessage || `Đã sử dụng ${config.name}!`);
               if (data?.eliminated_option_ids) {
                 dispatch({
@@ -187,6 +191,7 @@ export function useGameItems({
       sessionId,
       stage,
       onFreezeTimer,
+      onItemUsed,
       setGamification,
     ]
   );

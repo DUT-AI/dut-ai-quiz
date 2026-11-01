@@ -11,7 +11,9 @@ export type GameSfxKey =
   | "sfx_spell_impact"
   | "sfx_freeze"
   | "sfx_rock_wall"
-  | "sfx_chest_open";
+  | "sfx_chest_open"
+  | "sfx_buff"
+  | "sfx_microscope";
 
 export class AudioSystem {
   private scene: Phaser.Scene;
@@ -75,6 +77,8 @@ export class AudioSystem {
     this.scene.load.audio("sfx_freeze", `${sfxBase}/Spells/Ice Freeze 1.wav`);
     this.scene.load.audio("sfx_rock_wall", `${sfxBase}/Spells/Rock Wall 1.wav`);
     this.scene.load.audio("sfx_chest_open", `${sfxBase}/Doors Gates and Chests/Chest Open 1.wav`);
+    this.scene.load.audio("sfx_buff", `${sfxBase}/Spells/Firebuff 1.wav`);
+    this.scene.load.audio("sfx_microscope", `${sfxBase}/Spells/Spell Impact 1.wav`);
   }
 
   create(isInitiallyMuted: boolean = false): void {

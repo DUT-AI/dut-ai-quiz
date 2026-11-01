@@ -239,13 +239,21 @@ export class BattleArenaScene extends Phaser.Scene {
     this.bridge.on("react:item_used", (data: ItemUseEvent) => {
       if (data.effectType === "freeze") {
         this.audioSystem.playSfx("sfx_freeze");
+        this.playerDialogue.showBubble("Đóng băng thời gian!", 1200);
       } else if (data.effectType === "shield") {
         this.audioSystem.playSfx("sfx_shield");
+        this.particleSystem.emitShieldAura(this.player.container.x, this.player.container.y - 30);
+        this.playerDialogue.showBubble("Khiên Hộ Mệnh!", 1200);
+      } else if (data.effectType === "double") {
+        this.audioSystem.playSfx("sfx_buff");
+        this.playerDialogue.showBubble("Bùa Nhân Phẩm X2!", 1200);
+      } else if (data.effectType === "hint") {
+        this.audioSystem.playSfx("sfx_microscope");
+        this.playerDialogue.showBubble("Kính Hiển Vi soi đáp án!", 1200);
       } else {
         this.audioSystem.playSfx("sfx_chest_open");
+        this.playerDialogue.showBubble("Dùng vật phẩm!", 1200);
       }
-      this.particleSystem.emitShieldAura(this.player.container.x, this.player.container.y - 30);
-      this.playerDialogue.showBubble("Kích hoạt bảo hộ!", 1200);
     });
 
     // 6. Direct Player Attack (Parallel Text Dialogue + Slash + Hit SFX)

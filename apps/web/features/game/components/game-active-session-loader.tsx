@@ -69,5 +69,11 @@ export default function GameActiveSessionLoader({ lessonSlug }: GameActiveSessio
     );
   }
 
-  return <GameContainer lessonSlug={lessonSlug} initialSession={resolvedSession} />;
+  return (
+    <GameContainer
+      key={resolvedSession?.id || "game-session"}
+      lessonSlug={lessonSlug}
+      initialSession={resolvedSession}
+    />
+  );
 }
