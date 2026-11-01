@@ -13,11 +13,11 @@ export class AnimationSystem {
   preload(): void {
     const charBase = "/assets/character";
 
-    // 1. Preload Shield Knight (Player) Idle, Walk & Valiant_Slash (Facing East)
+    // 1. Preload Shield Knight (Player) Idle (Facing South-East), Walk & Valiant_Slash (Facing East)
     const knightBase = `${charBase}/shield-knight-FREE/Animations`;
     for (let i = 0; i < 13; i++) {
       const pad = String(i).padStart(3, "0");
-      this.scene.load.image(`knight_idle_${i}`, `${knightBase}/Idle/east/frame_${pad}.png`);
+      this.scene.load.image(`knight_idle_${i}`, `${knightBase}/Idle/south-east/frame_${pad}.png`);
     }
     for (let i = 0; i < 12; i++) {
       const pad = String(i).padStart(3, "0");
@@ -28,11 +28,11 @@ export class AnimationSystem {
       this.scene.load.image(`knight_slash_${i}`, `${knightBase}/Valiant_Slash/east/frame_${pad}.png`);
     }
 
-    // 2. Preload Bone Inquisitor (Boss Stage 1) Idle, Walk & Inquisitor_Strike (Facing West)
+    // 2. Preload Bone Inquisitor (Boss Stage 1) Idle (Facing South-West), Walk & Inquisitor_Strike (Facing West)
     const inquisitorBase = `${charBase}/bone-inquisitor-FREE/Animations`;
     for (let i = 0; i < 20; i++) {
       const pad = String(i).padStart(3, "0");
-      this.scene.load.image(`inquisitor_idle_${i}`, `${inquisitorBase}/Idle/west/frame_${pad}.png`);
+      this.scene.load.image(`inquisitor_idle_${i}`, `${inquisitorBase}/Idle/south-west/frame_${pad}.png`);
     }
     for (let i = 0; i < 14; i++) {
       const pad = String(i).padStart(3, "0");
@@ -43,11 +43,11 @@ export class AnimationSystem {
       this.scene.load.image(`inquisitor_strike_${i}`, `${inquisitorBase}/Inquisitor_Strike/west/frame_${pad}.png`);
     }
 
-    // 3. Preload Dwarven Hammer Engineer (Boss Stage 2) Idle, Walk & Hammer_Smash (Facing West)
+    // 3. Preload Dwarven Hammer Engineer (Boss Stage 2) Idle (Facing South-West), Walk & Hammer_Smash (Facing West)
     const dwarfBase = `${charBase}/dwarven-hammer-engineer-FREE/Animations`;
     for (let i = 0; i < 13; i++) {
       const pad = String(i).padStart(3, "0");
-      this.scene.load.image(`dwarf_idle_${i}`, `${dwarfBase}/Idle/west/frame_${pad}.png`);
+      this.scene.load.image(`dwarf_idle_${i}`, `${dwarfBase}/Idle/south-west/frame_${pad}.png`);
     }
     for (let i = 0; i < 16; i++) {
       const pad = String(i).padStart(3, "0");
@@ -55,11 +55,11 @@ export class AnimationSystem {
       this.scene.load.image(`dwarf_smash_${i}`, `${dwarfBase}/Hammer_Smash/west/frame_${pad}.png`);
     }
 
-    // 4. Preload Faceless Void Reaper (Boss Stage 3) Idle, Walk & Void_Strike (Facing West)
+    // 4. Preload Faceless Void Reaper (Boss Stage 3) Idle (Facing South-West), Walk & Void_Strike (Facing West)
     const reaperBase = `${charBase}/faceless-void-reaper-FREE/Animations`;
     for (let i = 0; i < 12; i++) {
       const pad = String(i).padStart(3, "0");
-      this.scene.load.image(`reaper_idle_${i}`, `${reaperBase}/Idle/west/frame_${pad}.png`);
+      this.scene.load.image(`reaper_idle_${i}`, `${reaperBase}/Idle/south-west/frame_${pad}.png`);
     }
     for (let i = 0; i < 12; i++) {
       const pad = String(i).padStart(3, "0");
@@ -131,30 +131,30 @@ export class AnimationSystem {
       });
     }
 
-    // 3. Corrupted Dark Knight Animations (Boss Stage 2)
-    if (!this.scene.anims.exists("dark_knight_idle")) {
+    // 3. Dwarven Hammer Engineer Animations (Boss Stage 2)
+    if (!this.scene.anims.exists("dwarf_idle")) {
       this.scene.anims.create({
-        key: "dark_knight_idle",
-        frames: Array.from({ length: 13 }, (_, i) => ({ key: `dark_knight_idle_${i}` })),
+        key: "dwarf_idle",
+        frames: Array.from({ length: 13 }, (_, i) => ({ key: `dwarf_idle_${i}` })),
         frameRate: 10,
         repeat: -1,
       });
     }
 
-    if (!this.scene.anims.exists("dark_knight_walk")) {
+    if (!this.scene.anims.exists("dwarf_walk")) {
       this.scene.anims.create({
-        key: "dark_knight_walk",
-        frames: Array.from({ length: 12 }, (_, i) => ({ key: `dark_knight_walk_${i}` })),
-        frameRate: 12,
+        key: "dwarf_walk",
+        frames: Array.from({ length: 16 }, (_, i) => ({ key: `dwarf_walk_${i}` })),
+        frameRate: 14,
         repeat: -1,
       });
     }
 
-    if (!this.scene.anims.exists("dark_knight_attack")) {
+    if (!this.scene.anims.exists("dwarf_attack")) {
       this.scene.anims.create({
-        key: "dark_knight_attack",
-        frames: Array.from({ length: 16 }, (_, i) => ({ key: `dark_knight_slash_${i}` })),
-        frameRate: 20,
+        key: "dwarf_attack",
+        frames: Array.from({ length: 16 }, (_, i) => ({ key: `dwarf_smash_${i}` })),
+        frameRate: 18,
         repeat: 0,
       });
     }

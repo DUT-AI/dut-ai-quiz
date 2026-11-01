@@ -154,12 +154,12 @@ export class BattleArenaScene extends Phaser.Scene {
     } else if (stage === 2) {
       return {
         name,
-        idleAnimKey: "dark_knight_idle",
-        walkAnimKey: "dark_knight_walk",
-        attackAnimKey: "dark_knight_attack",
-        initialFrameKey: "dark_knight_idle_0",
+        idleAnimKey: "dwarf_idle",
+        walkAnimKey: "dwarf_walk",
+        attackAnimKey: "dwarf_attack",
+        initialFrameKey: "dwarf_idle_0",
         scale: 1.25,
-        originY: 190 / 256,
+        originY: 188 / 256,
       };
     } else {
       return {
