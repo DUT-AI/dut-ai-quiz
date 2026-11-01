@@ -5,6 +5,7 @@ import { useLessons, useModules, useDeleteLesson, useReorderModules, useReorderL
 import type { Lesson, Module } from "@/features/lessons/types";
 import { ModuleFormModal } from "@/features/lessons/components/module-form-modal";
 import { ConfirmModal } from "@/components/molecules/confirm-modal";
+import { DeleteLessonModal } from "@/features/lessons/components/delete-lesson-modal";
 import { SearchBar } from "@/components/ui/search-bar";
 import { BookOpen, AlertCircle, Plus, ClipboardList, Layers, Folder } from "lucide-react";
 import Link from "next/link";
@@ -235,27 +236,25 @@ export default function LessonsPage() {
         />
       )}
 
-      <ConfirmModal
-        isOpen={!!deletingLesson}
-        title="Xoá bài học"
-        description={`Bạn có chắc chắn muốn xoá bài học "${deletingLesson?.name}"?\nCác câu hỏi trong bài học sẽ bị gỡ liên kết.`}
-        confirmLabel="Xoá ngay"
-        cancelLabel="Hủy"
-        variant="danger"
-        isLoading={deleteMut.isPending}
-        onConfirm={async () => {
-          if (deletingLesson) {
-            try {
-              await deleteMut.mutateAsync(deletingLesson.id);
-            } catch (err) {
-              console.error(err);
-            } finally {
-              setDeletingLesson(null);
+      {/* Delete Lesson Modal */}
+      {deletingLesson && (
+        <DeleteLessonModal
+          isOpen={!!deletingLesson}
+          lesson={deletingLesson}
+          allLessons={lessons || []}
+          isLoading={deleteMut.isPending}
+          onClose={() => setDeletingLesson(null)}
+          onConfirm={async (options) => {
+            if (deletingLesson) {
+              await deleteMut.mutateAsync({
+                id: deletingLesson.id,
+                action: options.action,
+                reassign_to_lesson_id: options.reassignToLessonId,
+              });
             }
-          }
-        }}
-        onCancel={() => setDeletingLesson(null)}
-      />
+          }}
+        />
+      )}
     </div>
   );
 }

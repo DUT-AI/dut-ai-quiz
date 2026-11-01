@@ -1,12 +1,12 @@
 from uuid import UUID
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities.question import DuplicateStatus, QuestionEntity, QuestionStatus
 from app.domain.interfaces import IQuestionRepository, QuestionSimilarityMatch
 from app.domain.value_objects import Difficulty, PoolType
-from app.infrastructure.persistence.models import Question, Tag
+from app.infrastructure.persistence.models import ExamQuestion, Question, Tag
 
 
 class QuestionRepository(IQuestionRepository):
@@ -280,3 +280,28 @@ class QuestionRepository(IQuestionRepository):
         if pool_type is not None:
             stmt = stmt.where(Question.pool_type == pool_type)
         return int(await self._s.scalar(stmt) or 0)
+
+    async def reassign_lesson(
+        self,
+        source_lesson_id: UUID,
+        target_lesson_id: UUID | None,
+    ) -> int:
+        stmt = (
+            update(Question)
+            .where(Question.lesson_id == source_lesson_id)
+            .values(lesson_id=target_lesson_id)
+        )
+        res = await self._s.execute(stmt)
+        await self._s.flush()
+        return res.rowcount  # type: ignore[no-any-return]
+
+    async def check_questions_in_exams(self, question_ids: list[UUID]) -> bool:
+        if not question_ids:
+            return False
+        stmt = (
+            select(func.count(ExamQuestion.id))
+            .where(ExamQuestion.question_id.in_(question_ids))
+            .limit(1)
+        )
+        count = await self._s.scalar(stmt)
+        return bool(count and count > 0)

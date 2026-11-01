@@ -1,8 +1,15 @@
 from datetime import datetime
+from enum import StrEnum
 from uuid import UUID
 
 from app.presentation.schemas.questions import QuestionOut
 from pydantic import BaseModel
+
+
+class LessonDeleteAction(StrEnum):
+    REASSIGN = "reassign"
+    UNASSIGN = "unassign"
+    DELETE = "delete"
 
 
 class LessonCreate(BaseModel):

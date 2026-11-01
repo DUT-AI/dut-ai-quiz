@@ -56,11 +56,28 @@ export function useUpdateLessonVideos(lessonId: string) {
   });
 }
 
+export interface DeleteLessonParams {
+  id: string;
+  action?: "reassign" | "unassign" | "delete";
+  reassign_to_lesson_id?: string;
+}
+
 export function useDeleteLesson() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) =>
-      apiClient.delete(`/api/v1/lessons/${id}`).then((r) => r.data),
+    mutationFn: (params: string | DeleteLessonParams) => {
+      const id = typeof params === "string" ? params : params.id;
+      const queryParams = new URLSearchParams();
+      if (typeof params !== "string") {
+        if (params.action) queryParams.set("action", params.action);
+        if (params.reassign_to_lesson_id) {
+          queryParams.set("reassign_to_lesson_id", params.reassign_to_lesson_id);
+        }
+      }
+      const qs = queryParams.toString();
+      const url = `/api/v1/lessons/${id}${qs ? `?${qs}` : ""}`;
+      return apiClient.delete(url).then((r) => r.data);
+    },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["lessons"] });
       void qc.invalidateQueries({ queryKey: ["questions"] });

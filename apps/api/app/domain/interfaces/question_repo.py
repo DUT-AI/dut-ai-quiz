@@ -73,3 +73,15 @@ class IQuestionRepository(Protocol):
     ) -> int:
         """Count questions assigned to a lesson, optionally filtered by pool_type."""
         ...
+
+    async def reassign_lesson(
+        self,
+        source_lesson_id: UUID,
+        target_lesson_id: UUID | None,
+    ) -> int:
+        """Reassign all questions from source lesson to target lesson (or None to unassign). Returns count updated."""
+        ...
+
+    async def check_questions_in_exams(self, question_ids: list[UUID]) -> bool:
+        """Check if any of the given question IDs are linked to exam questions."""
+        ...

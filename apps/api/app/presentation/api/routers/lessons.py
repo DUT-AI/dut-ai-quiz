@@ -27,6 +27,7 @@ from app.presentation.api.deps import CurrentUser, EducatorUser
 from app.presentation.schemas.lessons import (
     LessonBulkIndexOut,
     LessonCreate,
+    LessonDeleteAction,
     LessonDetailOut,
     LessonIndexOut,
     LessonMetadataOut,
@@ -262,9 +263,15 @@ async def delete_lesson(
     user: EducatorUser,
     lesson_id: str,
     use_case: FromDishka[DeleteLessonUseCase],
+    action: LessonDeleteAction = Query(default=LessonDeleteAction.UNASSIGN),
+    reassign_to_lesson_id: str | None = Query(default=None),
 ):
     try:
-        ok = await use_case.execute(lesson_id)
+        ok = await use_case.execute(
+            lesson_id=lesson_id,
+            action=action,
+            reassign_to_lesson_id=reassign_to_lesson_id,
+        )
         if not ok:
             raise HTTPException(status_code=404, detail="Lesson not found")
         return {"ok": True}

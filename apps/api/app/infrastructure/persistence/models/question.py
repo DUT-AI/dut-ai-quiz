@@ -51,7 +51,7 @@ class Question(Base):
     )
     lesson_id: Mapped[UUID | None] = mapped_column(
         pgUUID(as_uuid=True),
-        ForeignKey("lessons.id", ondelete="CASCADE"),
+        ForeignKey("lessons.id", ondelete="SET NULL"),
         index=True,
         nullable=True,
     )
