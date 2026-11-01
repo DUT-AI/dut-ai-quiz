@@ -1,0 +1,31 @@
+RPG MUSIC FREE: LICENSE
+Version 1.0
+
+This license covers every file in this download: music and data files.
+
+YOU MAY
+
+  * Use these files in personal, educational and commercial projects.
+  * Use them in games and videos you sell, on any platform, with no revenue limit.
+  * Cut, loop, pitch, layer, mix and otherwise modify them for your project.
+  * Use them in an unlimited number of your own projects.
+  * Let your team and contractors use them for work on your projects.
+
+YOU MAY NOT
+
+  * Resell the files themselves, as they are or modified.
+  * Redistribute them: no repacking into another asset pack, sound library, template,
+    game kit or store listing, no giving away or sharing them as files.
+  * Use them as training data for machine learning or generative models.
+  * Register them with a content ID or audio fingerprinting service.
+  * Claim authorship of the music or the sounds themselves.
+
+CREDIT
+
+  Not required. If you would like to, "GegX" is enough.
+
+NO WARRANTY
+
+  The files are provided as they are, without warranty of any kind.
+
+This license grants usage rights, not ownership.

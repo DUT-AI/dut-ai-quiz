@@ -1,0 +1,34 @@
+{
+  "Idle": {
+    "south": 20,
+    "south-east": 20,
+    "east": 20,
+    "north-east": 20,
+    "north": 20,
+    "north-west": 20,
+    "west": 20,
+    "south-west": 20
+  },
+  "Walk": {
+    "south": 10,
+    "south-east": 13,
+    "east": 12,
+    "north-east": 11,
+    "north": 11,
+    "north-west": 16,
+    "west": 14,
+    "south-west": 12
+  },
+  "Inquisitor_Strike": {
+    "south": 20,
+    "south-east": 20,
+    "south-east-alternate-1": 20,
+    "east": 20,
+    "north-east": 20,
+    "north": 20,
+    "north-west": 20,
+    "west": 20,
+    "west-alternate-1": 20,
+    "south-west": 20
+  }
+}

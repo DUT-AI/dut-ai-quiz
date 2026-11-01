@@ -1,0 +1,32 @@
+{
+  "Idle": {
+    "east": 13,
+    "north": 13,
+    "north-east": 13,
+    "north-west": 13,
+    "south": 13,
+    "south-east": 13,
+    "south-west": 13,
+    "west": 13
+  },
+  "Walk": {
+    "east": 12,
+    "north": 12,
+    "north-east": 12,
+    "north-west": 12,
+    "south": 12,
+    "south-east": 11,
+    "south-west": 12,
+    "west": 12
+  },
+  "Valiant_Slash": {
+    "east": 16,
+    "north": 16,
+    "north-east": 16,
+    "north-west": 16,
+    "south": 16,
+    "south-east": 16,
+    "south-west": 16,
+    "west": 16
+  }
+}

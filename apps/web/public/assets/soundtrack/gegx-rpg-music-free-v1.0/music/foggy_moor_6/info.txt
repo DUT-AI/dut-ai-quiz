@@ -1,0 +1,18 @@
+RPG Music Free v1.0 by GegX
+
+foggy_moor_6  (loop 1:01)
+    mood: peaceful | energy: low | tempo: slow (about 7 chord changes per minute)
+    brightness: warm | mode: minor | dynamics: gentle swells | texture: dense
+    instruments: low strings, double bass, church bell
+    use: moor, swamp, wasteland, fog
+    tags: peaceful, slow, drone, minor, moor
+
+Tempo is given as chord changes per minute: how often the harmony moves says more
+about how calm a track feels than a beat count. Under 6 per minute means long held
+chords, above 16 the harmony moves every few seconds. Tracks driven by drums say
+"driving beat" instead. Brightness describes the
+sound colour (dark, warm, bright), mode is minor, major, modal or unclear when the
+track keeps its key open. The same attributes are in loops.json and in an info.txt
+next to every track.
+
+More tracks and 66 sound effects: https://gegx.itch.io/rpg-audio-pack

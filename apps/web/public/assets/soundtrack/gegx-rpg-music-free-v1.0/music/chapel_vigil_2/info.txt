@@ -1,0 +1,18 @@
+RPG Music Free v1.0 by GegX
+
+chapel_vigil_2  (loop 1:01)
+    mood: peaceful | energy: medium | tempo: fast (about 18 chord changes per minute)
+    brightness: warm | mode: modal | dynamics: flat | texture: layered
+    instruments: organ, choir pad
+    use: chapel, crypt, funeral, night vigil
+    tags: peaceful, fast, drone, chapel
+
+Tempo is given as chord changes per minute: how often the harmony moves says more
+about how calm a track feels than a beat count. Under 6 per minute means long held
+chords, above 16 the harmony moves every few seconds. Tracks driven by drums say
+"driving beat" instead. Brightness describes the
+sound colour (dark, warm, bright), mode is minor, major, modal or unclear when the
+track keeps its key open. The same attributes are in loops.json and in an info.txt
+next to every track.
+
+More tracks and 66 sound effects: https://gegx.itch.io/rpg-audio-pack

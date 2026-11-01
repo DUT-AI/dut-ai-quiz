@@ -1,0 +1,830 @@
+{
+ "about": "Loop points per file. Every *_loop file loops over its whole length (loop_start_sample 0, loop_end_sample = file length). 'attributes' describes each track (tempo as chord changes per minute, see README.md, Track guide).",
+ "music": {
+  "title_theme": {
+   "folder": "music/title_theme",
+   "sample_rate": 48000,
+   "channels": 2,
+   "intro": "title_theme_intro",
+   "loop": "title_theme_loop",
+   "outro": "title_theme_outro",
+   "loop_start_sample": 0,
+   "loop_end_sample": 3355712,
+   "loop_start_s": 0.0,
+   "loop_end_s": 69.9107,
+   "intro_s": 8.0,
+   "outro_s": 8.0,
+   "loudness_dbfs_rms": -18.0,
+   "attributes": {
+    "mood": "epic",
+    "energy": "medium",
+    "tempo": "slow",
+    "tempo_detail": "slow (about 3 chord changes per minute)",
+    "chord_changes_per_minute": 3.4,
+    "brightness": "warm",
+    "mode": "unclear",
+    "instruments": [
+     "orchestra",
+     "brass fanfare",
+     "retro synth lead"
+    ],
+    "dynamics": "flat",
+    "texture": "layered",
+    "suggested_use": [
+     "title screen",
+     "main menu",
+     "opening"
+    ],
+    "loop_length_s": 69.9,
+    "tags": [
+     "epic",
+     "slow",
+     "orchestral",
+     "title screen"
+    ]
+   }
+  },
+  "forest": {
+   "folder": "music/forest",
+   "sample_rate": 48000,
+   "channels": 2,
+   "intro": "forest_intro",
+   "loop": "forest_loop",
+   "outro": "forest_outro",
+   "loop_start_sample": 0,
+   "loop_end_sample": 3736116,
+   "loop_start_s": 0.0,
+   "loop_end_s": 77.8358,
+   "intro_s": 8.0,
+   "outro_s": 8.0,
+   "loudness_dbfs_rms": -18.0,
+   "attributes": {
+    "mood": "mysterious",
+    "energy": "low",
+    "tempo": "slow",
+    "tempo_detail": "slow (about 10 chord changes per minute)",
+    "chord_changes_per_minute": 10.0,
+    "brightness": "warm",
+    "mode": "minor",
+    "instruments": [
+     "woodwinds",
+     "soft strings",
+     "harp",
+     "soft percussion"
+    ],
+    "dynamics": "building",
+    "texture": "layered",
+    "suggested_use": [
+     "forest",
+     "grove",
+     "elf village"
+    ],
+    "loop_length_s": 77.8,
+    "tags": [
+     "mysterious",
+     "slow",
+     "woodwinds",
+     "minor",
+     "forest"
+    ]
+   }
+  },
+  "cave": {
+   "folder": "music/cave",
+   "sample_rate": 48000,
+   "channels": 2,
+   "intro": "cave_intro",
+   "loop": "cave_loop",
+   "outro": "cave_outro",
+   "loop_start_sample": 0,
+   "loop_end_sample": 3495253,
+   "loop_start_s": 0.0,
+   "loop_end_s": 72.8178,
+   "intro_s": 8.0,
+   "outro_s": 8.0,
+   "loudness_dbfs_rms": -18.0,
+   "attributes": {
+    "mood": "mysterious",
+    "energy": "low",
+    "tempo": "medium",
+    "tempo_detail": "medium (about 12 chord changes per minute)",
+    "chord_changes_per_minute": 11.5,
+    "brightness": "warm",
+    "mode": "unclear",
+    "instruments": [
+     "low strings",
+     "bells"
+    ],
+    "dynamics": "building",
+    "texture": "layered",
+    "suggested_use": [
+     "cave",
+     "mine",
+     "quiet dungeon"
+    ],
+    "loop_length_s": 72.8,
+    "tags": [
+     "mysterious",
+     "medium",
+     "bells",
+     "cave"
+    ]
+   }
+  },
+  "snowy_peaks": {
+   "folder": "music/snowy_peaks",
+   "sample_rate": 48000,
+   "channels": 2,
+   "intro": "snowy_peaks_intro",
+   "loop": "snowy_peaks_loop",
+   "outro": "snowy_peaks_outro",
+   "loop_start_sample": 0,
+   "loop_end_sample": 3232095,
+   "loop_start_s": 0.0,
+   "loop_end_s": 67.3353,
+   "intro_s": 8.0,
+   "outro_s": 8.0,
+   "loudness_dbfs_rms": -18.0,
+   "attributes": {
+    "mood": "peaceful",
+    "energy": "low",
+    "tempo": "slow",
+    "tempo_detail": "slow (about 9 chord changes per minute)",
+    "chord_changes_per_minute": 8.9,
+    "brightness": "bright",
+    "mode": "minor",
+    "instruments": [
+     "soft strings",
+     "celesta",
+     "glockenspiel"
+    ],
+    "dynamics": "gentle swells",
+    "texture": "layered",
+    "suggested_use": [
+     "snow",
+     "mountain",
+     "ice cave"
+    ],
+    "loop_length_s": 67.3,
+    "tags": [
+     "peaceful",
+     "slow",
+     "bells",
+     "minor",
+     "snow"
+    ]
+   }
+  },
+  "adventure_begins": {
+   "folder": "music/adventure_begins",
+   "sample_rate": 48000,
+   "channels": 2,
+   "intro": "adventure_begins_intro",
+   "loop": "adventure_begins_loop",
+   "outro": "adventure_begins_outro",
+   "loop_start_sample": 0,
+   "loop_end_sample": 5782035,
+   "loop_start_s": 0.0,
+   "loop_end_s": 120.4591,
+   "intro_s": 8.0,
+   "outro_s": 8.0,
+   "loudness_dbfs_rms": -18.0,
+   "attributes": {
+    "mood": "cheerful",
+    "energy": "medium",
+    "tempo": "fast",
+    "tempo_detail": "fast (about 18 chord changes per minute)",
+    "chord_changes_per_minute": 17.9,
+    "brightness": "warm",
+    "mode": "major",
+    "instruments": [
+     "fingerpicked guitar",
+     "piano",
+     "harp",
+     "bells",
+     "pads"
+    ],
+    "dynamics": "gentle swells",
+    "texture": "layered",
+    "suggested_use": [
+     "departure",
+     "camp",
+     "intro",
+     "credits"
+    ],
+    "loop_length_s": 120.5,
+    "tags": [
+     "cheerful",
+     "fast",
+     "acoustic",
+     "major",
+     "departure"
+    ]
+   }
+  },
+  "misty_lake": {
+   "folder": "music/misty_lake",
+   "sample_rate": 48000,
+   "channels": 2,
+   "intro": "misty_lake_intro",
+   "loop": "misty_lake_loop",
+   "outro": "misty_lake_outro",
+   "loop_start_sample": 0,
+   "loop_end_sample": 5788842,
+   "loop_start_s": 0.0,
+   "loop_end_s": 120.6009,
+   "intro_s": 8.0,
+   "outro_s": 8.0,
+   "loudness_dbfs_rms": -18.0,
+   "attributes": {
+    "mood": "peaceful",
+    "energy": "low",
+    "tempo": "slow",
+    "tempo_detail": "slow (about 5 chord changes per minute)",
+    "chord_changes_per_minute": 5.0,
+    "brightness": "dark",
+    "mode": "minor",
+    "instruments": [
+     "piano",
+     "flute",
+     "harp",
+     "chimes",
+     "pads"
+    ],
+    "dynamics": "gentle swells",
+    "texture": "sparse",
+    "suggested_use": [
+     "lake",
+     "swamp at dawn",
+     "dream sequence"
+    ],
+    "loop_length_s": 120.6,
+    "tags": [
+     "peaceful",
+     "slow",
+     "bells",
+     "minor",
+     "lake"
+    ]
+   }
+  },
+  "foggy_moor": {
+   "folder": "music/foggy_moor",
+   "sample_rate": 48000,
+   "channels": 2,
+   "intro": "foggy_moor_intro",
+   "loop": "foggy_moor_loop",
+   "outro": "foggy_moor_outro",
+   "loop_start_sample": 0,
+   "loop_end_sample": 2912577,
+   "loop_start_s": 0.0,
+   "loop_end_s": 60.6787,
+   "intro_s": 8.0,
+   "outro_s": 8.0,
+   "loudness_dbfs_rms": -18.0,
+   "attributes": {
+    "mood": "dark",
+    "energy": "low",
+    "tempo": "very slow",
+    "tempo_detail": "very slow (about 5 chord changes per minute)",
+    "chord_changes_per_minute": 4.9,
+    "brightness": "warm",
+    "mode": "modal",
+    "instruments": [
+     "cello drone",
+     "double bass",
+     "church bell"
+    ],
+    "dynamics": "strong swells",
+    "texture": "sparse",
+    "suggested_use": [
+     "moor",
+     "swamp",
+     "wasteland",
+     "fog"
+    ],
+    "loop_length_s": 60.7,
+    "tags": [
+     "dark",
+     "very slow",
+     "drone",
+     "moor"
+    ]
+   }
+  },
+  "foggy_moor_2": {
+   "folder": "music/foggy_moor_2",
+   "sample_rate": 48000,
+   "channels": 2,
+   "intro": "foggy_moor_2_intro",
+   "loop": "foggy_moor_2_loop",
+   "outro": "foggy_moor_2_outro",
+   "loop_start_sample": 0,
+   "loop_end_sample": 2830126,
+   "loop_start_s": 0.0,
+   "loop_end_s": 58.961,
+   "intro_s": 8.0,
+   "outro_s": 8.0,
+   "loudness_dbfs_rms": -18.0,
+   "attributes": {
+    "mood": "peaceful",
+    "energy": "medium",
+    "tempo": "fast",
+    "tempo_detail": "fast (about 18 chord changes per minute)",
+    "chord_changes_per_minute": 18.3,
+    "brightness": "warm",
+    "mode": "minor",
+    "instruments": [
+     "low strings",
+     "double bass",
+     "church bell"
+    ],
+    "dynamics": "building",
+    "texture": "sparse",
+    "suggested_use": [
+     "moor",
+     "swamp",
+     "wasteland",
+     "fog"
+    ],
+    "loop_length_s": 59.0,
+    "tags": [
+     "peaceful",
+     "fast",
+     "drone",
+     "minor",
+     "moor"
+    ]
+   }
+  },
+  "foggy_moor_4": {
+   "folder": "music/foggy_moor_4",
+   "sample_rate": 48000,
+   "channels": 2,
+   "intro": "foggy_moor_4_intro",
+   "loop": "foggy_moor_4_loop",
+   "outro": "foggy_moor_4_outro",
+   "loop_start_sample": 0,
+   "loop_end_sample": 2922940,
+   "loop_start_s": 0.0,
+   "loop_end_s": 60.8946,
+   "intro_s": 8.0,
+   "outro_s": 8.0,
+   "loudness_dbfs_rms": -18.0,
+   "attributes": {
+    "mood": "peaceful",
+    "energy": "medium",
+    "tempo": "medium",
+    "tempo_detail": "medium (about 16 chord changes per minute)",
+    "chord_changes_per_minute": 15.8,
+    "brightness": "warm",
+    "mode": "minor",
+    "instruments": [
+     "low strings",
+     "double bass",
+     "church bell"
+    ],
+    "dynamics": "gentle swells",
+    "texture": "dense",
+    "suggested_use": [
+     "moor",
+     "swamp",
+     "wasteland",
+     "fog"
+    ],
+    "loop_length_s": 60.9,
+    "tags": [
+     "peaceful",
+     "medium",
+     "drone",
+     "minor",
+     "moor"
+    ]
+   }
+  },
+  "foggy_moor_5": {
+   "folder": "music/foggy_moor_5",
+   "sample_rate": 48000,
+   "channels": 2,
+   "intro": "foggy_moor_5_intro",
+   "loop": "foggy_moor_5_loop",
+   "outro": "foggy_moor_5_outro",
+   "loop_start_sample": 0,
+   "loop_end_sample": 2835522,
+   "loop_start_s": 0.0,
+   "loop_end_s": 59.0734,
+   "intro_s": 8.0,
+   "outro_s": 8.0,
+   "loudness_dbfs_rms": -18.0,
+   "attributes": {
+    "mood": "peaceful",
+    "energy": "low",
+    "tempo": "slow",
+    "tempo_detail": "slow (about 7 chord changes per minute)",
+    "chord_changes_per_minute": 7.1,
+    "brightness": "warm",
+    "mode": "modal",
+    "instruments": [
+     "low strings",
+     "double bass",
+     "church bell"
+    ],
+    "dynamics": "strong swells",
+    "texture": "layered",
+    "suggested_use": [
+     "moor",
+     "swamp",
+     "wasteland",
+     "fog"
+    ],
+    "loop_length_s": 59.1,
+    "tags": [
+     "peaceful",
+     "slow",
+     "drone",
+     "moor"
+    ]
+   }
+  },
+  "foggy_moor_6": {
+   "folder": "music/foggy_moor_6",
+   "sample_rate": 48000,
+   "channels": 2,
+   "intro": "foggy_moor_6_intro",
+   "loop": "foggy_moor_6_loop",
+   "outro": "foggy_moor_6_outro",
+   "loop_start_sample": 0,
+   "loop_end_sample": 2912727,
+   "loop_start_s": 0.0,
+   "loop_end_s": 60.6818,
+   "intro_s": 8.0,
+   "outro_s": 8.0,
+   "loudness_dbfs_rms": -18.0,
+   "attributes": {
+    "mood": "peaceful",
+    "energy": "low",
+    "tempo": "slow",
+    "tempo_detail": "slow (about 7 chord changes per minute)",
+    "chord_changes_per_minute": 6.9,
+    "brightness": "warm",
+    "mode": "minor",
+    "instruments": [
+     "low strings",
+     "double bass",
+     "church bell"
+    ],
+    "dynamics": "gentle swells",
+    "texture": "dense",
+    "suggested_use": [
+     "moor",
+     "swamp",
+     "wasteland",
+     "fog"
+    ],
+    "loop_length_s": 60.7,
+    "tags": [
+     "peaceful",
+     "slow",
+     "drone",
+     "minor",
+     "moor"
+    ]
+   }
+  },
+  "abandoned_hall": {
+   "folder": "music/abandoned_hall",
+   "sample_rate": 48000,
+   "channels": 2,
+   "intro": "abandoned_hall_intro",
+   "loop": "abandoned_hall_loop",
+   "outro": "abandoned_hall_outro",
+   "loop_start_sample": 0,
+   "loop_end_sample": 2929607,
+   "loop_start_s": 0.0,
+   "loop_end_s": 61.0335,
+   "intro_s": 8.0,
+   "outro_s": 8.0,
+   "loudness_dbfs_rms": -18.0,
+   "attributes": {
+    "mood": "dark",
+    "energy": "low",
+    "tempo": "very slow",
+    "tempo_detail": "very slow (about 4 chord changes per minute)",
+    "chord_changes_per_minute": 3.9,
+    "brightness": "warm",
+    "mode": "modal",
+    "instruments": [
+     "piano",
+     "low drone"
+    ],
+    "dynamics": "gentle swells",
+    "texture": "layered",
+    "suggested_use": [
+     "ruins",
+     "abandoned castle",
+     "empty hall"
+    ],
+    "loop_length_s": 61.0,
+    "tags": [
+     "dark",
+     "very slow",
+     "drone",
+     "ruins"
+    ]
+   }
+  },
+  "abandoned_hall_2": {
+   "folder": "music/abandoned_hall_2",
+   "sample_rate": 48000,
+   "channels": 2,
+   "intro": "abandoned_hall_2_intro",
+   "loop": "abandoned_hall_2_loop",
+   "outro": "abandoned_hall_2_outro",
+   "loop_start_sample": 0,
+   "loop_end_sample": 2878820,
+   "loop_start_s": 0.0,
+   "loop_end_s": 59.9754,
+   "intro_s": 8.0,
+   "outro_s": 8.0,
+   "loudness_dbfs_rms": -18.0,
+   "attributes": {
+    "mood": "peaceful",
+    "energy": "medium",
+    "tempo": "medium",
+    "tempo_detail": "medium (about 16 chord changes per minute)",
+    "chord_changes_per_minute": 16.0,
+    "brightness": "warm",
+    "mode": "minor",
+    "instruments": [
+     "piano",
+     "low drone"
+    ],
+    "dynamics": "gentle swells",
+    "texture": "layered",
+    "suggested_use": [
+     "ruins",
+     "abandoned castle",
+     "empty hall"
+    ],
+    "loop_length_s": 60.0,
+    "tags": [
+     "peaceful",
+     "medium",
+     "drone",
+     "minor",
+     "ruins"
+    ]
+   }
+  },
+  "abandoned_hall_5": {
+   "folder": "music/abandoned_hall_5",
+   "sample_rate": 48000,
+   "channels": 2,
+   "intro": "abandoned_hall_5_intro",
+   "loop": "abandoned_hall_5_loop",
+   "outro": "abandoned_hall_5_outro",
+   "loop_start_sample": 0,
+   "loop_end_sample": 2827670,
+   "loop_start_s": 0.0,
+   "loop_end_s": 58.9098,
+   "intro_s": 8.0,
+   "outro_s": 8.0,
+   "loudness_dbfs_rms": -18.0,
+   "attributes": {
+    "mood": "peaceful",
+    "energy": "medium",
+    "tempo": "medium",
+    "tempo_detail": "medium (about 12 chord changes per minute)",
+    "chord_changes_per_minute": 12.2,
+    "brightness": "warm",
+    "mode": "modal",
+    "instruments": [
+     "piano",
+     "low drone"
+    ],
+    "dynamics": "building",
+    "texture": "sparse",
+    "suggested_use": [
+     "ruins",
+     "abandoned castle",
+     "empty hall"
+    ],
+    "loop_length_s": 58.9,
+    "tags": [
+     "peaceful",
+     "medium",
+     "drone",
+     "ruins"
+    ]
+   }
+  },
+  "abandoned_hall_6": {
+   "folder": "music/abandoned_hall_6",
+   "sample_rate": 48000,
+   "channels": 2,
+   "intro": "abandoned_hall_6_intro",
+   "loop": "abandoned_hall_6_loop",
+   "outro": "abandoned_hall_6_outro",
+   "loop_start_sample": 0,
+   "loop_end_sample": 2880344,
+   "loop_start_s": 0.0,
+   "loop_end_s": 60.0072,
+   "intro_s": 8.0,
+   "outro_s": 8.0,
+   "loudness_dbfs_rms": -18.0,
+   "attributes": {
+    "mood": "dark",
+    "energy": "medium",
+    "tempo": "very slow",
+    "tempo_detail": "very slow (about 3 chord changes per minute)",
+    "chord_changes_per_minute": 3.0,
+    "brightness": "warm",
+    "mode": "modal",
+    "instruments": [
+     "piano",
+     "low drone"
+    ],
+    "dynamics": "gentle swells",
+    "texture": "dense",
+    "suggested_use": [
+     "ruins",
+     "abandoned castle",
+     "empty hall"
+    ],
+    "loop_length_s": 60.0,
+    "tags": [
+     "dark",
+     "very slow",
+     "drone",
+     "ruins"
+    ]
+   }
+  },
+  "chapel_vigil_2": {
+   "folder": "music/chapel_vigil_2",
+   "sample_rate": 48000,
+   "channels": 2,
+   "intro": "chapel_vigil_2_intro",
+   "loop": "chapel_vigil_2_loop",
+   "outro": "chapel_vigil_2_outro",
+   "loop_start_sample": 0,
+   "loop_end_sample": 2923288,
+   "loop_start_s": 0.0,
+   "loop_end_s": 60.9018,
+   "intro_s": 8.0,
+   "outro_s": 8.0,
+   "loudness_dbfs_rms": -18.0,
+   "attributes": {
+    "mood": "peaceful",
+    "energy": "medium",
+    "tempo": "fast",
+    "tempo_detail": "fast (about 18 chord changes per minute)",
+    "chord_changes_per_minute": 17.7,
+    "brightness": "warm",
+    "mode": "modal",
+    "instruments": [
+     "organ",
+     "choir pad"
+    ],
+    "dynamics": "flat",
+    "texture": "layered",
+    "suggested_use": [
+     "chapel",
+     "crypt",
+     "funeral",
+     "night vigil"
+    ],
+    "loop_length_s": 60.9,
+    "tags": [
+     "peaceful",
+     "fast",
+     "drone",
+     "chapel"
+    ]
+   }
+  },
+  "chapel_vigil_6": {
+   "folder": "music/chapel_vigil_6",
+   "sample_rate": 48000,
+   "channels": 2,
+   "intro": "chapel_vigil_6_intro",
+   "loop": "chapel_vigil_6_loop",
+   "outro": "chapel_vigil_6_outro",
+   "loop_start_sample": 0,
+   "loop_end_sample": 2879630,
+   "loop_start_s": 0.0,
+   "loop_end_s": 59.9923,
+   "intro_s": 8.0,
+   "outro_s": 8.0,
+   "loudness_dbfs_rms": -18.0,
+   "attributes": {
+    "mood": "dark",
+    "energy": "low",
+    "tempo": "very slow",
+    "tempo_detail": "very slow (about 0 chord changes per minute)",
+    "chord_changes_per_minute": 0.0,
+    "brightness": "warm",
+    "mode": "unclear",
+    "instruments": [
+     "organ",
+     "choir pad"
+    ],
+    "dynamics": "flat",
+    "texture": "dense",
+    "suggested_use": [
+     "chapel",
+     "crypt",
+     "funeral",
+     "night vigil"
+    ],
+    "loop_length_s": 60.0,
+    "tags": [
+     "dark",
+     "very slow",
+     "drone",
+     "chapel"
+    ]
+   }
+  },
+  "chapel_vigil_8": {
+   "folder": "music/chapel_vigil_8",
+   "sample_rate": 48000,
+   "channels": 2,
+   "intro": "chapel_vigil_8_intro",
+   "loop": "chapel_vigil_8_loop",
+   "outro": "chapel_vigil_8_outro",
+   "loop_start_sample": 0,
+   "loop_end_sample": 2867732,
+   "loop_start_s": 0.0,
+   "loop_end_s": 59.7444,
+   "intro_s": 8.0,
+   "outro_s": 8.0,
+   "loudness_dbfs_rms": -18.0,
+   "attributes": {
+    "mood": "peaceful",
+    "energy": "low",
+    "tempo": "slow",
+    "tempo_detail": "slow (about 8 chord changes per minute)",
+    "chord_changes_per_minute": 8.0,
+    "brightness": "dark",
+    "mode": "minor",
+    "instruments": [
+     "organ",
+     "choir pad"
+    ],
+    "dynamics": "strong swells",
+    "texture": "sparse",
+    "suggested_use": [
+     "chapel",
+     "crypt",
+     "funeral",
+     "night vigil"
+    ],
+    "loop_length_s": 59.7,
+    "tags": [
+     "peaceful",
+     "slow",
+     "drone",
+     "minor",
+     "chapel"
+    ]
+   }
+  }
+ },
+ "jingles": {
+  "victory": {
+   "folder": "music/jingles",
+   "file": "victory",
+   "sample_rate": 48000,
+   "length_s": 9.938,
+   "loop": false,
+   "attributes": {
+    "mood": "epic",
+    "energy": "high",
+    "tempo": "short jingle",
+    "tempo_detail": "short jingle",
+    "brightness": "warm",
+    "mode": "unclear",
+    "instruments": [
+     "brass fanfare",
+     "retro synth lead"
+    ],
+    "dynamics": "swell and decay",
+    "texture": "layered",
+    "suggested_use": [
+     "victory",
+     "quest complete",
+     "level clear"
+    ],
+    "length_s": 9.9,
+    "tags": [
+     "epic",
+     "jingle",
+     "brass fanfare",
+     "victory"
+    ]
+   }
+  }
+ },
+ "sfx_loops": {}
+}

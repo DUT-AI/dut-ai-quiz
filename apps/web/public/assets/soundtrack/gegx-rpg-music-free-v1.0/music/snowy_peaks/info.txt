@@ -1,0 +1,18 @@
+RPG Music Free v1.0 by GegX
+
+snowy_peaks  (loop 1:07)
+    mood: peaceful | energy: low | tempo: slow (about 9 chord changes per minute)
+    brightness: bright | mode: minor | dynamics: gentle swells | texture: layered
+    instruments: soft strings, celesta, glockenspiel
+    use: snow, mountain, ice cave
+    tags: peaceful, slow, bells, minor, snow
+
+Tempo is given as chord changes per minute: how often the harmony moves says more
+about how calm a track feels than a beat count. Under 6 per minute means long held
+chords, above 16 the harmony moves every few seconds. Tracks driven by drums say
+"driving beat" instead. Brightness describes the
+sound colour (dark, warm, bright), mode is minor, major, modal or unclear when the
+track keeps its key open. The same attributes are in loops.json and in an info.txt
+next to every track.
+
+More tracks and 66 sound effects: https://gegx.itch.io/rpg-audio-pack

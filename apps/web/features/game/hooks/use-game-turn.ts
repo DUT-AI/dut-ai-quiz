@@ -1,4 +1,4 @@
-import { useReducer, useState, useCallback } from "react";
+import { useReducer, useState, useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 import { usePatchGameAnswer, useActiveGameSession } from "../queries";
@@ -45,6 +45,24 @@ export function useGameTurn({ session, lessonSlug }: UseGameTurnProps) {
     setGameResult,
     setScreen,
   } = session;
+
+  // Đảm bảo turn state luôn đồng bộ và reset về QUESTION_ACTIVE khi bắt đầu session mới hoặc đổi câu hỏi
+  const prevSessionIdRef = useRef<string | null>(null);
+  const prevQuestionIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const currentQId = currentQuestion?.id || null;
+    const isNewSession = Boolean(sessionId && sessionId !== prevSessionIdRef.current);
+    const isNewQuestion = Boolean(currentQId && currentQId !== prevQuestionIdRef.current);
+
+    if (isNewSession || isNewQuestion) {
+      prevSessionIdRef.current = sessionId;
+      prevQuestionIdRef.current = currentQId;
+      dispatch({ type: "RESET_FOR_NEXT_QUESTION" });
+      setBossStatus("idle");
+      setScreenShake(false);
+    }
+  }, [sessionId, currentQuestion?.id]);
 
   const submitAnswer = useCallback(
     (params: {

@@ -33,7 +33,7 @@ export type GameResultState = "playing" | "victory" | "defeat";
 export type StageProgressStatus = "correct" | "incorrect" | "idle";
 
 export const getBossName = (stageNum: number): string => {
-  if (stageNum === 1) return "SLIME CHÚA";
-  if (stageNum === 2) return "MA BÀN THẠCH";
-  return "MA NHÃN TỐI THƯỢNG";
+  if (stageNum === 1) return "PHÁN QUAN BỘ CỐT";
+  if (stageNum === 2) return "BÓNG MA HẦM MỘ";
+  return "TỬ THẦN HƯ KHÔNG";
 };

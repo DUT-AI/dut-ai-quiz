@@ -1,0 +1,12 @@
+{
+  "Idle": {
+    "south": 12,
+    "south-east": 10,
+    "east": 12,
+    "north-east": 12,
+    "north": 12,
+    "north-west": 12,
+    "west": 12,
+    "south-west": 10
+  }
+}

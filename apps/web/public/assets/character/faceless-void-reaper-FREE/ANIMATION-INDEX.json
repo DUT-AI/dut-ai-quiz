@@ -1,0 +1,32 @@
+{
+  "Idle": {
+    "east": 12,
+    "north": 12,
+    "north-east": 12,
+    "north-west": 12,
+    "south": 12,
+    "south-east": 12,
+    "south-west": 12,
+    "west": 12
+  },
+  "Walk": {
+    "east": 12,
+    "north": 11,
+    "north-east": 12,
+    "north-west": 12,
+    "south": 9,
+    "south-east": 11,
+    "south-west": 11,
+    "west": 12
+  },
+  "Void_Strike": {
+    "east": 16,
+    "north": 16,
+    "north-east": 16,
+    "north-west": 16,
+    "south": 16,
+    "south-east": 16,
+    "south-west": 16,
+    "west": 16
+  }
+}
