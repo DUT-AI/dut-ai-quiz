@@ -29,4 +29,6 @@ def downgrade() -> None:
     # Add difficulty column to questions
     op.add_column("questions", sa.Column("difficulty", sa.String(), nullable=True))
     # Add difficulty_filter column to practice_sessions
-    op.add_column("practice_sessions", sa.Column("difficulty_filter", sa.String(), nullable=True))
+    op.add_column(
+        "practice_sessions", sa.Column("difficulty_filter", sa.String(), nullable=True)
+    )

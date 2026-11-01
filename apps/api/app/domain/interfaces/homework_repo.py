@@ -44,7 +44,9 @@ class IHomeworkRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def get_submission(self, submission_id: UUID) -> HomeworkSubmissionEntity | None:
+    async def get_submission(
+        self, submission_id: UUID
+    ) -> HomeworkSubmissionEntity | None:
         raise NotImplementedError
 
     @abstractmethod
@@ -69,7 +71,9 @@ class IHomeworkRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def list_submissions(self, homework_id: UUID) -> list[HomeworkSubmissionEntity]:
+    async def list_submissions(
+        self, homework_id: UUID
+    ) -> list[HomeworkSubmissionEntity]:
         raise NotImplementedError
 
     @abstractmethod

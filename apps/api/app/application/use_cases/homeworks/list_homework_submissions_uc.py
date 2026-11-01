@@ -21,7 +21,10 @@ class ListHomeworkSubmissionsUseCase:
         homework_id: UUID,
     ) -> list[HomeworkSubmissionOutDTO]:
         await get_homework_or_raise(self._repository, homework_id)
-        profiles = {profile.user_id: profile for profile in await self._manage_service.get_users()}
+        profiles = {
+            profile.user_id: profile
+            for profile in await self._manage_service.get_users()
+        }
         result: list[HomeworkSubmissionOutDTO] = []
         for submission in await self._repository.list_submissions(homework_id):
             profile = profiles.get(submission.user_id)

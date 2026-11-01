@@ -25,7 +25,9 @@ def upgrade() -> None:
     # 1. Create game_session_answers table
     op.create_table(
         "game_session_answers",
-        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, default=uuid.uuid4),
+        sa.Column(
+            "id", postgresql.UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        ),
         sa.Column(
             "session_id",
             postgresql.UUID(as_uuid=True),
@@ -49,10 +51,16 @@ def upgrade() -> None:
             nullable=False,
             server_default=sa.func.now(),
         ),
-        sa.UniqueConstraint("session_id", "question_id", name="uq_game_session_answer_turn"),
+        sa.UniqueConstraint(
+            "session_id", "question_id", name="uq_game_session_answer_turn"
+        ),
     )
-    op.create_index("idx_game_session_answers_session_id", "game_session_answers", ["session_id"])
-    op.create_index("idx_game_session_answers_question_id", "game_session_answers", ["question_id"])
+    op.create_index(
+        "idx_game_session_answers_session_id", "game_session_answers", ["session_id"]
+    )
+    op.create_index(
+        "idx_game_session_answers_question_id", "game_session_answers", ["question_id"]
+    )
 
     # 2. Data backfill from legacy snapshots
     bind = op.get_bind()
@@ -173,6 +181,10 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_index("idx_game_session_answers_question_id", table_name="game_session_answers")
-    op.drop_index("idx_game_session_answers_session_id", table_name="game_session_answers")
+    op.drop_index(
+        "idx_game_session_answers_question_id", table_name="game_session_answers"
+    )
+    op.drop_index(
+        "idx_game_session_answers_session_id", table_name="game_session_answers"
+    )
     op.drop_table("game_session_answers")

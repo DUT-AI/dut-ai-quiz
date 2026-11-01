@@ -36,7 +36,9 @@ class ExamRepository(IExamRepository):
         r = await self._s.execute(stmt.order_by(Exam.title))
         return [m.to_entity() for m in r.scalars().all()]
 
-    async def list_published_for_student(self, user_id: int, now: datetime) -> list[ExamEntity]:
+    async def list_published_for_student(
+        self, user_id: int, now: datetime
+    ) -> list[ExamEntity]:
         # Condition for exams where access_scope is PUBLIC OR (RESTRICTED and user is participant)
         access_cond = or_(
             Exam.access_scope == ExamAccessScope.PUBLIC,

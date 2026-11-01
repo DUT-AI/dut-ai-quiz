@@ -20,21 +20,28 @@ def upgrade() -> None:
         "homeworks",
         sa.Column("grading_attempts", sa.Integer(), nullable=False, server_default="0"),
     )
-    op.add_column("homeworks", sa.Column("grading_started_at", sa.DateTime(), nullable=True))
+    op.add_column(
+        "homeworks", sa.Column("grading_started_at", sa.DateTime(), nullable=True)
+    )
     op.add_column(
         "homeworks",
-        sa.Column("grading_retryable", sa.Boolean(), nullable=False, server_default=sa.true()),
+        sa.Column(
+            "grading_retryable", sa.Boolean(), nullable=False, server_default=sa.true()
+        ),
     )
     op.add_column(
         "homework_submissions",
         sa.Column("grading_attempts", sa.Integer(), nullable=False, server_default="0"),
     )
     op.add_column(
-        "homework_submissions", sa.Column("grading_started_at", sa.DateTime(), nullable=True)
+        "homework_submissions",
+        sa.Column("grading_started_at", sa.DateTime(), nullable=True),
     )
     op.add_column(
         "homework_submissions",
-        sa.Column("grading_retryable", sa.Boolean(), nullable=False, server_default=sa.true()),
+        sa.Column(
+            "grading_retryable", sa.Boolean(), nullable=False, server_default=sa.true()
+        ),
     )
 
     # Old failures have no reliable error classification. Keep automatic retry disabled

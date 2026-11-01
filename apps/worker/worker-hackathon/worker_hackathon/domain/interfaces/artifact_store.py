@@ -8,7 +8,9 @@ class IArtifactStore(ABC):
         pass
 
     @abstractmethod
-    def upload_file(self, source_path: str, key: str, content_type: str | None = None) -> str:
+    def upload_file(
+        self, source_path: str, key: str, content_type: str | None = None
+    ) -> str:
         """Upload a local artifact and return its object URL."""
         pass
 

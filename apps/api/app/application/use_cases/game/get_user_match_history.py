@@ -40,7 +40,11 @@ class GetUserMatchHistoryUseCase:
             attempt_number = total_attempts - idx
 
             gam = s.gamification
-            total_q = len(s.question_sequence) if s.question_sequence else (s.question_limit or 0)
+            total_q = (
+                len(s.question_sequence)
+                if s.question_sequence
+                else (s.question_limit or 0)
+            )
             correct_q = int(gam.correct_count)
             accuracy = round((correct_q / total_q) * 100, 1) if total_q > 0 else 0.0
 

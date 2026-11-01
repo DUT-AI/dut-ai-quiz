@@ -60,13 +60,17 @@ def upgrade() -> None:
         sa.Column("submitted_at", sa.DateTime(), nullable=False),
         sa.Column("is_late", sa.Boolean(), server_default="false", nullable=False),
         sa.Column("attempt_number", sa.Integer(), nullable=False),
-        sa.Column("status", sa.String(length=30), server_default="UPLOADED", nullable=False),
+        sa.Column(
+            "status", sa.String(length=30), server_default="UPLOADED", nullable=False
+        ),
         sa.Column("is_pass", sa.Boolean(), nullable=True),
         sa.Column("score", sa.Float(), nullable=True),
         sa.Column("feedback", sa.Text(), nullable=True),
         sa.Column("score_details", postgresql.JSONB(), nullable=True),
         sa.Column("plagiarism_info", postgresql.JSONB(), nullable=True),
-        sa.Column("is_plagiarized", sa.Boolean(), server_default="false", nullable=False),
+        sa.Column(
+            "is_plagiarized", sa.Boolean(), server_default="false", nullable=False
+        ),
         sa.Column("plagiarized_from_user_id", sa.Integer(), nullable=True),
         sa.Column("grading_error", sa.Text(), nullable=True),
         sa.ForeignKeyConstraint(["homework_id"], ["homeworks.id"], ondelete="CASCADE"),

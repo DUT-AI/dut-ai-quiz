@@ -115,7 +115,9 @@ class ImportNotionLessonUseCase:
                 if len(text_lines[0]) > 200:
                     lesson_description += "..."
             else:
-                lesson_description = f"Lesson imported from {os.path.basename(md_filename)}"
+                lesson_description = (
+                    f"Lesson imported from {os.path.basename(md_filename)}"
+                )
 
         # 4. Generate or use existing lesson ID
         lesson_id = lesson_id or uuid4()
@@ -130,12 +132,16 @@ class ImportNotionLessonUseCase:
                 continue
 
             # Sanitize image filename
-            safe_basename = slugify_vietnamese(os.path.splitext(os.path.basename(img_name))[0])
+            safe_basename = slugify_vietnamese(
+                os.path.splitext(os.path.basename(img_name))[0]
+            )
             ext = os.path.splitext(img_name)[1].lower()
             s3_key = f"uploads/lessons/{lesson_id}/{safe_basename}{ext}"
 
             # Upload
-            self._storage.upload_fileobj(io.BytesIO(img_bytes), settings.s3_bucket_name, s3_key)
+            self._storage.upload_fileobj(
+                io.BytesIO(img_bytes), settings.s3_bucket_name, s3_key
+            )
             public_url = self._storage.get_object_url(settings.s3_bucket_name, s3_key)
 
             # Map both full name and basename to this URL
@@ -147,7 +153,9 @@ class ImportNotionLessonUseCase:
             alt = match.group(1)
             url = match.group(2)
             # URL decode path and normalize separators
-            decoded = urllib.parse.unquote(url.split("#")[0].split("?")[0]).replace("\\", "/")
+            decoded = urllib.parse.unquote(url.split("#")[0].split("?")[0]).replace(
+                "\\", "/"
+            )
             basename = os.path.basename(decoded)
 
             if decoded in uploaded_urls:
@@ -163,7 +171,9 @@ class ImportNotionLessonUseCase:
             src_match = re.search(r'src=["\']([^"\']+)["\']', full_tag)
             if src_match:
                 url = src_match.group(1)
-                decoded = urllib.parse.unquote(url.split("#")[0].split("?")[0]).replace("\\", "/")
+                decoded = urllib.parse.unquote(url.split("#")[0].split("?")[0]).replace(
+                    "\\", "/"
+                )
                 basename = os.path.basename(decoded)
 
                 if decoded in uploaded_urls:

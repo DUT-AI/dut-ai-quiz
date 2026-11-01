@@ -2,7 +2,9 @@ import os
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from app.application.use_cases.questions.start_pdf_import_uc import StartPdfImportUseCase
+from app.application.use_cases.questions.start_pdf_import_uc import (
+    StartPdfImportUseCase,
+)
 
 
 @pytest.fixture
@@ -37,7 +39,11 @@ def use_case(mock_import_session_repo, mock_pdf_import_queue, mock_redis):
 @patch("app.application.use_cases.questions.start_pdf_import_uc.fitz.open")
 @pytest.mark.asyncio
 async def test_successful_pdf_import(
-    mock_fitz_open, use_case, mock_pdf_import_queue, mock_import_session_repo, mock_redis
+    mock_fitz_open,
+    use_case,
+    mock_pdf_import_queue,
+    mock_import_session_repo,
+    mock_redis,
 ):
     # Mock valid PDF document
     mock_doc = MagicMock()
@@ -48,7 +54,8 @@ async def test_successful_pdf_import(
     pdf_bytes = b"dummy_pdf_content"
 
     with patch(
-        "app.application.use_cases.questions.start_pdf_import_uc.open", new_callable=MagicMock
+        "app.application.use_cases.questions.start_pdf_import_uc.open",
+        new_callable=MagicMock,
     ):
         response = await use_case.execute(
             user_id=1, pdf_bytes=pdf_bytes, target_scope=None, password=None
@@ -112,7 +119,9 @@ async def test_pdf_locked_without_password(mock_fitz_open, use_case):
     mock_fitz_open.return_value = mock_doc
 
     with pytest.raises(ValueError, match="PDF_LOCKED"):
-        await use_case.execute(user_id=1, pdf_bytes=b"locked_pdf", target_scope=None, password=None)
+        await use_case.execute(
+            user_id=1, pdf_bytes=b"locked_pdf", target_scope=None, password=None
+        )
 
 
 @pytest.mark.asyncio
@@ -125,7 +134,10 @@ async def test_pdf_invalid_password(mock_fitz_open, use_case):
 
     with pytest.raises(ValueError, match="INVALID_PASSWORD"):
         await use_case.execute(
-            user_id=1, pdf_bytes=b"locked_pdf", target_scope=None, password="wrong_password"
+            user_id=1,
+            pdf_bytes=b"locked_pdf",
+            target_scope=None,
+            password="wrong_password",
         )
 
 

@@ -72,7 +72,9 @@ async def get_submission_logs_route(
     use_case: FromDishka[GetSubmissionLogsUseCase],
 ):
     logs = await use_case(
-        submission_id=submission_id, user_id=user.id, quiz_role=quiz_role_from_manage(user.roles)
+        submission_id=submission_id,
+        user_id=user.id,
+        quiz_role=quiz_role_from_manage(user.roles),
     )
     return {"logs": logs}
 

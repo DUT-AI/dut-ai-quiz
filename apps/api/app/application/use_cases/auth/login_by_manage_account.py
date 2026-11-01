@@ -36,14 +36,20 @@ class LoginByManageAccountUseCase:
             manage_access_token = tokens.access_token
             profile = await self._manage_client.get_own_profile(manage_access_token)
             if not profile:
-                raise AppException("Không thể tải thông tin cá nhân từ hệ thống quản lý", 400)
+                raise AppException(
+                    "Không thể tải thông tin cá nhân từ hệ thống quản lý", 400
+                )
 
             manage_user_id = profile.id
             role_names = profile.role_names
 
             # 3. Create unified JWT token
             local_jwt = create_access_token(
-                {"user_id": manage_user_id, "roles": role_names or ["guest"], "type": "service_a"}
+                {
+                    "user_id": manage_user_id,
+                    "roles": role_names or ["guest"],
+                    "type": "service_a",
+                }
             )
 
             return AuthTokens(

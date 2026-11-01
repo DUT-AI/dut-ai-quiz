@@ -94,10 +94,14 @@ async def patch_game_answers(
     body: GamificationAnswerPatchIn,
     use_case: FromDishka[PatchGameAnswerUseCase],
 ) -> GamificationAnswerResultOut:
-    return await use_case.execute(session_id, user.id, body, user_source=user.user_source)
+    return await use_case.execute(
+        session_id, user.id, body, user_source=user.user_source
+    )
 
 
-@router.post("/sessions/{session_id}/use-item", response_model=GamificationUseItemResultOut)
+@router.post(
+    "/sessions/{session_id}/use-item", response_model=GamificationUseItemResultOut
+)
 @inject
 async def use_item_game(
     user: CurrentUser,
@@ -141,7 +145,9 @@ async def game_history_summary(
 @router.get("/users/{user_id}/summary", response_model=list[GameLessonSummaryOut])
 @inject
 async def get_user_game_summary_for_manage(
-    user_id: int, _service: ManageService, use_case: FromDishka[GetGameHistorySummaryUseCase]
+    user_id: int,
+    _service: ManageService,
+    use_case: FromDishka[GetGameHistorySummaryUseCase],
 ):
     """Lấy tóm tắt lịch sử game của 1 học viên dành cho Manage Service"""
     return await use_case.execute(user_id)
@@ -149,7 +155,9 @@ async def get_user_game_summary_for_manage(
 
 @router.get("/{lesson_slug}/leaderboard", response_model=list[GameLeaderboardRowOut])
 @inject
-async def get_game_leaderboard(lesson_slug: str, use_case: FromDishka[GetGameLeaderboardUseCase]):
+async def get_game_leaderboard(
+    lesson_slug: str, use_case: FromDishka[GetGameLeaderboardUseCase]
+):
     return await use_case.execute(lesson_slug)
 
 
@@ -170,4 +178,6 @@ async def list_game_sessions_for_sync(
     use_case: FromDishka[ListGameSessionsForSyncUseCase],
 ) -> GameSessionsSyncResponse:
     data = await use_case.execute(lesson_slug)
-    return GameSessionsSyncResponse(data=[GameSessionSyncOutDTO(**item) for item in data])
+    return GameSessionsSyncResponse(
+        data=[GameSessionSyncOutDTO(**item) for item in data]
+    )

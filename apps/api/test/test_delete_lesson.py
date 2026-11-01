@@ -25,7 +25,11 @@ class MockLessonRepository(ILessonRepository):
 
     async def get_by_identifier(self, identifier: str) -> LessonEntity | None:
         for item in self.db.values():
-            if str(item.id) == identifier or item.slug == identifier or item.name == identifier:
+            if (
+                str(item.id) == identifier
+                or item.slug == identifier
+                or item.name == identifier
+            ):
                 return item
         return None
 

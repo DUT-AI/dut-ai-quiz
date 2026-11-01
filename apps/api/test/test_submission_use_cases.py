@@ -192,7 +192,10 @@ async def test_presign_submit_success():
     )
 
     res = await use_case(
-        task_id=task.id, user_id=1, script_filename="predict.py", model_filename="weights.pth"
+        task_id=task.id,
+        user_id=1,
+        script_filename="predict.py",
+        model_filename="weights.pth",
     )
 
     assert res is not None

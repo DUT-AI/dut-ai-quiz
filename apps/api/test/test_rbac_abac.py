@@ -290,7 +290,9 @@ async def test_delete_hackathon_abac_logic():
     assert ok is True
 
     # Admin succeeds
-    ok_admin = await use_case.execute(hackathon_id=hackathon_id, user_id=99, is_admin=True)
+    ok_admin = await use_case.execute(
+        hackathon_id=hackathon_id, user_id=99, is_admin=True
+    )
     assert ok_admin is True
 
 
@@ -346,7 +348,9 @@ async def test_extract_auth_context_bearer_token(monkeypatch):
 @pytest.mark.asyncio
 async def test_extract_auth_context_api_key(monkeypatch):
     monkeypatch.setattr(settings, "auth_dev_bypass", False)
-    monkeypatch.setattr(settings, "third_party_api_keys", "secret-test-key, partner-key-123")
+    monkeypatch.setattr(
+        settings, "third_party_api_keys", "secret-test-key, partner-key-123"
+    )
 
     # Header X-API-Key
     req = DummyRequest(headers={"X-API-Key": "secret-test-key"})

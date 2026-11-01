@@ -25,12 +25,16 @@ class IGameItemStrategy(ABC):
         ...
 
     @abstractmethod
-    def validate(self, session: "GameSessionEntity", context: ItemExecutionContext) -> None:
+    def validate(
+        self, session: "GameSessionEntity", context: ItemExecutionContext
+    ) -> None:
         """Validate preconditions for using this item."""
         ...
 
     @abstractmethod
-    def calculate_price(self, session: "GameSessionEntity", context: ItemExecutionContext) -> int:
+    def calculate_price(
+        self, session: "GameSessionEntity", context: ItemExecutionContext
+    ) -> int:
         """Calculate the price required to use this item."""
         ...
 

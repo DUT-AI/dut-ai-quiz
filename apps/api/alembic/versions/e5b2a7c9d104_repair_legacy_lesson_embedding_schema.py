@@ -19,11 +19,15 @@ depends_on: str | Sequence[str] | None = None
 
 
 def _column_names(table_name: str) -> set[str]:
-    return {column["name"] for column in sa.inspect(op.get_bind()).get_columns(table_name)}
+    return {
+        column["name"] for column in sa.inspect(op.get_bind()).get_columns(table_name)
+    }
 
 
 def _index_names(table_name: str) -> set[str]:
-    return {index["name"] for index in sa.inspect(op.get_bind()).get_indexes(table_name)}
+    return {
+        index["name"] for index in sa.inspect(op.get_bind()).get_indexes(table_name)
+    }
 
 
 def upgrade() -> None:

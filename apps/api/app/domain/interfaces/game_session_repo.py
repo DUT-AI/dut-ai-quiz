@@ -7,7 +7,9 @@ from app.domain.entities.game import GameSessionEntity
 class IGameSessionRepository(Protocol):
     """Interface protocol for GameSessionRepository database operations."""
 
-    async def get(self, session_id: UUID, for_update: bool = False) -> GameSessionEntity | None:
+    async def get(
+        self, session_id: UUID, for_update: bool = False
+    ) -> GameSessionEntity | None:
         """Get a game session entity by its UUID, optionally applying row-level lock."""
         ...
 
@@ -33,7 +35,9 @@ class IGameSessionRepository(Protocol):
         """Count completed sessions for a specific user and lesson slug."""
         ...
 
-    async def get_leaderboard_by_lesson(self, lesson_slug: str, limit: int = 100) -> list[dict]:
+    async def get_leaderboard_by_lesson(
+        self, lesson_slug: str, limit: int = 100
+    ) -> list[dict]:
         """Get the game leaderboard for a specific lesson."""
         ...
 

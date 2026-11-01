@@ -21,7 +21,9 @@ class CancelSubmissionUseCase:
         self._team_repo = team_repo
         self._redis = redis
 
-    async def __call__(self, submission_id: UUID, user_id: int) -> HackathonSubmissionEntity:
+    async def __call__(
+        self, submission_id: UUID, user_id: int
+    ) -> HackathonSubmissionEntity:
         now = datetime.now()
 
         # 1. Lấy thông tin lượt nộp bài

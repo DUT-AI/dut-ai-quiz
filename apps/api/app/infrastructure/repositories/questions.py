@@ -13,7 +13,9 @@ class QuestionRepository(IQuestionRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._s = session
 
-    async def _resolve_tag_names(self, tag_ids_list: list[list[UUID]]) -> dict[UUID, str]:
+    async def _resolve_tag_names(
+        self, tag_ids_list: list[list[UUID]]
+    ) -> dict[UUID, str]:
         unique_ids = set()
         for ids in tag_ids_list:
             if ids:
@@ -93,12 +95,16 @@ class QuestionRepository(IQuestionRepository):
                 tag_uuid = tag_res.scalar_one_or_none()
 
             if tag_uuid:
-                stmt = stmt.where(func.array_position(Question.tags, tag_uuid).isnot(None))
+                stmt = stmt.where(
+                    func.array_position(Question.tags, tag_uuid).isnot(None)
+                )
             else:
                 # tag not found, force empty result
                 from uuid import uuid4
 
-                stmt = stmt.where(func.array_position(Question.tags, uuid4()).isnot(None))
+                stmt = stmt.where(
+                    func.array_position(Question.tags, uuid4()).isnot(None)
+                )
 
         stmt = (
             stmt.order_by(Question.created_at.desc(), Question.id.desc())
@@ -226,7 +232,9 @@ class QuestionRepository(IQuestionRepository):
     async def delete_bulk(self, question_ids: list[UUID]) -> int:
         if not question_ids:
             return 0
-        stmt = delete(Question).where(Question.id.in_(question_ids)).returning(Question.id)
+        stmt = (
+            delete(Question).where(Question.id.in_(question_ids)).returning(Question.id)
+        )
         res = await self._s.execute(stmt)
         return len(res.scalars().all())
 
@@ -255,8 +263,12 @@ class QuestionRepository(IQuestionRepository):
         matches: list[QuestionSimilarityMatch] = []
         for model, score in rows:
             question = model.to_entity()
-            question.tags = [tag_map[tag_id] for tag_id in model.tags if tag_id in tag_map]
-            matches.append(QuestionSimilarityMatch(question=question, score=float(score)))
+            question.tags = [
+                tag_map[tag_id] for tag_id in model.tags if tag_id in tag_map
+            ]
+            matches.append(
+                QuestionSimilarityMatch(question=question, score=float(score))
+            )
         return matches
 
     async def count_by_lesson_and_pool(

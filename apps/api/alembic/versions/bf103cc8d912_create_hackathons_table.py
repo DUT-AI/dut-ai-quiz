@@ -27,11 +27,15 @@ def upgrade() -> None:
         sa.Column("rules", sa.String(), nullable=False, server_default=""),
         sa.Column("start_time", sa.DateTime(), nullable=True),
         sa.Column("end_time", sa.DateTime(), nullable=True),
-        sa.Column("participation_mode", sa.String(), nullable=False, server_default="both"),
+        sa.Column(
+            "participation_mode", sa.String(), nullable=False, server_default="both"
+        ),
         sa.Column("created_by", sa.Integer(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(op.f("ix_hackathons_created_by"), "hackathons", ["created_by"], unique=False)
+    op.create_index(
+        op.f("ix_hackathons_created_by"), "hackathons", ["created_by"], unique=False
+    )
 
 
 def downgrade() -> None:

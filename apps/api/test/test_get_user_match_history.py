@@ -5,7 +5,9 @@ from uuid import uuid4
 import pytest
 from app.application.dtos.user import UserOut
 from app.application.services.user_service import UserService
-from app.application.use_cases.game.get_user_match_history import GetUserMatchHistoryUseCase
+from app.application.use_cases.game.get_user_match_history import (
+    GetUserMatchHistoryUseCase,
+)
 from app.domain.entities.game import GameSessionEntity
 from app.domain.interfaces import IGameSessionRepository
 from app.domain.value_objects import GameSessionStatus
@@ -26,7 +28,10 @@ def mock_user_service():
 async def test_get_user_match_history_empty(mock_repo, mock_user_service):
     mock_repo.list_completed_by_user_and_lesson.return_value = []
     mock_user_service.get_user_info.return_value = UserOut(
-        id=1, name="Hero", email="hero@dutai.site", avatar_url="https://img.com/hero.png"
+        id=1,
+        name="Hero",
+        email="hero@dutai.site",
+        avatar_url="https://img.com/hero.png",
     )
 
     uc = GetUserMatchHistoryUseCase(ps_repo=mock_repo, user_service=mock_user_service)
@@ -50,7 +55,8 @@ async def test_get_user_match_history_with_sessions(mock_repo, mock_user_service
         lesson_slug="tong-quan-ve-python",
         question_limit=10,
         question_sequence=[
-            QuestionMeta(id=f"q{i}", tier=1, is_boss=False, time_limit=60) for i in range(10)
+            QuestionMeta(id=f"q{i}", tier=1, is_boss=False, time_limit=60)
+            for i in range(10)
         ],
         gamification=GamificationState(
             final_score=100.0,
@@ -65,7 +71,10 @@ async def test_get_user_match_history_with_sessions(mock_repo, mock_user_service
 
     mock_repo.list_completed_by_user_and_lesson.return_value = [s1]
     mock_user_service.get_user_info.return_value = UserOut(
-        id=1, name="Hero", email="hero@dutai.site", avatar_url="https://img.com/hero.png"
+        id=1,
+        name="Hero",
+        email="hero@dutai.site",
+        avatar_url="https://img.com/hero.png",
     )
 
     uc = GetUserMatchHistoryUseCase(ps_repo=mock_repo, user_service=mock_user_service)

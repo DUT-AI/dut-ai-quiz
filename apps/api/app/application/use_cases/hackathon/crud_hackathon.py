@@ -13,7 +13,11 @@ class CreateHackathonUseCase:
         self._hackathon_repo = hackathon_repo
 
     async def execute(self, payload: HackathonCreate, user_id: int) -> HackathonEntity:
-        if payload.start_time and payload.end_time and payload.start_time >= payload.end_time:
+        if (
+            payload.start_time
+            and payload.end_time
+            and payload.start_time >= payload.end_time
+        ):
             raise DomainValidationException("start_time must be before end_time")
         name = payload.name.strip()
         if not name:
@@ -77,7 +81,11 @@ class UpdateHackathonUseCase:
                 "Forbidden: You do not have permission to update this hackathon (Ownership required)"
             )
 
-        if payload.start_time and payload.end_time and payload.start_time >= payload.end_time:
+        if (
+            payload.start_time
+            and payload.end_time
+            and payload.start_time >= payload.end_time
+        ):
             raise DomainValidationException("start_time must be before end_time")
         data = payload.model_dump(exclude_unset=True)
         for k, v in data.items():
@@ -92,7 +100,9 @@ class DeleteHackathonUseCase:
     def __init__(self, hackathon_repo: IHackathonRepository):
         self._hackathon_repo = hackathon_repo
 
-    async def execute(self, hackathon_id: UUID, user_id: int, is_admin: bool = False) -> bool:
+    async def execute(
+        self, hackathon_id: UUID, user_id: int, is_admin: bool = False
+    ) -> bool:
         entity = await self._hackathon_repo.get(hackathon_id)
         if not entity:
             return False

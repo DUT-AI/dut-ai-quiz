@@ -96,7 +96,9 @@ class ChecklistEvaluation(BaseModel):
         return next(item for item in self.evaluations if item.id == criterion_id)
 
     def replace(self, value: CriterionEvaluation) -> None:
-        self.evaluations = [value if item.id == value.id else item for item in self.evaluations]
+        self.evaluations = [
+            value if item.id == value.id else item for item in self.evaluations
+        ]
 
 
 class CriterionEvidence(BaseModel):

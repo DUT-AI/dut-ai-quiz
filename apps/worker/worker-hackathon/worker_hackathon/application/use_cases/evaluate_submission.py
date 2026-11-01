@@ -17,7 +17,9 @@ from worker_hackathon.domain.interfaces.cancellation import ICancellationToken
 from worker_hackathon.domain.interfaces.evaluator import IEvaluator
 from worker_hackathon.domain.interfaces.event_publisher import ISubmissionEventPublisher
 from worker_hackathon.domain.interfaces.sandbox import ISandbox
-from worker_hackathon.domain.interfaces.submission_repository import ISubmissionRepository
+from worker_hackathon.domain.interfaces.submission_repository import (
+    ISubmissionRepository,
+)
 
 
 class EvaluateSubmissionUseCase:
@@ -98,7 +100,9 @@ class EvaluateSubmissionUseCase:
         for submission in stale_submissions:
             await self._mark_failed(
                 submission,
-                error_message=(f"Submission stuck in {submission.status.value} past timeout."),
+                error_message=(
+                    f"Submission stuck in {submission.status.value} past timeout."
+                ),
                 logs="",
             )
 
@@ -188,7 +192,8 @@ class EvaluateSubmissionUseCase:
             if sandbox_result["status"] != "success":
                 await self._mark_failed(
                     submission,
-                    error_message=sandbox_result.get("error") or "Sandbox execution failed.",
+                    error_message=sandbox_result.get("error")
+                    or "Sandbox execution failed.",
                     logs=self._tail_logs(sandbox_result.get("logs", "")),
                 )
                 return None
@@ -224,7 +229,9 @@ class EvaluateSubmissionUseCase:
                 return None
 
             predict_key = self._predict_key(submission.script_url)
-            self.artifact_store.upload_file(prediction_path, predict_key, content_type="text/csv")
+            self.artifact_store.upload_file(
+                prediction_path, predict_key, content_type="text/csv"
+            )
 
             submission.public_score = score
             submission.private_score = score
@@ -233,7 +240,9 @@ class EvaluateSubmissionUseCase:
             submission.logs = None
             submission.updated_at = datetime.now()
             submission = await self.submission_repo.update_submission(submission)
-            await self.event_publisher.publish_submission_update(submission, "submission.published")
+            await self.event_publisher.publish_submission_update(
+                submission, "submission.published"
+            )
 
             logger.info(f"Successfully calculated score for {submission.id}: {score}")
             return score
@@ -293,7 +302,9 @@ class EvaluateSubmissionUseCase:
         submission.logs = self._tail_logs(logs)
         submission.updated_at = datetime.now()
         submission = await self.submission_repo.update_submission(submission)
-        await self.event_publisher.publish_submission_update(submission, "submission.failed")
+        await self.event_publisher.publish_submission_update(
+            submission, "submission.failed"
+        )
         return submission
 
     async def _mark_cancelled(
@@ -302,7 +313,9 @@ class EvaluateSubmissionUseCase:
         submission.status = SubmissionStatus.CANCELLED
         submission.updated_at = datetime.now()
         submission = await self.submission_repo.update_submission(submission)
-        await self.event_publisher.publish_submission_update(submission, "submission.cancelled")
+        await self.event_publisher.publish_submission_update(
+            submission, "submission.cancelled"
+        )
         return submission
 
     async def _is_cancelled(self, submission_id: UUID) -> bool:

@@ -68,7 +68,9 @@ class MockHomeworkRepository(IHomeworkRepository):
     def __init__(self, homeworks: list[HomeworkEntity]) -> None:
         self.homeworks = homeworks
 
-    async def list_homeworks(self, lesson_id: UUID | None = None) -> list[HomeworkEntity]:
+    async def list_homeworks(
+        self, lesson_id: UUID | None = None
+    ) -> list[HomeworkEntity]:
         if lesson_id is None:
             return self.homeworks
         return [hw for hw in self.homeworks if hw.lesson_id == lesson_id]
@@ -97,7 +99,9 @@ class MockHomeworkRepository(IHomeworkRepository):
     ) -> HomeworkSubmissionEntity:
         return submission
 
-    async def get_submission(self, submission_id: UUID) -> HomeworkSubmissionEntity | None:
+    async def get_submission(
+        self, submission_id: UUID
+    ) -> HomeworkSubmissionEntity | None:
         return None
 
     async def get_latest_submission(
@@ -118,7 +122,9 @@ class MockHomeworkRepository(IHomeworkRepository):
     ) -> HomeworkSubmissionEntity | None:
         return None
 
-    async def list_submissions(self, homework_id: UUID) -> list[HomeworkSubmissionEntity]:
+    async def list_submissions(
+        self, homework_id: UUID
+    ) -> list[HomeworkSubmissionEntity]:
         return []
 
     async def list_completed_user_ids(self, homework_id: UUID) -> list[int]:
@@ -163,7 +169,11 @@ class MockQuestionRepository(IQuestionRepository):
 
     async def count_by_lesson_and_pool(self, lesson_id, pool_type) -> int:
         return len(
-            [q for q in self.questions if q.lesson_id == lesson_id and q.pool_type == pool_type]
+            [
+                q
+                for q in self.questions
+                if q.lesson_id == lesson_id and q.pool_type == pool_type
+            ]
         )
 
     async def add(self, entity):

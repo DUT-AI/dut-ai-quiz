@@ -49,30 +49,43 @@ def upgrade() -> None:
         sa.Column("snapshot", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
         sa.Column("tags_filter", postgresql.ARRAY(sa.String()), nullable=False),
         sa.Column(
-            "difficulty_filter", sa.Enum("EASY", "MEDIUM", "HARD", name="difficulty"), nullable=True
+            "difficulty_filter",
+            sa.Enum("EASY", "MEDIUM", "HARD", name="difficulty"),
+            nullable=True,
         ),
         sa.Column("question_limit", sa.Integer(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(
-        op.f("ix_practice_sessions_user_id"), "practice_sessions", ["user_id"], unique=False
+        op.f("ix_practice_sessions_user_id"),
+        "practice_sessions",
+        ["user_id"],
+        unique=False,
     )
     op.create_table(
         "questions",
         sa.Column("id", sa.Uuid(), nullable=False),
-        sa.Column("pool_type", sa.Enum("PRACTICE", "EXAM", name="pooltype"), nullable=False),
+        sa.Column(
+            "pool_type", sa.Enum("PRACTICE", "EXAM", name="pooltype"), nullable=False
+        ),
         sa.Column("content", sa.String(), nullable=False),
         sa.Column("options", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column("solution", sa.String(), nullable=True),
         sa.Column(
-            "difficulty", sa.Enum("EASY", "MEDIUM", "HARD", name="difficulty"), nullable=False
+            "difficulty",
+            sa.Enum("EASY", "MEDIUM", "HARD", name="difficulty"),
+            nullable=False,
         ),
         sa.Column("tags", postgresql.ARRAY(sa.String()), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(op.f("ix_questions_difficulty"), "questions", ["difficulty"], unique=False)
-    op.create_index(op.f("ix_questions_pool_type"), "questions", ["pool_type"], unique=False)
+    op.create_index(
+        op.f("ix_questions_difficulty"), "questions", ["difficulty"], unique=False
+    )
+    op.create_index(
+        op.f("ix_questions_pool_type"), "questions", ["pool_type"], unique=False
+    )
     op.create_table(
         "attempts",
         sa.Column("id", sa.Uuid(), nullable=False),
@@ -89,7 +102,9 @@ def upgrade() -> None:
         ),
         sa.Column("tab_out_count", sa.Integer(), nullable=False),
         sa.Column("shuffle_seed", sa.Integer(), nullable=True),
-        sa.Column("shuffle_snapshot", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+        sa.Column(
+            "shuffle_snapshot", postgresql.JSONB(astext_type=sa.Text()), nullable=True
+        ),
         sa.ForeignKeyConstraint(
             ["exam_id"],
             ["exams.id"],
@@ -116,9 +131,14 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("exam_id", "question_id", name="uq_exam_question"),
     )
-    op.create_index(op.f("ix_exam_questions_exam_id"), "exam_questions", ["exam_id"], unique=False)
     op.create_index(
-        op.f("ix_exam_questions_question_id"), "exam_questions", ["question_id"], unique=False
+        op.f("ix_exam_questions_exam_id"), "exam_questions", ["exam_id"], unique=False
+    )
+    op.create_index(
+        op.f("ix_exam_questions_question_id"),
+        "exam_questions",
+        ["question_id"],
+        unique=False,
     )
     op.create_table(
         "attempt_answers",
@@ -137,10 +157,16 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(
-        op.f("ix_attempt_answers_attempt_id"), "attempt_answers", ["attempt_id"], unique=False
+        op.f("ix_attempt_answers_attempt_id"),
+        "attempt_answers",
+        ["attempt_id"],
+        unique=False,
     )
     op.create_index(
-        op.f("ix_attempt_answers_question_id"), "attempt_answers", ["question_id"], unique=False
+        op.f("ix_attempt_answers_question_id"),
+        "attempt_answers",
+        ["question_id"],
+        unique=False,
     )
     op.create_table(
         "focus_events",

@@ -30,8 +30,12 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
     op.add_column("lessons", sa.Column("module_id", sa.UUID(), nullable=True))
-    op.create_index(op.f("ix_lessons_module_id"), "lessons", ["module_id"], unique=False)
-    op.create_foreign_key(None, "lessons", "modules", ["module_id"], ["id"], ondelete="SET NULL")
+    op.create_index(
+        op.f("ix_lessons_module_id"), "lessons", ["module_id"], unique=False
+    )
+    op.create_foreign_key(
+        None, "lessons", "modules", ["module_id"], ["id"], ondelete="SET NULL"
+    )
     # ### end Alembic commands ###
 
 

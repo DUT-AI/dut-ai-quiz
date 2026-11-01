@@ -6,7 +6,11 @@ import pytest
 from app.application.use_cases.questions.question_use_case import ListQuestionsUseCase
 from app.domain.entities.question import QuestionEntity, QuestionOptionEntity
 from app.domain.value_objects import Difficulty, PoolType
-from app.presentation.schemas.questions import QuestionListQuery, QuestionOptionOut, QuestionOut
+from app.presentation.schemas.questions import (
+    QuestionListQuery,
+    QuestionOptionOut,
+    QuestionOut,
+)
 
 
 @pytest.mark.asyncio
@@ -34,7 +38,9 @@ async def test_list_practice_questions_use_case():
     question_repo.list_all.return_value = [question]
 
     use_case = ListQuestionsUseCase(question_repo)
-    query = QuestionListQuery(pool_type=PoolType.PRACTICE, lesson_id=lesson_id, offset=0, limit=50)
+    query = QuestionListQuery(
+        pool_type=PoolType.PRACTICE, lesson_id=lesson_id, offset=0, limit=50
+    )
 
     result = await use_case.execute(query)
 
@@ -65,7 +71,9 @@ def test_question_output_schema_serialization():
     lesson_id = uuid4()
     question_id = uuid4()
 
-    opt_out_1 = QuestionOptionOut(id="opt-1", text="Correct Choice", is_correct=True, fixed=False)
+    opt_out_1 = QuestionOptionOut(
+        id="opt-1", text="Correct Choice", is_correct=True, fixed=False
+    )
     opt_out_2 = QuestionOptionOut(
         id="opt-2", text="Incorrect Choice", is_correct=False, fixed=False
     )
@@ -119,7 +127,9 @@ async def test_answer_question_use_case():
 
     question_repo.get.return_value = question
 
-    from app.application.use_cases.questions.answer_question_uc import AnswerQuestionUseCase
+    from app.application.use_cases.questions.answer_question_uc import (
+        AnswerQuestionUseCase,
+    )
 
     use_case = AnswerQuestionUseCase(question_repo)
 
@@ -196,7 +206,9 @@ def test_question_to_student_schema_directly():
 
 @pytest.mark.asyncio
 async def test_bulk_delete_questions_use_case():
-    from app.application.use_cases.questions.detete_question_uc import BulkDeleteQuestionsUseCase
+    from app.application.use_cases.questions.detete_question_uc import (
+        BulkDeleteQuestionsUseCase,
+    )
 
     question_repo = AsyncMock()
     question_repo.delete_bulk.return_value = 3

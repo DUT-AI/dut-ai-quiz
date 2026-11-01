@@ -26,7 +26,9 @@ MINIO_URL_PATTERN = re.compile(r"https?://[^\s\"']+/uploads/pdf-images/[^\s\"']+
 
 
 class RejectQuestionUseCase:
-    def __init__(self, session: AsyncSession, redis: Redis, s3_client: IS3Client) -> None:
+    def __init__(
+        self, session: AsyncSession, redis: Redis, s3_client: IS3Client
+    ) -> None:
         self._s = session
         self._redis = redis
         self._s3 = s3_client
@@ -49,7 +51,9 @@ class RejectQuestionUseCase:
             try:
                 key = self._extract_s3_key(url)
                 if key:
-                    self._s3._client.delete_object(Bucket=settings.pdf_upload_bucket, Key=key)
+                    self._s3._client.delete_object(
+                        Bucket=settings.pdf_upload_bucket, Key=key
+                    )
                     logger.info(f"Deleted MinIO object: {key}")
             except Exception as exc:
                 logger.warning(f"Failed to delete MinIO image {url}: {exc}")

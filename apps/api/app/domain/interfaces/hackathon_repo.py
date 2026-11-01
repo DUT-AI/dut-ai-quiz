@@ -29,7 +29,9 @@ class IHackathonTaskRepository(Protocol):
 
     async def get(self, task_id: UUID) -> HackathonTaskEntity | None: ...
 
-    async def list_for_hackathon(self, hackathon_id: UUID) -> list[HackathonTaskEntity]: ...
+    async def list_for_hackathon(
+        self, hackathon_id: UUID
+    ) -> list[HackathonTaskEntity]: ...
 
     async def add(self, entity: HackathonTaskEntity) -> HackathonTaskEntity: ...
 
@@ -57,7 +59,9 @@ class IHackathonTeamRepository(Protocol):
 
 
 class IHackathonRegistrationRepository(Protocol):
-    async def get(self, registration_id: UUID) -> HackathonRegistrationEntity | None: ...
+    async def get(
+        self, registration_id: UUID
+    ) -> HackathonRegistrationEntity | None: ...
 
     async def get_user_registration(
         self, hackathon_id: UUID, user_id: int
@@ -67,11 +71,17 @@ class IHackathonRegistrationRepository(Protocol):
         self, hackathon_id: UUID, team_id: UUID
     ) -> HackathonRegistrationEntity | None: ...
 
-    async def list_for_hackathon(self, hackathon_id: UUID) -> list[HackathonRegistrationEntity]: ...
+    async def list_for_hackathon(
+        self, hackathon_id: UUID
+    ) -> list[HackathonRegistrationEntity]: ...
 
-    async def add(self, entity: HackathonRegistrationEntity) -> HackathonRegistrationEntity: ...
+    async def add(
+        self, entity: HackathonRegistrationEntity
+    ) -> HackathonRegistrationEntity: ...
 
-    async def update(self, entity: HackathonRegistrationEntity) -> HackathonRegistrationEntity: ...
+    async def update(
+        self, entity: HackathonRegistrationEntity
+    ) -> HackathonRegistrationEntity: ...
 
     async def update_full(
         self, entity: HackathonRegistrationEntity
@@ -83,9 +93,13 @@ class IHackathonRegistrationRepository(Protocol):
 class IHackathonSubmissionRepository(Protocol):
     async def get(self, submission_id: UUID) -> HackathonSubmissionEntity | None: ...
 
-    async def add(self, entity: HackathonSubmissionEntity) -> HackathonSubmissionEntity: ...
+    async def add(
+        self, entity: HackathonSubmissionEntity
+    ) -> HackathonSubmissionEntity: ...
 
-    async def update(self, entity: HackathonSubmissionEntity) -> HackathonSubmissionEntity: ...
+    async def update(
+        self, entity: HackathonSubmissionEntity
+    ) -> HackathonSubmissionEntity: ...
 
     async def list_for_task(
         self, task_id: UUID, user_id: int | None = None, team_id: UUID | None = None
@@ -101,7 +115,9 @@ class IHackathonSubmissionRepository(Protocol):
 
     async def commit(self) -> None: ...
 
-    async def list_for_hackathon(self, hackathon_id: UUID) -> list[HackathonSubmissionEntity]: ...
+    async def list_for_hackathon(
+        self, hackathon_id: UUID
+    ) -> list[HackathonSubmissionEntity]: ...
 
     async def get_last_submission(
         self, task_id: UUID, user_id: int | None = None, team_id: UUID | None = None

@@ -189,6 +189,8 @@ class StartImportUseCase:
         except Exception as exc:
             logger.exception(f"[Import {job_str}] Pipeline failed: {exc}")
             try:
-                await self._import_repo.update_status(job_id, "FAILED", error_message=str(exc))
+                await self._import_repo.update_status(
+                    job_id, "FAILED", error_message=str(exc)
+                )
             except Exception:
                 pass

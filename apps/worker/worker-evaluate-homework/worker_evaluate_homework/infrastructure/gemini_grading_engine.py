@@ -122,7 +122,9 @@ BẮT BUỘC TRẢ VỀ JSON theo cấu trúc mẫu sau (chỉ trả về JSON, 
             return _blocking_result(rubric.criteria, static["blocking_errors"])
 
         checklist = "\n".join(
-            (f"{item.id}. [{item.weight:.4g} điểm] {item.criterion}: {item.description}")
+            (
+                f"{item.id}. [{item.weight:.4g} điểm] {item.criterion}: {item.description}"
+            )
             for item in rubric.criteria
         )
         source_text = _pack_sources(sources)
@@ -189,7 +191,9 @@ BẮT BUỘC TRẢ VỀ JSON theo cấu trúc sau:
             missing_ids = expected_ids - actual_ids
             extra_ids = actual_ids - expected_ids
             if extra_ids:
-                evaluated.evaluations = [e for e in evaluated.evaluations if e.id in expected_ids]
+                evaluated.evaluations = [
+                    e for e in evaluated.evaluations if e.id in expected_ids
+                ]
             if missing_ids:
                 for mid in missing_ids:
                     evaluated.evaluations.append(
@@ -218,7 +222,9 @@ BẮT BUỘC TRẢ VỀ JSON theo cấu trúc sau:
                 }
             )
             mark = "✅" if evaluation.status else "❌"
-            feedback_lines.append(f"- {mark} **{item.criterion}**: {evaluation.description}")
+            feedback_lines.append(
+                f"- {mark} **{item.criterion}**: {evaluation.description}"
+            )
 
         score = round(min(score, 10.0), 2)
         feedback_lines.extend(["", f"**Tổng điểm: {score}/10**"])
@@ -268,7 +274,9 @@ BẮT BUỘC TRẢ VỀ JSON theo cấu trúc sau:
         for source in sources:
             step = settings.homework_grading_chunk_chars
             for start in range(0, len(source.content), step):
-                pending.append((source.name, start, source.content[start : start + step]))
+                pending.append(
+                    (source.name, start, source.content[start : start + step])
+                )
         summaries = []
         expected_ids = {item.id for item in rubric.criteria}
         while pending:
@@ -277,9 +285,13 @@ BẮT BUỘC TRẢ VỀ JSON theo cấu trúc sau:
                     "Bài nộp cần quá nhiều lượt đọc LLM; không chấm thiếu nội dung"
                 )
             name, start, content = pending.pop(0)
-            fragment = f"### FILE: {name}, chars {start}:{start + len(content)}\n{content}"
+            fragment = (
+                f"### FILE: {name}, chars {start}:{start + len(content)}\n{content}"
+            )
             try:
-                evidence = await self._generate_structured(prefix + fragment, ChunkEvidence)
+                evidence = await self._generate_structured(
+                    prefix + fragment, ChunkEvidence
+                )
             except ContextLimitError:
                 if len(content) <= 1:
                     raise
@@ -320,9 +332,13 @@ BẮT BUỘC TRẢ VỀ JSON theo cấu trúc sau:
             final_prompt = before + section + evidence_text + after[len(source_text) :]
             tokens = await self._llm.count_tokens(final_prompt, _SYSTEM_INSTRUCTION)
             if tokens <= self._llm.input_token_budget:
-                return await self._generate_structured(final_prompt, ChecklistEvaluation)
+                return await self._generate_structured(
+                    final_prompt, ChecklistEvaluation
+                )
             if len(summaries) <= 1:
-                raise ContextLimitError("Bằng chứng tổng hợp và rubric vẫn vượt ngân sách LLM")
+                raise ContextLimitError(
+                    "Bằng chứng tổng hợp và rubric vẫn vượt ngân sách LLM"
+                )
             merged = []
             for offset in range(0, len(summaries), 2):
                 pair = summaries[offset : offset + 2]
@@ -339,7 +355,9 @@ BẮT BUỘC TRẢ VỀ JSON theo cấu trúc sau:
                 )
                 evidence = await self._generate_structured(merge_prompt, ChunkEvidence)
                 pair_ids = {item["id"] for part in pair for item in part["findings"]}
-                merged_findings = {f.id: f.evidence for f in evidence.findings if f.id in pair_ids}
+                merged_findings = {
+                    f.id: f.evidence for f in evidence.findings if f.id in pair_ids
+                }
                 # Preserve original evidence if LLM omitted any pair_id during merge
                 for part in pair:
                     for item in part.get("findings", []):
@@ -347,7 +365,11 @@ BẮT BUỘC TRẢ VỀ JSON theo cấu trúc sau:
                         if pid in pair_ids and pid not in merged_findings:
                             merged_findings[pid] = item.get("evidence", "")
                 merged.append(
-                    {"findings": [{"id": k, "evidence": v} for k, v in merged_findings.items()]}
+                    {
+                        "findings": [
+                            {"id": k, "evidence": v} for k, v in merged_findings.items()
+                        ]
+                    }
                 )
             summaries = merged
 
@@ -379,7 +401,9 @@ def _analyze_sources(
             elif isinstance(node, ast.ClassDef):
                 class_count += 1
             elif isinstance(node, ast.Import):
-                imported_modules.update(alias.name.split(".")[0].casefold() for alias in node.names)
+                imported_modules.update(
+                    alias.name.split(".")[0].casefold() for alias in node.names
+                )
             elif isinstance(node, ast.ImportFrom) and node.module:
                 imported_modules.add(node.module.split(".")[0].casefold())
 
@@ -387,7 +411,9 @@ def _analyze_sources(
     allowed = _expand_library_names(rubric.allowed_libraries)
     forbidden_imports = sorted(imported_modules & forbidden)
     unauthorized_imports = (
-        sorted(imported_modules - allowed - local_modules - set(sys.stdlib_module_names))
+        sorted(
+            imported_modules - allowed - local_modules - set(sys.stdlib_module_names)
+        )
         if allowed
         else []
     )

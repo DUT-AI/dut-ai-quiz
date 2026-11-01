@@ -15,6 +15,8 @@ class DeleteCommentUseCase:
 
         # Only owner or admin can delete
         if comment.user_id != user_id and user_role != "admin":
-            raise AppException(status_code=403, message="Bạn không có quyền xóa bình luận này.")
+            raise AppException(
+                status_code=403, message="Bạn không có quyền xóa bình luận này."
+            )
 
         await self._comment_repo.delete(comment_id)

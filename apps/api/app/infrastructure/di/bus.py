@@ -3,7 +3,9 @@ from redis.asyncio import Redis
 
 from app.domain.events.bus import EventBus
 from app.domain.interfaces import IHackathonEventSubscriber
-from app.infrastructure.bus.hackathon_event_subscriber import RedisHackathonEventSubscriber
+from app.infrastructure.bus.hackathon_event_subscriber import (
+    RedisHackathonEventSubscriber,
+)
 from app.infrastructure.bus.simple_bus import SimpleEventBus
 
 

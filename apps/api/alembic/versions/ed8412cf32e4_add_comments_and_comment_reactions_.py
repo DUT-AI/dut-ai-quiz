@@ -27,7 +27,11 @@ def upgrade() -> None:
         sa.Column(
             "target_type",
             sa.Enum(
-                "system_feedback", "lesson_qna", name="targettype", native_enum=False, length=50
+                "system_feedback",
+                "lesson_qna",
+                name="targettype",
+                native_enum=False,
+                length=50,
             ),
             nullable=False,
         ),
@@ -44,10 +48,18 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(op.f("ix_comments_created_at"), "comments", ["created_at"], unique=False)
-    op.create_index(op.f("ix_comments_parent_id"), "comments", ["parent_id"], unique=False)
-    op.create_index(op.f("ix_comments_target_id"), "comments", ["target_id"], unique=False)
-    op.create_index(op.f("ix_comments_target_type"), "comments", ["target_type"], unique=False)
+    op.create_index(
+        op.f("ix_comments_created_at"), "comments", ["created_at"], unique=False
+    )
+    op.create_index(
+        op.f("ix_comments_parent_id"), "comments", ["parent_id"], unique=False
+    )
+    op.create_index(
+        op.f("ix_comments_target_id"), "comments", ["target_id"], unique=False
+    )
+    op.create_index(
+        op.f("ix_comments_target_type"), "comments", ["target_type"], unique=False
+    )
     op.create_index(op.f("ix_comments_user_id"), "comments", ["user_id"], unique=False)
     op.create_table(
         "comment_reactions",
@@ -55,7 +67,9 @@ def upgrade() -> None:
         sa.Column("user_id", sa.Integer(), nullable=False),
         sa.Column(
             "reaction_type",
-            sa.Enum("like", "dislike", name="reactiontype", native_enum=False, length=20),
+            sa.Enum(
+                "like", "dislike", name="reactiontype", native_enum=False, length=20
+            ),
             nullable=False,
         ),
         sa.Column("created_at", sa.DateTime(), nullable=False),

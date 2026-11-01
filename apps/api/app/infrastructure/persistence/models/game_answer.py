@@ -1,7 +1,15 @@
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    UniqueConstraint,
+)
 from sqlalchemy.dialects.postgresql import UUID as pgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -14,7 +22,9 @@ from .base import Base
 class GameSessionAnswer(Base):
     __tablename__ = "game_session_answers"
 
-    id: Mapped[UUID] = mapped_column(pgUUID(as_uuid=True), primary_key=True, default=uuid4)
+    id: Mapped[UUID] = mapped_column(
+        pgUUID(as_uuid=True), primary_key=True, default=uuid4
+    )
     session_id: Mapped[UUID] = mapped_column(
         pgUUID(as_uuid=True),
         ForeignKey("game_sessions.id", ondelete="CASCADE"),
@@ -37,7 +47,9 @@ class GameSessionAnswer(Base):
     )
 
     __table_args__ = (
-        UniqueConstraint("session_id", "question_id", name="uq_game_session_answer_turn"),
+        UniqueConstraint(
+            "session_id", "question_id", name="uq_game_session_answer_turn"
+        ),
     )
 
     def to_entity(self) -> GameSessionAnswerEntity:

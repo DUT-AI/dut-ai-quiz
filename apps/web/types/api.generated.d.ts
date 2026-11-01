@@ -318,6 +318,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/lessons/{lesson_id}/videos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Lesson Videos
+         * @description List all reference videos for a lesson.
+         */
+        get: operations["list_lesson_videos_api_v1_lessons__lesson_id__videos_get"];
+        /**
+         * Sync Lesson Videos
+         * @description Batch update / sync reference videos for a lesson. Requires MANAGE_LESSON permission.
+         */
+        put: operations["sync_lesson_videos_api_v1_lessons__lesson_id__videos_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/modules": {
         parameters: {
             query?: never;
@@ -2787,6 +2811,19 @@ export interface components {
              */
             question_id: string;
         };
+        /** GamificationUseItemResultOut */
+        GamificationUseItemResultOut: {
+            /** Item Name */
+            item_name: string;
+            /** Eliminated Option Ids */
+            eliminated_option_ids?: string[];
+            /**
+             * Time Freeze Active
+             * @default false
+             */
+            time_freeze_active: boolean;
+            updated_gamification: components["schemas"]["GamificationStateOut"];
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -3262,6 +3299,11 @@ export interface components {
              * @default false
              */
             has_game_questions: boolean;
+            /**
+             * Videos
+             * @default []
+             */
+            videos: components["schemas"]["LessonVideoOut"][];
         };
         /** LessonExercisesMetadataOutDTO */
         LessonExercisesMetadataOutDTO: {
@@ -3363,6 +3405,66 @@ export interface components {
             slug?: string | null;
             /** Module Id */
             module_id?: string | null;
+        };
+        /** LessonVideoBatchSync */
+        LessonVideoBatchSync: {
+            /**
+             * Videos
+             * @default []
+             */
+            videos: components["schemas"]["LessonVideoCreate"][];
+        };
+        /** LessonVideoCreate */
+        LessonVideoCreate: {
+            /** Title */
+            title: string;
+            /** Url */
+            url: string;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            /**
+             * Order
+             * @default 0
+             */
+            order: number;
+        };
+        /** LessonVideoOut */
+        LessonVideoOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Lesson Id
+             * Format: uuid
+             */
+            lesson_id: string;
+            /** Title */
+            title: string;
+            /** Url */
+            url: string;
+            /** Youtube Video Id */
+            youtube_video_id: string;
+            /** Start Seconds */
+            start_seconds: number;
+            /** Order */
+            order: number;
+            /** Description */
+            description: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
         };
         /** LockResponse */
         LockResponse: {
@@ -4700,6 +4802,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LessonExercisesMetadataOutDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_lesson_videos_api_v1_lessons__lesson_id__videos_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lesson_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonVideoOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    sync_lesson_videos_api_v1_lessons__lesson_id__videos_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lesson_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LessonVideoBatchSync"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonVideoOut"][];
                 };
             };
             /** @description Validation Error */
@@ -7003,7 +7171,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["GamificationUseItemResultOut"];
                 };
             };
             /** @description Validation Error */

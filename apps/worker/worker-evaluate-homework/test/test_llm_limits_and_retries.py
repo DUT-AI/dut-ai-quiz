@@ -21,13 +21,18 @@ from worker_evaluate_homework.domain.models import (
     GradingCriterion,
 )
 from worker_evaluate_homework.domain.retry import GradingAttempt
-from worker_evaluate_homework.infrastructure.archive_reader import _compact_training_output
+from worker_evaluate_homework.infrastructure.archive_reader import (
+    _compact_training_output,
+)
 from worker_evaluate_homework.infrastructure.arq_queue import ArqHomeworkGradingQueue
 from worker_evaluate_homework.infrastructure.gemini_grading_engine import (
     HomeworkGradingEngine,
     _pack_sources,
 )
-from worker_evaluate_homework.infrastructure.llm_clients import GeminiLLMClient, OpenAILLMClient
+from worker_evaluate_homework.infrastructure.llm_clients import (
+    GeminiLLMClient,
+    OpenAILLMClient,
+)
 from worker_evaluate_homework.presentation.arq_tasks import evaluate_homework_job
 
 
@@ -50,11 +55,15 @@ def transport(handler, *, token_count=100, context=66816):
         body = json.loads(request.content) if request.content else {}
         path = request.url.path
         if path == "/props":
-            return httpx.Response(200, json={"default_generation_settings": {"n_ctx": context}})
+            return httpx.Response(
+                200, json={"default_generation_settings": {"n_ctx": context}}
+            )
         if path == "/apply-template":
             assert body["chat_template_kwargs"] == {"enable_thinking": False}
             assert body["reasoning_effort"] == "none"
-            return httpx.Response(200, json={"prompt": "CHAT:" + body["messages"][-1]["content"]})
+            return httpx.Response(
+                200, json={"prompt": "CHAT:" + body["messages"][-1]["content"]}
+            )
         if path == "/tokenize":
             assert body["content"].startswith("CHAT:")
             assert body["add_special"] and body["parse_special"]
@@ -106,7 +115,9 @@ async def test_server_context_and_output_reserve_are_applied():
         await client.generate_structured("short", ChecklistEvaluation)
         assert (
             client.input_token_budget
-            == 8192 - settings.homework_llm_max_output_tokens - settings.homework_llm_token_margin
+            == 8192
+            - settings.homework_llm_max_output_tokens
+            - settings.homework_llm_token_margin
         )
     assert sent[0]["max_tokens"] == settings.homework_llm_max_output_tokens
     assert sent[0]["response_format"] == {
@@ -118,11 +129,15 @@ async def test_server_context_and_output_reserve_are_applied():
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("status,retryable", [(400, False), (401, False), (429, True), (503, True)])
+@pytest.mark.parametrize(
+    "status,retryable", [(400, False), (401, False), (429, True), (503, True)]
+)
 async def test_http_errors_have_explicit_retry_policy(status, retryable):
     async with httpx.AsyncClient(
         transport=transport(
-            lambda request, body: httpx.Response(status, json={"error": {"message": "failure"}}),
+            lambda request, body: httpx.Response(
+                status, json={"error": {"message": "failure"}}
+            ),
         )
     ) as http:
         with pytest.raises(LLMError) as failure:
@@ -153,15 +168,20 @@ async def test_provider_context_error_never_retries_and_refreshes_budget():
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "content,reason", [('{"evaluations":[', "stop"), ('{"evaluations":[]}', "length"), ("", "stop")]
+    "content,reason",
+    [('{"evaluations":[', "stop"), ('{"evaluations":[]}', "length"), ("", "stop")],
 )
-async def test_bad_json_and_truncated_response_are_bounded_retryable_errors(content, reason):
+async def test_bad_json_and_truncated_response_are_bounded_retryable_errors(
+    content, reason
+):
     async with httpx.AsyncClient(
         transport=transport(
             lambda request, body: httpx.Response(
                 200,
                 json={
-                    "choices": [{"finish_reason": reason, "message": {"content": content}}],
+                    "choices": [
+                        {"finish_reason": reason, "message": {"content": content}}
+                    ],
                 },
             )
         )
@@ -197,7 +217,8 @@ async def test_large_native_payload_is_split_before_network_request():
         client = OpenAILLMClient(api_url="https://example.test/v1", http_client=http)
         with pytest.raises(ContextLimitError, match="payload"):
             await client.generate_structured(
-                "a" * (settings.homework_llm_max_tokenizer_bytes + 1), ChecklistEvaluation
+                "a" * (settings.homework_llm_max_tokenizer_bytes + 1),
+                ChecklistEvaluation,
             )
     assert not requests
 
@@ -214,24 +235,37 @@ class EvidenceClient:
         return len(prompt) + len(system_instruction)
 
     async def generate_structured(self, prompt, schema, system_instruction=""):
-        assert await self.count_tokens(prompt, system_instruction) <= self.input_token_budget
+        assert (
+            await self.count_tokens(prompt, system_instruction)
+            <= self.input_token_budget
+        )
         if schema is ChunkEvidence:
             if "\nFRAGMENT:\n" in prompt:
                 fragment = prompt.split("\nFRAGMENT:\n", 1)[1].split("\n", 1)[1]
                 self.fragments.append(fragment)
             else:
                 self.merge_calls += 1
-            return ChunkEvidence(findings=[{"id": "print_output", "evidence": "observed " * 100}])
+            return ChunkEvidence(
+                findings=[{"id": "print_output", "evidence": "observed " * 100}]
+            )
         self.final_calls += 1
         return ChecklistEvaluation(
-            evaluations=[{"id": "print_output", "status": True, "description": "Combined evidence"}]
+            evaluations=[
+                {
+                    "id": "print_output",
+                    "status": True,
+                    "description": "Combined evidence",
+                }
+            ]
         )
 
 
 @pytest.mark.asyncio
 async def test_long_submission_reads_all_parts_and_scores_once(monkeypatch):
     monkeypatch.setattr(settings, "homework_grading_chunk_chars", 1000)
-    source = SourceFile(name="main.py", content="# " + "a" * 11000 + "\nprint('tail evidence')\n")
+    source = SourceFile(
+        name="main.py", content="# " + "a" * 11000 + "\nprint('tail evidence')\n"
+    )
     client = EvidenceClient()
     result = await HomeworkGradingEngine(client).grade(rubric(), [source])
     assert "".join(client.fragments) == source.content
@@ -255,19 +289,30 @@ async def test_chunk_limit_fails_without_partial_grade(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_fragments_are_split_again_when_exact_token_count_exceeds_budget(monkeypatch):
+async def test_fragments_are_split_again_when_exact_token_count_exceeds_budget(
+    monkeypatch,
+):
     monkeypatch.setattr(settings, "homework_grading_chunk_chars", 4000)
     client = EvidenceClient()
     client.input_token_budget = 2400
 
     async def generate(prompt, schema, system_instruction=""):
-        assert await client.count_tokens(prompt, system_instruction) <= client.input_token_budget
+        assert (
+            await client.count_tokens(prompt, system_instruction)
+            <= client.input_token_budget
+        )
         if schema is ChunkEvidence:
-            client.fragments.append(prompt.split("\nFRAGMENT:\n", 1)[1].split("\n", 1)[1])
-            return ChunkEvidence(findings=[{"id": "print_output", "evidence": "observed"}])
+            client.fragments.append(
+                prompt.split("\nFRAGMENT:\n", 1)[1].split("\n", 1)[1]
+            )
+            return ChunkEvidence(
+                findings=[{"id": "print_output", "evidence": "observed"}]
+            )
         client.final_calls += 1
         return ChecklistEvaluation(
-            evaluations=[{"id": "print_output", "status": True, "description": "All parts read"}]
+            evaluations=[
+                {"id": "print_output", "status": True, "description": "All parts read"}
+            ]
         )
 
     client.generate_structured = generate
@@ -341,7 +386,10 @@ async def test_cancelled_submission_saves_retry_metadata(retry_policy):
     from worker_evaluate_homework.application.use_cases.evaluate_submission import (
         EvaluateHomeworkSubmissionUseCase,
     )
-    from worker_evaluate_homework.domain import HomeworkGradingRecord, SubmissionGradingRecord
+    from worker_evaluate_homework.domain import (
+        HomeworkGradingRecord,
+        SubmissionGradingRecord,
+    )
 
     submission_id, homework_id = uuid4(), uuid4()
     repo, reader, engine = AsyncMock(), AsyncMock(), AsyncMock()
@@ -370,13 +418,19 @@ def gemini_client(monkeypatch):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("status,retryable", [(400, False), (408, True), (429, True), (503, True)])
+@pytest.mark.parametrize(
+    "status,retryable", [(400, False), (408, True), (429, True), (503, True)]
+)
 @pytest.mark.parametrize("stage", ["count_tokens", "generate_content"])
-async def test_gemini_adapter_translates_provider_failures(gemini_client, status, retryable, stage):
+async def test_gemini_adapter_translates_provider_failures(
+    gemini_client, status, retryable, stage
+):
     from google.genai.errors import APIError
 
     client, sdk = gemini_client
-    getattr(sdk.aio.models, stage).side_effect = APIError(status, {"error": {"message": "failure"}})
+    getattr(sdk.aio.models, stage).side_effect = APIError(
+        status, {"error": {"message": "failure"}}
+    )
     with pytest.raises(LLMError) as failure:
         await client.generate_structured("short", ChecklistEvaluation)
     assert failure.value.retryable is retryable
@@ -393,7 +447,9 @@ async def test_gemini_adapter_translates_transport_failure(gemini_client):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("content", ["", '{"evaluations":[', '{"wrong": true}'])
-async def test_gemini_invalid_json_is_a_bounded_retryable_failure(gemini_client, content):
+async def test_gemini_invalid_json_is_a_bounded_retryable_failure(
+    gemini_client, content
+):
     client, sdk = gemini_client
     sdk.aio.models.generate_content.return_value = SimpleNamespace(text=content)
     with pytest.raises(LLMError) as failure:

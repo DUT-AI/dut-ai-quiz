@@ -20,6 +20,7 @@ from .list_lessons_uc import ListLessonsUseCase
 from .reorder_lessons_uc import (
     ReorderLessonsUseCase,
 )
+from .sync_lesson_videos_uc import SyncLessonVideosUseCase
 from .update_lesson_uc import UpdateLessonUseCase
 
 __all__ = [
@@ -31,6 +32,7 @@ __all__ = [
     "GetLessonMetadataUseCase",
     "ListLessonsUseCase",
     "ReorderLessonsUseCase",
+    "SyncLessonVideosUseCase",
     "UpdateLessonUseCase",
     "IndexLessonUseCase",
     "IndexAllLessonsUseCase",

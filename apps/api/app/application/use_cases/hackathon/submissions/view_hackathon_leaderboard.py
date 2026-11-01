@@ -1,6 +1,8 @@
 from uuid import UUID
 
-from app.application.services.hackathon_leaderboard import HackathonLeaderboardAppService
+from app.application.services.hackathon_leaderboard import (
+    HackathonLeaderboardAppService,
+)
 from app.domain.interfaces import IHackathonLeaderboardCache
 
 

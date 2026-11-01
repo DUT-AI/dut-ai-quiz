@@ -53,7 +53,9 @@ class EvaluateHomeworkSubmissionUseCase:
             homework = await self._repository.get_homework(submission.homework_id)
             if homework is None:
                 raise ValueError(f"Homework {submission.homework_id} not found")
-            if homework.grading_rubric is None or not homework.grading_rubric.get("criteria"):
+            if homework.grading_rubric is None or not homework.grading_rubric.get(
+                "criteria"
+            ):
                 await self._register_homework.execute(homework.id)
                 homework = await self._repository.get_homework(homework.id)
                 if (
@@ -63,7 +65,9 @@ class EvaluateHomeworkSubmissionUseCase:
                 ):
                     raise LLMError("Rubric chưa sẵn sàng để chấm bài", retryable=True)
 
-            sources = await self._artifact_reader.read_submission_sources(submission.object_key)
+            sources = await self._artifact_reader.read_submission_sources(
+                submission.object_key
+            )
             fingerprints = [build_fingerprint(source) for source in sources]
             previous = await self._repository.list_previous_fingerprints(
                 submission.homework_id,
@@ -78,7 +82,9 @@ class EvaluateHomeworkSubmissionUseCase:
                 HomeworkRubric.model_validate(homework.grading_rubric),
                 sources,
             )
-            copied_user_id = copied_user_id if similarity >= self._plagiarism_threshold else None
+            copied_user_id = (
+                copied_user_id if similarity >= self._plagiarism_threshold else None
+            )
             saved = await self._repository.save_submission_result(
                 submission_id,
                 result,
@@ -103,7 +109,8 @@ class EvaluateHomeworkSubmissionUseCase:
             # apply its independent persisted limit before requesting another job.
             failure = (
                 exc.__cause__
-                if isinstance(exc, RetryGradingRequested) and isinstance(exc.__cause__, Exception)
+                if isinstance(exc, RetryGradingRequested)
+                and isinstance(exc.__cause__, Exception)
                 else exc
             )
             should_retry = self._retry_policy.can_retry(
@@ -119,7 +126,9 @@ class EvaluateHomeworkSubmissionUseCase:
             if not saved:
                 return None
             if should_retry:
-                raise RetryGradingRequested(self._retry_policy.delay_seconds(attempt)) from failure
+                raise RetryGradingRequested(
+                    self._retry_policy.delay_seconds(attempt)
+                ) from failure
             if failure is not exc:
                 raise failure from None
             raise

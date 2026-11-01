@@ -25,13 +25,19 @@ router = APIRouter(prefix="/modules", tags=["modules"])
 async def list_modules(
     user: CurrentUser,
     use_case: FromDishka[ListModulesUseCase],
-    q: str | None = Query(None, description="Prefix search for module name (case-insensitive)"),
-    name: str | None = Query(None, description="Exact match for module name (case-insensitive)"),
+    q: str | None = Query(
+        None, description="Prefix search for module name (case-insensitive)"
+    ),
+    name: str | None = Query(
+        None, description="Exact match for module name (case-insensitive)"
+    ),
     description: str | None = Query(
         None, description="Partial search for module description (case-insensitive)"
     ),
     order: int | None = Query(None, description="Exact match for module order"),
-    include_lessons: bool = Query(True, description="Whether to include lesson list in response"),
+    include_lessons: bool = Query(
+        True, description="Whether to include lesson list in response"
+    ),
 ):
     """List all modules with their corresponding lessons and optional filters."""
     return await use_case.execute(

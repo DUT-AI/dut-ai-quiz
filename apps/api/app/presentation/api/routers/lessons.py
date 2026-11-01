@@ -16,11 +16,12 @@ from app.application.use_cases.lessons import (
     IndexLessonUseCase,
     ListLessonsUseCase,
     ReorderLessonsUseCase,
+    SyncLessonVideosUseCase,
     UpdateLessonUseCase,
 )
 from app.application.use_cases.questions import ListQuestionsUseCase
 from app.domain.entities.auth_enums import SystemPermission
-from app.domain.interfaces import EmbeddingServiceError
+from app.domain.interfaces import EmbeddingServiceError, ILessonVideoRepository
 from app.domain.value_objects import Difficulty, PoolType
 from app.presentation.api.deps import CurrentUser, EducatorUser
 from app.presentation.schemas.lessons import (
@@ -32,8 +33,14 @@ from app.presentation.schemas.lessons import (
     LessonOut,
     LessonReorder,
     LessonUpdate,
+    LessonVideoBatchSync,
+    LessonVideoOut,
 )
-from app.presentation.schemas.questions import QuestionListQuery, QuestionOut, QuestionToStudent
+from app.presentation.schemas.questions import (
+    QuestionListQuery,
+    QuestionOut,
+    QuestionToStudent,
+)
 
 router = APIRouter(prefix="/lessons", tags=["lessons"])
 
@@ -110,7 +117,9 @@ async def get_lesson(
         import copy
 
         res = copy.deepcopy(res)
-        res["questions"] = [QuestionToStudent.model_validate(q) for q in res.get("questions", [])]
+        res["questions"] = [
+            QuestionToStudent.model_validate(q) for q in res.get("questions", [])
+        ]
     return res
 
 
@@ -142,7 +151,9 @@ async def import_notion_lesson(
     Educator or Admin only.
     """
     if file.filename and not file.filename.endswith(".zip"):
-        raise HTTPException(status_code=400, detail="Only ZIP files (.zip) are supported")
+        raise HTTPException(
+            status_code=400, detail="Only ZIP files (.zip) are supported"
+        )
 
     mid = None
     if (
@@ -185,7 +196,9 @@ async def import_notion_lesson(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to import lesson: {str(e)}") from e
+        raise HTTPException(
+            status_code=500, detail=f"Failed to import lesson: {str(e)}"
+        ) from e
 
 
 @router.post("/reorder")
@@ -283,3 +296,26 @@ async def get_lesson_exercises(
     Used by DUT-AI Manager to track multi-exercise completion progress.
     """
     return await use_case.execute(lesson_slug)
+
+
+@router.get("/{lesson_id}/videos", response_model=list[LessonVideoOut])
+@inject
+async def list_lesson_videos(
+    lesson_id: UUID,
+    user: CurrentUser,
+    video_repo: FromDishka[ILessonVideoRepository],
+):
+    """List all reference videos for a lesson."""
+    return await video_repo.list_by_lesson_id(lesson_id)
+
+
+@router.put("/{lesson_id}/videos", response_model=list[LessonVideoOut])
+@inject
+async def sync_lesson_videos(
+    lesson_id: UUID,
+    payload: LessonVideoBatchSync,
+    user: EducatorUser,
+    use_case: FromDishka[SyncLessonVideosUseCase],
+):
+    """Batch update / sync reference videos for a lesson. Requires MANAGE_LESSON permission."""
+    return await use_case.execute(lesson_id, payload.videos)

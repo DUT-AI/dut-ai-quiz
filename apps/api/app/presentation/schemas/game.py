@@ -11,7 +11,9 @@ class GamificationStartIn(BaseModel):
 class GamificationAnswerPatchIn(BaseModel):
     question_id: UUID
     option_id: str
-    time_response: float = Field(..., ge=0, description="Time taken to answer in seconds")
+    time_response: float = Field(
+        ..., ge=0, description="Time taken to answer in seconds"
+    )
     activate_shield: bool = False
     activate_double_points: bool = False
 

@@ -16,7 +16,9 @@ class IExamRepository(Protocol):
         """List all exams created by or shared with a teacher."""
         ...
 
-    async def list_published_for_student(self, user_id: int, now: datetime) -> list[ExamEntity]:
+    async def list_published_for_student(
+        self, user_id: int, now: datetime
+    ) -> list[ExamEntity]:
         """List all published and active exams for a student."""
         ...
 

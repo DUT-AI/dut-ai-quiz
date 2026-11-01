@@ -33,7 +33,9 @@ async def startup(ctx):
     http_client = httpx.AsyncClient()
     retry_policy = GradingRetryPolicy(
         max_attempts=settings.homework_grading_max_attempts,
-        lease_duration=timedelta(seconds=settings.homework_grading_timeout_seconds + 60),
+        lease_duration=timedelta(
+            seconds=settings.homework_grading_timeout_seconds + 60
+        ),
     )
     repository = PostgresHomeworkGradingRepository(retry_policy)
     artifact_reader = S3HomeworkArtifactReader(

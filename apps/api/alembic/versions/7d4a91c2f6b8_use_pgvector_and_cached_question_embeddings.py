@@ -72,8 +72,12 @@ def upgrade() -> None:
     )
 
     op.add_column("questions", sa.Column("embedding", Vector(768), nullable=True))
-    op.add_column("questions", sa.Column("embedding_model", sa.String(200), nullable=True))
-    op.add_column("questions", sa.Column("embedding_source_hash", sa.String(64), nullable=True))
+    op.add_column(
+        "questions", sa.Column("embedding_model", sa.String(200), nullable=True)
+    )
+    op.add_column(
+        "questions", sa.Column("embedding_source_hash", sa.String(64), nullable=True)
+    )
 
 
 def downgrade() -> None:

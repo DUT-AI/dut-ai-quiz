@@ -133,6 +133,30 @@ export function apiPatch<T>(
   return apiPatchJson<T>(path, body, schema);
 }
 
+export function apiPutJson<T>(
+  path: string,
+  body: ApiBody,
+  schema?: z.ZodType<T, any, any>
+): Promise<T> {
+  return apiJson<T>(
+    path,
+    {
+      method: "PUT",
+      headers: jsonHeaders,
+      body: JSON.stringify(body),
+    },
+    schema
+  );
+}
+
+export function apiPut<T>(
+  path: string,
+  body: ApiBody,
+  schema?: z.ZodType<T, any, any>
+): Promise<T> {
+  return apiPutJson<T>(path, body, schema);
+}
+
 // Helper to distinguish options and Zod schemas in apiClient
 function parseClientArgs<T>(
   arg3: z.ZodType<T, any, any> | ApiClientOptions | undefined,

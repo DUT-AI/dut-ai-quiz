@@ -14,7 +14,9 @@ class GameSessionRepository(IGameSessionRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._s = session
 
-    async def get(self, session_id: UUID, for_update: bool = False) -> GameSessionEntity | None:
+    async def get(
+        self, session_id: UUID, for_update: bool = False
+    ) -> GameSessionEntity | None:
         stmt = select(GameSession).where(GameSession.id == session_id)
         if for_update:
             stmt = stmt.with_for_update()
@@ -38,7 +40,9 @@ class GameSessionRepository(IGameSessionRepository):
         return model.to_entity()
 
     async def save(self, entity: GameSessionEntity) -> GameSessionEntity:
-        r = await self._s.execute(select(GameSession).where(GameSession.id == entity.id))
+        r = await self._s.execute(
+            select(GameSession).where(GameSession.id == entity.id)
+        )
         model = r.scalar_one_or_none()
         if model:
             model.lesson_slug = entity.lesson_slug
@@ -81,7 +85,9 @@ class GameSessionRepository(IGameSessionRepository):
         )
         return r.scalar() or 0
 
-    async def get_leaderboard_by_lesson(self, lesson_slug: str, limit: int = 100) -> list[dict]:
+    async def get_leaderboard_by_lesson(
+        self, lesson_slug: str, limit: int = 100
+    ) -> list[dict]:
         subq = (
             select(GameSession.id)
             .where(GameSession.status == GameSessionStatus.COMPLETED)
@@ -99,7 +105,9 @@ class GameSessionRepository(IGameSessionRepository):
 
         # Count total completed attempts for each user
         count_subq = (
-            select(GameSession.user_id, func.count(GameSession.id).label("total_attempts"))
+            select(
+                GameSession.user_id, func.count(GameSession.id).label("total_attempts")
+            )
             .where(GameSession.status == GameSessionStatus.COMPLETED)
             .where(GameSession.lesson_slug == lesson_slug)
             .where(GameSession.question_limit > 0)
@@ -127,9 +135,12 @@ class GameSessionRepository(IGameSessionRepository):
         for row in rows:
             q_seq = row.GameSession.question_sequence or []
 
-            total_questions = len(q_seq) if q_seq else (row.GameSession.question_limit or 0)
+            total_questions = (
+                len(q_seq) if q_seq else (row.GameSession.question_limit or 0)
+            )
             is_completed = bool(
-                row.GameSession.status == GameSessionStatus.COMPLETED and total_questions > 0
+                row.GameSession.status == GameSessionStatus.COMPLETED
+                and total_questions > 0
             )
 
             result.append(
@@ -184,7 +195,9 @@ class GameSessionRepository(IGameSessionRepository):
                 {
                     "session_id": str(s.id),
                     "user_id": s.user_id,
-                    "completed_at": s.completed_at.isoformat() if s.completed_at else None,
+                    "completed_at": s.completed_at.isoformat()
+                    if s.completed_at
+                    else None,
                     "final_score": float(s.final_score),
                     "gold": int(s.gold_earned),
                     "attempt_count": int(s.attempt_count),

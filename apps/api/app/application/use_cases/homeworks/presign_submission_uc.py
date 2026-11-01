@@ -40,9 +40,13 @@ class PresignHomeworkSubmissionUseCase:
             raise AppException("Tên file không hợp lệ", 400)
 
         lower_name = safe_name.casefold()
-        if not any(lower_name.endswith(suffix) for suffix in HOMEWORK_SUBMISSION_SUFFIXES):
+        if not any(
+            lower_name.endswith(suffix) for suffix in HOMEWORK_SUBMISSION_SUFFIXES
+        ):
             allowed = ", ".join(HOMEWORK_SUBMISSION_SUFFIXES)
-            raise AppException(f"Định dạng file không được hỗ trợ. Cho phép: {allowed}", 400)
+            raise AppException(
+                f"Định dạng file không được hỗ trợ. Cho phép: {allowed}", 400
+            )
 
         stamp = now_ict().strftime("%Y%m%d_%H%M%S_%f")
         key = f"homeworks/{homework_id}/submissions/{user_id}/{stamp}_{safe_name}"

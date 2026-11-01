@@ -18,7 +18,9 @@ class GameHydrationService:
     def __init__(self, question_repo: IQuestionRepository) -> None:
         self._question_repo = question_repo
 
-    async def hydrate_question_snapshot(self, meta: QuestionMeta) -> GameQuestionSnapshotOut:
+    async def hydrate_question_snapshot(
+        self, meta: QuestionMeta
+    ) -> GameQuestionSnapshotOut:
         """Hydrate a single question snapshot with its live text and options from database."""
         try:
             q_uuid = UUID(str(meta.id))
@@ -70,7 +72,9 @@ class GameHydrationService:
             and session.status == GameSessionStatus.IN_PROGRESS
             and 0 <= idx < len(session.question_sequence)
         ):
-            current_q = await self.hydrate_question_snapshot(session.question_sequence[idx])
+            current_q = await self.hydrate_question_snapshot(
+                session.question_sequence[idx]
+            )
 
         return GameSessionOut(
             id=session.id,
@@ -84,7 +88,9 @@ class GameHydrationService:
             question_limit=session.question_limit,
             current_question_index=idx,
             current_question=current_q,
-            gamification=GamificationStateOut.model_validate(session.gamification.to_dict()),
+            gamification=GamificationStateOut.model_validate(
+                session.gamification.to_dict()
+            ),
         )
 
     def to_history_out(self, session: GameSessionEntity) -> GameSessionOut:
@@ -101,5 +107,7 @@ class GameHydrationService:
             question_limit=session.question_limit,
             current_question_index=session.gamification.last_question_index,
             current_question=None,
-            gamification=GamificationStateOut.model_validate(session.gamification.to_dict()),
+            gamification=GamificationStateOut.model_validate(
+                session.gamification.to_dict()
+            ),
         )

@@ -29,7 +29,12 @@ def upgrade() -> None:
 def downgrade() -> None:
     # Re-add foreign key constraints
     op.create_foreign_key(
-        "comments_user_id_fkey", "comments", "users", ["user_id"], ["id"], ondelete="CASCADE"
+        "comments_user_id_fkey",
+        "comments",
+        "users",
+        ["user_id"],
+        ["id"],
+        ondelete="CASCADE",
     )
     op.create_foreign_key(
         "comment_reactions_user_id_fkey",

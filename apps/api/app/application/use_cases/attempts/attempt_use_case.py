@@ -16,7 +16,9 @@ from app.presentation.schemas.common import FocusEventIn
 
 
 class GetAttemptUseCase:
-    def __init__(self, att_repo: IAttemptRepository, question_repo: IQuestionRepository):
+    def __init__(
+        self, att_repo: IAttemptRepository, question_repo: IQuestionRepository
+    ):
         self._att_repo = att_repo
         self._question_repo = question_repo
 
@@ -38,7 +40,9 @@ class GetAttemptUseCase:
             if q:
                 ordered.append(q)
 
-        questions = att.shuffle_snapshot.reconstruct_presentation({q.id: q for q in ordered})
+        questions = att.shuffle_snapshot.reconstruct_presentation(
+            {q.id: q for q in ordered}
+        )
 
         # Load saved answers so frontend can restore progress on reconnect
         saved_answers = await self._att_repo.list_answers(attempt_id)
@@ -76,7 +80,9 @@ class PatchAttemptAnswersUseCase:
     def __init__(self, att_repo: IAttemptRepository):
         self._att_repo = att_repo
 
-    async def execute(self, attempt_id: UUID, user_id: int, payload: AttemptAnswersPatch) -> bool:
+    async def execute(
+        self, attempt_id: UUID, user_id: int, payload: AttemptAnswersPatch
+    ) -> bool:
         att = await self._att_repo.get(attempt_id)
         if not att or att.user_id != user_id:
             return False
@@ -85,7 +91,9 @@ class PatchAttemptAnswersUseCase:
             return False
 
         for a in payload.answers:
-            await self._att_repo.upsert_answer(attempt_id, a.question_id, a.selected_option_id)
+            await self._att_repo.upsert_answer(
+                attempt_id, a.question_id, a.selected_option_id
+            )
         return True
 
 
@@ -162,7 +170,9 @@ class RecordFocusEventUseCase:
                 "attempt": {
                     "status": a.status.value if a else None,
                     "score": float(a.score) if a and a.score is not None else None,
-                    "completed_at": (a.completed_at.isoformat() if a and a.completed_at else None),
+                    "completed_at": (
+                        a.completed_at.isoformat() if a and a.completed_at else None
+                    ),
                 },
             }
 

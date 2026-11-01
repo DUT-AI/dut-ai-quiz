@@ -19,9 +19,15 @@ from worker_evaluate_homework.domain import (
     SourceFile,
     SubmissionGradingRecord,
 )
-from worker_evaluate_homework.domain.errors import ArtifactStorageError, ContextLimitError, LLMError
+from worker_evaluate_homework.domain.errors import (
+    ArtifactStorageError,
+    ContextLimitError,
+    LLMError,
+)
 from worker_evaluate_homework.domain.retry import GradingAttempt
-from worker_evaluate_homework.infrastructure.archive_reader import S3HomeworkArtifactReader
+from worker_evaluate_homework.infrastructure.archive_reader import (
+    S3HomeworkArtifactReader,
+)
 from worker_evaluate_homework.presentation.arq_tasks import (
     evaluate_homework_job,
     register_homework_job,
@@ -35,7 +41,9 @@ def grading(retry_policy):
     rubric = HomeworkRubric(
         topic="Print",
         criteria=[
-            GradingCriterion(id="print_output", criterion="Print", description="Print", weight=10)
+            GradingCriterion(
+                id="print_output", criterion="Print", description="Print", weight=10
+            )
         ],
     )
     repo.get_homework.return_value = HomeworkGradingRecord(
@@ -46,20 +54,28 @@ def grading(retry_policy):
     )
     attempt = GradingAttempt(1, datetime(2026, 10, 11))
     repo.claim_submission.return_value = repo.claim_homework.return_value = attempt
-    repo.save_submission_error.return_value = repo.save_submission_result.return_value = True
-    repo.save_homework_error.return_value = repo.save_homework_rubric.return_value = True
+    repo.save_submission_error.return_value = (
+        repo.save_submission_result.return_value
+    ) = True
+    repo.save_homework_error.return_value = repo.save_homework_rubric.return_value = (
+        True
+    )
     repo.list_previous_fingerprints.return_value = []
     reader.read_submission_sources.return_value = [SourceFile("main.py", "print(42)")]
     engine.grade.return_value = GradeResult(True, 10, "Good", [])
     engine.create_rubric.return_value = rubric
     register = RegisterHomeworkUseCase(repo, reader, engine, retry_policy)
-    evaluate = EvaluateHomeworkSubmissionUseCase(repo, reader, engine, register, 0.8, retry_policy)
+    evaluate = EvaluateHomeworkSubmissionUseCase(
+        repo, reader, engine, register, 0.8, retry_policy
+    )
     return repo, reader, engine, register, evaluate, submission_id, homework_id
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("number", [1, 2, 3])
-async def test_submission_retry_and_final_failure_use_persisted_attempt(grading, number):
+async def test_submission_retry_and_final_failure_use_persisted_attempt(
+    grading, number
+):
     repo, reader, _, _, evaluate, submission_id, _ = grading
     attempt = GradingAttempt(number, datetime(2026, 10, 11))
     repo.claim_submission.return_value = attempt
@@ -87,7 +103,9 @@ async def test_registration_uses_the_same_retry_limit(grading, number):
     repo.claim_homework.return_value = attempt
     reader.read_homework_text.side_effect = LLMError("Temporary 429", retryable=True)
     with pytest.raises(Retry if number < 3 else LLMError):
-        await register_homework_job({"register_use_case": register, "job_try": 1}, str(homework_id))
+        await register_homework_job(
+            {"register_use_case": register, "job_try": 1}, str(homework_id)
+        )
     assert repo.save_homework_error.call_args.kwargs == {
         "attempt": attempt,
         "retryable": number < 3,
@@ -111,7 +129,11 @@ async def test_read_failure_before_claim_does_not_write_failure(grading, registr
     read = repo.get_homework if registration else repo.get_submission
     read.side_effect = RuntimeError("Database unavailable")
     with pytest.raises(RuntimeError, match="Database unavailable"):
-        await (register.execute(homework_id) if registration else evaluate.execute(submission_id))
+        await (
+            register.execute(homework_id)
+            if registration
+            else evaluate.execute(submission_id)
+        )
     repo.save_homework_error.assert_not_awaited()
     repo.save_submission_error.assert_not_awaited()
 
@@ -131,7 +153,11 @@ async def test_unclaimed_job_does_not_grade_or_write(grading, registration):
     repo, reader, engine, register, evaluate, submission_id, homework_id = grading
     claim = repo.claim_homework if registration else repo.claim_submission
     claim.return_value = None
-    await (register.execute(homework_id) if registration else evaluate.execute(submission_id))
+    await (
+        register.execute(homework_id)
+        if registration
+        else evaluate.execute(submission_id)
+    )
     reader.read_homework_text.assert_not_awaited()
     reader.read_submission_sources.assert_not_awaited()
     engine.grade.assert_not_awaited()
@@ -151,11 +177,17 @@ async def test_lost_claim_does_not_report_an_unsaved_score(grading):
 @pytest.mark.parametrize("registration", [False, True])
 async def test_lost_claim_does_not_schedule_retry(grading, registration):
     repo, reader, _, register, evaluate, submission_id, homework_id = grading
-    repo.save_submission_error.return_value = repo.save_homework_error.return_value = False
+    repo.save_submission_error.return_value = repo.save_homework_error.return_value = (
+        False
+    )
     read = reader.read_homework_text if registration else reader.read_submission_sources
     read.side_effect = LLMError("Temporary 503", retryable=True)
     assert (
-        await (register.execute(homework_id) if registration else evaluate.execute(submission_id))
+        await (
+            register.execute(homework_id)
+            if registration
+            else evaluate.execute(submission_id)
+        )
         is None
     )
 
@@ -164,13 +196,17 @@ async def test_lost_claim_does_not_schedule_retry(grading, registration):
 @pytest.mark.parametrize("registration", [False, True])
 async def test_last_attempt_cancellation_is_final_and_propagates(grading, registration):
     repo, reader, _, register, evaluate, submission_id, homework_id = grading
-    repo.claim_homework.return_value = repo.claim_submission.return_value = GradingAttempt(
-        3, datetime(2026, 10, 11)
+    repo.claim_homework.return_value = repo.claim_submission.return_value = (
+        GradingAttempt(3, datetime(2026, 10, 11))
     )
     read = reader.read_homework_text if registration else reader.read_submission_sources
     read.side_effect = asyncio.CancelledError
     with pytest.raises(asyncio.CancelledError):
-        await (register.execute(homework_id) if registration else evaluate.execute(submission_id))
+        await (
+            register.execute(homework_id)
+            if registration
+            else evaluate.execute(submission_id)
+        )
     save = repo.save_homework_error if registration else repo.save_submission_error
     assert save.call_args.kwargs["retryable"] is False
     if not registration:
@@ -193,7 +229,9 @@ async def test_nested_rubric_retry_respects_submission_attempt_limit(grading):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("status,retryable", [(404, False), (408, True), (429, True), (503, True)])
+@pytest.mark.parametrize(
+    "status,retryable", [(404, False), (408, True), (429, True), (503, True)]
+)
 async def test_storage_adapter_translates_http_errors(status, retryable):
     async with httpx.AsyncClient(
         transport=httpx.MockTransport(lambda request: httpx.Response(status))

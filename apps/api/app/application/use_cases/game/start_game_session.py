@@ -34,10 +34,14 @@ class StartGameSessionUseCase:
         self._hydration = hydration
         self._cache = cache
 
-    async def execute(self, user_id: int, payload: GamificationStartIn) -> GameSessionOut:
+    async def execute(
+        self, user_id: int, payload: GamificationStartIn
+    ) -> GameSessionOut:
         # Auto-finish any existing IN_PROGRESS session for this lesson+user
         # so that the client never needs to call finishSession separately.
-        existing = await self._ps_repo.get_active_by_lesson(user_id, payload.lesson_slug)
+        existing = await self._ps_repo.get_active_by_lesson(
+            user_id, payload.lesson_slug
+        )
         if existing and existing.status == GameSessionStatus.IN_PROGRESS:
             existing.status = GameSessionStatus.COMPLETED
             existing.completed_at = now_ict()
@@ -85,9 +89,15 @@ class StartGameSessionUseCase:
             return unseen + seen
 
         # Target distribution: 3 EASY (Tier 1), 3 MEDIUM (Tier 2), 4 HARD (Tier 3) -> Total 10
-        easy_pool = prioritize_and_order([q for q in questions if q.difficulty == Difficulty.EASY])
-        med_pool = prioritize_and_order([q for q in questions if q.difficulty == Difficulty.MEDIUM])
-        hard_pool = prioritize_and_order([q for q in questions if q.difficulty == Difficulty.HARD])
+        easy_pool = prioritize_and_order(
+            [q for q in questions if q.difficulty == Difficulty.EASY]
+        )
+        med_pool = prioritize_and_order(
+            [q for q in questions if q.difficulty == Difficulty.MEDIUM]
+        )
+        hard_pool = prioritize_and_order(
+            [q for q in questions if q.difficulty == Difficulty.HARD]
+        )
 
         target_easy = min(3, len(easy_pool))
         target_med = min(3, len(med_pool))
@@ -116,7 +126,9 @@ class StartGameSessionUseCase:
                 take_from_easy = min(4 - len(selected_hard), len(remaining_easy))
                 selected_hard.extend(remaining_easy[:take_from_easy])
                 remaining_easy = remaining_easy[take_from_easy:]
-                needed = 10 - (len(selected_easy) + len(selected_med) + len(selected_hard))
+                needed = 10 - (
+                    len(selected_easy) + len(selected_med) + len(selected_hard)
+                )
 
         if needed > 0 and len(selected_med) < 3:
             take_from_hard = min(3 - len(selected_med), len(remaining_hard))
@@ -128,7 +140,9 @@ class StartGameSessionUseCase:
                 take_from_easy = min(3 - len(selected_med), len(remaining_easy))
                 selected_med.extend(remaining_easy[:take_from_easy])
                 remaining_easy = remaining_easy[take_from_easy:]
-                needed = 10 - (len(selected_easy) + len(selected_med) + len(selected_hard))
+                needed = 10 - (
+                    len(selected_easy) + len(selected_med) + len(selected_hard)
+                )
 
         if needed > 0 and len(selected_easy) < 3:
             take_from_med = min(3 - len(selected_easy), len(remaining_med))
@@ -140,7 +154,9 @@ class StartGameSessionUseCase:
                 take_from_hard = min(3 - len(selected_easy), len(remaining_hard))
                 selected_easy.extend(remaining_hard[:take_from_hard])
                 remaining_hard = remaining_hard[take_from_hard:]
-                needed = 10 - (len(selected_easy) + len(selected_med) + len(selected_hard))
+                needed = 10 - (
+                    len(selected_easy) + len(selected_med) + len(selected_hard)
+                )
 
         # Final fill-up from any remaining pool to reach 10 if bank has available questions
         if (len(selected_easy) + len(selected_med) + len(selected_hard)) < 10:

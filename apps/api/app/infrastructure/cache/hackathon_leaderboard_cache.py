@@ -14,7 +14,9 @@ class RedisHackathonLeaderboardCache(IHackathonLeaderboardCache):
     def _make_key(self, hackathon_id: UUID, is_private: bool = False) -> str:
         return f"hackathon_leaderboard:{hackathon_id}:{'private' if is_private else 'public'}"
 
-    async def get(self, hackathon_id: UUID, is_private: bool = False) -> list[dict] | None:
+    async def get(
+        self, hackathon_id: UUID, is_private: bool = False
+    ) -> list[dict] | None:
         key = self._make_key(hackathon_id, is_private)
         data = await self._redis.get(key)
         if data:

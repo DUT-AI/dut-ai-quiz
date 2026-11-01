@@ -28,8 +28,12 @@ def upgrade() -> None:
     )
 
     # 3. Alter columns to vector(1024)
-    op.execute("ALTER TABLE lesson_chunks ALTER COLUMN embedding TYPE vector(1024) USING NULL")
-    op.execute("ALTER TABLE questions ALTER COLUMN embedding TYPE vector(1024) USING NULL")
+    op.execute(
+        "ALTER TABLE lesson_chunks ALTER COLUMN embedding TYPE vector(1024) USING NULL"
+    )
+    op.execute(
+        "ALTER TABLE questions ALTER COLUMN embedding TYPE vector(1024) USING NULL"
+    )
 
     # 4. Recreate HNSW indexes with vector_cosine_ops for 1024-dim vectors
     op.create_index(
@@ -57,8 +61,12 @@ def downgrade() -> None:
         "UPDATE questions SET embedding = NULL, embedding_model = NULL, embedding_source_hash = NULL"
     )
 
-    op.execute("ALTER TABLE lesson_chunks ALTER COLUMN embedding TYPE vector(768) USING NULL")
-    op.execute("ALTER TABLE questions ALTER COLUMN embedding TYPE vector(768) USING NULL")
+    op.execute(
+        "ALTER TABLE lesson_chunks ALTER COLUMN embedding TYPE vector(768) USING NULL"
+    )
+    op.execute(
+        "ALTER TABLE questions ALTER COLUMN embedding TYPE vector(768) USING NULL"
+    )
 
     op.create_index(
         "ix_lesson_chunks_embedding_hnsw",

@@ -53,7 +53,9 @@ class RegisterHomeworkUseCase:
             )
             raise
         except Exception as exc:
-            should_retry = self._retry_policy.can_retry(attempt, retryable=is_retryable_error(exc))
+            should_retry = self._retry_policy.can_retry(
+                attempt, retryable=is_retryable_error(exc)
+            )
             saved = await self._repository.save_homework_error(
                 homework_id,
                 str(exc),
@@ -63,5 +65,7 @@ class RegisterHomeworkUseCase:
             if not saved:
                 return
             if should_retry:
-                raise RetryGradingRequested(self._retry_policy.delay_seconds(attempt)) from exc
+                raise RetryGradingRequested(
+                    self._retry_policy.delay_seconds(attempt)
+                ) from exc
             raise

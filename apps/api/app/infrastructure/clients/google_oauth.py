@@ -28,7 +28,9 @@ class GoogleOAuthClient:
             "grant_type": "authorization_code",
         }
         try:
-            response = await self._client.post(self._token_url, data=token_data, timeout=15.0)
+            response = await self._client.post(
+                self._token_url, data=token_data, timeout=15.0
+            )
             if response.status_code != 200:
                 logger.error(f"Google Token Exchange failed: {response.text}")
                 return None
@@ -41,7 +43,9 @@ class GoogleOAuthClient:
     async def get_user_info(self, access_token: str) -> dict | None:
         headers = {"Authorization": f"Bearer {access_token}"}
         try:
-            response = await self._client.get(self._userinfo_url, headers=headers, timeout=15.0)
+            response = await self._client.get(
+                self._userinfo_url, headers=headers, timeout=15.0
+            )
             if response.status_code != 200:
                 logger.error(f"Google Userinfo fetch failed: {response.text}")
                 return None

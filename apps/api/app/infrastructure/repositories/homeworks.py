@@ -38,7 +38,8 @@ class HomeworkRepository(IHomeworkRepository):
 
     async def lesson_exists(self, lesson_id: UUID) -> bool:
         return (
-            await self._session.scalar(select(Lesson.id).where(Lesson.id == lesson_id)) is not None
+            await self._session.scalar(select(Lesson.id).where(Lesson.id == lesson_id))
+            is not None
         )
 
     async def get_homework(self, homework_id: UUID) -> HomeworkEntity | None:
@@ -147,7 +148,9 @@ class HomeworkRepository(IHomeworkRepository):
         await self._session.refresh(model)
         return model.to_entity()
 
-    async def get_submission(self, submission_id: UUID) -> HomeworkSubmissionEntity | None:
+    async def get_submission(
+        self, submission_id: UUID
+    ) -> HomeworkSubmissionEntity | None:
         model = await self._session.get(HomeworkSubmission, submission_id)
         return model.to_entity() if model else None
 
@@ -219,7 +222,9 @@ class HomeworkRepository(IHomeworkRepository):
         await self._session.flush()
         return model.to_entity()
 
-    async def list_submissions(self, homework_id: UUID) -> list[HomeworkSubmissionEntity]:
+    async def list_submissions(
+        self, homework_id: UUID
+    ) -> list[HomeworkSubmissionEntity]:
         models = (
             await self._session.scalars(
                 select(HomeworkSubmission)
@@ -264,7 +269,10 @@ class HomeworkRepository(IHomeworkRepository):
                 Homework.archived_at.is_(None),
             )
             .group_by(HomeworkSubmission.user_id)
-            .having(func.count(func.distinct(HomeworkSubmission.homework_id)) >= total_active)
+            .having(
+                func.count(func.distinct(HomeworkSubmission.homework_id))
+                >= total_active
+            )
             .order_by(HomeworkSubmission.user_id)
         )
         rows = (await self._session.execute(stmt)).all()
@@ -319,7 +327,9 @@ class HomeworkRepository(IHomeworkRepository):
                 original_filename=row[0].original_filename,
                 submitted_at=row[0].submitted_at,
                 status=str(
-                    row[0].status.value if hasattr(row[0].status, "value") else row[0].status
+                    row[0].status.value
+                    if hasattr(row[0].status, "value")
+                    else row[0].status
                 ),
                 is_pass=row[0].is_pass,
                 score=float(row[0].score) if row[0].score is not None else None,

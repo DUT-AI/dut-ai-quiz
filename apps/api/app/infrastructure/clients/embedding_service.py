@@ -43,7 +43,8 @@ class LocalHashingEmbeddingService(IEmbeddingService):
 
         features: list[tuple[str, float]] = [(f"word:{word}", 1.0) for word in words]
         features.extend(
-            (f"bigram:{left}:{right}", 1.35) for left, right in zip(words, words[1:], strict=False)
+            (f"bigram:{left}:{right}", 1.35)
+            for left, right in zip(words, words[1:], strict=False)
         )
 
         compact = " ".join(words)
@@ -136,7 +137,9 @@ class DutAiEmbeddingService(IEmbeddingService):
                     sorted_items = sorted(data["data"], key=lambda item: item["index"])
                     result.extend(item["embedding"] for item in sorted_items)
                 else:
-                    raise ValueError(f"Unexpected response format from embedding service: {data}")
+                    raise ValueError(
+                        f"Unexpected response format from embedding service: {data}"
+                    )
         except (httpx.HTTPError, KeyError, TypeError, ValueError) as exc:
             err_msg = str(exc) or repr(exc)
             raise EmbeddingServiceError(
@@ -144,7 +147,9 @@ class DutAiEmbeddingService(IEmbeddingService):
             ) from exc
 
         expected = self._settings.embedding_dimensions
-        if len(result) != len(texts) or any(len(vector) != expected for vector in result):
+        if len(result) != len(texts) or any(
+            len(vector) != expected for vector in result
+        ):
             raise EmbeddingServiceError(
                 "DUT-AI embedding service returned an unexpected vector shape; "
                 f"expected {expected} dimensions, got {[len(v) for v in result[:3]]}"
@@ -199,7 +204,9 @@ class OpenAICompatibleEmbeddingService(IEmbeddingService):
             raise EmbeddingServiceError(f"Embedding provider failed: {exc}") from exc
 
         expected = self._settings.embedding_dimensions
-        if len(result) != len(texts) or any(len(vector) != expected for vector in result):
+        if len(result) != len(texts) or any(
+            len(vector) != expected for vector in result
+        ):
             raise EmbeddingServiceError(
                 f"Embedding provider returned an unexpected vector shape; expected {expected} dimensions"
             )

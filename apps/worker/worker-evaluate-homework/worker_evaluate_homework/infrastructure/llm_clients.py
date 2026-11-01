@@ -53,12 +53,18 @@ class OpenAILLMClient(ILLMClient):
         else:
             self._chat_url = raw_url
 
-        self._api_key = api_key if api_key is not None else settings.homework_llm_api_key
+        self._api_key = (
+            api_key if api_key is not None else settings.homework_llm_api_key
+        )
         self._model = model or settings.homework_llm_model
         self._temperature = (
-            temperature if temperature is not None else settings.homework_llm_temperature
+            temperature
+            if temperature is not None
+            else settings.homework_llm_temperature
         )
-        self._timeout = timeout if timeout is not None else settings.homework_llm_timeout_seconds
+        self._timeout = (
+            timeout if timeout is not None else settings.homework_llm_timeout_seconds
+        )
         self._client = http_client
         root = self._chat_url.removesuffix("/chat/completions").removesuffix("/v1")
         self._tokenizer_url = (settings.homework_llm_tokenizer_url or root).rstrip("/")
@@ -129,7 +135,12 @@ class OpenAILLMClient(ILLMClient):
             client,
             "POST",
             "/tokenize",
-            {"model": self._model, "content": rendered, "add_special": True, "parse_special": True},
+            {
+                "model": self._model,
+                "content": rendered,
+                "add_special": True,
+                "parse_special": True,
+            },
         )
         tokens = data.get("tokens")
         if not isinstance(tokens, list):
@@ -165,7 +176,9 @@ class OpenAILLMClient(ILLMClient):
                 f"Lỗi kết nối LLM tokenizer: {type(exc).__name__}", retryable=True
             ) from exc
         except ValueError as exc:
-            raise LLMError(f"LLM tokenizer trả về dữ liệu không hợp lệ tại {path}") from exc
+            raise LLMError(
+                f"LLM tokenizer trả về dữ liệu không hợp lệ tại {path}"
+            ) from exc
 
     async def _get_client(self) -> httpx.AsyncClient:
         if self._client is None:
@@ -193,7 +206,10 @@ class OpenAILLMClient(ILLMClient):
             "temperature": self._temperature,
             # The native server enforces field types and evidence length limits.
             # A plain JSON object can still copy a large fragment into its answer.
-            "response_format": {"type": "json_object", "schema": schema.model_json_schema()},
+            "response_format": {
+                "type": "json_object",
+                "schema": schema.model_json_schema(),
+            },
             "chat_template_kwargs": {"enable_thinking": False},
             "reasoning_effort": "none",
             "max_tokens": settings.homework_llm_max_output_tokens,
@@ -219,7 +235,10 @@ class OpenAILLMClient(ILLMClient):
                 error = exc.response.json().get("error", {})
             except ValueError:
                 error = {}
-            if isinstance(error, dict) and error.get("type") == "exceed_context_size_error":
+            if (
+                isinstance(error, dict)
+                and error.get("type") == "exceed_context_size_error"
+            ):
                 context = error.get("n_ctx")
                 if isinstance(context, int) and context > 0:
                     self._context_tokens = min(self._context_tokens, context)
@@ -230,10 +249,14 @@ class OpenAILLMClient(ILLMClient):
                 retryable=is_transient_http_error(exc),
             ) from exc
         except httpx.TransportError as exc:
-            raise LLMError(f"Lỗi kết nối LLM: {type(exc).__name__}", retryable=True) from exc
+            raise LLMError(
+                f"Lỗi kết nối LLM: {type(exc).__name__}", retryable=True
+            ) from exc
         except Exception as exc:
             logger.error(f"OpenAI LLM request to {self._chat_url} failed: {exc}")
-            raise LLMError(f"LLM trả về response không hợp lệ: {exc}", retryable=True) from exc
+            raise LLMError(
+                f"LLM trả về response không hợp lệ: {exc}", retryable=True
+            ) from exc
 
         logger.info(
             "LLM response model={} prompt_tokens={} usage={} finish_reason={}",
@@ -252,7 +275,9 @@ class OpenAILLMClient(ILLMClient):
         try:
             return schema.model_validate_json(extracted_json)
         except Exception as exc:
-            logger.error(f"Failed to validate JSON against schema {schema.__name__}: {exc}")
+            logger.error(
+                f"Failed to validate JSON against schema {schema.__name__}: {exc}"
+            )
             raise LLMError(
                 f"LLM trả về định dạng JSON không hợp lệ: {exc}", retryable=True
             ) from exc
@@ -268,7 +293,9 @@ class GeminiLLMClient(ILLMClient):
     ) -> None:
         key = api_key or settings.gemini_api_key
         if not key:
-            raise RuntimeError("Thiếu GEMINI_API_KEY; chưa thể khởi tạo GeminiLLMClient")
+            raise RuntimeError(
+                "Thiếu GEMINI_API_KEY; chưa thể khởi tạo GeminiLLMClient"
+            )
         from google import genai
 
         self._client = genai.Client(api_key=key)

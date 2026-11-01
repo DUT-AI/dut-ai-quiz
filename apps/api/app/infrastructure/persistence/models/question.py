@@ -32,7 +32,9 @@ class Question(Base):
         ),
     )
 
-    id: Mapped[UUID] = mapped_column(pgUUID(as_uuid=True), primary_key=True, default=uuid4)
+    id: Mapped[UUID] = mapped_column(
+        pgUUID(as_uuid=True), primary_key=True, default=uuid4
+    )
     pool_type: Mapped[PoolType] = mapped_column(index=True)
     difficulty: Mapped[Difficulty] = mapped_column(
         default=Difficulty.EASY,
@@ -40,7 +42,9 @@ class Question(Base):
         index=True,
     )
     content: Mapped[str] = mapped_column(default="", server_default="")
-    options: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, nullable=False, default=list)
+    options: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSONB, nullable=False, default=list
+    )
     solution: Mapped[str | None] = mapped_column(nullable=True)
     tags: Mapped[list[UUID]] = mapped_column(
         ARRAY(pgUUID(as_uuid=True)), nullable=False, default=list
@@ -72,9 +76,15 @@ class Question(Base):
         ForeignKey("questions.id", ondelete="SET NULL"),
         nullable=True,
     )
-    is_difficulty_ai_suggested: Mapped[bool] = mapped_column(default=False, server_default="false")
-    is_answer_ai_generated: Mapped[bool] = mapped_column(default=False, server_default="false")
-    is_solution_ai_generated: Mapped[bool] = mapped_column(default=False, server_default="false")
+    is_difficulty_ai_suggested: Mapped[bool] = mapped_column(
+        default=False, server_default="false"
+    )
+    is_answer_ai_generated: Mapped[bool] = mapped_column(
+        default=False, server_default="false"
+    )
+    is_solution_ai_generated: Mapped[bool] = mapped_column(
+        default=False, server_default="false"
+    )
     import_session_id: Mapped[UUID | None] = mapped_column(
         pgUUID(as_uuid=True),
         ForeignKey("import_sessions.id", ondelete="SET NULL"),

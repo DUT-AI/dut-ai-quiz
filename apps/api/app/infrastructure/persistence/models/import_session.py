@@ -14,7 +14,9 @@ from .base import Base
 class ImportSession(Base):
     __tablename__ = "import_sessions"
 
-    id: Mapped[UUID] = mapped_column(pgUUID(as_uuid=True), primary_key=True, default=uuid4)
+    id: Mapped[UUID] = mapped_column(
+        pgUUID(as_uuid=True), primary_key=True, default=uuid4
+    )
     user_id: Mapped[int] = mapped_column(index=True)
     file_name: Mapped[str | None] = mapped_column(default=None, nullable=True)
     total_questions: Mapped[int] = mapped_column(default=0)

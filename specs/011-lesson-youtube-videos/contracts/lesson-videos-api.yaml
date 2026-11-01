@@ -1,0 +1,252 @@
+openapi: 3.1.0
+info:
+  title: Lesson YouTube Reference Videos API
+  version: 1.0.0
+  description: Endpoints for managing and retrieving YouTube reference videos attached to lessons.
+paths:
+  /api/v1/lessons/by-slug/{slug}:
+    get:
+      summary: Get lesson detail by slug
+      description: Returns lesson details including theory Markdown and attached reference videos.
+      tags:
+        - lessons
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "ham-so"
+      responses:
+        '200':
+          description: Lesson details with reference videos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LessonDetailOut'
+        '404':
+          description: Lesson not found
+
+  /api/v1/lessons/{lesson_id}/videos:
+    get:
+      summary: List reference videos for a lesson
+      tags:
+        - lessons
+      parameters:
+        - name: lesson_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Ordered list of reference videos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LessonVideoOut'
+
+    put:
+      summary: Batch sync / replace all reference videos for a lesson
+      description: Replaces the reference video playlist for the specified lesson. Requires MANAGE_LESSON permission.
+      tags:
+        - lessons
+      parameters:
+        - name: lesson_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LessonVideoBatchSync'
+      responses:
+        '200':
+          description: Updated list of reference videos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LessonVideoOut'
+        '400':
+          description: Invalid YouTube URL or payload
+        '403':
+          description: Insufficient permissions
+        '404':
+          description: Lesson not found
+
+    post:
+      summary: Add a single reference video to a lesson
+      description: Requires MANAGE_LESSON permission.
+      tags:
+        - lessons
+      parameters:
+        - name: lesson_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LessonVideoCreate'
+      responses:
+        '201':
+          description: Video successfully added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LessonVideoOut'
+        '400':
+          description: Invalid YouTube URL
+
+  /api/v1/lessons/{lesson_id}/videos/{video_id}:
+    delete:
+      summary: Delete a reference video
+      description: Requires MANAGE_LESSON permission.
+      tags:
+        - lessons
+      parameters:
+        - name: lesson_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: video_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Video deleted successfully
+        '404':
+          description: Video or lesson not found
+
+components:
+  schemas:
+    LessonVideoCreate:
+      type: object
+      required:
+        - title
+        - url
+      properties:
+        title:
+          type: string
+          example: "Khảo sát sự biến thiên của hàm số - Phần 1"
+        url:
+          type: string
+          example: "https://www.youtube.com/watch?v=Zf-VMEgCxGE&t=3179s"
+        description:
+          type: string
+          default: ""
+          example: "Video hướng dẫn chi tiết cách tìm cực trị và tiệm cận."
+        order:
+          type: integer
+          default: 0
+          example: 0
+
+    LessonVideoBatchSync:
+      type: object
+      required:
+        - videos
+      properties:
+        videos:
+          type: array
+          items:
+            $ref: '#/components/schemas/LessonVideoCreate'
+
+    LessonVideoOut:
+      type: object
+      required:
+        - id
+        - lesson_id
+        - title
+        - url
+        - youtube_video_id
+        - start_seconds
+        - order
+        - description
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        lesson_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        url:
+          type: string
+        youtube_video_id:
+          type: string
+          example: "Zf-VMEgCxGE"
+        start_seconds:
+          type: integer
+          example: 3179
+        order:
+          type: integer
+          example: 0
+        description:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    LessonDetailOut:
+      type: object
+      required:
+        - id
+        - name
+        - description
+        - order
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        content_md:
+          type: string
+          nullable: true
+        order:
+          type: integer
+        slug:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        module_id:
+          type: string
+          format: uuid
+          nullable: true
+        has_game_questions:
+          type: boolean
+          default: false
+        videos:
+          type: array
+          items:
+            $ref: '#/components/schemas/LessonVideoOut'
+          default: []

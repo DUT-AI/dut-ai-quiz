@@ -68,7 +68,9 @@ def downgrade() -> None:
         .scalar_one()
     )
     if unsupported:
-        raise RuntimeError("Cannot downgrade while hackathon tasks use newly added metrics.")
+        raise RuntimeError(
+            "Cannot downgrade while hackathon tasks use newly added metrics."
+        )
     _replace_metric_enum(_OLD_METRICS)
     op.create_table(
         "homework_assignments",

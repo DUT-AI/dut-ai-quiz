@@ -24,13 +24,21 @@ class TurnBuffItemStrategy(IGameItemStrategy):
     def is_instant(self) -> bool:
         return False
 
-    def validate(self, session: "GameSessionEntity", context: ItemExecutionContext) -> None:
+    def validate(
+        self, session: "GameSessionEntity", context: ItemExecutionContext
+    ) -> None:
         raise DomainValidationException(
             f"Item {self.item_type.value} must be activated when submitting your answer"
         )
 
-    def calculate_price(self, session: "GameSessionEntity", context: ItemExecutionContext) -> int:
-        is_boss = context.current_question_meta.is_boss if context.current_question_meta else False
+    def calculate_price(
+        self, session: "GameSessionEntity", context: ItemExecutionContext
+    ) -> int:
+        is_boss = (
+            context.current_question_meta.is_boss
+            if context.current_question_meta
+            else False
+        )
         return session.gamification.get_item_price(self.item_type, is_boss=is_boss)
 
     async def apply(

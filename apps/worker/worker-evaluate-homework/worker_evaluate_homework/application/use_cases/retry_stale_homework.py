@@ -38,9 +38,13 @@ class RetryStaleHomeworkUseCase:
             )
             for hw_id in homework_ids:
                 try:
-                    enqueued_homeworks += int(await self._queue.enqueue_registration(hw_id))
+                    enqueued_homeworks += int(
+                        await self._queue.enqueue_registration(hw_id)
+                    )
                 except Exception as exc:
-                    logger.warning(f"Không thể enqueue retry cho homework {hw_id}: {exc}")
+                    logger.warning(
+                        f"Không thể enqueue retry cho homework {hw_id}: {exc}"
+                    )
         except Exception as exc:
             logger.error(f"Lỗi khi truy vấn stale homeworks: {exc}")
 
@@ -53,9 +57,13 @@ class RetryStaleHomeworkUseCase:
             )
             for sub_id in submission_ids:
                 try:
-                    enqueued_submissions += int(await self._queue.enqueue_evaluation(sub_id))
+                    enqueued_submissions += int(
+                        await self._queue.enqueue_evaluation(sub_id)
+                    )
                 except Exception as exc:
-                    logger.warning(f"Không thể enqueue retry cho submission {sub_id}: {exc}")
+                    logger.warning(
+                        f"Không thể enqueue retry cho submission {sub_id}: {exc}"
+                    )
         except Exception as exc:
             logger.error(f"Lỗi khi truy vấn stale submissions: {exc}")
 

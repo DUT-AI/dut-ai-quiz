@@ -4,7 +4,9 @@ from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import APIRouter, HTTPException, Query
 
 from app.application.use_cases.exams.exam_use_case import GetExamUseCase
-from app.application.use_cases.leaderboard.leaderboard_use_case import GetLeaderboardUseCase
+from app.application.use_cases.leaderboard.leaderboard_use_case import (
+    GetLeaderboardUseCase,
+)
 from app.domain.entities.auth_enums import SystemPermission
 from app.presentation.api.deps import CurrentUser
 from app.presentation.schemas.attempts import LeaderboardRow

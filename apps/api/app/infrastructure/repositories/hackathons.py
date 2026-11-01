@@ -42,7 +42,9 @@ class HackathonRepository(IHackathonRepository):
 
     async def list_for_admin(self, user_id: int) -> list[HackathonEntity]:
         r = await self._s.execute(
-            select(Hackathon).where(Hackathon.created_by == user_id).order_by(Hackathon.name)
+            select(Hackathon)
+            .where(Hackathon.created_by == user_id)
+            .order_by(Hackathon.name)
         )
         return [m.to_entity() for m in r.scalars().all()]
 
@@ -93,7 +95,9 @@ class HackathonTaskRepository(IHackathonTaskRepository):
         return r.scalar_one_or_none() is not None
 
     async def get(self, task_id: UUID) -> HackathonTaskEntity | None:
-        r = await self._s.execute(select(HackathonTask).where(HackathonTask.id == task_id))
+        r = await self._s.execute(
+            select(HackathonTask).where(HackathonTask.id == task_id)
+        )
         model = r.scalar_one_or_none()
         return model.to_entity() if model else None
 
@@ -113,7 +117,9 @@ class HackathonTaskRepository(IHackathonTaskRepository):
         return model.to_entity()
 
     async def update(self, entity: HackathonTaskEntity) -> HackathonTaskEntity:
-        r = await self._s.execute(select(HackathonTask).where(HackathonTask.id == entity.id))
+        r = await self._s.execute(
+            select(HackathonTask).where(HackathonTask.id == entity.id)
+        )
         model = r.scalar_one_or_none()
         if model:
             model.name = entity.name
@@ -129,7 +135,9 @@ class HackathonTaskRepository(IHackathonTaskRepository):
         raise ValueError("Hackathon task not found")
 
     async def delete(self, entity: HackathonTaskEntity) -> None:
-        r = await self._s.execute(select(HackathonTask).where(HackathonTask.id == entity.id))
+        r = await self._s.execute(
+            select(HackathonTask).where(HackathonTask.id == entity.id)
+        )
         model = r.scalar_one_or_none()
         if model:
             await self._s.delete(model)
@@ -140,12 +148,16 @@ class HackathonTeamRepository(IHackathonTeamRepository):
         self._s = session
 
     async def get(self, team_id: UUID) -> HackathonTeamEntity | None:
-        r = await self._s.execute(select(HackathonTeam).where(HackathonTeam.id == team_id))
+        r = await self._s.execute(
+            select(HackathonTeam).where(HackathonTeam.id == team_id)
+        )
         model = r.scalar_one_or_none()
         return model.to_entity() if model else None
 
     async def get_by_code(self, code: str) -> HackathonTeamEntity | None:
-        r = await self._s.execute(select(HackathonTeam).where(HackathonTeam.code == code))
+        r = await self._s.execute(
+            select(HackathonTeam).where(HackathonTeam.code == code)
+        )
         model = r.scalar_one_or_none()
         return model.to_entity() if model else None
 
@@ -158,7 +170,9 @@ class HackathonTeamRepository(IHackathonTeamRepository):
         )
         return r.scalar_one_or_none() is not None
 
-    async def get_user_team(self, hackathon_id: UUID, user_id: int) -> HackathonTeamEntity | None:
+    async def get_user_team(
+        self, hackathon_id: UUID, user_id: int
+    ) -> HackathonTeamEntity | None:
         r = await self._s.execute(
             select(HackathonTeam).where(
                 HackathonTeam.hackathon_id == hackathon_id,
@@ -176,7 +190,9 @@ class HackathonTeamRepository(IHackathonTeamRepository):
         return model.to_entity()
 
     async def update(self, entity: HackathonTeamEntity) -> HackathonTeamEntity:
-        r = await self._s.execute(select(HackathonTeam).where(HackathonTeam.id == entity.id))
+        r = await self._s.execute(
+            select(HackathonTeam).where(HackathonTeam.id == entity.id)
+        )
         model = r.scalar_one_or_none()
         if model:
             model.name = entity.name
@@ -189,7 +205,9 @@ class HackathonTeamRepository(IHackathonTeamRepository):
         raise ValueError("Team not found")
 
     async def delete(self, entity: HackathonTeamEntity) -> None:
-        r = await self._s.execute(select(HackathonTeam).where(HackathonTeam.id == entity.id))
+        r = await self._s.execute(
+            select(HackathonTeam).where(HackathonTeam.id == entity.id)
+        )
         model = r.scalar_one_or_none()
         if model:
             await self._s.delete(model)
@@ -201,7 +219,9 @@ class HackathonRegistrationRepository(IHackathonRegistrationRepository):
 
     async def get(self, registration_id: UUID) -> HackathonRegistrationEntity | None:
         r = await self._s.execute(
-            select(HackathonRegistration).where(HackathonRegistration.id == registration_id)
+            select(HackathonRegistration).where(
+                HackathonRegistration.id == registration_id
+            )
         )
         model = r.scalar_one_or_none()
         return model.to_entity() if model else None
@@ -232,7 +252,9 @@ class HackathonRegistrationRepository(IHackathonRegistrationRepository):
         model = r.scalar_one_or_none()
         return model.to_entity() if model else None
 
-    async def list_for_hackathon(self, hackathon_id: UUID) -> list[HackathonRegistrationEntity]:
+    async def list_for_hackathon(
+        self, hackathon_id: UUID
+    ) -> list[HackathonRegistrationEntity]:
         r = await self._s.execute(
             select(HackathonRegistration)
             .where(HackathonRegistration.hackathon_id == hackathon_id)
@@ -240,14 +262,18 @@ class HackathonRegistrationRepository(IHackathonRegistrationRepository):
         )
         return [m.to_entity() for m in r.scalars().all()]
 
-    async def add(self, entity: HackathonRegistrationEntity) -> HackathonRegistrationEntity:
+    async def add(
+        self, entity: HackathonRegistrationEntity
+    ) -> HackathonRegistrationEntity:
         model = HackathonRegistration.from_entity(entity)
         self._s.add(model)
         await self._s.flush()
         await self._s.refresh(model)
         return model.to_entity()
 
-    async def update(self, entity: HackathonRegistrationEntity) -> HackathonRegistrationEntity:
+    async def update(
+        self, entity: HackathonRegistrationEntity
+    ) -> HackathonRegistrationEntity:
         r = await self._s.execute(
             select(HackathonRegistration).where(HackathonRegistration.id == entity.id)
         )
@@ -261,7 +287,9 @@ class HackathonRegistrationRepository(IHackathonRegistrationRepository):
             return model.to_entity()
         raise ValueError("Registration not found")
 
-    async def update_full(self, entity: HackathonRegistrationEntity) -> HackathonRegistrationEntity:
+    async def update_full(
+        self, entity: HackathonRegistrationEntity
+    ) -> HackathonRegistrationEntity:
         """Update tất cả các trường — dùng khi đăng ký lại sau khi bị từ chối."""
         r = await self._s.execute(
             select(HackathonRegistration).where(HackathonRegistration.id == entity.id)
@@ -306,7 +334,9 @@ class HackathonSubmissionRepository(IHackathonSubmissionRepository):
         await self._s.refresh(model)
         return model.to_entity()
 
-    async def update(self, entity: HackathonSubmissionEntity) -> HackathonSubmissionEntity:
+    async def update(
+        self, entity: HackathonSubmissionEntity
+    ) -> HackathonSubmissionEntity:
         r = await self._s.execute(
             select(HackathonSubmission).where(HackathonSubmission.id == entity.id)
         )
@@ -390,7 +420,9 @@ class HackathonSubmissionRepository(IHackathonSubmissionRepository):
         model = r.scalar_one_or_none()
         return model.to_entity() if model else None
 
-    async def list_for_hackathon(self, hackathon_id: UUID) -> list[HackathonSubmissionEntity]:
+    async def list_for_hackathon(
+        self, hackathon_id: UUID
+    ) -> list[HackathonSubmissionEntity]:
         from app.infrastructure.persistence.models.hackathon import HackathonTask
 
         stmt = (

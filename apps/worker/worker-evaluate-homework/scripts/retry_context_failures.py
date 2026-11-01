@@ -31,7 +31,9 @@ async def replay(args):
             HomeworkSubmission.submitted_at >= now - timedelta(days=args.days),
             or_(
                 HomeworkSubmission.grading_error.ilike("%exceed_context_size_error%"),
-                HomeworkSubmission.grading_error.ilike("%exceeds the available context size%"),
+                HomeworkSubmission.grading_error.ilike(
+                    "%exceeds the available context size%"
+                ),
             ),
             or_(
                 HomeworkSubmission.grading_started_at.is_(None),
@@ -48,7 +50,9 @@ async def replay(args):
         if args.apply:
             redis = await create_pool(_redis_settings_from_config())
             if not await redis.get(f"{settings.homework_queue_name}:health-check"):
-                raise RuntimeError("Worker chưa healthy; chưa reset metadata hoặc enqueue bài")
+                raise RuntimeError(
+                    "Worker chưa healthy; chưa reset metadata hoặc enqueue bài"
+                )
             stmt = stmt.with_for_update(of=HomeworkSubmission, skip_locked=True)
         async with AsyncSessionLocal() as session:
             rows = list((await session.scalars(stmt)).all())

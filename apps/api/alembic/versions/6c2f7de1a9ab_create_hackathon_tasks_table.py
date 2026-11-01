@@ -43,7 +43,9 @@ def upgrade() -> None:
         sa.Column("max_submissions", sa.Integer(), nullable=False, server_default="1"),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=True),
-        sa.ForeignKeyConstraint(["hackathon_id"], ["hackathons.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(
+            ["hackathon_id"], ["hackathons.id"], ondelete="CASCADE"
+        ),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(

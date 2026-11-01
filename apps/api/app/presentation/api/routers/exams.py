@@ -47,8 +47,12 @@ async def create_exam_route(
 
 @router.get("/{exam_id}", response_model=ExamOut)
 @inject
-async def get_exam_route(user: CurrentUser, exam_id: UUID, use_case: FromDishka[GetExamUseCase]):
-    ex = await use_case.execute(exam_id, user_id=user.id, role=quiz_role_from_manage(user.roles))
+async def get_exam_route(
+    user: CurrentUser, exam_id: UUID, use_case: FromDishka[GetExamUseCase]
+):
+    ex = await use_case.execute(
+        exam_id, user_id=user.id, role=quiz_role_from_manage(user.roles)
+    )
     if not ex:
         raise HTTPException(status_code=404, detail="Not found")
     if not user.has_permission(SystemPermission.MANAGE_EXAM):

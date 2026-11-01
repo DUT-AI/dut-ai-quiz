@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiGet, apiPost, apiPatch, apiClient } from "@/lib/api";
-import { LessonSchema, ModuleSchema, type Lesson, type Module } from "./types";
+import { apiGet, apiPost, apiPatch, apiPut, apiClient } from "@/lib/api";
+import { LessonSchema, ModuleSchema, LessonVideoSchema, type Lesson, type Module, type LessonVideo, type LessonVideoInput } from "./types";
 import { z } from "zod";
 
 export function useLessons(options?: any) {
@@ -8,6 +8,16 @@ export function useLessons(options?: any) {
     queryKey: ["lessons"],
     queryFn: () => apiGet<Lesson[]>("/api/v1/lessons", z.array(LessonSchema)),
     staleTime: 60_000,
+    ...options,
+  });
+}
+
+export function useLesson(id: string, options?: any) {
+  return useQuery<Lesson>({
+    queryKey: ["lessons", id],
+    queryFn: () => apiGet<Lesson>(`/api/v1/lessons/${id}`, LessonSchema),
+    staleTime: 60_000,
+    enabled: !!id,
     ...options,
   });
 }
@@ -27,6 +37,22 @@ export function useUpdateLesson(id: string) {
     mutationFn: (body: { name?: string; description?: string; content_md?: string; order?: number; slug?: string; module_id?: string | null }) =>
       apiPatch<Lesson>(`/api/v1/lessons/${id}`, body, LessonSchema),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["lessons"] }),
+  });
+}
+
+export function useUpdateLessonVideos(lessonId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (videos: LessonVideoInput[]) =>
+      apiPut<LessonVideo[]>(
+        `/api/v1/lessons/${lessonId}/videos`,
+        { videos },
+        z.array(LessonVideoSchema)
+      ),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["lessons"] });
+      void qc.invalidateQueries({ queryKey: ["lessons", "by-slug"] });
+    },
   });
 }
 

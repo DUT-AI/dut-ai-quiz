@@ -21,11 +21,15 @@ def upgrade() -> None:
     # Rename table
     op.rename_table("practice_sessions", "game_sessions")
     # Rename index
-    op.execute("ALTER INDEX ix_practice_sessions_user_id RENAME TO ix_game_sessions_user_id")
+    op.execute(
+        "ALTER INDEX ix_practice_sessions_user_id RENAME TO ix_game_sessions_user_id"
+    )
 
 
 def downgrade() -> None:
     # Rename index back
-    op.execute("ALTER INDEX ix_game_sessions_user_id RENAME TO ix_practice_sessions_user_id")
+    op.execute(
+        "ALTER INDEX ix_game_sessions_user_id RENAME TO ix_practice_sessions_user_id"
+    )
     # Rename table back
     op.rename_table("game_sessions", "practice_sessions")

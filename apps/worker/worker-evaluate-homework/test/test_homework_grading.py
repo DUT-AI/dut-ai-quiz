@@ -60,7 +60,9 @@ class RepositoryStub:
         self.homework = replace(self.homework, grading_rubric=rubric)
         return True
 
-    async def save_homework_error(self, homework_id, error, *, attempt, retryable=False):
+    async def save_homework_error(
+        self, homework_id, error, *, attempt, retryable=False
+    ):
         return True
 
     async def get_submission(self, submission_id):
@@ -257,7 +259,9 @@ async def test_invalid_submission_does_not_retry_arq_job() -> None:
 
 
 def test_identical_python_sources_are_detected() -> None:
-    current = build_fingerprint(SourceFile(name="main.py", content="def add(a, b): return a + b"))
+    current = build_fingerprint(
+        SourceFile(name="main.py", content="def add(a, b): return a + b")
+    )
     previous = [
         type(
             "Stored",
@@ -277,7 +281,9 @@ def test_identical_python_sources_are_detected() -> None:
 
 
 def test_plagiarism_score_covers_the_whole_multifile_submission() -> None:
-    copied = build_fingerprint(SourceFile(name="main.py", content="print('shared bootstrap')"))
+    copied = build_fingerprint(
+        SourceFile(name="main.py", content="print('shared bootstrap')")
+    )
     original = build_fingerprint(
         SourceFile(
             name="model.py",
@@ -683,7 +689,9 @@ async def test_openai_llm_client_and_grading_engine() -> None:
     }
 
     mock_response.json.return_value = {
-        "choices": [{"message": {"content": f"```json\n{json.dumps(rubric_payload)}\n```"}}]
+        "choices": [
+            {"message": {"content": f"```json\n{json.dumps(rubric_payload)}\n```"}}
+        ]
     }
     mock_client.post = AsyncMock(return_value=mock_response)
 

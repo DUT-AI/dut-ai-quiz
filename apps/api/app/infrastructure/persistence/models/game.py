@@ -18,7 +18,9 @@ from .base import Base
 class GameSession(Base):
     __tablename__ = "game_sessions"
 
-    id: Mapped[UUID] = mapped_column(pgUUID(as_uuid=True), primary_key=True, default=uuid4)
+    id: Mapped[UUID] = mapped_column(
+        pgUUID(as_uuid=True), primary_key=True, default=uuid4
+    )
     user_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
@@ -30,12 +32,16 @@ class GameSession(Base):
     )
     started_at: Mapped[datetime] = mapped_column(default=now_ict, nullable=False)
     completed_at: Mapped[datetime | None] = mapped_column(nullable=True)
-    question_limit: Mapped[int] = mapped_column(default=10, server_default="10", nullable=False)
+    question_limit: Mapped[int] = mapped_column(
+        default=10, server_default="10", nullable=False
+    )
 
     # Scoring & Ranking Metrics
     final_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     gold_earned: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    total_time_response: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    total_time_response: Mapped[float] = mapped_column(
+        Float, nullable=False, default=0.0
+    )
     attempt_count: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     current_tier: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
 
@@ -43,11 +49,15 @@ class GameSession(Base):
     question_sequence: Mapped[list[dict[str, Any]]] = mapped_column(
         JSONB, nullable=False, default=list
     )
-    gamification_state: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
+    gamification_state: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, default=dict
+    )
 
     def to_entity(self) -> GameSessionEntity:
         question_sequence = [
-            QuestionMeta.from_dict(q) for q in (self.question_sequence or []) if isinstance(q, dict)
+            QuestionMeta.from_dict(q)
+            for q in (self.question_sequence or [])
+            if isinstance(q, dict)
         ]
         gamification = GamificationState.from_dict(self.gamification_state or {})
 

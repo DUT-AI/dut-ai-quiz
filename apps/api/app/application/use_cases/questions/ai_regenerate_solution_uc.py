@@ -23,13 +23,13 @@ class AiRegenerateSolutionUseCase:
             raise ValueError("GEMINI_API_KEY is missing")
 
         client = genai.Client(api_key=api_key)
-        prompt = (
-            f"Solve the following multiple-choice question step-by-step.\nQuestion:\n{q.content}\n"
-        )
+        prompt = f"Solve the following multiple-choice question step-by-step.\nQuestion:\n{q.content}\n"
         if custom_prompt:
             prompt += f"\nAdditional Instructions from Teacher:\n{custom_prompt}\n"
 
-        response = client.models.generate_content(model="gemma-4-31b-it", contents=prompt)
+        response = client.models.generate_content(
+            model="gemma-4-31b-it", contents=prompt
+        )
 
         q.solution = response.text
         q.is_solution_ai_generated = True

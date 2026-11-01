@@ -23,7 +23,9 @@ def upgrade() -> None:
     op.add_column("questions", sa.Column("created_by", sa.Integer(), nullable=True))
     op.execute("UPDATE questions SET created_by = 1")
     op.alter_column("questions", "created_by", nullable=False)
-    op.create_index(op.f("ix_questions_created_by"), "questions", ["created_by"], unique=False)
+    op.create_index(
+        op.f("ix_questions_created_by"), "questions", ["created_by"], unique=False
+    )
     # ### end Alembic commands ###
 
 

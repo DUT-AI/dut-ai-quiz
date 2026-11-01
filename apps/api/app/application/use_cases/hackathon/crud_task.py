@@ -159,7 +159,10 @@ class UpdateHackathonTaskUseCase:
             data["name"] = data["name"].strip()
             if not data["name"]:
                 raise ValueError("name must not be empty")
-        if "problem_description_md" in data and data["problem_description_md"] is not None:
+        if (
+            "problem_description_md" in data
+            and data["problem_description_md"] is not None
+        ):
             data["problem_description_md"] = data["problem_description_md"].strip()
             if not data["problem_description_md"]:
                 raise ValueError("problem_description_md must not be empty")

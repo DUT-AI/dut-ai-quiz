@@ -64,7 +64,11 @@ class LessonChunker:
                 current = _Section(heading_path=tuple(headings))
                 continue
 
-            if token.level == 0 and token.type in self._ROOT_BLOCK_TYPES and token.map is not None:
+            if (
+                token.level == 0
+                and token.type in self._ROOT_BLOCK_TYPES
+                and token.map is not None
+            ):
                 start, end = token.map
                 raw = "\n".join(lines[start:end]).strip()
                 if raw:
@@ -85,7 +89,9 @@ class LessonChunker:
                 # Formula/table/image enrichment is part of the provider input,
                 # so it must count toward the model's sequence limit too.
                 unit_tokens = self.estimate_tokens(self._enrich_block(unit))
-                would_exceed = bool(current) and current_tokens + unit_tokens > self._max_tokens
+                would_exceed = (
+                    bool(current) and current_tokens + unit_tokens > self._max_tokens
+                )
                 reached_target = bool(current) and current_tokens >= self._target_tokens
                 if would_exceed or reached_target:
                     chunks.append(self._build_chunk(section, current))
@@ -99,7 +105,10 @@ class LessonChunker:
         return chunks
 
     def _breadcrumb_tokens(self, heading_path: tuple[str, ...]) -> int:
-        lines = [f"[H{level}] {heading}" for level, heading in enumerate(heading_path, start=1)]
+        lines = [
+            f"[H{level}] {heading}"
+            for level, heading in enumerate(heading_path, start=1)
+        ]
         if heading_path:
             lines.append(f"[SECTION] {' > '.join(heading_path)}")
         return self.estimate_tokens("\n".join(lines)) if lines else 0
@@ -108,7 +117,8 @@ class LessonChunker:
         content = "\n\n".join(blocks).strip()
         breadcrumb = " > ".join(section.heading_path)
         context_parts = [
-            f"[H{level}] {heading}" for level, heading in enumerate(section.heading_path, start=1)
+            f"[H{level}] {heading}"
+            for level, heading in enumerate(section.heading_path, start=1)
         ]
         if breadcrumb:
             context_parts.append(f"[SECTION] {breadcrumb}")
@@ -140,7 +150,9 @@ class LessonChunker:
             return [block]
 
         sentences = [
-            part.strip() for part in re.split(r"(?<=[.!?。！？])\s+", block) if part.strip()
+            part.strip()
+            for part in re.split(r"(?<=[.!?。！？])\s+", block)
+            if part.strip()
         ]
         if len(sentences) <= 1:
             return [block]
@@ -163,7 +175,9 @@ class LessonChunker:
             next(group for group in match.groups() if group is not None).strip()
             for match in self._BLOCK_FORMULA.finditer(block)
         ]
-        formulas.extend(match.group(1).strip() for match in self._INLINE_FORMULA.finditer(block))
+        formulas.extend(
+            match.group(1).strip() for match in self._INLINE_FORMULA.finditer(block)
+        )
         for formula in formulas:
             additions.append(
                 "[FORMULA]\n"

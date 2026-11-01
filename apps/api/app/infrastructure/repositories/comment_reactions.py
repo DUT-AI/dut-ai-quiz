@@ -12,7 +12,9 @@ class CommentReactionRepository(ICommentReactionRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def get_reaction(self, comment_id: UUID, user_id: int) -> CommentReactionEntity | None:
+    async def get_reaction(
+        self, comment_id: UUID, user_id: int
+    ) -> CommentReactionEntity | None:
         stmt = select(CommentReaction).where(
             CommentReaction.comment_id == comment_id, CommentReaction.user_id == user_id
         )
@@ -84,17 +86,25 @@ class CommentReactionRepository(ICommentReactionRepository):
         await self._session.execute(stmt)
 
         # Update both counters
-        if reaction.reaction_type == ReactionType.like:  # Switching from dislike to like
+        if (
+            reaction.reaction_type == ReactionType.like
+        ):  # Switching from dislike to like
             update_stmt = (
                 update(Comment)
                 .where(Comment.id == reaction.comment_id)
-                .values(like_count=Comment.like_count + 1, dislike_count=Comment.dislike_count - 1)
+                .values(
+                    like_count=Comment.like_count + 1,
+                    dislike_count=Comment.dislike_count - 1,
+                )
             )
         else:  # Switching from like to dislike
             update_stmt = (
                 update(Comment)
                 .where(Comment.id == reaction.comment_id)
-                .values(like_count=Comment.like_count - 1, dislike_count=Comment.dislike_count + 1)
+                .values(
+                    like_count=Comment.like_count - 1,
+                    dislike_count=Comment.dislike_count + 1,
+                )
             )
         await self._session.execute(update_stmt)
         await self._session.flush()

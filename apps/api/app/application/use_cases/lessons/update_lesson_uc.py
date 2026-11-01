@@ -10,11 +10,15 @@ from app.presentation.schemas.lessons import LessonUpdate
 class UpdateLessonUseCase:
     """Update an existing lesson in the system."""
 
-    def __init__(self, repo: ILessonRepository, scheduler: LessonIndexScheduler) -> None:
+    def __init__(
+        self, repo: ILessonRepository, scheduler: LessonIndexScheduler
+    ) -> None:
         self._repo = repo
         self._scheduler = scheduler
 
-    async def execute(self, lesson_id: str, payload: LessonUpdate) -> LessonEntity | None:
+    async def execute(
+        self, lesson_id: str, payload: LessonUpdate
+    ) -> LessonEntity | None:
         """Execute the use case to update the lesson."""
         entity = await self._repo.get(UUID(lesson_id))
         if not entity:
@@ -53,7 +57,8 @@ class UpdateLessonUseCase:
 
         saved = await self._repo.update(entity)
         if any(
-            value is not None for value in (payload.name, payload.description, payload.content_md)
+            value is not None
+            for value in (payload.name, payload.description, payload.content_md)
         ):
             await self._scheduler.schedule(saved)
         return saved

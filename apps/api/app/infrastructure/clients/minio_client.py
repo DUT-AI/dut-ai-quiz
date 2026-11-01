@@ -17,7 +17,11 @@ class MinioClient(IS3Client):
 
         client_config = Config(
             signature_version="s3v4",
-            s3={"addressing_style": ("path" if settings.s3_force_path_style else "virtual")},
+            s3={
+                "addressing_style": (
+                    "path" if settings.s3_force_path_style else "virtual"
+                )
+            },
         )
 
         self._client = boto3.client(
@@ -29,7 +33,10 @@ class MinioClient(IS3Client):
             region_name=settings.s3_region,
         )
 
-        if self._public_endpoint_url and self._public_endpoint_url != self._endpoint_url:
+        if (
+            self._public_endpoint_url
+            and self._public_endpoint_url != self._endpoint_url
+        ):
             self._public_client = boto3.client(
                 "s3",
                 endpoint_url=self._public_endpoint_url,
@@ -92,7 +99,9 @@ class MinioClient(IS3Client):
         except Exception as e:
             raise e
 
-    def generate_presigned_download_url(self, bucket: str, key: str, expires_in: int = 3600) -> str:
+    def generate_presigned_download_url(
+        self, bucket: str, key: str, expires_in: int = 3600
+    ) -> str:
         """Generates a presigned GET download URL using public boto3 client."""
         return self._public_client.generate_presigned_url(
             "get_object",

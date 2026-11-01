@@ -34,7 +34,9 @@ class GetRelatedLessonsUseCase:
         if question is None:
             return None
         if question.pool_type != PoolType.PRACTICE:
-            raise ValueError("Related lessons are only available for practice questions")
+            raise ValueError(
+                "Related lessons are only available for practice questions"
+            )
         if not self._embedding_service.enabled:
             raise EmbeddingServiceError("Lesson embedding is not enabled")
         if (
@@ -64,7 +66,11 @@ class GetRelatedLessonsUseCase:
     async def _rerank_candidates(
         self, question: QuestionEntity, candidates: list[LessonChunkMatch]
     ) -> list[LessonChunkMatch]:
-        if not candidates or self._rerank_service is None or not self._rerank_service.enabled:
+        if (
+            not candidates
+            or self._rerank_service is None
+            or not self._rerank_service.enabled
+        ):
             return candidates
 
         # Filter to current candidates first before sending to reranker
@@ -107,11 +113,14 @@ class GetRelatedLessonsUseCase:
             return reranked + remaining_candidates
         except Exception as exc:
             logger.warning(
-                "Reranking failed in related lessons, falling back to vector score: {}", exc
+                "Reranking failed in related lessons, falling back to vector score: {}",
+                exc,
             )
             return valid_candidates
 
-    async def execute(self, question_id: UUID, limit: int, min_score: float) -> list[dict] | None:
+    async def execute(
+        self, question_id: UUID, limit: int, min_score: float
+    ) -> list[dict] | None:
         search_res = await self._search_matches(question_id, max(limit * 12, 30))
         if search_res is None:
             return None

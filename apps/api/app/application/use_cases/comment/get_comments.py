@@ -11,7 +11,12 @@ class GetCommentsUseCase:
         self._user_service = user_service
 
     async def get_root_comments(
-        self, target_type: TargetType, target_id: UUID | None, sort_by: str, limit: int, offset: int
+        self,
+        target_type: TargetType,
+        target_id: UUID | None,
+        sort_by: str,
+        limit: int,
+        offset: int,
     ) -> tuple[list[CommentEntity], int]:
         comments, total = await self._comment_repo.get_comments_tree(
             target_type, target_id, sort_by, limit, offset
@@ -22,6 +27,8 @@ class GetCommentsUseCase:
     async def get_replies(
         self, parent_id: UUID, sort_by: str, limit: int, offset: int
     ) -> tuple[list[CommentEntity], int]:
-        comments, total = await self._comment_repo.get_replies(parent_id, sort_by, limit, offset)
+        comments, total = await self._comment_repo.get_replies(
+            parent_id, sort_by, limit, offset
+        )
         await self._user_service.resolve_authors(comments)
         return comments, total

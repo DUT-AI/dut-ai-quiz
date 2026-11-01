@@ -1,14 +1,24 @@
 from app.domain.exceptions.exceptions import NotFoundException
-from app.domain.interfaces import ILessonRepository, IQuestionRepository
+from app.domain.interfaces import (
+    ILessonRepository,
+    ILessonVideoRepository,
+    IQuestionRepository,
+)
 from app.domain.value_objects import PoolType
 
 
 class GetLessonBySlugUseCase:
     """Read a lesson and its locally managed Markdown content by slug."""
 
-    def __init__(self, lesson_repo: ILessonRepository, question_repo: IQuestionRepository) -> None:
+    def __init__(
+        self,
+        lesson_repo: ILessonRepository,
+        question_repo: IQuestionRepository,
+        video_repo: ILessonVideoRepository,
+    ) -> None:
         self._lesson_repo = lesson_repo
         self._question_repo = question_repo
+        self._video_repo = video_repo
 
     async def execute(self, slug: str):
         lesson = await self._lesson_repo.get_by_slug(slug)
@@ -21,6 +31,7 @@ class GetLessonBySlugUseCase:
             limit=1,
         )
         has_game_questions = len(game_questions) > 0
+        videos = await self._video_repo.list_by_lesson_id(lesson.id)
 
         return {
             "id": lesson.id,
@@ -33,4 +44,5 @@ class GetLessonBySlugUseCase:
             "module_id": lesson.module_id,
             "has_game_questions": has_game_questions,
             "questions": [],
+            "videos": videos,
         }

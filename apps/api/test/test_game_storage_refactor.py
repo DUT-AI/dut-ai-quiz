@@ -25,7 +25,11 @@ class MockOption:
         self.is_correct = is_correct
 
     def to_dict(self):
-        return {"id": str(self.id), "content": self.content, "is_correct": self.is_correct}
+        return {
+            "id": str(self.id),
+            "content": self.content,
+            "is_correct": self.is_correct,
+        }
 
 
 class MockQuestion:
@@ -205,7 +209,9 @@ async def test_finish_game_session():
         started_at=now_ict(),
         completed_at=None,
         status=GameSessionStatus.IN_PROGRESS,
-        question_sequence=[QuestionMeta(id=str(uuid4()), tier=1, is_boss=False, time_limit=60)],
+        question_sequence=[
+            QuestionMeta(id=str(uuid4()), tier=1, is_boss=False, time_limit=60)
+        ],
         gamification=GamificationState(
             lives=3, gold=50, points=100, current_tier=1, last_question_index=1
         ),

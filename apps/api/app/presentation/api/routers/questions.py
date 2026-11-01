@@ -119,7 +119,9 @@ async def find_related_questions_route(
             content=body.content,
             limit=body.limit,
             min_score=(
-                settings.related_question_min_score if body.min_score is None else body.min_score
+                settings.related_question_min_score
+                if body.min_score is None
+                else body.min_score
             ),
             pool_type=pool_type,
         )
@@ -218,7 +220,9 @@ async def get_related_lessons_route(
         result = await use_case.execute(
             question_id,
             limit=limit,
-            min_score=(settings.related_lesson_min_score if min_score is None else min_score),
+            min_score=(
+                settings.related_lesson_min_score if min_score is None else min_score
+            ),
         )
     except EmbeddingServiceError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
@@ -229,7 +233,9 @@ async def get_related_lessons_route(
     return result
 
 
-@router.get("/{question_id}/relative-documents", response_model=list[RelativeDocumentOut])
+@router.get(
+    "/{question_id}/relative-documents", response_model=list[RelativeDocumentOut]
+)
 @inject
 async def get_relative_document(
     user: CurrentUser,
@@ -242,7 +248,9 @@ async def get_relative_document(
         result = await use_case.get_relative_document(
             question_id,
             limit=limit,
-            min_score=(settings.related_lesson_min_score if min_score is None else min_score),
+            min_score=(
+                settings.related_lesson_min_score if min_score is None else min_score
+            ),
         )
     except EmbeddingServiceError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
@@ -263,7 +271,8 @@ async def heartbeat_question_route(
     ok = await use_case.execute(question_id, user.id)
     if not ok:
         raise HTTPException(
-            status_code=409, detail="Could not acquire lock or question not found/not draft."
+            status_code=409,
+            detail="Could not acquire lock or question not found/not draft.",
         )
     return {"ok": True}
 

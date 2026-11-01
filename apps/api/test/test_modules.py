@@ -35,7 +35,9 @@ class MockModuleRepository(IModuleRepository):
         if name is not None and name.strip():
             res = [m for m in res if m.name.lower() == name.strip().lower()]
         if description is not None and description.strip():
-            res = [m for m in res if description.strip().lower() in m.description.lower()]
+            res = [
+                m for m in res if description.strip().lower() in m.description.lower()
+            ]
         if order is not None:
             res = [m for m in res if m.order == order]
         return sorted(res, key=lambda x: (x.order, x.created_at))
@@ -108,7 +110,9 @@ async def test_modules_flow():
     delete_uc = DeleteModuleUseCase(module_repo)
 
     # 1. Create Module
-    payload = ModuleCreate(name="Introduction to AI", description="Basic AI concepts", order=1)
+    payload = ModuleCreate(
+        name="Introduction to AI", description="Basic AI concepts", order=1
+    )
     new_module = await create_uc.execute(payload)
 
     assert new_module.name == "Introduction to AI"
@@ -145,7 +149,9 @@ async def test_modules_flow():
 
     # 4b. Create second module and test reordering
     another_module = await create_uc.execute(
-        ModuleCreate(name="Advanced Neural Networks", description="Deep learning", order=5)
+        ModuleCreate(
+            name="Advanced Neural Networks", description="Deep learning", order=5
+        )
     )
     reorder_payload = ModuleReorder(module_ids=[another_module.id, updated_module.id])
     await reorder_uc.execute(reorder_payload)

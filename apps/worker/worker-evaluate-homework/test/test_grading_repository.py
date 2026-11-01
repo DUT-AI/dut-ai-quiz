@@ -37,7 +37,9 @@ async def repository(retry_policy):
     if url.host not in {"localhost", "127.0.0.1"}:
         pytest.skip("Repository integration tests run against local PostgreSQL only")
     schema = "codex_homework_test_" + uuid4().hex
-    engine = create_async_engine(url, connect_args={"server_settings": {"search_path": schema}})
+    engine = create_async_engine(
+        url, connect_args={"server_settings": {"search_path": schema}}
+    )
     async with engine.begin() as connection:
         await connection.execute(CreateSchema(schema))
         metadata = MetaData()
@@ -48,18 +50,25 @@ async def repository(retry_policy):
         await connection.run_sync(metadata.create_all)
     sessions = async_sessionmaker(engine, expire_on_commit=False)
     async with sessions() as session:
-        homework = Homework(title="test", description="", created_by=1, grading_status="READY")
+        homework = Homework(
+            title="test", description="", created_by=1, grading_status="READY"
+        )
         session.add(homework)
         await session.flush()
         submission = HomeworkSubmission(
-            homework_id=homework.id, user_id=1, object_key="test.zip", original_filename="test.zip"
+            homework_id=homework.id,
+            user_id=1,
+            object_key="test.zip",
+            original_filename="test.zip",
         )
         session.add(submission)
         await session.commit()
         homework_id, submission_id = homework.id, submission.id
     try:
         yield (
-            postgres_repository.PostgresHomeworkGradingRepository(retry_policy, sessions),
+            postgres_repository.PostgresHomeworkGradingRepository(
+                retry_policy, sessions
+            ),
             sessions,
             engine,
             homework_id,
@@ -76,7 +85,9 @@ async def repository(retry_policy):
 @pytest.mark.asyncio
 async def test_atomic_claim_allows_only_one_worker(repository):
     repo, sessions, _, _, submission_id = repository
-    claimed = await asyncio.gather(*[repo.claim_submission(submission_id) for _ in range(3)])
+    claimed = await asyncio.gather(
+        *[repo.claim_submission(submission_id) for _ in range(3)]
+    )
     assert sum(attempt is not None for attempt in claimed) == 1
     async with sessions() as session:
         submission = await session.get(HomeworkSubmission, submission_id)
@@ -90,7 +101,11 @@ async def test_permanent_error_is_excluded_from_cron(repository):
     attempt = await repo.claim_submission(submission_id)
     assert attempt is not None
     await repo.save_submission_error(
-        submission_id, "LLM exceed_context_size_error", attempt=attempt, final=True, retryable=False
+        submission_id,
+        "LLM exceed_context_size_error",
+        attempt=attempt,
+        final=True,
+        retryable=False,
     )
     assert await repo.list_stale_submission_ids() == []
     assert await repo.claim_submission(submission_id) is None
@@ -110,7 +125,9 @@ async def test_attempt_limit_survives_new_cron_jobs(repository):
 
 
 @pytest.mark.asyncio
-async def test_recent_lease_is_not_stale_even_for_old_submission(repository, retry_policy):
+async def test_recent_lease_is_not_stale_even_for_old_submission(
+    repository, retry_policy
+):
     repo, sessions, _, _, submission_id = repository
     async with sessions() as session:
         submission = await session.get(HomeworkSubmission, submission_id)
@@ -156,7 +173,9 @@ async def test_rubric_claims_and_retries_are_also_bounded(repository):
         attempt = await repo.claim_homework(homework_id)
         assert attempt is not None
         assert await repo.claim_homework(homework_id) is None
-        await repo.save_homework_error(homework_id, "LLM 503", attempt=attempt, retryable=True)
+        await repo.save_homework_error(
+            homework_id, "LLM 503", attempt=attempt, retryable=True
+        )
     assert await repo.claim_homework(homework_id) is None
     assert await repo.list_stale_homework_ids() == []
 
@@ -181,7 +200,8 @@ async def test_metadata_migration_roundtrip_preserves_status_and_score(repositor
         with Operations.context(MigrationContext.configure(connection)):
             migration.downgrade()
             assert "grading_attempts" not in {
-                c["name"] for c in inspect(connection).get_columns("homework_submissions")
+                c["name"]
+                for c in inspect(connection).get_columns("homework_submissions")
             }
             migration.upgrade()
 
@@ -235,7 +255,9 @@ async def test_recovery_selects_context_only_and_preserves_status_score(
     redis = AsyncMock()
     monkeypatch.setattr(recovery, "AsyncSessionLocal", sessions)
     monkeypatch.setattr(recovery, "create_pool", AsyncMock(return_value=redis))
-    await recovery.replay(SimpleNamespace(apply=apply, days=7, limit=5, submission_id=None))
+    await recovery.replay(
+        SimpleNamespace(apply=apply, days=7, limit=5, submission_id=None)
+    )
     async with sessions() as session:
         submission = await session.get(HomeworkSubmission, submission_id)
         assert submission.status == "FAILED" and submission.score == 0
@@ -269,7 +291,9 @@ async def test_expired_worker_cannot_overwrite_new_submission_or_fingerprints(
     new_attempt = await repo.claim_submission(submission_id)
     assert new_attempt is not None and new_attempt.number == 2
     result = GradeResult(True, 9, "New result", [])
-    fingerprints = [{"file_name": "main.py", "code_hash": "a" * 64, "fingerprints": ["new"]}]
+    fingerprints = [
+        {"file_name": "main.py", "code_hash": "a" * 64, "fingerprints": ["new"]}
+    ]
     assert not await repo.save_submission_error(
         submission_id, "Old timeout", attempt=old_attempt, final=True
     )
@@ -289,14 +313,18 @@ async def test_expired_worker_cannot_overwrite_new_submission_or_fingerprints(
     )
     async with sessions() as session:
         submission = await session.get(HomeworkSubmission, submission_id)
-        stored = list((await session.scalars(select(HomeworkSubmissionFingerprint))).all())
+        stored = list(
+            (await session.scalars(select(HomeworkSubmissionFingerprint))).all()
+        )
         assert submission.status == "GRADED" and submission.score == 9
         assert submission.grading_error is None
         assert len(stored) == 1 and stored[0].fingerprints == ["new"]
 
 
 @pytest.mark.asyncio
-async def test_expired_rubric_worker_cannot_overwrite_new_claim(repository, monkeypatch):
+async def test_expired_rubric_worker_cannot_overwrite_new_claim(
+    repository, monkeypatch
+):
     repo, sessions, _, homework_id, _ = repository
     async with sessions() as session:
         homework = await session.get(Homework, homework_id)
@@ -308,9 +336,15 @@ async def test_expired_rubric_worker_cannot_overwrite_new_claim(repository, monk
     started_at += timedelta(minutes=17)
     new_attempt = await repo.claim_homework(homework_id)
     assert old_attempt is not None and new_attempt is not None
-    assert not await repo.save_homework_rubric(homework_id, {"old": True}, attempt=old_attempt)
-    assert not await repo.save_homework_error(homework_id, "Old error", attempt=old_attempt)
-    assert await repo.save_homework_rubric(homework_id, {"new": True}, attempt=new_attempt)
+    assert not await repo.save_homework_rubric(
+        homework_id, {"old": True}, attempt=old_attempt
+    )
+    assert not await repo.save_homework_error(
+        homework_id, "Old error", attempt=old_attempt
+    )
+    assert await repo.save_homework_rubric(
+        homework_id, {"new": True}, attempt=new_attempt
+    )
     async with sessions() as session:
         homework = await session.get(Homework, homework_id)
         assert homework.grading_status == "READY"
@@ -365,7 +399,10 @@ async def test_fingerprint_failure_rolls_back_the_grading_result(repository):
         submission = await session.get(HomeworkSubmission, submission_id)
         assert submission.status == "GRADING" and submission.score is None
         assert submission.grading_started_at == attempt.started_at
-        assert list((await session.scalars(select(HomeworkSubmissionFingerprint))).all()) == []
+        assert (
+            list((await session.scalars(select(HomeworkSubmissionFingerprint))).all())
+            == []
+        )
 
 
 def test_metadata_migration_supports_offline_sql():

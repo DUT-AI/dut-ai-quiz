@@ -74,14 +74,18 @@ class DutAiRerankService(IRerankService):
                 data = response.json()
 
                 if not isinstance(data, list):
-                    raise ValueError(f"Unexpected response format from rerank service: {data}")
+                    raise ValueError(
+                        f"Unexpected response format from rerank service: {data}"
+                    )
 
                 for item in data:
                     local_index = int(item["index"])
                     global_index = offset + local_index
                     score = float(item["score"])
                     text_val = item.get("text") if return_text else None
-                    all_results.append(RerankItem(index=global_index, score=score, text=text_val))
+                    all_results.append(
+                        RerankItem(index=global_index, score=score, text=text_val)
+                    )
         except (httpx.HTTPError, KeyError, TypeError, ValueError) as exc:
             err_msg = str(exc) or repr(exc)
             raise RerankServiceError(
@@ -162,7 +166,9 @@ class LocalRerankService(IRerankService):
             intersection = q_words & t_words
             union = q_words | t_words
             score = len(intersection) / len(union) if union else 0.0
-            results.append(RerankItem(index=i, score=score, text=text if return_text else None))
+            results.append(
+                RerankItem(index=i, score=score, text=text if return_text else None)
+            )
 
         results.sort(key=lambda x: x.score, reverse=True)
         if top_k is not None:

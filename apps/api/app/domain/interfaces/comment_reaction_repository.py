@@ -6,7 +6,9 @@ from app.domain.entities.comment import CommentReactionEntity, ReactionType
 
 class ICommentReactionRepository(ABC):
     @abstractmethod
-    async def get_reaction(self, comment_id: UUID, user_id: int) -> CommentReactionEntity | None:
+    async def get_reaction(
+        self, comment_id: UUID, user_id: int
+    ) -> CommentReactionEntity | None:
         pass
 
     @abstractmethod

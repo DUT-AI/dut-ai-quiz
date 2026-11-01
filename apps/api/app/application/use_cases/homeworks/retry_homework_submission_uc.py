@@ -33,7 +33,9 @@ class RetryHomeworkSubmissionUseCase:
             allow_any_non_grading=True,
         )
         if retried is None:
-            raise AppException("Bài nộp đã được yêu cầu chấm lại hoặc đang được chấm", 409)
+            raise AppException(
+                "Bài nộp đã được yêu cầu chấm lại hoặc đang được chấm", 409
+            )
 
         await self._queue.enqueue_evaluation(submission_id)
         return HomeworkSubmissionOutDTO.from_entity(retried)

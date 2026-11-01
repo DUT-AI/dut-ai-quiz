@@ -3,7 +3,9 @@ import zipfile
 from uuid import UUID, uuid4
 
 import pytest
-from app.application.use_cases.lessons.import_notion_lesson_uc import ImportNotionLessonUseCase
+from app.application.use_cases.lessons.import_notion_lesson_uc import (
+    ImportNotionLessonUseCase,
+)
 from app.core.datetime_utils import now_ict
 from app.domain.entities.lesson import LessonEntity
 from app.domain.interfaces import ILessonRepository, IS3Client
@@ -30,7 +32,11 @@ class MockLessonRepository(ILessonRepository):
 
     async def get_by_identifier(self, identifier: str):
         for les in self.lessons:
-            if str(les.id) == identifier or les.slug == identifier or les.name == identifier:
+            if (
+                str(les.id) == identifier
+                or les.slug == identifier
+                or les.name == identifier
+            ):
                 return les
         return None
 
@@ -125,9 +131,7 @@ Dưới đây là sơ đồ so sánh:
     # Check replaced URLs in Markdown
     from app.config import settings
 
-    expected_url1 = (
-        f"http://fake-s3/{settings.s3_bucket_name}/uploads/lessons/{lesson.id}/image-1.png"
-    )
+    expected_url1 = f"http://fake-s3/{settings.s3_bucket_name}/uploads/lessons/{lesson.id}/image-1.png"
     expected_url2 = f"http://fake-s3/{settings.s3_bucket_name}/uploads/lessons/{lesson.id}/hardware_tradeoff.png"
 
     assert f"![Hình minh họa 1]({expected_url1})" in lesson.content_md
@@ -195,5 +199,8 @@ async def test_import_notion_lesson_update():
     assert (
         updated_lesson.slug == "mask-rcnn"
     )  # It shouldn't conflict with itself and change to mask-rcnn-1
-    assert updated_lesson.content_md == "# Mask RCNN\nHọc máy và xử lý ngôn ngữ tự nhiên.\n"
+    assert (
+        updated_lesson.content_md
+        == "# Mask RCNN\nHọc máy và xử lý ngôn ngữ tự nhiên.\n"
+    )
     assert len(repo.lessons) == 1  # No duplicate lesson created

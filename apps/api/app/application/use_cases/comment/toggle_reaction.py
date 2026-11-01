@@ -17,7 +17,9 @@ class ToggleReactionUseCase:
         self._comment_repo = comment_repo
         self._user_service = user_service
 
-    async def execute(self, user_id: int, comment_id: UUID, reaction_type: ReactionType) -> None:
+    async def execute(
+        self, user_id: int, comment_id: UUID, reaction_type: ReactionType
+    ) -> None:
         # Check if comment exists
         comment = await self._comment_repo.get_by_id(comment_id)
         if not comment:

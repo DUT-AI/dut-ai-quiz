@@ -20,7 +20,9 @@ class GameSessionEntity:
     status: GameSessionStatus
     question_limit: int = 10
     question_sequence: list[QuestionMeta] = dataclasses.field(default_factory=list)
-    gamification: GamificationState = dataclasses.field(default_factory=GamificationState)
+    gamification: GamificationState = dataclasses.field(
+        default_factory=GamificationState
+    )
 
     def __init__(
         self,
@@ -54,7 +56,10 @@ class GameSessionEntity:
             self.gamification.final_score = float(final_score)
         if gold_earned is not None and not self.gamification.gold:
             self.gamification.gold = int(gold_earned)
-        if total_time_response is not None and not self.gamification.total_time_response:
+        if (
+            total_time_response is not None
+            and not self.gamification.total_time_response
+        ):
             self.gamification.total_time_response = float(total_time_response)
         if attempt_count is not None and self.gamification.attempt_count == 1:
             self.gamification.attempt_count = int(attempt_count)

@@ -26,6 +26,7 @@ from .import_session_repo import IImportSessionRepository
 from .lesson_chunk_repo import ILessonChunkRepository
 from .lesson_index_queue import ILessonIndexQueue
 from .lesson_repo import ILessonRepository
+from .lesson_video_repo import ILessonVideoRepository
 from .manage_cache import IDUTAIManageCache
 from .manage_service import IManageService
 from .module_repo import IModuleRepository
@@ -43,6 +44,7 @@ __all__ = [
     "IExamRepository",
     "IFocusEventRepository",
     "ILessonRepository",
+    "ILessonVideoRepository",
     "ILessonChunkRepository",
     "ILessonIndexQueue",
     "IEmbeddingService",

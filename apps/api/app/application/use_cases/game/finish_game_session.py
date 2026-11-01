@@ -29,7 +29,9 @@ class FinishGameSessionUseCase:
             session.completed_at = now_ict()
 
             lesson_slug = session.lesson_slug or "unknown"
-            count_completed = await self._ps_repo.count_completed_by_lesson(user_id, lesson_slug)
+            count_completed = await self._ps_repo.count_completed_by_lesson(
+                user_id, lesson_slug
+            )
             session.gamification.finalize_score(count_completed)
 
             if self._cache:
@@ -37,4 +39,6 @@ class FinishGameSessionUseCase:
 
             session = await self._ps_repo.save(session)
 
-        return await self._hydration.to_session_out(session, include_current_question=False)
+        return await self._hydration.to_session_out(
+            session, include_current_question=False
+        )

@@ -3,7 +3,6 @@
 import { useState, useMemo } from "react";
 import { useLessons, useModules, useDeleteLesson, useReorderModules, useReorderLessons, useDeleteModule } from "@/features/lessons/queries";
 import type { Lesson, Module } from "@/features/lessons/types";
-import { LessonFormModal } from "@/features/lessons/components/lesson-form-modal";
 import { ModuleFormModal } from "@/features/lessons/components/module-form-modal";
 import { ConfirmModal } from "@/components/molecules/confirm-modal";
 import { SearchBar } from "@/components/ui/search-bar";
@@ -21,8 +20,6 @@ export default function LessonsPage() {
   const deleteMut = useDeleteLesson();
   const deleteModuleMut = useDeleteModule();
 
-  const [showCreate, setShowCreate] = useState(false);
-  const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
   const [deletingLesson, setDeletingLesson] = useState<Lesson | null>(null);
 
   const [showCreateModule, setShowCreateModule] = useState(false);
@@ -178,7 +175,6 @@ export default function LessonsPage() {
                     <div key={l.id} className="flex flex-col gap-2">
                       <LessonCard
                         lesson={l}
-                        onEdit={() => setEditingLesson(l)}
                         onDelete={() => setDeletingLesson(l)}
                         showGrip={false}
                       />
@@ -202,7 +198,7 @@ export default function LessonsPage() {
                 onLessonsReorder={handleLessonsReorder}
                 onEditModule={setEditingModule}
                 onDeleteModule={setDeletingModule}
-                onEditLesson={setEditingLesson}
+                onEditLesson={(l) => window.location.assign(`/teacher/lessons/${l.id}/edit`)}
                 onDeleteLesson={setDeletingLesson}
               />
             )}
@@ -236,16 +232,6 @@ export default function LessonsPage() {
             }
           }}
           onCancel={() => setDeletingModule(null)}
-        />
-      )}
-
-      {showCreate && (
-        <LessonFormModal onClose={() => setShowCreate(false)} />
-      )}
-      {editingLesson && (
-        <LessonFormModal
-          initialData={editingLesson}
-          onClose={() => setEditingLesson(null)}
         />
       )}
 

@@ -153,7 +153,9 @@ async def test_finish_session_computes_decay_and_invalidates_cache(
 
 
 @pytest.mark.asyncio
-async def test_finish_session_decay_minimum_limit(mock_repo, mock_cache, mock_hydration):
+async def test_finish_session_decay_minimum_limit(
+    mock_repo, mock_cache, mock_hydration
+):
     """Test that the decay factor doesn't drop below 0.2 even after many attempts."""
     user_id = 1
     session_id = uuid4()

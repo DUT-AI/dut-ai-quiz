@@ -3,7 +3,10 @@ from uuid import uuid4
 
 import pytest
 from app.application.services.game_hydration import GameHydrationService
-from app.application.use_cases.game import FinishGameSessionUseCase, GetActiveGameSessionUseCase
+from app.application.use_cases.game import (
+    FinishGameSessionUseCase,
+    GetActiveGameSessionUseCase,
+)
 from app.core.datetime_utils import now_ict
 from app.domain.entities.game import GameSessionEntity
 from app.domain.value_objects import GameSessionStatus

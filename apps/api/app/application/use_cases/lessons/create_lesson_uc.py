@@ -11,7 +11,9 @@ from app.presentation.schemas.lessons import LessonCreate
 class CreateLessonUseCase:
     """Create a new lesson in the system."""
 
-    def __init__(self, repo: ILessonRepository, scheduler: LessonIndexScheduler) -> None:
+    def __init__(
+        self, repo: ILessonRepository, scheduler: LessonIndexScheduler
+    ) -> None:
         self._repo = repo
         self._scheduler = scheduler
 

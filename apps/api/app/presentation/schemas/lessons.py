@@ -47,6 +47,40 @@ class LessonDetailOut(LessonOut):
 
     questions: list[QuestionOut] = []
     has_game_questions: bool = False
+    videos: list["LessonVideoOut"] = []
+
+
+class LessonVideoCreate(BaseModel):
+    title: str
+    url: str
+    description: str = ""
+    order: int = 0
+
+
+class LessonVideoUpdate(BaseModel):
+    title: str | None = None
+    url: str | None = None
+    description: str | None = None
+    order: int | None = None
+
+
+class LessonVideoOut(BaseModel):
+    id: UUID
+    lesson_id: UUID
+    title: str
+    url: str
+    youtube_video_id: str
+    start_seconds: int
+    order: int
+    description: str
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class LessonVideoBatchSync(BaseModel):
+    videos: list[LessonVideoCreate] = []
 
 
 class LessonReorderItem(BaseModel):

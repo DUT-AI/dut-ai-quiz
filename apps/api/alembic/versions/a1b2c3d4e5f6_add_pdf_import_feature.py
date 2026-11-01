@@ -32,11 +32,15 @@ def upgrade() -> None:
         sa.Column("user_id", sa.Integer(), nullable=False),
         sa.Column("file_name", sa.String(255), nullable=False, server_default=""),
         sa.Column("total_questions", sa.Integer(), nullable=False, server_default="0"),
-        sa.Column("processed_questions", sa.Integer(), nullable=False, server_default="0"),
+        sa.Column(
+            "processed_questions", sa.Integer(), nullable=False, server_default="0"
+        ),
         sa.Column("status", sa.String(20), nullable=False, server_default="PROCESSING"),
         sa.Column("error_message", sa.Text(), nullable=True),
         sa.Column("lesson_id", postgresql.UUID(as_uuid=True), nullable=True),
-        sa.Column("target_scope", sa.String(20), nullable=False, server_default="LESSON"),
+        sa.Column(
+            "target_scope", sa.String(20), nullable=False, server_default="LESSON"
+        ),
         sa.Column(
             "created_at",
             sa.TIMESTAMP(timezone=True),
@@ -59,25 +63,42 @@ def upgrade() -> None:
     )
     op.add_column(
         "questions",
-        sa.Column("is_answer_ai_generated", sa.Boolean(), nullable=False, server_default="false"),
-    )
-    op.add_column(
-        "questions",
-        sa.Column("is_solution_ai_generated", sa.Boolean(), nullable=False, server_default="false"),
-    )
-    op.add_column(
-        "questions",
         sa.Column(
-            "is_difficulty_ai_suggested", sa.Boolean(), nullable=False, server_default="false"
+            "is_answer_ai_generated",
+            sa.Boolean(),
+            nullable=False,
+            server_default="false",
         ),
     )
     op.add_column(
         "questions",
-        sa.Column("duplicate_status", sa.String(30), nullable=False, server_default="UNIQUE"),
+        sa.Column(
+            "is_solution_ai_generated",
+            sa.Boolean(),
+            nullable=False,
+            server_default="false",
+        ),
     )
     op.add_column(
         "questions",
-        sa.Column("duplicate_of_question_id", postgresql.UUID(as_uuid=True), nullable=True),
+        sa.Column(
+            "is_difficulty_ai_suggested",
+            sa.Boolean(),
+            nullable=False,
+            server_default="false",
+        ),
+    )
+    op.add_column(
+        "questions",
+        sa.Column(
+            "duplicate_status", sa.String(30), nullable=False, server_default="UNIQUE"
+        ),
+    )
+    op.add_column(
+        "questions",
+        sa.Column(
+            "duplicate_of_question_id", postgresql.UUID(as_uuid=True), nullable=True
+        ),
     )
     op.add_column(
         "questions",
@@ -108,7 +129,9 @@ def upgrade() -> None:
 
     # Indexes
     op.create_index("ix_questions_status", "questions", ["status"])
-    op.create_index("ix_questions_import_session_id", "questions", ["import_session_id"])
+    op.create_index(
+        "ix_questions_import_session_id", "questions", ["import_session_id"]
+    )
 
 
 def downgrade() -> None:

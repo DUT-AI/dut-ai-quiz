@@ -72,7 +72,9 @@ async def list_my_homeworks(
     use_case: FromDishka[ListMyHomeworksUseCase],
     lesson_id: UUID | None = None,
 ) -> HomeworkListResponse:
-    return HomeworkListResponse(data=await use_case.execute(user.id, lesson_id=lesson_id))
+    return HomeworkListResponse(
+        data=await use_case.execute(user.id, lesson_id=lesson_id)
+    )
 
 
 @router.get("", response_model=HomeworkListResponse)
@@ -308,7 +310,9 @@ async def homework_attachment_url(
     user: CurrentUser,
     use_case: FromDishka[GetHomeworkAttachmentUrlUseCase],
 ) -> DownloadUrlResponse:
-    return DownloadUrlResponse(data=DownloadUrlData(url=await use_case.execute(homework_id)))
+    return DownloadUrlResponse(
+        data=DownloadUrlData(url=await use_case.execute(homework_id))
+    )
 
 
 @router.get(

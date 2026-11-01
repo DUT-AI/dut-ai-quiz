@@ -10,7 +10,10 @@ from redis.asyncio import Redis
 
 class UserService:
     def __init__(
-        self, user_repo: IUserRepository, manage_client: IManageService, redis: Redis | None = None
+        self,
+        user_repo: IUserRepository,
+        manage_client: IManageService,
+        redis: Redis | None = None,
     ):
         self.user_repo = user_repo
         self.manage_client = manage_client
@@ -72,13 +75,17 @@ class UserService:
                 # Cache in Redis for 10 minutes (600s)
                 if self._redis:
                     try:
-                        await self._redis.set(cache_key, user_out.model_dump_json(), ex=600)
+                        await self._redis.set(
+                            cache_key, user_out.model_dump_json(), ex=600
+                        )
                     except Exception as e:
                         logger.warning(f"Error caching user info for {user_id}: {e}")
 
                 return user_out
         except Exception as e:
-            logger.warning(f"Error fetching profile from Manage Service for user {user_id}: {e}")
+            logger.warning(
+                f"Error fetching profile from Manage Service for user {user_id}: {e}"
+            )
 
         # 5. Dev fallback if enabled
         if settings.auth_dev_bypass:

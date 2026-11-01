@@ -50,7 +50,9 @@ class CommentRepository(ICommentRepository):
         elif sort_by == SortMode.TOP_LIKES:
             stmt = stmt.order_by(Comment.like_count.desc(), Comment.created_at.desc())
         elif sort_by == SortMode.TOP_DISLIKES:
-            stmt = stmt.order_by(Comment.dislike_count.desc(), Comment.created_at.desc())
+            stmt = stmt.order_by(
+                Comment.dislike_count.desc(), Comment.created_at.desc()
+            )
         elif sort_by == SortMode.OLD:
             stmt = stmt.order_by(Comment.created_at.asc())
         else:  # NEW or default
@@ -93,7 +95,9 @@ class CommentRepository(ICommentRepository):
     async def get_replies(
         self, parent_id: UUID, sort_by: str, limit: int = 20, offset: int = 0
     ) -> tuple[list[CommentEntity], int]:
-        count_stmt = select(func.count(Comment.id)).where(Comment.parent_id == parent_id)
+        count_stmt = select(func.count(Comment.id)).where(
+            Comment.parent_id == parent_id
+        )
         total_count = (await self._session.execute(count_stmt)).scalar_one()
 
         stmt = select(Comment).where(Comment.parent_id == parent_id)
@@ -159,7 +163,11 @@ class CommentRepository(ICommentRepository):
         stmt = (
             update(Comment)
             .where(Comment.id == comment.id)
-            .values(content=comment.content, image_urls=comment.image_urls, updated_at=func.now())
+            .values(
+                content=comment.content,
+                image_urls=comment.image_urls,
+                updated_at=func.now(),
+            )
             .returning(Comment)
         )
 

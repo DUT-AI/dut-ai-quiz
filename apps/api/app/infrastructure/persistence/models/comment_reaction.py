@@ -18,7 +18,9 @@ class CommentReaction(Base):
         ForeignKey("comments.id", ondelete="CASCADE"), primary_key=True
     )
     user_id: Mapped[int] = mapped_column(primary_key=True)
-    reaction_type: Mapped[str] = mapped_column(Enum(ReactionType, native_enum=False, length=20))
+    reaction_type: Mapped[str] = mapped_column(
+        Enum(ReactionType, native_enum=False, length=20)
+    )
     created_at: Mapped[datetime] = mapped_column(default=now_ict)
 
     def to_entity(self) -> CommentReactionEntity:

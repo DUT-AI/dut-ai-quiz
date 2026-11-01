@@ -83,7 +83,9 @@ class GoogleAuthUseCase:
             # 1. Exchange OAuth code for Google Access Token
             google_access_token = await self._google_client.exchange_code(code)
             if not google_access_token:
-                raise AppException("Không thể lấy Google Access Token từ OAuth code", 400)
+                raise AppException(
+                    "Không thể lấy Google Access Token từ OAuth code", 400
+                )
 
             # 2. Get User Info from Google
             google_user = await self._google_client.get_user_info(google_access_token)

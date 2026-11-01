@@ -57,7 +57,9 @@ class PostgresHomeworkGradingRepository:
                     .where(
                         Homework.id == homework_id,
                         Homework.archived_at.is_(None),
-                        Homework.grading_status.in_(["PENDING", "PROCESSING", "FAILED"]),
+                        Homework.grading_status.in_(
+                            ["PENDING", "PROCESSING", "FAILED"]
+                        ),
                         Homework.grading_retryable.is_(True),
                         Homework.grading_attempts < self._retry_policy.max_attempts,
                         or_(
@@ -141,11 +143,15 @@ class PostgresHomeworkGradingRepository:
                     update(HomeworkSubmission)
                     .where(
                         HomeworkSubmission.id == submission_id,
-                        HomeworkSubmission.status.in_(["UPLOADED", "GRADING", "FAILED"]),
+                        HomeworkSubmission.status.in_(
+                            ["UPLOADED", "GRADING", "FAILED"]
+                        ),
                         HomeworkSubmission.grading_retryable.is_(True),
-                        HomeworkSubmission.grading_attempts < self._retry_policy.max_attempts,
+                        HomeworkSubmission.grading_attempts
+                        < self._retry_policy.max_attempts,
                         or_(
-                            HomeworkSubmission.status != SubmissionGradingStatus.GRADING.value,
+                            HomeworkSubmission.status
+                            != SubmissionGradingStatus.GRADING.value,
                             HomeworkSubmission.grading_started_at.is_(None),
                             HomeworkSubmission.grading_started_at < expired,
                         ),
@@ -157,7 +163,8 @@ class PostgresHomeworkGradingRepository:
                         grading_attempts=HomeworkSubmission.grading_attempts + 1,
                     )
                     .returning(
-                        HomeworkSubmission.grading_attempts, HomeworkSubmission.grading_started_at
+                        HomeworkSubmission.grading_attempts,
+                        HomeworkSubmission.grading_started_at,
                     )
                 )
             ).first()
@@ -362,7 +369,8 @@ class PostgresHomeworkGradingRepository:
                 or_(
                     HomeworkSubmission.status == SubmissionGradingStatus.UPLOADED.value,
                     and_(
-                        HomeworkSubmission.status == SubmissionGradingStatus.GRADING.value,
+                        HomeworkSubmission.status
+                        == SubmissionGradingStatus.GRADING.value,
                         or_(
                             HomeworkSubmission.grading_started_at < cutoff_stale,
                             and_(

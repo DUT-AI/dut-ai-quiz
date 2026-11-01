@@ -105,7 +105,11 @@ async def test_microscope_strategy_eliminates_two_incorrect_options(mock_questio
     assert len(result.eliminated_option_ids) == 2
     assert str(opt_correct.id) not in result.eliminated_option_ids
     for eliminated_id in result.eliminated_option_ids:
-        assert eliminated_id in [str(opt_wrong1.id), str(opt_wrong2.id), str(opt_wrong3.id)]
+        assert eliminated_id in [
+            str(opt_wrong1.id),
+            str(opt_wrong2.id),
+            str(opt_wrong3.id),
+        ]
 
 
 @pytest.mark.asyncio
@@ -203,7 +207,9 @@ async def test_game_item_registry_lookup_and_custom_extension(mock_question_repo
             return 10
 
         async def apply(self, session, context):
-            return ItemExecutionResult(item_name="double_points", metadata={"lucky": True})
+            return ItemExecutionResult(
+                item_name="double_points", metadata={"lucky": True}
+            )
 
     custom_strat = CustomLuckyDiceStrategy()
     registry.register(custom_strat)
@@ -221,7 +227,9 @@ async def test_use_item_use_case_success_and_atomic_gold_deduction(
     opt_correct = MagicMock(id=uuid4(), is_correct=True)
     opt_wrong1 = MagicMock(id=uuid4(), is_correct=False)
     opt_wrong2 = MagicMock(id=uuid4(), is_correct=False)
-    mock_question_repo.get.return_value = MagicMock(options=[opt_correct, opt_wrong1, opt_wrong2])
+    mock_question_repo.get.return_value = MagicMock(
+        options=[opt_correct, opt_wrong1, opt_wrong2]
+    )
 
     registry = GameItemRegistry(
         [
@@ -235,7 +243,9 @@ async def test_use_item_use_case_success_and_atomic_gold_deduction(
     use_case = UseItemGameUseCase(mock_session_repo, mock_question_repo, registry)
     payload = GamificationUseItemIn(item_name="microscope", question_id=q_id)
 
-    res = await use_case.execute(session_id=session.id, user_id=session.user_id, payload=payload)
+    res = await use_case.execute(
+        session_id=session.id, user_id=session.user_id, payload=payload
+    )
 
     assert res.item_name == "microscope"
     assert len(res.eliminated_option_ids) == 2
@@ -248,7 +258,9 @@ async def test_use_item_use_case_insufficient_gold_does_not_mutate(
     mock_session_repo, mock_question_repo
 ):
     q_id = uuid4()
-    session = create_dummy_session(gold=20, current_q_id=str(q_id))  # Microscope costs 50
+    session = create_dummy_session(
+        gold=20, current_q_id=str(q_id)
+    )  # Microscope costs 50
     mock_session_repo.get.return_value = session
 
     registry = GameItemRegistry(
@@ -262,7 +274,9 @@ async def test_use_item_use_case_insufficient_gold_does_not_mutate(
     payload = GamificationUseItemIn(item_name="microscope", question_id=q_id)
 
     with pytest.raises(InsufficientResourceException):
-        await use_case.execute(session_id=session.id, user_id=session.user_id, payload=payload)
+        await use_case.execute(
+            session_id=session.id, user_id=session.user_id, payload=payload
+        )
 
     assert session.gamification.gold == 20  # Gold not deducted
     mock_session_repo.save.assert_not_called()
@@ -302,7 +316,9 @@ async def test_use_item_session_not_in_progress(mock_session_repo, mock_question
 
     payload = GamificationUseItemIn(item_name="microscope", question_id=uuid4())
     with pytest.raises(DomainValidationException) as exc:
-        await use_case.execute(session_id=session.id, user_id=session.user_id, payload=payload)
+        await use_case.execute(
+            session_id=session.id, user_id=session.user_id, payload=payload
+        )
     assert "Session is not in progress" in str(exc.value)
 
 
@@ -318,12 +334,16 @@ async def test_use_item_mismatched_question_id(mock_session_repo, mock_question_
 
     payload = GamificationUseItemIn(item_name="microscope", question_id=different_q_id)
     with pytest.raises(DomainValidationException) as exc:
-        await use_case.execute(session_id=session.id, user_id=session.user_id, payload=payload)
+        await use_case.execute(
+            session_id=session.id, user_id=session.user_id, payload=payload
+        )
     assert "Question ID does not match" in str(exc.value)
 
 
 @pytest.mark.asyncio
-async def test_use_item_atomic_rollback_on_apply_failure(mock_session_repo, mock_question_repo):
+async def test_use_item_atomic_rollback_on_apply_failure(
+    mock_session_repo, mock_question_repo
+):
     q_id = uuid4()
     session = create_dummy_session(gold=100, current_q_id=str(q_id))
     mock_session_repo.get.return_value = session
@@ -336,7 +356,9 @@ async def test_use_item_atomic_rollback_on_apply_failure(mock_session_repo, mock
 
     payload = GamificationUseItemIn(item_name="microscope", question_id=q_id)
     with pytest.raises(EntityNotFoundException):
-        await use_case.execute(session_id=session.id, user_id=session.user_id, payload=payload)
+        await use_case.execute(
+            session_id=session.id, user_id=session.user_id, payload=payload
+        )
 
     # Gold must NOT be deducted if apply() fails
     assert session.gamification.gold == 100

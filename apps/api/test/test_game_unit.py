@@ -94,7 +94,10 @@ async def test_TC_G01_patch_gamification_answer_correct(mock_answer_repo):
     ps_repo.count_completed_by_lesson.return_value = 0
 
     use_case = PatchGameAnswerUseCase(
-        ps_repo, question_repo, mock_answer_repo, hydration=GameHydrationService(question_repo)
+        ps_repo,
+        question_repo,
+        mock_answer_repo,
+        hydration=GameHydrationService(question_repo),
     )
 
     payload = GamificationAnswerPatchIn(
@@ -155,7 +158,10 @@ async def test_TC_G02_patch_gamification_answer_incorrect_lose_life(mock_answer_
     ps_repo.count_completed_by_lesson.return_value = 0
 
     use_case = PatchGameAnswerUseCase(
-        ps_repo, question_repo, mock_answer_repo, hydration=GameHydrationService(question_repo)
+        ps_repo,
+        question_repo,
+        mock_answer_repo,
+        hydration=GameHydrationService(question_repo),
     )
 
     payload = GamificationAnswerPatchIn(
@@ -216,7 +222,10 @@ async def test_TC_P01_boss_defeated_advances_tier(mock_answer_repo):
     ps_repo.count_completed_by_lesson.return_value = 0
 
     use_case = PatchGameAnswerUseCase(
-        ps_repo, question_repo, mock_answer_repo, hydration=GameHydrationService(question_repo)
+        ps_repo,
+        question_repo,
+        mock_answer_repo,
+        hydration=GameHydrationService(question_repo),
     )
 
     payload = GamificationAnswerPatchIn(
@@ -249,7 +258,9 @@ async def test_TC_P02_user_loses_all_lives_game_over(mock_answer_repo):
         started_at=now_ict(),
         completed_at=None,
         status=GameSessionStatus.IN_PROGRESS,
-        question_sequence=[QuestionMeta(id=str(q_id), tier=1, is_boss=False, time_limit=60)],
+        question_sequence=[
+            QuestionMeta(id=str(q_id), tier=1, is_boss=False, time_limit=60)
+        ],
         gamification=GamificationState(
             lives=1,
             gold=100,
@@ -265,7 +276,10 @@ async def test_TC_P02_user_loses_all_lives_game_over(mock_answer_repo):
     ps_repo.count_completed_by_lesson.return_value = 0
 
     use_case = PatchGameAnswerUseCase(
-        ps_repo, question_repo, mock_answer_repo, hydration=GameHydrationService(question_repo)
+        ps_repo,
+        question_repo,
+        mock_answer_repo,
+        hydration=GameHydrationService(question_repo),
     )
 
     payload = GamificationAnswerPatchIn(
@@ -297,7 +311,9 @@ async def test_TC_P03_win_game_on_last_question(mock_answer_repo):
         started_at=now_ict(),
         completed_at=None,
         status=GameSessionStatus.IN_PROGRESS,
-        question_sequence=[QuestionMeta(id=str(q_id), tier=3, is_boss=True, time_limit=300)],
+        question_sequence=[
+            QuestionMeta(id=str(q_id), tier=3, is_boss=True, time_limit=300)
+        ],
         gamification=GamificationState(
             lives=3,
             gold=100,
@@ -313,7 +329,10 @@ async def test_TC_P03_win_game_on_last_question(mock_answer_repo):
     ps_repo.count_completed_by_lesson.return_value = 0
     ps_repo.count_completed_by_lesson.return_value = 0
     use_case = PatchGameAnswerUseCase(
-        ps_repo, question_repo, mock_answer_repo, hydration=GameHydrationService(question_repo)
+        ps_repo,
+        question_repo,
+        mock_answer_repo,
+        hydration=GameHydrationService(question_repo),
     )
 
     payload = GamificationAnswerPatchIn(
@@ -371,7 +390,10 @@ async def test_TC_S01_spam_already_answered_question(mock_answer_repo):
         answered_at=now_ict(),
     )
     use_case = PatchGameAnswerUseCase(
-        ps_repo, question_repo, mock_answer_repo, hydration=GameHydrationService(question_repo)
+        ps_repo,
+        question_repo,
+        mock_answer_repo,
+        hydration=GameHydrationService(question_repo),
     )
 
     payload = GamificationAnswerPatchIn(
@@ -405,7 +427,9 @@ async def test_TC_S03_timeout_fails_automatically(mock_answer_repo):
     q_id = uuid4()
     opt_correct_id = str(uuid4())
     opt_a = MockQuestionOption(opt_correct_id, "Correct", True)
-    question_repo.get.return_value = MockQuestion(q_id, Difficulty.MEDIUM, "Content", [opt_a])
+    question_repo.get.return_value = MockQuestion(
+        q_id, Difficulty.MEDIUM, "Content", [opt_a]
+    )
 
     session_id = uuid4()
     session = GameSessionEntity(
@@ -414,7 +438,9 @@ async def test_TC_S03_timeout_fails_automatically(mock_answer_repo):
         started_at=now_ict(),
         completed_at=None,
         status=GameSessionStatus.IN_PROGRESS,
-        question_sequence=[QuestionMeta(id=str(q_id), tier=1, is_boss=False, time_limit=60)],
+        question_sequence=[
+            QuestionMeta(id=str(q_id), tier=1, is_boss=False, time_limit=60)
+        ],
         gamification=GamificationState(
             lives=3,
             gold=100,
@@ -429,7 +455,10 @@ async def test_TC_S03_timeout_fails_automatically(mock_answer_repo):
     ps_repo.get.return_value = session
     ps_repo.count_completed_by_lesson.return_value = 0
     use_case = PatchGameAnswerUseCase(
-        ps_repo, question_repo, mock_answer_repo, hydration=GameHydrationService(question_repo)
+        ps_repo,
+        question_repo,
+        mock_answer_repo,
+        hydration=GameHydrationService(question_repo),
     )
 
     # User gửi time_response (65s) vượt quá time_limit (60s) -> tính là Timeout/Sai
@@ -438,7 +467,9 @@ async def test_TC_S03_timeout_fails_automatically(mock_answer_repo):
     )
     result = await use_case.execute(session_id, user_id=1, payload=payload)
 
-    assert result.is_correct is False  # Mặc dù chọn đúng option, nhưng do timeout nên tính là Sai
+    assert (
+        result.is_correct is False
+    )  # Mặc dù chọn đúng option, nhưng do timeout nên tính là Sai
     assert result.updated_gamification.lives == 2  # Bị trừ mạng
 
 
@@ -473,7 +504,10 @@ async def test_TC_S04_question_not_in_session(mock_answer_repo):
     ps_repo.get.return_value = session
     ps_repo.count_completed_by_lesson.return_value = 0
     use_case = PatchGameAnswerUseCase(
-        ps_repo, question_repo, mock_answer_repo, hydration=GameHydrationService(question_repo)
+        ps_repo,
+        question_repo,
+        mock_answer_repo,
+        hydration=GameHydrationService(question_repo),
     )
 
     payload = GamificationAnswerPatchIn(
@@ -516,7 +550,10 @@ async def test_TC_S05_submit_after_game_over(mock_answer_repo):
     ps_repo.count_completed_by_lesson.return_value = 0
     ps_repo.count_completed_by_lesson.return_value = 0
     use_case = PatchGameAnswerUseCase(
-        ps_repo, question_repo, mock_answer_repo, hydration=GameHydrationService(question_repo)
+        ps_repo,
+        question_repo,
+        mock_answer_repo,
+        hydration=GameHydrationService(question_repo),
     )
 
     payload = GamificationAnswerPatchIn(

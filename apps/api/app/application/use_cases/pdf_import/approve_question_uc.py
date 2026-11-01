@@ -34,7 +34,10 @@ class ApproveQuestionUseCase:
         )
         model = r.scalar_one_or_none()
         if not model:
-            return {"ok": False, "error": "Câu hỏi không tồn tại hoặc không ở trạng thái DRAFT"}
+            return {
+                "ok": False,
+                "error": "Câu hỏi không tồn tại hoặc không ở trạng thái DRAFT",
+            }
 
         # Check lock: only the lock holder can approve
         lock_key = f"lock:question:{question_id}"

@@ -32,11 +32,18 @@ class FakeRerankService:
     calls = 0
 
     async def rerank(
-        self, query: str, texts: list[str], *, return_text: bool = False, top_k: int | None = None
+        self,
+        query: str,
+        texts: list[str],
+        *,
+        return_text: bool = False,
+        top_k: int | None = None,
     ):
         self.calls += 1
         items = [
-            RerankItem(index=i, score=0.99 - 0.1 * i, text=texts[i] if return_text else None)
+            RerankItem(
+                index=i, score=0.99 - 0.1 * i, text=texts[i] if return_text else None
+            )
             for i in range(len(texts))
         ]
         return items[:top_k] if top_k else items
@@ -145,7 +152,9 @@ async def test_related_questions_with_reranking() -> None:
     )
     embedding_service = FakeEmbeddingService()
     rerank_service = FakeRerankService()
-    use_case = FindRelatedQuestionsUseCase(repository, embedding_service, rerank_service)
+    use_case = FindRelatedQuestionsUseCase(
+        repository, embedding_service, rerank_service
+    )
 
     result = await use_case.execute(
         content="Query text",

@@ -51,7 +51,9 @@ def test_s3_client_uses_region_path_style_and_encoded_object_url() -> None:
 
     with (
         patch.object(s3_client_module, "settings", config),
-        patch.object(s3_client_module.boto3, "client", return_value=boto_client) as factory,
+        patch.object(
+            s3_client_module.boto3, "client", return_value=boto_client
+        ) as factory,
     ):
         client = s3_client_module.MinioClient()
 
@@ -94,7 +96,9 @@ def test_s3_dual_endpoint_settings_and_client() -> None:
 
     with (
         patch.object(s3_client_module, "settings", config),
-        patch.object(s3_client_module.boto3, "client", side_effect=mock_boto_factory) as factory,
+        patch.object(
+            s3_client_module.boto3, "client", side_effect=mock_boto_factory
+        ) as factory,
     ):
         client = s3_client_module.MinioClient()
 
@@ -107,7 +111,9 @@ def test_s3_dual_endpoint_settings_and_client() -> None:
         )
 
         # Presigned download URL uses public client
-        download_url = client.generate_presigned_download_url("lms-prod", "homeworks/file.zip")
+        download_url = client.generate_presigned_download_url(
+            "lms-prod", "homeworks/file.zip"
+        )
         assert download_url == "https://minio.dutai.site/lms-prod/test.zip?signed=1"
         public_boto.generate_presigned_url.assert_called_with(
             "get_object",

@@ -42,7 +42,9 @@ def setup_exception_handlers(app: FastAPI):
         )
 
     @app.exception_handler(RequestValidationError)
-    async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    async def validation_exception_handler(
+        request: Request, exc: RequestValidationError
+    ):
         logger.error(
             f"Validation Error: {exc.errors()} | "
             f"Body: {getattr(request, '_json', 'N/A')} | "

@@ -55,8 +55,12 @@ Mỗi patch được ánh xạ sang một vector riêng.
 
     chunks = chunker.split(content)
 
-    patch_chunks = [chunk for chunk in chunks if chunk.heading_path[-1] == "Patch Extraction"]
-    projection_chunks = [chunk for chunk in chunks if chunk.heading_path[-1] == "Linear Projection"]
+    patch_chunks = [
+        chunk for chunk in chunks if chunk.heading_path[-1] == "Patch Extraction"
+    ]
+    projection_chunks = [
+        chunk for chunk in chunks if chunk.heading_path[-1] == "Linear Projection"
+    ]
     assert patch_chunks
     assert projection_chunks
     assert all("Linear Projection" not in chunk.content for chunk in patch_chunks)
@@ -74,7 +78,9 @@ Mỗi patch được ánh xạ sang một vector riêng.
 
 def test_chunker_only_splits_oversized_paragraph_at_sentence_boundaries() -> None:
     chunker = LessonChunker(target_tokens=100, max_tokens=120)
-    paragraph = " ".join(f"Đây là câu số {index} chứa kiến thức quan trọng." for index in range(80))
+    paragraph = " ".join(
+        f"Đây là câu số {index} chứa kiến thức quan trọng." for index in range(80)
+    )
 
     chunks = chunker.split(f"## Một section\n\n{paragraph}")
 
@@ -151,7 +157,9 @@ async def test_dutai_tei_openai_compatible_embed_endpoint() -> None:
             200,
             json={
                 "object": "list",
-                "data": [{"object": "embedding", "embedding": [0.5] * 1024, "index": 0}],
+                "data": [
+                    {"object": "embedding", "embedding": [0.5] * 1024, "index": 0}
+                ],
                 "model": "BAAI/bge-m3",
             },
         )
@@ -278,12 +286,19 @@ class FakeRerankService:
     calls = 0
 
     async def rerank(
-        self, query: str, texts: list[str], *, return_text: bool = False, top_k: int | None = None
+        self,
+        query: str,
+        texts: list[str],
+        *,
+        return_text: bool = False,
+        top_k: int | None = None,
     ):
         self.calls += 1
         # Reverse order for testing reordering
         items = [
-            RerankItem(index=i, score=0.5 + 0.1 * i, text=texts[i] if return_text else None)
+            RerankItem(
+                index=i, score=0.5 + 0.1 * i, text=texts[i] if return_text else None
+            )
             for i in range(len(texts))
         ]
         items.sort(key=lambda x: x.score, reverse=True)

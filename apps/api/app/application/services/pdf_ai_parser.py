@@ -60,7 +60,9 @@ class GeminiParsedOption(BaseModel):
 class GeminiParsedQuestion(BaseModel):
     content: str = Field(description="Nội dung câu hỏi (không bao gồm 'Câu X')")
     options: list[GeminiParsedOption] = Field(description="Danh sách 4 đáp án")
-    solution: str | None = Field(default=None, description="Lời giải chi tiết từng bước")
+    solution: str | None = Field(
+        default=None, description="Lời giải chi tiết từng bước"
+    )
     difficulty: str = Field(default="MEDIUM", description="EASY, MEDIUM, hoặc HARD")
     is_answer_ai_generated: bool = False
     is_solution_ai_generated: bool = False
@@ -198,7 +200,9 @@ class PDFAIParserService:
         pix = page.get_pixmap(matrix=mat, alpha=False)
         return pix.tobytes("png")
 
-    def _crop_inline_images(self, page: fitz.Page, job_id: str) -> list[tuple[str, bytes]]:
+    def _crop_inline_images(
+        self, page: fitz.Page, job_id: str
+    ) -> list[tuple[str, bytes]]:
         results: list[tuple[str, bytes]] = []
         min_px = settings.pdf_image_min_px
 
@@ -218,7 +222,9 @@ class PDFAIParserService:
 
         return results
 
-    def _upload_image_to_minio(self, job_id: str, anchor_id: str, img_bytes: bytes) -> str:
+    def _upload_image_to_minio(
+        self, job_id: str, anchor_id: str, img_bytes: bytes
+    ) -> str:
         key = f"{settings.pdf_images_prefix}/{job_id}/{anchor_id}.png"
         self._s3.upload_fileobj(
             io.BytesIO(img_bytes),
@@ -246,7 +252,9 @@ class PDFAIParserService:
         parts: list[Any] = []
         for i, img_bytes in enumerate(batch_page_images):
             parts.append(f"=== Trang {batch_page_nums[i] + 1} ===")
-            parts.append(genai_types.Part.from_bytes(data=img_bytes, mime_type="image/png"))
+            parts.append(
+                genai_types.Part.from_bytes(data=img_bytes, mime_type="image/png")
+            )
         parts.append(prompt)
 
         max_retries = 4
@@ -285,7 +293,10 @@ class PDFAIParserService:
                     raw_questions = data
                 elif isinstance(data, dict):
                     raw_questions = (
-                        data.get("questions") or data.get("items") or data.get("data") or []
+                        data.get("questions")
+                        or data.get("items")
+                        or data.get("data")
+                        or []
                     )
 
                 if not raw_questions:
@@ -297,7 +308,9 @@ class PDFAIParserService:
                 return raw_questions
 
             except json.JSONDecodeError as exc:
-                logger.error(f"Gemini batch JSON parse error: {exc}\nRaw output: {raw_text[:500]}")
+                logger.error(
+                    f"Gemini batch JSON parse error: {exc}\nRaw output: {raw_text[:500]}"
+                )
                 return []
             except Exception as exc:
                 err_str = str(exc)
@@ -341,7 +354,9 @@ class PDFAIParserService:
     ) -> list[ParsedQuestion]:
         doc = fitz.open(stream=pdf_bytes, filetype="pdf")
         total_pages = len(doc)
-        logger.info(f"[PDF Import job={job_id}] Total {total_pages} pages, batch_size={batch_size}")
+        logger.info(
+            f"[PDF Import job={job_id}] Total {total_pages} pages, batch_size={batch_size}"
+        )
 
         rendered: list[tuple[int, bytes, list[tuple[str, str]]]] = []
         for page_num in range(total_pages):
@@ -409,8 +424,12 @@ class PDFAIParserService:
                     solution=q.get("solution"),
                     difficulty=q.get("difficulty", "MEDIUM"),
                     is_answer_ai_generated=bool(q.get("is_answer_ai_generated", False)),
-                    is_solution_ai_generated=bool(q.get("is_solution_ai_generated", False)),
-                    is_difficulty_ai_suggested=bool(q.get("is_difficulty_ai_suggested", True)),
+                    is_solution_ai_generated=bool(
+                        q.get("is_solution_ai_generated", False)
+                    ),
+                    is_difficulty_ai_suggested=bool(
+                        q.get("is_difficulty_ai_suggested", True)
+                    ),
                     image_urls=[url for _, url in all_refs],
                 )
 
@@ -448,7 +467,9 @@ class PDFAIParserService:
     ) -> str:
         correct_opt = next((o for o in options if o.get("is_correct")), None)
         correct_text = (
-            f"{correct_opt['id']}. {correct_opt['text']}" if correct_opt else "Chưa xác định"
+            f"{correct_opt['id']}. {correct_opt['text']}"
+            if correct_opt
+            else "Chưa xác định"
         )
         options_text = "\n".join(f"{o['id']}. {o['text']}" for o in options)
         hint_block = f"\nGợi ý từ admin: {admin_hint}" if admin_hint else ""

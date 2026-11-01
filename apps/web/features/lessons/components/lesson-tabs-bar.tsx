@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, Code2, Swords, ListRestart, ChevronDown } from "lucide-react";
+import { BookOpen, Code2, Swords, ListRestart, ChevronDown, Video } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +30,13 @@ export function LessonTabsBar({ slug, isPreview = false }: LessonTabsBarProps) {
       icon: BookOpen,
       href: `${basePath}${querySuffix}`,
       isActive: pathname === basePath || pathname === `${basePath}/`,
+    },
+    {
+      id: "video",
+      label: "Video",
+      icon: Video,
+      href: `${basePath}/video${querySuffix}`,
+      isActive: pathname === `${basePath}/video` || pathname.startsWith(`${basePath}/video/`),
     },
     {
       id: "practice",

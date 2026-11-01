@@ -1,0 +1,132 @@
+# Implementation Plan: Lesson YouTube Reference Videos
+
+**Branch**: `011-lesson-youtube-videos` | **Date**: 2026-11-01 | **Spec**: [spec.md](spec.md)
+
+**Input**: Feature specification from `/specs/011-lesson-youtube-videos/spec.md`
+
+## Summary
+
+Enable attaching and managing multiple YouTube reference videos for lessons in the DUT-AI Quiz system, and provide a dedicated video viewing experience for learners:
+1. **Domain & Persistence (Backend)**: Add `lesson_videos` table linked to `lessons.id` (`ON DELETE CASCADE`), `LessonVideoEntity`, `ILessonVideoRepository`, and Alembic migration.
+2. **YouTube Utility**: Implement dual backend/frontend parser for YouTube URLs (supporting standard, shortened, embed, and live links) and timestamp query parameters (e.g., `t=3179s` or `52m59s` into normalized `start_seconds`).
+3. **API Contracts**: Update `LessonDetailOut` to include `videos: list[LessonVideoOut] = []`, implement `GET /api/v1/lessons/{id}/videos` and `PUT /api/v1/lessons/{id}/videos` (batch sync) with Dishka DI.
+4. **Learner Experience (Frontend)**: Implement `/lessons/[slug]/video` route inside `(tabs)` layout, add "Video" tab item with Lucide icon to `LessonTabsBar`, and render responsive 16:9 player with playlist switcher and empty state.
+5. **Educator Experience (Frontend)**: Add a "Video tham khảo" management section to the lesson editor (`LessonEditorPage` / `LessonFormModal`) allowing teachers to add, preview, reorder, and delete reference videos.
+
+---
+
+## Technical Context
+
+**Language/Version**: Python 3.12 (Backend `apps/api`), TypeScript 5 & Node.js 20+ (Frontend `apps/web`)  
+**Primary Dependencies**: FastAPI, Pydantic v2, Dishka (DI), SQLModel / SQLAlchemy, Next.js 14 (App Router), React 18, Tailwind CSS, TanStack Query v5, Framer Motion, Lucide React  
+**Storage**: PostgreSQL (`lesson_videos` table with foreign key `lessons.id`)  
+**Testing**: Pytest (`uv run pytest`), Next.js / TypeScript (`npm run type-check`), ESLint (`npm run lint`), `make check`  
+**Target Platform**: Linux / macOS server (Docker containerized) & Modern Web Browsers (Desktop & Mobile)  
+**Project Type**: Monorepo Web Application (`apps/api` + `apps/web`)  
+**Performance Goals**: Video tab render LCP < 1.2s; API endpoint response time < 20ms; zero impact on existing lesson theory markdown loading  
+**Constraints**: YouTube iframe embedding MUST use `youtube-nocookie.com` domain with `rel=0`; zero hardcoded styling violations (no purple/violet hues per design guidelines); strictly adhere to Lightweight DDD and single-source-of-truth contracts (`make generate-api`)  
+**Scale/Scope**: 1 new database table, 1 migration revision, 3 backend use cases, 1 repository interface + impl, 1 router extension, 1 new Next.js tab route (`video/page.tsx`), `LessonTabsBar` update, and lesson editor form extension  
+
+---
+
+## Constitution Check
+
+*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+
+- [x] **Principle I (Lightweight DDD)**: Strictly adheres to layer separation:
+  - `presentation/`: `LessonVideoCreate`, `LessonVideoOut`, router endpoints under `/api/v1/lessons/...`.
+  - `application/use_cases/`: `SyncLessonVideosUseCase`, `ListLessonVideosUseCase`.
+  - `domain/entities/`: `LessonVideoEntity`.
+  - `domain/interfaces/`: `ILessonVideoRepository`.
+  - `infrastructure/repositories/`: `LessonVideoRepository` using SQLAlchemy/SQLModel.
+  - Dishka container registers repository and use cases cleanly.
+- [x] **Principle II (Single Source of Truth API Contracts)**:
+  - All endpoints define explicit Pydantic response models (`list[LessonVideoOut]`, `LessonDetailOut`).
+  - Frontend types synchronized via `openapi-typescript` (`make generate-api`).
+- [x] **Principle III (Feature-First Frontend)**:
+  - Video components, queries, and types reside within `apps/web/features/lessons/`.
+  - Shared tab layout in `apps/web/app/(root)/lessons/[slug]/(tabs)/` reuses `LessonProvider` and `useLessonContext()`.
+- [x] **Principle IV (Test-Driven Verification)**:
+  - Pytest suite covering YouTube URL/timestamp parsing, repository operations, and video sync use cases.
+  - Zero TypeScript compile errors (`npm run type-check`) and clean linting (`make check`).
+- [x] **Principle V (Authority & State Separation)**:
+  - Server maintains persistence authority, URL sanitization, and authorization (`MANAGE_LESSON`).
+  - Client manages player state (active video selection in playlist, play/pause).
+
+---
+
+## Project Structure
+
+### Documentation (this feature)
+
+```text
+specs/011-lesson-youtube-videos/
+├── plan.md              # Master Implementation Plan (this file)
+├── research.md          # Technical research & architectural decisions
+├── data-model.md        # ER diagram, DB schema, entities, and Pydantic schemas
+├── quickstart.md        # Runnable verification scenarios
+├── contracts/           # API contract definition
+│   └── lesson-videos-api.yaml
+└── tasks.md             # Generated by /speckit-tasks
+```
+
+### Source Code Impact
+
+```text
+apps/api/
+├── alembic/versions/
+│   └── xxxx_add_lesson_videos_table.py         # Migration for lesson_videos table
+├── app/
+│   ├── core/
+│   │   └── youtube.py                          # YouTube URL and timestamp parser utility
+│   ├── domain/
+│   │   ├── entities/
+│   │   │   └── lesson_video.py                 # LessonVideoEntity
+│   │   └── interfaces/
+│   │       ├── __init__.py
+│   │       └── lesson_video_repo.py            # ILessonVideoRepository interface
+│   ├── infrastructure/
+│   │   ├── persistence/models/
+│   │   │   └── lesson_video.py                 # LessonVideo SQLModel
+│   │   ├── repositories/
+│   │   │   └── lesson_videos.py                # LessonVideoRepository
+│   │   └── di/
+│   │       └── container.py                    # Register video repository and use cases in Dishka
+│   ├── application/
+│   │   └── use_cases/lessons/
+│   │       ├── sync_lesson_videos_uc.py        # Sync/update reference videos for a lesson
+│   │       ├── get_lesson_by_slug_uc.py        # Include videos in detail payload
+│   │       └── get_lesson_detail_uc.py         # Include videos in detail payload
+│   └── presentation/
+│       ├── schemas/lessons.py                  # LessonVideoCreate, LessonVideoOut, LessonDetailOut.videos
+│       └── api/routers/lessons.py              # Endpoints for lesson videos
+└── test/
+    ├── test_youtube_parser.py                  # Unit tests for URL & timestamp extraction
+    └── test_lesson_videos.py                   # Use case & repository tests
+
+apps/web/
+├── app/(root)/lessons/[slug]/(tabs)/
+│   └── video/
+│       └── page.tsx                            # Learner route: http://localhost:3000/lessons/[slug]/video
+├── features/lessons/
+│   ├── components/
+│   │   ├── lesson-tabs-bar.tsx                 # Add "Video" tab item with Lucide icon
+│   │   ├── video/
+│   │   │   ├── lesson-video-tab.tsx            # Main video tab container (player + playlist)
+│   │   │   ├── youtube-player.tsx              # Responsive 16:9 embedded iframe player
+│   │   │   └── video-playlist.tsx              # Playlist selector sidebar/drawer
+│   │   ├── lesson-editor-page.tsx              # Add "Video tham khảo" editor section
+│   │   └── lesson-form.tsx                     # Support video inputs in lesson modal form
+│   ├── lib/
+│   │   └── youtube.ts                          # Frontend YouTube parser & embed URL builder
+│   ├── queries.ts                              # useUpdateLessonVideos mutation hook
+│   └── types.ts                                # LessonVideoSchema, LessonVideo type
+```
+
+---
+
+## Complexity Tracking
+
+| Violation | Why Needed | Simpler Alternative Rejected Because |
+|---|---|---|
+| *None* | *N/A* | *N/A* |

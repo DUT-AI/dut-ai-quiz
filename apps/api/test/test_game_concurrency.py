@@ -202,7 +202,9 @@ async def test_race_condition_integrity_error_mapped_to_conflict():
         started_at=now_ict(),
         completed_at=None,
         status=GameSessionStatus.IN_PROGRESS,
-        question_sequence=[QuestionMeta(id=str(q_id), tier=1, is_boss=False, time_limit=60)],
+        question_sequence=[
+            QuestionMeta(id=str(q_id), tier=1, is_boss=False, time_limit=60)
+        ],
         gamification=GamificationState(
             lives=3, gold=0, points=0, current_tier=1, last_question_index=0
         ),

@@ -28,7 +28,11 @@ class FindRelatedQuestionsUseCase:
     async def _rerank_candidates(
         self, query: str, candidates: list[QuestionSimilarityMatch]
     ) -> list[QuestionSimilarityMatch]:
-        if not candidates or self._rerank_service is None or not self._rerank_service.enabled:
+        if (
+            not candidates
+            or self._rerank_service is None
+            or not self._rerank_service.enabled
+        ):
             return candidates
 
         texts = [question_embedding_text(c.question) for c in candidates]
@@ -46,7 +50,8 @@ class FindRelatedQuestionsUseCase:
             return reranked
         except Exception as exc:
             logger.warning(
-                "Reranking failed in related questions, falling back to vector score: {}", exc
+                "Reranking failed in related questions, falling back to vector score: {}",
+                exc,
             )
             return candidates
 
@@ -65,7 +70,9 @@ class FindRelatedQuestionsUseCase:
             raise EmbeddingServiceError("Question embedding is not enabled")
 
         query_embedding = (
-            await self._embedding_service.embed([question_query_embedding_text(normalized_content)])
+            await self._embedding_service.embed(
+                [question_query_embedding_text(normalized_content)]
+            )
         )[0]
         raw_candidates = await self._question_repo.search_similar(
             embedding=query_embedding,
@@ -77,7 +84,8 @@ class FindRelatedQuestionsUseCase:
         valid_candidates = [
             match
             for match in raw_candidates
-            if match.question.embedding_source_hash == question_embedding_hash(match.question)
+            if match.question.embedding_source_hash
+            == question_embedding_hash(match.question)
         ]
 
         # Rerank top candidates with cross-encoder to maintain sub-second latency and prevent timeout

@@ -47,7 +47,9 @@ class ClientProvider(Provider):
     @provide(scope=Scope.APP)
     async def get_http_client(self) -> AsyncIterable[httpx.AsyncClient]:
         """Provide http client."""
-        async with httpx.AsyncClient(timeout=httpx.Timeout(timeout=30.0, connect=10.0)) as client:
+        async with httpx.AsyncClient(
+            timeout=httpx.Timeout(timeout=30.0, connect=10.0)
+        ) as client:
             yield client
 
     @provide(scope=Scope.APP)
@@ -68,7 +70,9 @@ class ClientProvider(Provider):
         return MinioClient()
 
     @provide(scope=Scope.APP)
-    def get_hackathon_submission_store(self, s3_client: IS3Client) -> IHackathonSubmissionStore:
+    def get_hackathon_submission_store(
+        self, s3_client: IS3Client
+    ) -> IHackathonSubmissionStore:
         """Provide MinIO Hackathon Submission Store."""
         return MinIOHackathonSubmissionStore(s3_client)
 
@@ -99,7 +103,10 @@ class ClientProvider(Provider):
 
     @provide(scope=Scope.APP)
     def get_rerank_service(self, client: httpx.AsyncClient) -> IRerankService:
-        if not settings.rerank_enabled or settings.rerank_provider.casefold() == "disabled":
+        if (
+            not settings.rerank_enabled
+            or settings.rerank_provider.casefold() == "disabled"
+        ):
             return DisabledRerankService()
         if settings.rerank_provider.casefold() == "local":
             return LocalRerankService()

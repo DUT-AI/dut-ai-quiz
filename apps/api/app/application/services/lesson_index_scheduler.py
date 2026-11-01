@@ -22,11 +22,15 @@ class LessonIndexScheduler:
     async def schedule(self, lesson: LessonEntity) -> bool:
         if not self.enabled:
             return False
-        source_hash = lesson_source_hash(lesson.name, lesson.description, lesson.content_md or "")
+        source_hash = lesson_source_hash(
+            lesson.name, lesson.description, lesson.content_md or ""
+        )
         try:
             await self._queue.enqueue_index(lesson.id, source_hash)
             return True
         except Exception as exc:
             # Editing lesson content must remain possible during a Redis outage.
-            logger.warning("Could not enqueue lesson {} for indexing: {}", lesson.id, exc)
+            logger.warning(
+                "Could not enqueue lesson {} for indexing: {}", lesson.id, exc
+            )
             return False

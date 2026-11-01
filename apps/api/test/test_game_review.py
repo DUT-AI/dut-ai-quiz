@@ -143,7 +143,9 @@ async def test_get_game_session_review_success():
     assert item1.is_correct is True
     assert item1.time_response == 4.2
     assert item1.points_gained == 100
-    assert item1.explanation == "Python is a high-level interpreted programming language."
+    assert (
+        item1.explanation == "Python is a high-level interpreted programming language."
+    )
     assert len(item1.options) == 2
 
     # Check Question 2 review item

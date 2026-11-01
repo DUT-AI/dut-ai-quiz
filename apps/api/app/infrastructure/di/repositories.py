@@ -13,6 +13,7 @@ from app.domain.interfaces import (
     IImportSessionRepository,
     ILessonChunkRepository,
     ILessonRepository,
+    ILessonVideoRepository,
     IModuleRepository,
     IQuestionRepository,
     ITagRepository,
@@ -43,6 +44,7 @@ from app.infrastructure.repositories.hackathons import (
 from app.infrastructure.repositories.homeworks import HomeworkRepository
 from app.infrastructure.repositories.import_sessions import ImportSessionRepository
 from app.infrastructure.repositories.lesson_chunks import LessonChunkRepository
+from app.infrastructure.repositories.lesson_videos import LessonVideoRepository
 from app.infrastructure.repositories.lessons import LessonRepository
 from app.infrastructure.repositories.modules import ModuleRepository
 from app.infrastructure.repositories.questions import QuestionRepository
@@ -55,11 +57,14 @@ class RepositoryProvider(Provider):
 
     # Đăng ký kèm theo tham số provides để map concrete class với interface của nó
     lesson_repo = provide(LessonRepository, provides=ILessonRepository)
+    lesson_video_repo = provide(LessonVideoRepository, provides=ILessonVideoRepository)
     lesson_chunk_repo = provide(LessonChunkRepository, provides=ILessonChunkRepository)
     module_repo = provide(ModuleRepository, provides=IModuleRepository)
     user_repo = provide(UserRepository, provides=IUserRepository)
     exam_repo = provide(ExamRepository, provides=IExamRepository)
-    exam_question_repo = provide(ExamQuestionRepository, provides=IExamQuestionRepository)
+    exam_question_repo = provide(
+        ExamQuestionRepository, provides=IExamQuestionRepository
+    )
     question_repo = provide(QuestionRepository, provides=IQuestionRepository)
     tag_repo = provide(TagRepository, provides=ITagRepository)
     focus_event_repo = provide(FocusEventRepository, provides=IFocusEventRepository)
@@ -69,8 +74,12 @@ class RepositoryProvider(Provider):
     )
     attempt_repo = provide(AttemptRepository, provides=IAttemptRepository)
     hackathon_repo = provide(HackathonRepository, provides=IHackathonRepository)
-    hackathon_task_repo = provide(HackathonTaskRepository, provides=IHackathonTaskRepository)
-    hackathon_team_repo = provide(HackathonTeamRepository, provides=IHackathonTeamRepository)
+    hackathon_task_repo = provide(
+        HackathonTaskRepository, provides=IHackathonTaskRepository
+    )
+    hackathon_team_repo = provide(
+        HackathonTeamRepository, provides=IHackathonTeamRepository
+    )
     hackathon_registration_repo = provide(
         HackathonRegistrationRepository, provides=IHackathonRegistrationRepository
     )
@@ -78,6 +87,10 @@ class RepositoryProvider(Provider):
         HackathonSubmissionRepository, provides=IHackathonSubmissionRepository
     )
     comment_repo = provide(CommentRepository, provides=ICommentRepository)
-    comment_reaction_repo = provide(CommentReactionRepository, provides=ICommentReactionRepository)
-    import_session_repo = provide(ImportSessionRepository, provides=IImportSessionRepository)
+    comment_reaction_repo = provide(
+        CommentReactionRepository, provides=ICommentReactionRepository
+    )
+    import_session_repo = provide(
+        ImportSessionRepository, provides=IImportSessionRepository
+    )
     homework_repo = provide(HomeworkRepository, provides=IHomeworkRepository)

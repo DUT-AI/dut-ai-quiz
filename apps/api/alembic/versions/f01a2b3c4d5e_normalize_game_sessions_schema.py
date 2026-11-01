@@ -21,7 +21,9 @@ depends_on: str | Sequence[str] | None = None
 
 def upgrade() -> None:
     # 1. Add new normalized columns with nullable / server defaults
-    op.add_column("game_sessions", sa.Column("lesson_slug", sa.String(length=100), nullable=True))
+    op.add_column(
+        "game_sessions", sa.Column("lesson_slug", sa.String(length=100), nullable=True)
+    )
     op.add_column(
         "game_sessions",
         sa.Column("final_score", sa.Float(), nullable=False, server_default="0.0"),
@@ -32,7 +34,9 @@ def upgrade() -> None:
     )
     op.add_column(
         "game_sessions",
-        sa.Column("total_time_response", sa.Float(), nullable=False, server_default="0.0"),
+        sa.Column(
+            "total_time_response", sa.Float(), nullable=False, server_default="0.0"
+        ),
     )
     op.add_column(
         "game_sessions",

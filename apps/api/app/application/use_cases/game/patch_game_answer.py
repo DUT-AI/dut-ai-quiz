@@ -18,7 +18,9 @@ from app.domain.interfaces import (
 from app.domain.value_objects import GameSessionStatus
 from app.domain.value_objects.gamification import GamificationItem
 from app.infrastructure.cache.game_leaderboard_cache import GameLeaderboardCache
-from app.infrastructure.services.manage_webhook import dispatch_manage_submission_webhook
+from app.infrastructure.services.manage_webhook import (
+    dispatch_manage_submission_webhook,
+)
 from app.presentation.schemas.game import (
     GamificationAnswerPatchIn,
     GamificationAnswerResultOut,
@@ -58,21 +60,29 @@ class PatchGameAnswerUseCase:
         state = session.gamification
 
         # Check if this question was already answered (Idempotency / duplicate check)
-        prev_answer = await self._answer_repo.get_by_turn(session_id, payload.question_id)
+        prev_answer = await self._answer_repo.get_by_turn(
+            session_id, payload.question_id
+        )
         if prev_answer:
             if str(prev_answer.option_id) == str(payload.option_id):
                 next_q_out = None
                 next_meta = session.current_question_meta
                 if next_meta and not session.is_game_over:
-                    next_q_out = await self._hydration.hydrate_question_snapshot(next_meta)
+                    next_q_out = await self._hydration.hydrate_question_snapshot(
+                        next_meta
+                    )
 
                 return GamificationAnswerResultOut(
                     is_correct=prev_answer.is_correct,
                     points_gained=0,
                     coins_gained=0,
-                    updated_gamification=GamificationStateOut.model_validate(state.to_dict()),
+                    updated_gamification=GamificationStateOut.model_validate(
+                        state.to_dict()
+                    ),
                     is_game_over=session.is_game_over,
-                    correct_option_id=str(payload.option_id) if prev_answer.is_correct else None,
+                    correct_option_id=str(payload.option_id)
+                    if prev_answer.is_correct
+                    else None,
                     next_question=next_q_out,
                 )
             raise DomainValidationException("Question already answered")
@@ -82,7 +92,9 @@ class PatchGameAnswerUseCase:
             raise DomainValidationException("All questions already answered")
 
         if str(current_q.id) != str(payload.question_id):
-            raise DomainValidationException("Question ID does not match current question index")
+            raise DomainValidationException(
+                "Question ID does not match current question index"
+            )
 
         # Verify answer correctness from DB
         q_db = await self._question_repo.get(payload.question_id)
@@ -106,11 +118,17 @@ class PatchGameAnswerUseCase:
         # Calculate item costs
         cost = 0
         if payload.activate_double_points:
-            cost += state.get_item_price(GamificationItem.DOUBLE_POINTS, is_boss=current_q.is_boss)
+            cost += state.get_item_price(
+                GamificationItem.DOUBLE_POINTS, is_boss=current_q.is_boss
+            )
         if payload.activate_shield:
             if not state.can_use_shield_in_tier(current_q.tier):
-                raise DomainValidationException(f"Shield already used in Tier {current_q.tier}")
-            cost += state.get_item_price(GamificationItem.SHIELD, is_boss=current_q.is_boss)
+                raise DomainValidationException(
+                    f"Shield already used in Tier {current_q.tier}"
+                )
+            cost += state.get_item_price(
+                GamificationItem.SHIELD, is_boss=current_q.is_boss
+            )
 
         if not state.has_enough_gold(cost):
             raise InsufficientResourceException("Not enough gold to activate items")
@@ -165,7 +183,9 @@ class PatchGameAnswerUseCase:
             session.completed_at = now_ict()
 
             lesson_slug = session.lesson_slug or "unknown"
-            count_completed = await self._ps_repo.count_completed_by_lesson(user_id, lesson_slug)
+            count_completed = await self._ps_repo.count_completed_by_lesson(
+                user_id, lesson_slug
+            )
             state.finalize_score(count_completed)
 
             if self._cache:

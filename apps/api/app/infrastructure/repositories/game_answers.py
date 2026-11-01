@@ -21,7 +21,9 @@ class GameSessionAnswerRepository(IGameSessionAnswerRepository):
             await self._s.flush()
         except IntegrityError:
             await self._s.rollback()
-            raise DomainValidationException("Question already answered", status_code=409) from None
+            raise DomainValidationException(
+                "Question already answered", status_code=409
+            ) from None
         await self._s.refresh(model)
         return model.to_entity()
 

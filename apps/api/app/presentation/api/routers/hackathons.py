@@ -25,7 +25,9 @@ router = APIRouter(prefix="/hackathons", tags=["hackathons"])
 
 @router.get("", response_model=list[HackathonOut])
 @inject
-async def list_hackathons_route(user: CurrentUser, use_case: FromDishka[ListHackathonsUseCase]):
+async def list_hackathons_route(
+    user: CurrentUser, use_case: FromDishka[ListHackathonsUseCase]
+):
     return await use_case.execute(user.id, quiz_role_from_manage(user.roles))
 
 
@@ -52,7 +54,9 @@ async def get_hackathon_route(
     hackathon_id: UUID,
     use_case: FromDishka[GetHackathonUseCase],
 ):
-    res = await use_case.execute(hackathon_id, user.id, quiz_role_from_manage(user.roles))
+    res = await use_case.execute(
+        hackathon_id, user.id, quiz_role_from_manage(user.roles)
+    )
     if not res:
         raise HTTPException(status_code=404, detail="Hackathon not found")
     return res
