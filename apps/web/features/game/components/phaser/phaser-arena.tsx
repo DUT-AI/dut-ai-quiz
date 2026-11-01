@@ -58,7 +58,7 @@ export default function PhaserArena({
         type: Phaser.AUTO,
         parent: containerRef.current,
         width: 800,
-        height: 420,
+        height: 450,
         transparent: true,
         scale: {
           mode: Phaser.Scale.FIT,
@@ -109,7 +109,7 @@ export default function PhaserArena({
       {/* Phaser Canvas Mount Point */}
       <div
         ref={containerRef}
-        className="w-full aspect-[16/9] max-h-[440px] flex items-center justify-center pointer-events-auto"
+        className="w-full aspect-[16/9] flex items-center justify-center pointer-events-auto overflow-hidden"
       />
 
       {/* ❤️ V1-STYLE HEART HUD OVERLAY (Player & Boss Hearts) */}

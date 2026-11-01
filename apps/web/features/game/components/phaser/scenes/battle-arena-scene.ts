@@ -79,14 +79,7 @@ export class BattleArenaScene extends Phaser.Scene {
     const height = this.cameras.main.height;
     const groundY = height - 85;
 
-    // 2. Subtle Ground Shadow & Battle Arena Boundary
-    const platform = this.add.graphics();
-    platform.fillStyle(0x020617, 0.45);
-    platform.lineStyle(1.5, 0x6366f1, 0.35);
-    platform.fillRoundedRect(30, groundY + 12, width - 60, 24, 12);
-    platform.strokeRoundedRect(30, groundY + 12, width - 60, 24, 12);
-
-    // 3. Spawn Player (Shield Knight)
+    // 2. Spawn Player (Shield Knight)
     const playerX = Math.min(180, width * 0.25);
     this.player = new CharacterEntity({
       scene: this,
