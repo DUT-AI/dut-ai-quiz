@@ -115,12 +115,12 @@ Requirements include:
 User added `apps/web/public/assets/gegx-rpg-music-free-v1.0/`, which contains structured RPG music with `loops.json`:
 - Themes: `title_theme`, `adventure_begins`, `forest`, `cave`, `snowy_peaks`, `misty_lake`, `foggy_moor`, `abandoned_hall`, `chapel_vigil`.
 - Jingles: `jingles/victory`.
-- Audio formats provided: `.ogg` (highly compressed, optimal for web browsers) and `.wav` (fallback).
+- Audio formats provided: `.ogg` (highly compressed, optimal for web browsers).
 - Each track has `intro`, `loop`, and `outro` audio clips, with exact sample-level loop metadata in `loops.json`.
 
 ### Decision
 Implement an `AudioSystem` inside Phaser:
-1. **Format Preference**: Prioritize `.ogg` files for fast loading and reduced bandwidth consumption, falling back to `.wav` if needed.
+1. **Format Preference**: Exclusively use `.ogg` files for fast loading and reduced bandwidth/storage consumption without heavy `.wav` fallbacks.
 2. **Autoplay Compliance**: Listen for Phaser's `sound.on('unlocked')` event or first user touch/click. Never trigger un-muted audio before user interaction to adhere to strict browser autoplay policies.
 3. **Stage Theme Mapping**:
    - Stage 1 (Slime / Beginner): `adventure_begins` or `forest`

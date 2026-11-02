@@ -3,3 +3,8 @@ node_modules/
 out/
 build/
 .env*.local
+
+public/assets/soundtrack/
+public/assets/sound-effect/
+public/assets/character/
+public/assets/background/

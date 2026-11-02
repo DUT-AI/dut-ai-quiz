@@ -204,6 +204,8 @@ services:
             args:
                 - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://quiz.dutai.site}
                 - NEXT_PUBLIC_MANAGE_LOGIN_URL=${NEXT_PUBLIC_MANAGE_LOGIN_URL:-https://manage.dutai.io.vn/dashboard}
+        volumes:
+            - ./apps/web/public:/app/public:ro
         container_name: dut-ai-quiz-web
         restart: unless-stopped
         env_file:

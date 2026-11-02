@@ -31,54 +31,51 @@ export class AudioSystem {
     const bgmBase = "/assets/soundtrack/gegx-rpg-music-free-v1.0/music";
 
     // Round 1: Adventure / Forest
-    this.scene.load.audio("bgm_round_1", [
-      `${bgmBase}/adventure_begins/adventure_begins_loop.ogg`,
-      `${bgmBase}/adventure_begins/adventure_begins_loop.wav`,
-    ]);
+    this.scene.load.audio(
+      "bgm_round_1",
+      `${bgmBase}/adventure_begins/adventure_begins_loop.ogg`
+    );
 
     // Round 2: Cave / Mystery
-    this.scene.load.audio("bgm_round_2", [
-      `${bgmBase}/cave/cave_loop.ogg`,
-      `${bgmBase}/cave/cave_loop.wav`,
-    ]);
+    this.scene.load.audio(
+      "bgm_round_2",
+      `${bgmBase}/cave/cave_loop.ogg`
+    );
 
     // Round 3: Abandoned Hall / Boss
-    this.scene.load.audio("bgm_round_3", [
-      `${bgmBase}/abandoned_hall/abandoned_hall_loop.ogg`,
-      `${bgmBase}/abandoned_hall/abandoned_hall_loop.wav`,
-    ]);
+    this.scene.load.audio(
+      "bgm_round_3",
+      `${bgmBase}/abandoned_hall/abandoned_hall_loop.ogg`
+    );
 
     // Victory Fanfare
-    this.scene.load.audio("jingle_victory", [
-      `${bgmBase}/jingles/victory.ogg`,
-      `${bgmBase}/jingles/victory.wav`,
-    ]);
+    this.scene.load.audio(
+      "jingle_victory",
+      `${bgmBase}/jingles/victory.ogg`
+    );
 
     // === Free Fantasy SFX Pack By TomMusic (Replaces all old placeholder SFX) ===
-    const sfxBase = "/assets/sound-effect/Free Fantasy SFX Pack By TomMusic/WAV Files/SFX";
-    const swordImpactHit2 = [
-      "/assets/sound-effect/Free Fantasy SFX Pack By TomMusic/OGG Files/SFX/Attacks/Sword Attacks Hits and Blocks/Sword Impact Hit 2.ogg",
-      "/assets/sound-effect/Free Fantasy SFX Pack By TomMusic/WAV Files/SFX/Attacks/Sword Attacks Hits and Blocks/Sword Impact Hit 2.wav",
-    ];
+    const sfxBase = "/assets/sound-effect/Free Fantasy SFX Pack By TomMusic/OGG Files/SFX";
+    const swordImpactHit2 = `${sfxBase}/Attacks/Sword Attacks Hits and Blocks/Sword Impact Hit 2.ogg`;
 
     // 1. Sword & Physical Attacks
-    this.scene.load.audio("sfx_slash", `${sfxBase}/Attacks/Sword Attacks Hits and Blocks/Sword Attack 1.wav`);
+    this.scene.load.audio("sfx_slash", `${sfxBase}/Attacks/Sword Attacks Hits and Blocks/Sword Attack 1.ogg`);
     this.scene.load.audio("sfx_hit", swordImpactHit2);
-    this.scene.load.audio("sfx_parry", `${sfxBase}/Attacks/Sword Attacks Hits and Blocks/Sword Parry 1.wav`);
-    this.scene.load.audio("sfx_shield", `${sfxBase}/Attacks/Sword Attacks Hits and Blocks/Sword Blocked 1.wav`);
+    this.scene.load.audio("sfx_parry", `${sfxBase}/Attacks/Sword Attacks Hits and Blocks/Sword Parry 1.ogg`);
+    this.scene.load.audio("sfx_shield", `${sfxBase}/Attacks/Sword Attacks Hits and Blocks/Sword Blocked 1.ogg`);
 
     // 2. Boss & Spells Attacks (Both using Sword Impact Hit 2 for impacts when attacked)
-    this.scene.load.audio("sfx_boss_attack", `${sfxBase}/Spells/Rock Meteor Throw 1.wav`);
+    this.scene.load.audio("sfx_boss_attack", `${sfxBase}/Spells/Rock Meteor Throw 1.ogg`);
     this.scene.load.audio("sfx_boss_hit", swordImpactHit2);
-    this.scene.load.audio("sfx_fireball", `${sfxBase}/Spells/Fireball 1.wav`);
-    this.scene.load.audio("sfx_spell_impact", `${sfxBase}/Spells/Spell Impact 2.wav`);
+    this.scene.load.audio("sfx_fireball", `${sfxBase}/Spells/Fireball 1.ogg`);
+    this.scene.load.audio("sfx_spell_impact", `${sfxBase}/Spells/Spell Impact 2.ogg`);
 
     // 3. Items & Buffs SFX
-    this.scene.load.audio("sfx_freeze", `${sfxBase}/Spells/Ice Freeze 1.wav`);
-    this.scene.load.audio("sfx_rock_wall", `${sfxBase}/Spells/Rock Wall 1.wav`);
-    this.scene.load.audio("sfx_chest_open", `${sfxBase}/Doors Gates and Chests/Chest Open 1.wav`);
-    this.scene.load.audio("sfx_buff", `${sfxBase}/Spells/Firebuff 1.wav`);
-    this.scene.load.audio("sfx_microscope", `${sfxBase}/Spells/Spell Impact 1.wav`);
+    this.scene.load.audio("sfx_freeze", `${sfxBase}/Spells/Ice Freeze 1.ogg`);
+    this.scene.load.audio("sfx_rock_wall", `${sfxBase}/Spells/Rock Wall 1.ogg`);
+    this.scene.load.audio("sfx_chest_open", `${sfxBase}/Doors Gates and Chests/Chest Open 1.ogg`);
+    this.scene.load.audio("sfx_buff", `${sfxBase}/Spells/Firebuff 1.ogg`);
+    this.scene.load.audio("sfx_microscope", `${sfxBase}/Spells/Spell Impact 1.ogg`);
   }
 
   create(isInitiallyMuted: boolean = false): void {
