@@ -85,6 +85,8 @@ async def test_start_attempt_resumes_active_attempt():
     result = await use_case.execute(exam_id, user_id, action="start")
     assert result["is_resumed"] is True
     assert result["attempt"].id == active_attempt.id
+    assert "saved_answers" in result
+    att_repo.list_answers.assert_awaited_once_with(active_attempt.id)
 
 
 @pytest.mark.asyncio

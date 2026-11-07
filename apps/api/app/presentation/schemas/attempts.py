@@ -81,6 +81,11 @@ class ShuffledQuestionOut(BaseModel):
         return [str(item) for item in v]
 
 
+class AttemptSavedAnswerItem(BaseModel):
+    question_id: UUID
+    selected_option_id: str | None = None
+
+
 class StartAttemptIn(BaseModel):
     action: str = "start"
 
@@ -91,6 +96,7 @@ class StartAttemptOut(BaseModel):
     tab_out_count: int
     questions: list[ShuffledQuestionOut]
     is_resumed: bool = False
+    saved_answers: list[AttemptSavedAnswerItem] = Field(default_factory=list)
     server_time: datetime | None = None
 
 
@@ -99,11 +105,6 @@ class ActiveAttemptOut(BaseModel):
     expires_at: datetime
     tab_out_count: int
     server_time: datetime
-
-
-class AttemptSavedAnswerItem(BaseModel):
-    question_id: UUID
-    selected_option_id: str | None = None
 
 
 class GetAttemptOut(BaseModel):

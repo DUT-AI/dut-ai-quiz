@@ -72,6 +72,13 @@ async def start_attempt_route(
         tab_out_count=att.tab_out_count,
         questions=result["presentation"],
         is_resumed=result.get("is_resumed", False),
+        saved_answers=[
+            AttemptSavedAnswerItem(
+                question_id=a.question_id,
+                selected_option_id=a.selected_option_id,
+            )
+            for a in result.get("saved_answers", [])
+        ],
         server_time=now_ict(),
     )
 

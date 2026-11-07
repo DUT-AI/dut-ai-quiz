@@ -31,6 +31,9 @@ export const VIOLATION_MESSAGES: Record<string, string> = {
   devtools_detected: "Phát hiện mở công cụ Developer Tools.",
 };
 
+const RELOAD_GRACE_PREFIX = "exam_reload_grace_";
+const RELOAD_GRACE_WINDOW_MS = 10000; // 10 seconds grace period on reload
+
 /**
  * Comprehensive anti-cheat hook for exam environment.
  *
@@ -63,10 +66,48 @@ export function useAntiCheat({
   const hasEnteredRef = useRef(false);
   const stabilizedAtRef = useRef<number | null>(null);
   const mouseLeaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isUnloadingRef = useRef(false);
 
   useEffect(() => { isSubmittingRef.current = isSubmitting; }, [isSubmitting]);
   useEffect(() => { hasEnteredRef.current = hasEnteredFirstTime; }, [hasEnteredFirstTime]);
   useEffect(() => { stabilizedAtRef.current = stabilizedAt; }, [stabilizedAt]);
+
+  // Handle page reload grace period to prevent false-positive anti-cheat penalties
+  useEffect(() => {
+    if (typeof window === "undefined" || !attemptId) return;
+
+    // Check if this mount is immediately following a page reload
+    const key = `${RELOAD_GRACE_PREFIX}${attemptId}`;
+    try {
+      const graceTimestamp = sessionStorage.getItem(key);
+      if (graceTimestamp) {
+        const diff = Date.now() - parseInt(graceTimestamp, 10);
+        if (diff < RELOAD_GRACE_WINDOW_MS) {
+          // Provide 5s cooldown for the reloaded page to re-render without trigger
+          const cooldown = Date.now() + 5000;
+          setStabilizedAt(cooldown);
+          stabilizedAtRef.current = cooldown;
+        }
+        sessionStorage.removeItem(key);
+      }
+    } catch {
+      // ignore sessionStorage access errors
+    }
+
+    const onBeforeUnload = () => {
+      isUnloadingRef.current = true;
+      try {
+        sessionStorage.setItem(key, String(Date.now()));
+      } catch {
+        // ignore
+      }
+    };
+
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", onBeforeUnload);
+    };
+  }, [attemptId]);
 
   const enterFullScreen = useCallback(async () => {
     try {
@@ -95,6 +136,8 @@ export function useAntiCheat({
   // ─── Core violation handler ───
   const handleViolation = useCallback(
     (eventType: string) => {
+      // Suppress if unloading, not ready, or within cooldown
+      if (isUnloadingRef.current) return;
       if (!hasEnteredRef.current || !stabilizedAtRef.current) return;
       if (Date.now() < stabilizedAtRef.current) return;
       if (isViolatingRef.current || isSubmittingRef.current) return;
@@ -132,6 +175,7 @@ export function useAntiCheat({
     if (!isActive) return;
 
     const onFullScreenChange = () => {
+      if (isUnloadingRef.current) return;
       const active = !!document.fullscreenElement;
       setIsFullScreen(active);
       if (active) {
@@ -146,20 +190,24 @@ export function useAntiCheat({
     };
 
     const onVisibilityChange = () => {
+      if (isUnloadingRef.current) return;
       if (document.visibilityState === "hidden" && hasEnteredRef.current) {
         handleViolation("visibility_hidden");
       }
     };
 
     const onBlur = () => {
+      if (isUnloadingRef.current) return;
       if (hasEnteredRef.current) handleViolation("window_blur");
     };
 
     const onMouseLeave = () => {
-      if (!hasEnteredRef.current) return;
+      if (isUnloadingRef.current || !hasEnteredRef.current) return;
       if (mouseLeaveTimerRef.current) clearTimeout(mouseLeaveTimerRef.current);
       mouseLeaveTimerRef.current = setTimeout(() => {
-        handleViolation("mouse_leave");
+        if (!isUnloadingRef.current) {
+          handleViolation("mouse_leave");
+        }
         mouseLeaveTimerRef.current = null;
       }, 2000);
     };
@@ -179,7 +227,7 @@ export function useAntiCheat({
 
     // Heartbeat polling (500ms)
     const heartbeat = setInterval(() => {
-      if (isSubmittingRef.current || !hasEnteredRef.current) return;
+      if (isUnloadingRef.current || isSubmittingRef.current || !hasEnteredRef.current) return;
       if (!document.hasFocus()) handleViolation("poll_loss_focus");
       if (!document.fullscreenElement && hasEnteredRef.current) {
         setIsFullScreen(false);
@@ -202,9 +250,6 @@ export function useAntiCheat({
   }, [isActive, handleViolation]);
 
   // ─── Layer 4: RAF-based timer throttle detection ───
-  // Chrome throttles RAF in hidden tabs. Extensions can fake visibilityState
-  // but CANNOT prevent browser-level RAF throttling.
-  // Normal: ~16ms between frames. Hidden/throttled: RAF paused or > 500ms.
   useEffect(() => {
     if (!isActive) return;
 
@@ -213,12 +258,10 @@ export function useAntiCheat({
     let wasThrottled = false;
 
     const checkFrame = (timestamp: number) => {
+      if (isUnloadingRef.current) return;
       if (lastFrameTime > 0 && hasEnteredRef.current && !isSubmittingRef.current) {
         const delta = timestamp - lastFrameTime;
 
-        // If delta > 500ms, tab was likely hidden (RAF was paused).
-        // Normal visible tab: ~16ms. Background tab: RAF paused entirely.
-        // When tab returns, first frame has a huge delta.
         if (delta > 500 && !wasThrottled) {
           wasThrottled = true;
           handleViolation("timer_throttled");
@@ -235,8 +278,6 @@ export function useAntiCheat({
   }, [isActive, handleViolation]);
 
   // ─── Layer 5: DevTools detection ───
-  // In fullscreen, outerWidth == innerWidth normally.
-  // If DevTools is docked, innerWidth shrinks → diff > threshold.
   useEffect(() => {
     if (!isActive) return;
 
@@ -244,7 +285,7 @@ export function useAntiCheat({
     let devtoolsWasOpen = false;
 
     const check = setInterval(() => {
-      if (!hasEnteredRef.current || isSubmittingRef.current) return;
+      if (isUnloadingRef.current || !hasEnteredRef.current || isSubmittingRef.current) return;
 
       const widthDiff = window.outerWidth - window.innerWidth;
       const heightDiff = window.outerHeight - window.innerHeight;

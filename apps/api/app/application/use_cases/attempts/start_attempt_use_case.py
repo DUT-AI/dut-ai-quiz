@@ -66,10 +66,12 @@ class StartAttemptUseCase:
                         questions, active_att.shuffle_seed or 0
                     )
                     presentation = res.presentation
+                saved_answers = await self._att_repo.list_answers(active_att.id)
                 return {
                     "attempt": active_att,
                     "presentation": presentation,
                     "is_resumed": True,
+                    "saved_answers": saved_answers,
                 }
 
         # Check max attempts limit for creating new attempt

@@ -4203,6 +4203,8 @@ export interface components {
              * @default false
              */
             is_resumed: boolean;
+            /** Saved Answers */
+            saved_answers?: components["schemas"]["AttemptSavedAnswerItem"][];
             /** Server Time */
             server_time?: string | null;
         };

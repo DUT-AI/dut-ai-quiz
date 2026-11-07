@@ -33,7 +33,19 @@ export default function TestEnvironmentPage() {
   const { data, isLoading: loadingAttempt, error } = useAttempt(attemptId);
 
   // Local navigation state
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(() => {
+    if (typeof window === "undefined" || !attemptId) return 0;
+    try {
+      const saved = localStorage.getItem(`exam_idx_${attemptId}`);
+      if (saved !== null) {
+        const parsed = parseInt(saved, 10);
+        return isNaN(parsed) ? 0 : parsed;
+      }
+    } catch {
+      // ignore
+    }
+    return 0;
+  });
   const [showNavigator, setShowNavigator] = useState(false);
   const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
   const [notification, setNotification] = useState<{
@@ -41,6 +53,17 @@ export default function TestEnvironmentPage() {
     message: string;
     type: "info" | "error" | "warning";
   } | null>(null);
+
+  const handleIndexChange = useCallback((newIndex: number) => {
+    setCurrentIndex(newIndex);
+    if (typeof window !== "undefined" && attemptId) {
+      try {
+        localStorage.setItem(`exam_idx_${attemptId}`, String(newIndex));
+      } catch {
+        // ignore
+      }
+    }
+  }, [attemptId]);
 
   // Exam session hook (answers, debounced auto-save, submit)
   const session = useExamSession({
@@ -84,6 +107,15 @@ export default function TestEnvironmentPage() {
       router.push(`/history/${attemptId}/review`);
     }
   }, [data, attemptId, router]);
+
+  const questions = (data?.questions || []) as any[];
+
+  // Clamp index if stored index is out of bounds
+  useEffect(() => {
+    if (questions.length > 0 && currentIndex >= questions.length) {
+      handleIndexChange(0);
+    }
+  }, [questions.length, currentIndex, handleIndexChange]);
 
   const handleManualSubmit = useCallback(async () => {
     setShowConfirmSubmit(false);
@@ -141,7 +173,6 @@ export default function TestEnvironmentPage() {
     );
   }
 
-  const questions = (data?.questions || []) as any[];
   const currentQuestion = questions[currentIndex];
   const currentQuestionId = currentQuestion?.question_id || currentQuestion?.id;
 
@@ -164,7 +195,7 @@ export default function TestEnvironmentPage() {
           answers={session.answers}
           isOpen={showNavigator}
           onClose={() => setShowNavigator(false)}
-          onSelectIndex={setCurrentIndex}
+          onSelectIndex={handleIndexChange}
         />
 
         {/* Right Side: Question Display */}
@@ -194,7 +225,7 @@ export default function TestEnvironmentPage() {
             <div className="flex items-center gap-4">
               <button 
                 disabled={currentIndex === 0}
-                onClick={() => setCurrentIndex((prev) => prev - 1)}
+                onClick={() => handleIndexChange(currentIndex - 1)}
                 className="flex items-center gap-2 px-6 py-4 rounded-2xl font-bold text-gray-navy hover:bg-gray-50 dark:hover:bg-white/5 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <ChevronLeft className="size-5" />
@@ -207,7 +238,7 @@ export default function TestEnvironmentPage() {
 
               <button 
                 disabled={currentIndex === questions.length - 1}
-                onClick={() => setCurrentIndex((prev) => prev + 1)}
+                onClick={() => handleIndexChange(currentIndex + 1)}
                 className="flex items-center gap-2 px-8 py-4 rounded-2xl bg-dark-blue dark:bg-white/10 text-white font-bold hover:scale-[1.02] transition-all disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 TIẾP THEO
