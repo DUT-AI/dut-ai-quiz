@@ -38,6 +38,21 @@ class QuestionRepository(IQuestionRepository):
         entity.tags = [tag_map[tid] for tid in model.tags if tid in tag_map]
         return entity
 
+    async def get_by_ids(self, question_ids: list[UUID]) -> list[QuestionEntity]:
+        if not question_ids:
+            return []
+        r = await self._s.execute(select(Question).where(Question.id.in_(question_ids)))
+        models = list(r.scalars().all())
+        if not models:
+            return []
+        tag_map = await self._resolve_tag_names([m.tags for m in models])
+        entities = []
+        for m in models:
+            ent = m.to_entity()
+            ent.tags = [tag_map[tid] for tid in m.tags if tid in tag_map]
+            entities.append(ent)
+        return entities
+
     async def list_all(
         self,
         *,

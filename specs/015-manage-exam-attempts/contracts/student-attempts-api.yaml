@@ -1,0 +1,214 @@
+openapi: 3.1.0
+info:
+  title: Teacher Student Exam Attempts API
+  version: 1.0.0
+paths:
+  /api/v1/exams/{exam_id}/students/{student_id}/attempts:
+    get:
+      summary: Get all attempts and answer details for a specific student
+      description: Accessible only by educators and admins. Returns full attempt history, answers, and focus events.
+      parameters:
+        - name: exam_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: student_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful retrieval
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentExamAttemptsResponse'
+        '403':
+          description: Forbidden - User is not an educator or admin
+        '404':
+          description: Exam or student not found
+
+  /api/v1/exams/{exam_id}/attempts/{attempt_id}:
+    delete:
+      summary: Delete an attempt and cascade delete its answers and events
+      description: Accessible only by educators and admins. Hard deletes the attempt so the student can retake the exam.
+      parameters:
+        - name: exam_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: attempt_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Attempt deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteAttemptResponse'
+        '403':
+          description: Forbidden
+        '404':
+          description: Attempt not found
+
+components:
+  schemas:
+    StudentExamAttemptsResponse:
+      type: object
+      required:
+        - student_id
+        - exam_id
+        - attempts
+        - total_attempts
+        - best_score
+        - max_tab_out
+      properties:
+        student_id:
+          type: integer
+        exam_id:
+          type: string
+          format: uuid
+        attempts:
+          type: array
+          items:
+            $ref: '#/components/schemas/StudentAttemptDetailOut'
+        total_attempts:
+          type: integer
+        best_score:
+          type: number
+          nullable: true
+        max_tab_out:
+          type: integer
+
+    StudentAttemptDetailOut:
+      type: object
+      required:
+        - id
+        - exam_id
+        - user_id
+        - status
+        - score
+        - tab_out_count
+        - started_at
+        - completed_at
+        - expires_at
+        - questions
+        - focus_events
+      properties:
+        id:
+          type: string
+          format: uuid
+        exam_id:
+          type: string
+          format: uuid
+        user_id:
+          type: integer
+        status:
+          type: string
+          enum: [IN_PROGRESS, COMPLETED, ABANDONED]
+        score:
+          type: number
+          nullable: true
+        tab_out_count:
+          type: integer
+        started_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        expires_at:
+          type: string
+          format: date-time
+        questions:
+          type: array
+          items:
+            $ref: '#/components/schemas/StudentAttemptQuestionDetail'
+        focus_events:
+          type: array
+          items:
+            $ref: '#/components/schemas/StudentAttemptFocusEventOut'
+
+    StudentAttemptQuestionDetail:
+      type: object
+      required:
+        - id
+        - content
+        - options
+        - selected_option_id
+        - correct_option_id
+        - is_correct
+      properties:
+        id:
+          type: string
+          format: uuid
+        content:
+          type: string
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/QuestionOptionOut'
+        selected_option_id:
+          type: string
+          nullable: true
+        correct_option_id:
+          type: string
+          nullable: true
+        is_correct:
+          type: boolean
+          nullable: true
+
+    QuestionOptionOut:
+      type: object
+      required:
+        - id
+        - content
+        - is_correct
+      properties:
+        id:
+          type: string
+        content:
+          type: string
+        is_correct:
+          type: boolean
+
+    StudentAttemptFocusEventOut:
+      type: object
+      required:
+        - id
+        - event
+        - received_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        event:
+          type: string
+        received_at:
+          type: string
+          format: date-time
+
+    DeleteAttemptResponse:
+      type: object
+      required:
+        - success
+        - message
+        - deleted_attempt_id
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        deleted_attempt_id:
+          type: string
+          format: uuid

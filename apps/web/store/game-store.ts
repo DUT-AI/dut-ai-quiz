@@ -43,9 +43,10 @@ export const useGameStore = create<GameState>((set, get) => ({
         lesson_slug: lessonSlug,
       });
       const questions: QuizQuestion[] = res.snapshot.presentation.map((p) => ({
+        id: p.question_id,
         question_id: p.question_id,
         content: p.content,
-        options: p.options,
+        options: p.options.map((o) => ({ id: o.id, text: o.text, fixed: (o as any).fixed ?? false })),
         userSelectedOptionId: undefined,
       }));
       set({

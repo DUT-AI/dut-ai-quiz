@@ -19,6 +19,8 @@ class AttemptEntity:
     tab_out_count: int
     shuffle_seed: int | None
     shuffle_snapshot: ShuffledSnapshot | None
+    correct_count: int | None = None
+    total_questions: int | None = None
 
     def score_attempt(
         self,
@@ -26,7 +28,10 @@ class AttemptEntity:
         answers_by_question_id: dict[UUID, str | None],
     ) -> float:
         n = len(questions)
+        self.total_questions = n
         if n == 0:
+            self.correct_count = 0
+            self.score = 0.0
             return 0.0
         per = 10.0 / n
         correct = 0
@@ -38,8 +43,10 @@ class AttemptEntity:
                 if opt.id == sel and opt.is_correct:
                     correct += 1
                     break
-        total = correct * per
-        return round(min(total, 10.0), 2)
+        self.correct_count = correct
+        total = round(min(correct * per, 10.0), 2)
+        self.score = total
+        return total
 
 
 @dataclasses.dataclass

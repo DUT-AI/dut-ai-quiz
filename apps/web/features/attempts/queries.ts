@@ -1,51 +1,54 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiGet, apiPost, apiPatch } from "@/lib/api";
-import { z } from "zod";
-import {
-  AttemptOutSchema,
-  AttemptHistoryItemSchema,
-  AttemptReviewResponseSchema,
-  QuizQuestionSchema,
-  StartAttemptResponseSchema,
-  type AttemptOut,
-  type AttemptHistoryItem,
-  type AttemptReviewResponse,
-  type QuizQuestion,
-  type StartAttemptResponse,
+import type {
+  ActiveAttempt,
+  AttemptHistoryItem,
+  AttemptOut,
+  AttemptReviewResponse,
+  GetAttemptResponse,
+  StartAttemptResponse,
 } from "./types";
+
+export function useActiveAttempt(examId: string | null) {
+  return useQuery<ActiveAttempt | null>({
+    queryKey: ["active-attempt", examId],
+    queryFn: () =>
+      apiGet<ActiveAttempt | null>(
+        `/api/v1/exams/${examId!}/my-active-attempt`
+      ),
+    enabled: !!examId,
+    staleTime: 5000,
+  });
+}
 
 export function useStartAttempt() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (examId: string) =>
-      apiPost<StartAttemptResponse>(`/api/v1/exams/${examId}/attempts`, {}, StartAttemptResponseSchema),
+    mutationFn: ({
+      examId,
+      action = "start",
+    }: {
+      examId: string;
+      action?: "start" | "restart";
+    }) =>
+      apiPost<StartAttemptResponse>(
+        `/api/v1/exams/${examId}/attempts`,
+        { action }
+      ),
     onSuccess: (data) => {
       void qc.invalidateQueries({ queryKey: ["attempt", data.attempt_id] });
       void qc.invalidateQueries({ queryKey: ["my-attempts"] });
+      void qc.invalidateQueries({ queryKey: ["active-attempt"] });
     },
   });
 }
 
 export function useAttempt(attemptId: string | null) {
-  const AttemptResponseSchema = z.object({
-    attempt: AttemptOutSchema,
-    questions: z.array(QuizQuestionSchema),
-    saved_answers: z.array(
-      z.object({
-        question_id: z.string(),
-        selected_option_id: z.string().nullable(),
-      })
-    ),
-  });
-
-  type AttemptResponse = z.infer<typeof AttemptResponseSchema>;
-
-  return useQuery({
+  return useQuery<GetAttemptResponse>({
     queryKey: ["attempt", attemptId],
     queryFn: () =>
-      apiGet<AttemptResponse>(
-        `/api/v1/attempts/${attemptId!}`,
-        AttemptResponseSchema
+      apiGet<GetAttemptResponse>(
+        `/api/v1/attempts/${attemptId!}`
       ),
     enabled: !!attemptId,
     staleTime: 0, // Always fresh during exam
@@ -63,8 +66,7 @@ export function usePatchAnswers() {
     }) =>
       apiPatch<{ ok: boolean }>(
         `/api/v1/attempts/${attemptId}/answers`,
-        { answers },
-        z.object({ ok: z.boolean() })
+        { answers }
       ),
   });
 }
@@ -73,7 +75,7 @@ export function useSubmitAttempt() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (attemptId: string) =>
-      apiPost<AttemptOut>(`/api/v1/attempts/${attemptId}/submit`, {}, AttemptOutSchema),
+      apiPost<AttemptOut>(`/api/v1/attempts/${attemptId}/submit`, {}),
     onSuccess: (data) => {
       void qc.invalidateQueries({ queryKey: ["attempt", data.id] });
       void qc.invalidateQueries({ queryKey: ["my-attempts"] });
@@ -99,34 +101,30 @@ export function useRecordFocusEvent() {
           event,
           client_event_id: clientEventId,
           client_ts: new Date().toISOString(),
-        },
-        z.object({
-          tab_out_count: z.number(),
-          action: z.string(),
-          attempt: z.any().optional(),
-        })
+        }
       ),
   });
 }
 
 export function useMyAttempts() {
-  return useQuery({
+  return useQuery<AttemptHistoryItem[]>({
     queryKey: ["my-attempts"],
-    queryFn: () => apiGet<AttemptHistoryItem[]>("/api/v1/me/attempts", z.array(AttemptHistoryItemSchema)),
+    queryFn: () => apiGet<AttemptHistoryItem[]>("/api/v1/me/attempts"),
     staleTime: 30_000,
   });
 }
 
 export function useAttemptReview(attemptId: string | null) {
-  return useQuery({
+  return useQuery<AttemptReviewResponse>({
     queryKey: ["attempt-review", attemptId],
-    queryFn: () => apiGet<AttemptReviewResponse>(`/api/v1/attempts/${attemptId!}/review`, AttemptReviewResponseSchema),
+    queryFn: () =>
+      apiGet<AttemptReviewResponse>(`/api/v1/attempts/${attemptId!}/review`),
     enabled: !!attemptId,
   });
 }
 
 export function useGameHistory() {
-  return useQuery({
+  return useQuery<unknown[]>({
     queryKey: ["game-history"],
     queryFn: () => apiGet<unknown[]>("/api/v1/game/history"),
     staleTime: 30_000,

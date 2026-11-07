@@ -36,11 +36,11 @@ class ExamEntity:
 
     def can_access(self, user_id: int | None) -> bool:
         """Kiểm tra quyền truy cập bài thi: Creator hoặc PUBLIC hoặc nằm trong danh sách RESTRICTED."""
-        if (
-            user_id is None
-            or user_id == self.created_by
-            or self.access_scope == ExamAccessScope.PUBLIC
-        ):
+        if self.access_scope == ExamAccessScope.PUBLIC:
+            return True
+        if user_id is None:
+            return False
+        if user_id == self.created_by:
             return True
         return bool(self.participant_ids and user_id in self.participant_ids)
 

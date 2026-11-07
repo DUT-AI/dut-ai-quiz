@@ -15,6 +15,12 @@ class IAttemptRepository(Protocol):
         """Count completed attempts for a user on a specific exam."""
         ...
 
+    async def get_active_for_user_exam(
+        self, user_id: int, exam_id: UUID
+    ) -> AttemptEntity | None:
+        """Find an active (IN_PROGRESS) attempt for user and exam."""
+        ...
+
     async def get(self, attempt_id: UUID) -> AttemptEntity | None:
         """Get a single attempt entity by its UUID."""
         ...
@@ -65,6 +71,16 @@ class IAttemptRepository(Protocol):
         self, exam_id: UUID
     ) -> list[AttemptAnswerEntity]:
         """List all answers from completed attempts of an exam."""
+        ...
+
+    async def list_for_user_and_exam(
+        self, exam_id: UUID, user_id: int
+    ) -> list[AttemptEntity]:
+        """List all attempts for a specific user and exam ordered by start time descending."""
+        ...
+
+    async def delete_attempt(self, attempt_id: UUID) -> bool:
+        """Cascade delete an attempt along with its answers and focus events."""
         ...
 
 

@@ -1,4 +1,5 @@
 from .attempt_use_case import (
+    GetActiveAttemptUseCase,
     GetAttemptDetailUseCase,
     GetAttemptUseCase,
     ListExamAttemptsUseCase,
@@ -11,6 +12,7 @@ from .start_attempt_use_case import StartAttemptUseCase
 from .submit_attempt_use_case import SubmitAttemptUseCase
 
 __all__ = [
+    "GetActiveAttemptUseCase",
     "StartAttemptUseCase",
     "SubmitAttemptUseCase",
     "GetAttemptUseCase",

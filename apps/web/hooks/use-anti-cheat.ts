@@ -62,6 +62,7 @@ export function useAntiCheat({
   const isSubmittingRef = useRef(isSubmitting);
   const hasEnteredRef = useRef(false);
   const stabilizedAtRef = useRef<number | null>(null);
+  const mouseLeaveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => { isSubmittingRef.current = isSubmitting; }, [isSubmitting]);
   useEffect(() => { hasEnteredRef.current = hasEnteredFirstTime; }, [hasEnteredFirstTime]);
@@ -73,24 +74,29 @@ export function useAntiCheat({
       if (el.requestFullscreen) {
         await el.requestFullscreen();
         setHasEnteredFirstTime(true);
-        setStabilizedAt(Date.now());
+        const cooldown = Date.now() + 3000;
+        setStabilizedAt(cooldown);
+        stabilizedAtRef.current = cooldown;
       }
     } catch (err) {
       console.error("Fullscreen failed:", err);
     }
   }, []);
 
-  const dismissViolation = useCallback(() => {
+  const dismissViolation = useCallback(async () => {
     setShowViolationModal(false);
+    const cooldown = Date.now() + 3000;
+    setStabilizedAt(cooldown);
+    stabilizedAtRef.current = cooldown;
+    await enterFullScreen();
     isViolatingRef.current = false;
-    enterFullScreen();
   }, [enterFullScreen]);
 
   // ─── Core violation handler ───
   const handleViolation = useCallback(
     (eventType: string) => {
       if (!hasEnteredRef.current || !stabilizedAtRef.current) return;
-      if (Date.now() - stabilizedAtRef.current < 3000) return;
+      if (Date.now() < stabilizedAtRef.current) return;
       if (isViolatingRef.current || isSubmittingRef.current) return;
 
       isViolatingRef.current = true;
@@ -130,7 +136,9 @@ export function useAntiCheat({
       setIsFullScreen(active);
       if (active) {
         setHasEnteredFirstTime(true);
-        setStabilizedAt(Date.now());
+        const cooldown = Date.now() + 3000;
+        setStabilizedAt(cooldown);
+        stabilizedAtRef.current = cooldown;
       }
       if (!active && !isSubmittingRef.current && hasEnteredRef.current) {
         handleViolation("exit_fullscreen");
@@ -148,13 +156,26 @@ export function useAntiCheat({
     };
 
     const onMouseLeave = () => {
-      if (hasEnteredRef.current) handleViolation("mouse_leave");
+      if (!hasEnteredRef.current) return;
+      if (mouseLeaveTimerRef.current) clearTimeout(mouseLeaveTimerRef.current);
+      mouseLeaveTimerRef.current = setTimeout(() => {
+        handleViolation("mouse_leave");
+        mouseLeaveTimerRef.current = null;
+      }, 2000);
+    };
+
+    const onMouseEnter = () => {
+      if (mouseLeaveTimerRef.current) {
+        clearTimeout(mouseLeaveTimerRef.current);
+        mouseLeaveTimerRef.current = null;
+      }
     };
 
     document.addEventListener("fullscreenchange", onFullScreenChange);
     document.addEventListener("visibilitychange", onVisibilityChange);
     window.addEventListener("blur", onBlur);
     document.addEventListener("mouseleave", onMouseLeave);
+    document.addEventListener("mouseenter", onMouseEnter);
 
     // Heartbeat polling (500ms)
     const heartbeat = setInterval(() => {
@@ -171,6 +192,11 @@ export function useAntiCheat({
       document.removeEventListener("visibilitychange", onVisibilityChange);
       window.removeEventListener("blur", onBlur);
       document.removeEventListener("mouseleave", onMouseLeave);
+      document.removeEventListener("mouseenter", onMouseEnter);
+      if (mouseLeaveTimerRef.current) {
+        clearTimeout(mouseLeaveTimerRef.current);
+        mouseLeaveTimerRef.current = null;
+      }
       clearInterval(heartbeat);
     };
   }, [isActive, handleViolation]);
@@ -240,31 +266,40 @@ export function useAntiCheat({
     if (!isActive) return;
 
     const onKeyDown = (e: KeyboardEvent) => {
+      const isCmdOrCtrl = e.ctrlKey || e.metaKey;
+      const keyUpper = e.key.toUpperCase();
+
       // F12
       if (e.key === "F12") {
         e.preventDefault();
         e.stopPropagation();
         return;
       }
-      // Ctrl+Shift+I/J/C (DevTools)
-      if (e.ctrlKey && e.shiftKey && ["I", "J", "C"].includes(e.key.toUpperCase())) {
+      // Mac Option+Cmd+I / Option+Cmd+J / Option+Cmd+C (DevTools)
+      if (e.altKey && e.metaKey && ["I", "J", "C"].includes(keyUpper)) {
         e.preventDefault();
         e.stopPropagation();
         return;
       }
-      // Ctrl+U (view source)
-      if (e.ctrlKey && e.key.toUpperCase() === "U") {
+      // Ctrl+Shift+I/J/C or Cmd+Shift+I/J/C (DevTools)
+      if (isCmdOrCtrl && e.shiftKey && ["I", "J", "C"].includes(keyUpper)) {
         e.preventDefault();
         e.stopPropagation();
         return;
       }
-      // Ctrl+S (save page)
-      if (e.ctrlKey && e.key.toUpperCase() === "S") {
+      // Ctrl+U or Cmd+U (view source / Option+Cmd+U)
+      if ((isCmdOrCtrl && keyUpper === "U") || (e.altKey && e.metaKey && keyUpper === "U")) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+      // Ctrl+S or Cmd+S (save page)
+      if (isCmdOrCtrl && keyUpper === "S") {
         e.preventDefault();
         return;
       }
-      // Ctrl+P (print)
-      if (e.ctrlKey && e.key.toUpperCase() === "P") {
+      // Ctrl+P or Cmd+P (print)
+      if (isCmdOrCtrl && keyUpper === "P") {
         e.preventDefault();
         return;
       }

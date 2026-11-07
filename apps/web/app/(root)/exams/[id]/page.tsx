@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useExam, useStartAttempt } from "@/lib/queries";
+import { useExam, useStartAttempt, useActiveAttempt } from "@/lib/queries";
 import { 
   ShieldCheck, 
   Clock, 
@@ -12,7 +12,8 @@ import {
   FileText,
   UserCheck,
   AlertTriangle,
-  Calendar
+  Calendar,
+  RotateCcw
 } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -26,13 +27,14 @@ export default function ExamEntrancePage() {
   const examId = params.id as string;
 
   const { data: exam, isLoading: loadingExam } = useExam(examId);
+  const { data: activeAttempt, isLoading: loadingActive } = useActiveAttempt(examId);
   const startAttempt = useStartAttempt();
   const [isStarting, setIsStarting] = useState(false);
 
-  const handleStart = async () => {
+  const handleStart = async (action: "start" | "restart" = "start") => {
     setIsStarting(true);
     try {
-      const res = await startAttempt.mutateAsync(examId);
+      const res = await startAttempt.mutateAsync({ examId, action });
       router.push(`/exams/${examId}/attempt/${res.attempt_id}`);
     } catch (err: any) {
       alert(err.message || "Không thể bắt đầu kỳ thi. Vui lòng thử lại.");
@@ -141,23 +143,79 @@ export default function ExamEntrancePage() {
           </div>
 
           <div className="pt-6 border-t border-gray-100 dark:border-white/5 flex flex-col items-center gap-6">
-            <button
-              onClick={handleStart}
-              disabled={isStarting}
-              className="group relative w-full md:w-auto min-w-[300px] h-20 bg-primary text-white rounded-[2rem] font-black text-xl shadow-2xl shadow-primary/30 hover:scale-[1.02] active:scale-95 transition-all overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
-              <div className="relative flex items-center justify-center gap-4">
-                {isStarting ? (
-                   <div className="size-6 border-4 border-white border-t-transparent animate-spin rounded-full" />
-                ) : (
-                  <>
-                    BẮT ĐẦU THI NGAY
-                    <Play className="size-6 fill-current" />
-                  </>
-                )}
+            {activeAttempt ? (
+              <div className="w-full p-6 rounded-3xl bg-amber-500/10 border border-amber-500/20 text-center space-y-4">
+                <div className="flex items-center justify-center gap-2 text-amber-500 font-black text-sm uppercase tracking-wider">
+                  <AlertTriangle className="size-5" />
+                  Bạn đang có bài thi chưa hoàn thành
+                </div>
+                <p className="text-sm text-gray-navy dark:text-light-blue/70">
+                  Hệ thống ghi nhận bạn đã bắt đầu bài thi này và còn thời gian. Bạn có thể tiếp tục làm bài hoặc làm lại từ đầu.
+                </p>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
+                  <button
+                    onClick={() => handleStart("start")}
+                    disabled={isStarting}
+                    className="w-full sm:w-auto px-8 py-4 bg-primary text-white rounded-2xl font-black text-base shadow-xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                  >
+                    <Play className="size-5 fill-current" />
+                    TIẾP TỤC LÀM BÀI
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (confirm("Làm lại từ đầu sẽ hủy lượt thi hiện tại. Bạn có chắc chắn muốn làm lại không?")) {
+                        handleStart("restart");
+                      }
+                    }}
+                    disabled={isStarting}
+                    className="w-full sm:w-auto px-6 py-4 bg-transparent border-2 border-gray-200 dark:border-white/10 text-dark-blue dark:text-white rounded-2xl font-black text-base hover:bg-gray-100 dark:hover:bg-white/5 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    <RotateCcw className="size-4" />
+                    LÀM LẠI TỪ ĐẦU
+                  </button>
+                </div>
               </div>
-            </button>
+            ) : (() => {
+              const now = new Date();
+              const isBeforeStart = exam.start_time && parseICT(exam.start_time) > now;
+              const isAfterEnd = exam.end_time && parseICT(exam.end_time) < now;
+
+              if (isBeforeStart) {
+                return (
+                  <div className="text-center py-4 px-8 rounded-2xl bg-gray-100 dark:bg-white/5 font-bold text-gray-navy">
+                    Chưa đến thời gian bắt đầu làm bài
+                  </div>
+                );
+              }
+
+              if (isAfterEnd) {
+                return (
+                  <div className="text-center py-4 px-8 rounded-2xl bg-red-500/10 text-red-400 font-bold">
+                    Kỳ thi đã kết thúc thời gian làm bài
+                  </div>
+                );
+              }
+
+              return (
+                <button
+                  onClick={() => handleStart("start")}
+                  disabled={isStarting}
+                  className="group relative w-full md:w-auto min-w-[300px] h-20 bg-primary text-white rounded-[2rem] font-black text-xl shadow-2xl shadow-primary/30 hover:scale-[1.02] active:scale-95 transition-all overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+                  <div className="relative flex items-center justify-center gap-4">
+                    {isStarting ? (
+                      <div className="size-6 border-4 border-white border-t-transparent animate-spin rounded-full" />
+                    ) : (
+                      <>
+                        BẮT ĐẦU THI NGAY
+                        <Play className="size-6 fill-current" />
+                      </>
+                    )}
+                  </div>
+                </button>
+              );
+            })()}
             <p className="text-xs font-medium text-gray-navy dark:text-light-blue/40 italic">
                * Bằng cách nhấn bắt đầu, bạn đồng ý với mọi quy chế được nêu bên trên.
             </p>

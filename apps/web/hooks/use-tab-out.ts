@@ -56,7 +56,7 @@ export function useTabOut(attemptId: string | null) {
               completed_at: out.attempt.completed_at,
               expires_at: "",
               score,
-              status: out.attempt.status ?? "COMPLETED",
+              status: (out.attempt.status ?? "COMPLETED") as AttemptOut["status"],
               tab_out_count: out.tab_out_count,
             };
             applyAutoSubmit(score, pseudo);

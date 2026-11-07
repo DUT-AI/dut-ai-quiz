@@ -1,0 +1,316 @@
+openapi: 3.1.0
+info:
+  title: Exam Attempt Lifecycle & Scoring API
+  version: 1.0.0
+paths:
+  /api/v1/exams/{exam_id}/my-active-attempt:
+    get:
+      summary: Get student's current active in-progress attempt for an exam
+      parameters:
+        - name: exam_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Active attempt found or null
+          content:
+            application/json:
+              schema:
+                type: object
+                nullable: true
+                properties:
+                  attempt_id:
+                    type: string
+                    format: uuid
+                  expires_at:
+                    type: string
+                    format: date-time
+                  tab_out_count:
+                    type: integer
+                  server_time:
+                    type: string
+                    format: date-time
+
+  /api/v1/exams/{exam_id}/attempts:
+    post:
+      summary: Start a new attempt or resume/restart an existing one
+      parameters:
+        - name: exam_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action:
+                  type: string
+                  enum: [start, restart]
+                  default: start
+      responses:
+        '200':
+          description: Started or resumed attempt
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [attempt_id, expires_at, tab_out_count, questions, server_time]
+                properties:
+                  attempt_id:
+                    type: string
+                    format: uuid
+                  expires_at:
+                    type: string
+                    format: date-time
+                  tab_out_count:
+                    type: integer
+                  is_resumed:
+                    type: boolean
+                    default: false
+                  server_time:
+                    type: string
+                    format: date-time
+                  questions:
+                    type: array
+                    items:
+                      type: object
+                      required: [question_id, content, options, tags]
+                      properties:
+                        question_id:
+                          type: string
+                          format: uuid
+                        content:
+                          type: string
+                        options:
+                          type: array
+                          items:
+                            type: object
+                            required: [id, text]
+                            properties:
+                              id:
+                                type: string
+                              text:
+                                type: string
+        '403':
+          description: Max attempts reached or exam not accessible
+
+  /api/v1/attempts/{attempt_id}:
+    get:
+      summary: Load attempt for exam environment with clock skew compensation
+      parameters:
+        - name: attempt_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Attempt state and questions
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [attempt, questions, saved_answers, server_time]
+                properties:
+                  server_time:
+                    type: string
+                    format: date-time
+                  attempt:
+                    $ref: '#/components/schemas/AttemptOut'
+                  questions:
+                    type: array
+                    items:
+                      type: object
+                      required: [question_id, content, options]
+                      properties:
+                        question_id:
+                          type: string
+                          format: uuid
+                        content:
+                          type: string
+                        options:
+                          type: array
+                          items:
+                            type: object
+                            required: [id, text]
+                            properties:
+                              id:
+                                type: string
+                              text:
+                                type: string
+                  saved_answers:
+                    type: array
+                    items:
+                      type: object
+                      required: [question_id, selected_option_id]
+                      properties:
+                        question_id:
+                          type: string
+                        selected_option_id:
+                          type: string
+                          nullable: true
+
+  /api/v1/attempts/{attempt_id}/answers:
+    patch:
+      summary: Auto-save answers while attempt is in progress
+      parameters:
+        - name: attempt_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [answers]
+              properties:
+                answers:
+                  type: array
+                  items:
+                    type: object
+                    required: [question_id, selected_option_id]
+                    properties:
+                      question_id:
+                        type: string
+                        format: uuid
+                      selected_option_id:
+                        type: string
+                        nullable: true
+      responses:
+        '200':
+          description: Answers saved
+        '400':
+          description: Attempt expired (> 10s cutoff) or invalid state
+
+  /api/v1/attempts/{attempt_id}/submit:
+    post:
+      summary: Submit attempt for grading
+      parameters:
+        - name: attempt_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Attempt scored and submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttemptOut'
+
+  /api/v1/attempts/{attempt_id}/review:
+    get:
+      summary: Review past attempt in student's shuffled order
+      parameters:
+        - name: attempt_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Full review data with dual scoring
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [attempt, answers, questions]
+                properties:
+                  attempt:
+                    $ref: '#/components/schemas/AttemptOut'
+                  answers:
+                    type: array
+                    items:
+                      type: object
+                      required: [question_id, selected_option_id]
+                      properties:
+                        question_id:
+                          type: string
+                        selected_option_id:
+                          type: string
+                          nullable: true
+                  questions:
+                    type: array
+                    items:
+                      type: object
+                      required: [id, content, options]
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        content:
+                          type: string
+                        solution:
+                          type: string
+                          nullable: true
+                        options:
+                          type: array
+                          items:
+                            type: object
+                            required: [id, text]
+                            properties:
+                              id:
+                                type: string
+                              text:
+                                type: string
+                              is_correct:
+                                type: boolean
+                                nullable: true
+
+components:
+  schemas:
+    AttemptOut:
+      type: object
+      required: [id, exam_id, user_id, started_at, expires_at, status, tab_out_count]
+      properties:
+        id:
+          type: string
+          format: uuid
+        exam_id:
+          type: string
+          format: uuid
+        user_id:
+          type: integer
+        started_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        expires_at:
+          type: string
+          format: date-time
+        score:
+          type: number
+          nullable: true
+          description: Scaled score out of 10.0 (e.g. 8.5)
+        correct_count:
+          type: integer
+          nullable: true
+          description: Raw count of correct questions (e.g. 17)
+        total_questions:
+          type: integer
+          nullable: true
+          description: Total questions in attempt (e.g. 20)
+        status:
+          type: string
+          enum: [IN_PROGRESS, COMPLETED, TIMED_OUT, ABANDONED]
+        tab_out_count:
+          type: integer

@@ -17,6 +17,7 @@ from app.application.services.pdf_ai_parser import PDFAIParserService
 from app.application.services.question_embedding import QuestionEmbeddingService
 from app.application.services.user_service import UserService
 from app.application.use_cases.attempts import (
+    GetActiveAttemptUseCase,
     GetAttemptDetailUseCase,
     GetAttemptUseCase,
     ListExamAttemptsUseCase,
@@ -365,6 +366,7 @@ class UseCaseProvider(Provider):
 
     # attempts
     start_attempt_use_case = provide(StartAttemptUseCase, scope=Scope.REQUEST)
+    get_active_attempt_use_case = provide(GetActiveAttemptUseCase, scope=Scope.REQUEST)
     submit_attempt_use_case = provide(SubmitAttemptUseCase, scope=Scope.REQUEST)
     get_attempt_use_case = provide(GetAttemptUseCase, scope=Scope.REQUEST)
     get_attempt_detail_use_case = provide(GetAttemptDetailUseCase, scope=Scope.REQUEST)

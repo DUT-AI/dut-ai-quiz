@@ -44,7 +44,7 @@ class GetExamStatsUseCase:
             for a in attempts
             if a.status == AttemptStatus.COMPLETED and a.score is not None
         ]
-        scores = [a.score for a in completed_attempts]
+        scores = [a.score for a in completed_attempts if a.score is not None]
 
         unique_users = {a.user_id for a in attempts}
         completed_users = {a.user_id for a in completed_attempts}
@@ -52,28 +52,21 @@ class GetExamStatsUseCase:
         avg_score = round(sum(scores) / len(scores), 2) if scores else 0.0
         max_score = max(scores) if scores else 0.0
 
-        dist = {"0-2": 0, "2-4": 0, "4-6": 0, "6-8": 0, "8-10": 0}
+        ranges = [f"{i}-{i + 1}" for i in range(10)]
+        dist = {r: 0 for r in ranges}
 
         # Best score per user for distribution
         user_best_scores = {}
         for a in completed_attempts:
-            if (
+            if a.score is not None and (
                 a.user_id not in user_best_scores
                 or a.score > user_best_scores[a.user_id]
             ):
                 user_best_scores[a.user_id] = a.score
 
         for sc in user_best_scores.values():
-            if sc < 2:
-                dist["0-2"] += 1
-            elif sc < 4:
-                dist["2-4"] += 1
-            elif sc < 6:
-                dist["4-6"] += 1
-            elif sc < 8:
-                dist["6-8"] += 1
-            else:
-                dist["8-10"] += 1
+            bin_idx = min(max(int(sc), 0), 9)
+            dist[ranges[bin_idx]] += 1
 
         score_distribution = [
             ScoreDistributionItem(range=k, count=v) for k, v in dist.items()
@@ -118,7 +111,7 @@ class GetExamStatsUseCase:
                 correct_opt_id = None
                 for opt in q.options:
                     if opt.is_correct:
-                        correct_opt_id = str(opt.id)
+                        correct_opt_id = opt.id
                         break
 
                 for a in completed_attempts:

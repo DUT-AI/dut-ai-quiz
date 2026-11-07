@@ -1,7 +1,8 @@
+from datetime import timedelta
 from uuid import UUID, uuid4
 
 from app.core.datetime_utils import now_ict
-from app.domain.entities.attempt import FocusEventEntity
+from app.domain.entities.attempt import AttemptEntity, FocusEventEntity
 from app.domain.events.attempts import AttemptViolationEvent
 from app.domain.events.bus import EventBus
 from app.domain.interfaces import (
@@ -34,15 +35,10 @@ class GetAttemptUseCase:
         if not ids:
             return {"attempt": att, "questions": [], "saved_answers": []}
 
-        ordered = []
-        for i in ids:
-            q = await self._question_repo.get(i)
-            if q:
-                ordered.append(q)
+        questions_list = await self._question_repo.get_by_ids(ids)
+        questions_by_id = {q.id: q for q in questions_list}
 
-        questions = att.shuffle_snapshot.reconstruct_presentation(
-            {q.id: q for q in ordered}
-        )
+        questions = att.shuffle_snapshot.reconstruct_presentation(questions_by_id)
 
         # Load saved answers so frontend can restore progress on reconnect
         saved_answers = await self._att_repo.list_answers(attempt_id)
@@ -88,6 +84,9 @@ class PatchAttemptAnswersUseCase:
             return False
 
         if att.status != AttemptStatus.IN_PROGRESS:
+            return False
+
+        if now_ict() > att.expires_at + timedelta(seconds=10):
             return False
 
         for a in payload.answers:
@@ -196,3 +195,16 @@ class ListUserAttemptsUseCase:
             }
             for att, title in rows
         ]
+
+
+class GetActiveAttemptUseCase:
+    def __init__(self, att_repo: IAttemptRepository):
+        self._att_repo = att_repo
+
+    async def execute(self, exam_id: UUID, user_id: int) -> AttemptEntity | None:
+        from datetime import timedelta
+
+        att = await self._att_repo.get_active_for_user_exam(user_id, exam_id)
+        if att and now_ict() <= att.expires_at + timedelta(seconds=60):
+            return att
+        return None

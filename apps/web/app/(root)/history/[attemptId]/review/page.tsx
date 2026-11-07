@@ -12,7 +12,7 @@ import {
     Loader2,
     ChevronRight,
     Info,
-    Timer
+    Timer,
 } from "lucide-react";
 import { useAttemptReview } from "@/lib/queries";
 import { format } from "date-fns";
@@ -75,7 +75,12 @@ export default function ReviewPage() {
     }
 
     const { attempt, answers, questions } = reviewData as AttemptReviewResponse;
-    const scorePercentage = (attempt.score !== null ? (attempt.score / questions.length) * 100 : 0);
+    const totalQ = attempt.total_questions || questions.length || 1;
+    const correctQ = attempt.correct_count !== null && attempt.correct_count !== undefined
+        ? attempt.correct_count
+        : (attempt.score !== null ? Math.round((attempt.score / 10.0) * totalQ) : 0);
+    const scoreVal = attempt.score !== null ? attempt.score : 0;
+    const scorePercentage = Math.min(100, Math.max(0, (scoreVal / 10.0) * 100));
 
     return (
         <div className="max-w-4xl mx-auto px-6 py-12 space-y-12 pb-32">
@@ -109,8 +114,8 @@ export default function ReviewPage() {
                             />
                         </svg>
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
-                            <span className="text-4xl font-black leading-none">{attempt.score}</span>
-                            <span className="text-[10px] font-black opacity-60 uppercase tracking-widest mt-1">/ {questions.length} ĐIỂM</span>
+                            <span className="text-4xl font-black leading-none">{scoreVal.toFixed(1)}</span>
+                            <span className="text-[10px] font-black opacity-60 uppercase tracking-widest mt-1">/ 10 ĐIỂM</span>
                         </div>
                     </div>
 
@@ -123,6 +128,7 @@ export default function ReviewPage() {
                         </div>
 
                         <div className="flex flex-wrap gap-3 justify-center md:justify-start">
+                            <Badge icon={CheckCircle2} label="Số câu đúng" value={`${correctQ}/${totalQ} câu`} color="bg-primary/20 text-light-blue" />
                             <Badge icon={Clock} label="Hoàn thành" value={attempt.completed_at ? "Xong" : "N/A"} color="bg-green-500/20 text-green-300" />
                             <Badge icon={AlertTriangle} label="Vi phạm" value={`${attempt.tab_out_count} lần`} color="bg-red/20 text-red-300" />
                         </div>
@@ -166,7 +172,7 @@ export default function ReviewPage() {
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         {q.options.map((opt) => {
                                             const isUserChoice = userChoiceId && String(opt.id).toLowerCase() === String(userChoiceId).toLowerCase();
-                                            const isCorrectOpt = opt.is_correct === true || opt.is_correct === "true" || opt.is_correct === 1;
+                                            const isCorrectOpt = Boolean(opt.is_correct);
 
                                             let borderColor = "#e2e8f0"; // gray-200
                                             let bgColor = "transparent";

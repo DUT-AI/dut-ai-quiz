@@ -19,6 +19,10 @@ class IQuestionRepository(Protocol):
         """Get a single question entity by its UUID."""
         ...
 
+    async def get_by_ids(self, question_ids: list[UUID]) -> list[QuestionEntity]:
+        """Fetch multiple question entities in a single query by their UUIDs."""
+        ...
+
     async def list_all(
         self,
         *,

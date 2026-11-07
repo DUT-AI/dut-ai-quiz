@@ -95,7 +95,7 @@ const Game = () => {
           >
             <Answers
               options={question.options}
-              questionId={question.question_id}
+              questionId={question.id || question.question_id || ""}
               goNextQuestion={goNextQuestion}
             />
           </MotionDiv>

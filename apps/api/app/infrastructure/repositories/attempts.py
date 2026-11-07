@@ -1,12 +1,13 @@
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities.attempt import AttemptAnswerEntity, AttemptEntity
 from app.domain.interfaces import IAttemptAnswerRepository, IAttemptRepository
 from app.domain.value_objects import AttemptStatus
 from app.infrastructure.persistence.models import Attempt, AttemptAnswer, Exam
+from app.infrastructure.persistence.models.attempt import FocusEvent
 
 
 class AttemptRepository(IAttemptRepository):
@@ -32,6 +33,22 @@ class AttemptRepository(IAttemptRepository):
             )
         )
         return int(r.scalar_one() or 0)
+
+    async def get_active_for_user_exam(
+        self, user_id: int, exam_id: UUID
+    ) -> AttemptEntity | None:
+        r = await self._s.execute(
+            select(Attempt)
+            .where(
+                Attempt.user_id == user_id,
+                Attempt.exam_id == exam_id,
+                Attempt.status == AttemptStatus.IN_PROGRESS,
+            )
+            .order_by(Attempt.started_at.desc())
+            .limit(1)
+        )
+        model = r.scalar_one_or_none()
+        return model.to_entity() if model else None
 
     async def get(self, attempt_id: UUID) -> AttemptEntity | None:
         r = await self._s.execute(select(Attempt).where(Attempt.id == attempt_id))

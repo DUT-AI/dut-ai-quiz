@@ -1,6 +1,7 @@
 from dataclasses import asdict, dataclass
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
+import dataclasses
 
 if TYPE_CHECKING:
     from app.domain.entities.question import QuestionEntity
@@ -19,6 +20,10 @@ class ShuffledQuestion:
     content: str
     options: list[ShuffledOption]
     tags: list[str]
+
+    @property
+    def id(self) -> str:
+        return self.question_id
 
 
 @dataclass(frozen=True)
@@ -66,6 +71,31 @@ class ShuffledSnapshot:
                     tags=q.tags,
                 )
             )
+        return out
+
+    def reconstruct_review_questions(
+        self, questions_by_id: dict[UUID, "QuestionEntity"]
+    ) -> list["QuestionEntity"]:
+        
+
+        out = []
+        for qid_str in self.question_order:
+            qid = UUID(qid_str)
+            q = questions_by_id.get(qid)
+            if not q:
+                continue
+            order_ids = self.options.get(qid_str, [])
+            opts_by_id = {str(o.id): o for o in q.options}
+            shuffled_opts = []
+            for oid in order_ids:
+                o_data = opts_by_id.get(str(oid))
+                if o_data:
+                    shuffled_opts.append(o_data)
+            for o in q.options:
+                if o not in shuffled_opts:
+                    shuffled_opts.append(o)
+
+            out.append(dataclasses.replace(q, options=shuffled_opts))
         return out
 
 

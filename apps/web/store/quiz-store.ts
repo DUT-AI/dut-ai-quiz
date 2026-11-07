@@ -59,12 +59,16 @@ export const useQuestionStore = create<State>()((set, get) => ({
         `/api/v1/exams/${exam.id}/attempts`,
         {}
       );
-      const questions: QuizQuestion[] = data.questions.map((q) => ({
-        question_id: q.question_id,
-        content: q.content,
-        options: q.options.map((o) => ({ id: o.id, text: o.text })),
-        userSelectedOptionId: null,
-      }));
+      const questions: QuizQuestion[] = data.questions.map((q) => {
+        const qId = q.id || q.question_id || "";
+        return {
+          id: qId,
+          question_id: qId,
+          content: q.content,
+          options: q.options.map((o) => ({ id: o.id, text: o.text, fixed: o.fixed ?? false })),
+          userSelectedOptionId: null,
+        };
+      });
       set({
         selectedExam: exam,
         attemptId: data.attempt_id,
