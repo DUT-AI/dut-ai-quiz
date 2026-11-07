@@ -22,3 +22,11 @@ class FocusEventRepository(IFocusEventRepository):
             select(FocusEvent).where(FocusEvent.client_event_id == client_event_id)
         )
         return r.scalar_one_or_none() is not None
+
+    async def list_for_attempt(self, attempt_id) -> list[FocusEventEntity]:
+        r = await self._s.execute(
+            select(FocusEvent)
+            .where(FocusEvent.attempt_id == attempt_id)
+            .order_by(FocusEvent.received_at.asc())
+        )
+        return [m.to_entity() for m in r.scalars().all()]

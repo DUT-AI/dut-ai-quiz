@@ -4,6 +4,9 @@ from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import APIRouter, HTTPException
 
 from app.application.services.auth_roles import quiz_role_from_manage
+from app.application.use_cases.exams.delete_exam_attempt_uc import (
+    DeleteExamAttemptUseCase,
+)
 from app.application.use_cases.exams.exam_use_case import (
     CreateExamUseCase,
     DeleteExamUseCase,
@@ -13,10 +16,17 @@ from app.application.use_cases.exams.exam_use_case import (
     SetExamQuestionsUseCase,
     UpdateExamUseCase,
 )
+from app.application.use_cases.exams.get_student_attempts_uc import (
+    GetStudentAttemptsUseCase,
+)
 from app.application.use_cases.exams.stats_use_case import GetExamStatsUseCase
 from app.core.datetime_utils import now_ict
 from app.domain.entities.auth_enums import SystemPermission
 from app.presentation.api.deps import CurrentUser, TeacherUser
+from app.presentation.schemas.exam_attempts import (
+    DeleteAttemptResponse,
+    StudentExamAttemptsResponse,
+)
 from app.presentation.schemas.exams import (
     ExamCreate,
     ExamOut,
@@ -120,3 +130,38 @@ async def get_exam_stats_route(
 ):
     stats = await use_case.execute(exam_id)
     return stats
+
+
+@router.get(
+    "/{exam_id}/students/{student_id}/attempts",
+    response_model=StudentExamAttemptsResponse,
+)
+@inject
+async def get_student_attempts_route(
+    user: TeacherUser,
+    exam_id: UUID,
+    student_id: int,
+    use_case: FromDishka[GetStudentAttemptsUseCase],
+):
+    return await use_case.execute(exam_id, student_id)
+
+
+@router.delete(
+    "/{exam_id}/attempts/{attempt_id}",
+    response_model=DeleteAttemptResponse,
+)
+@inject
+async def delete_exam_attempt_route(
+    user: TeacherUser,
+    exam_id: UUID,
+    attempt_id: UUID,
+    use_case: FromDishka[DeleteExamAttemptUseCase],
+):
+    role = getattr(user, "role", "educator")
+    user_id = getattr(user, "id", 0)
+    return await use_case.execute(
+        exam_id=exam_id,
+        attempt_id=attempt_id,
+        operator_user_id=user_id,
+        operator_role=role,
+    )

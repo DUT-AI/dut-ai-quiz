@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiGet, apiPost, apiPatch, apiClient } from "@/lib/api";
+import { apiGet, apiPost, apiPatch, apiClient, apiFetch } from "@/lib/api";
 import { QuestionOutSchema, type QuestionOut } from "../questions/types";
 import { z } from "zod";
 import {
@@ -15,6 +15,8 @@ import {
   type LeaderboardEntry,
   type ExternalTeam,
   type ExternalUser,
+  type StudentExamAttemptsResponse,
+  type DeleteAttemptResponse,
 } from "./types";
 
 const ICONS = [
@@ -151,5 +153,35 @@ export function useExternalUsers() {
     queryFn: () =>
       apiGet<{ data: ExternalUser[] }>("/api/v1/external/users", z.object({ data: z.array(ExternalUserSchema) })),
     staleTime: 300_000,
+  });
+}
+
+export function useStudentExamAttempts(examId: string | null, studentId: number | null) {
+  return useQuery<StudentExamAttemptsResponse>({
+    queryKey: ["student-attempts", examId, studentId],
+    queryFn: async () => {
+      const res = await apiFetch(`/api/v1/exams/${examId}/students/${studentId}/attempts`);
+      if (!res.ok) throw new Error("Không thể tải thông tin lượt thi");
+      return res.json();
+    },
+    enabled: !!examId && !!studentId,
+  });
+}
+
+export function useDeleteExamAttempt(examId: string | null, studentId: number | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (attemptId: string) => {
+      const res = await apiFetch(`/api/v1/exams/${examId}/attempts/${attemptId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Không thể xóa lượt thi");
+      return res.json() as Promise<DeleteAttemptResponse>;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["exam-stats", examId] });
+      void qc.invalidateQueries({ queryKey: ["student-attempts", examId, studentId] });
+      void qc.invalidateQueries({ queryKey: ["leaderboard", examId] });
+    },
   });
 }

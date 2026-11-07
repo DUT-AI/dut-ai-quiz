@@ -35,7 +35,9 @@ from app.presentation.schemas.questions import QuestionOut
 router = APIRouter(tags=["attempts"])
 
 
-@router.get("/exams/{exam_id}/my-active-attempt", response_model=ActiveAttemptOut | None)
+@router.get(
+    "/exams/{exam_id}/my-active-attempt", response_model=ActiveAttemptOut | None
+)
 @inject
 async def my_active_attempt_route(
     user: CurrentUser,

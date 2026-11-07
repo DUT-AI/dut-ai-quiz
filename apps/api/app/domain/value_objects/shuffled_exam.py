@@ -1,7 +1,7 @@
+import dataclasses
 from dataclasses import asdict, dataclass
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
-import dataclasses
 
 if TYPE_CHECKING:
     from app.domain.entities.question import QuestionEntity
@@ -76,7 +76,6 @@ class ShuffledSnapshot:
     def reconstruct_review_questions(
         self, questions_by_id: dict[UUID, "QuestionEntity"]
     ) -> list["QuestionEntity"]:
-        
 
         out = []
         for qid_str in self.question_order:

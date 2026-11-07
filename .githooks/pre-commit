@@ -63,21 +63,30 @@ if [ -n "$STAGED_PYTHON" ]; then
     fi
 
     if [ -n "$RUFF_CMD" ]; then
-        # 2a. Ruff Check
-        echo -e "  - Đang chạy ${CYAN}$RUFF_CMD check apps/api apps/worker${NC}..."
+        # 2a. Tự động sửa lỗi và định dạng trước khi verify
+        echo -e "  - Đang tự động fix lỗi: ${CYAN}$RUFF_CMD check --fix apps/api apps/worker${NC}..."
+        $RUFF_CMD check --fix apps/api apps/worker || true
+
+        echo -e "  - Đang tự động format: ${CYAN}$RUFF_CMD format apps/api apps/worker${NC}..."
+        $RUFF_CMD format apps/api apps/worker || true
+
+        # Re-stage các file Python đã được tự động fix/format vào commit
+        echo "$STAGED_PYTHON" | xargs git add 2>/dev/null || true
+
+        # 2b. Ruff Check Verification
+        echo -e "  - Đang xác thực linting: ${CYAN}$RUFF_CMD check apps/api apps/worker${NC}..."
         if ! $RUFF_CMD check apps/api apps/worker; then
-            echo -e "${RED}✗ Lỗi Python linting phát hiện bởi Ruff!${NC}"
-            echo -e "${YELLOW}  Gợi ý sửa nhanh: make api-lint hoặc uv run ruff check --fix apps/api apps/worker${NC}"
+            echo -e "${RED}✗ Lỗi Python linting phát hiện bởi Ruff không thể tự động sửa!${NC}"
+            echo -e "${YELLOW}  Vui lòng kiểm tra và sửa lỗi thủ công.${NC}"
             HAS_ERROR=1
         else
             echo -e "${GREEN}  ✓ Ruff linting: PASS${NC}"
         fi
 
-        # 2b. Ruff Format Check
-        echo -e "  - Đang chạy ${CYAN}$RUFF_CMD format --check apps/api apps/worker${NC}..."
+        # 2c. Ruff Format Verification
+        echo -e "  - Đang xác thực formatting: ${CYAN}$RUFF_CMD format --check apps/api apps/worker${NC}..."
         if ! $RUFF_CMD format --check apps/api apps/worker; then
             echo -e "${RED}✗ Code Python chưa được format theo chuẩn!${NC}"
-            echo -e "${YELLOW}  Gợi ý sửa nhanh: uv run ruff format apps/api apps/worker${NC}"
             HAS_ERROR=1
         else
             echo -e "${GREEN}  ✓ Ruff formatting: PASS${NC}"

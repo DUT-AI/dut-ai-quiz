@@ -45,6 +45,7 @@ api-dev backend-dev: api-sync
 
 api-lint:
 	uv run ruff check apps/api apps/worker --fix
+	uv run ruff format apps/api apps/worker
 
 migrate: 
 	cd $(API_DIR) && uv run alembic upgrade head

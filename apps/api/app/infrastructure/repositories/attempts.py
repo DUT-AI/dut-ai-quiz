@@ -187,6 +187,28 @@ class AttemptRepository(IAttemptRepository):
         )
         return [m.to_entity() for m in r.scalars().all()]
 
+    async def list_for_user_and_exam(
+        self, exam_id: UUID, user_id: int
+    ) -> list[AttemptEntity]:
+        r = await self._s.execute(
+            select(Attempt)
+            .where(Attempt.exam_id == exam_id, Attempt.user_id == user_id)
+            .order_by(Attempt.started_at.desc())
+        )
+        return [m.to_entity() for m in r.scalars().all()]
+
+    async def delete_attempt(self, attempt_id: UUID) -> bool:
+        # Atomic cascading delete
+        await self._s.execute(
+            delete(AttemptAnswer).where(AttemptAnswer.attempt_id == attempt_id)
+        )
+        await self._s.execute(
+            delete(FocusEvent).where(FocusEvent.attempt_id == attempt_id)
+        )
+        res = await self._s.execute(delete(Attempt).where(Attempt.id == attempt_id))
+        await self._s.flush()
+        return bool(res.rowcount and res.rowcount > 0)
+
 
 class AttemptAnswerRepository(IAttemptAnswerRepository):
     def __init__(self, session: AsyncSession) -> None:

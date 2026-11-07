@@ -40,6 +40,9 @@ from app.application.use_cases.comment import (
     GetCommentsUseCase,
     ToggleReactionUseCase,
 )
+from app.application.use_cases.exams.delete_exam_attempt_uc import (
+    DeleteExamAttemptUseCase,
+)
 from app.application.use_cases.exams.exam_use_case import (
     CreateExamUseCase,
     DeleteExamUseCase,
@@ -48,6 +51,9 @@ from app.application.use_cases.exams.exam_use_case import (
     ListExamsUseCase,
     SetExamQuestionsUseCase,
     UpdateExamUseCase,
+)
+from app.application.use_cases.exams.get_student_attempts_uc import (
+    GetStudentAttemptsUseCase,
 )
 from app.application.use_cases.exams.stats_use_case import GetExamStatsUseCase
 from app.application.use_cases.game import (
@@ -210,6 +216,12 @@ class UseCaseProvider(Provider):
     set_exam_questions_use_case = provide(SetExamQuestionsUseCase, scope=Scope.REQUEST)
     update_exam_use_case = provide(UpdateExamUseCase, scope=Scope.REQUEST)
     get_exam_stats_use_case = provide(GetExamStatsUseCase, scope=Scope.REQUEST)
+    get_student_attempts_use_case = provide(
+        GetStudentAttemptsUseCase, scope=Scope.REQUEST
+    )
+    delete_exam_attempt_use_case = provide(
+        DeleteExamAttemptUseCase, scope=Scope.REQUEST
+    )
     create_hackathon_use_case = provide(CreateHackathonUseCase, scope=Scope.REQUEST)
     delete_hackathon_use_case = provide(DeleteHackathonUseCase, scope=Scope.REQUEST)
     get_hackathon_use_case = provide(GetHackathonUseCase, scope=Scope.REQUEST)

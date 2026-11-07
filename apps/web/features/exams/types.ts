@@ -106,3 +106,11 @@ export const ExternalUserSchema = z.object({
 });
 
 export type ExternalUser = z.infer<typeof ExternalUserSchema>;
+
+// Contract-driven types from OpenAPI
+import type { components } from "@/types/api.generated";
+export type StudentExamAttemptsResponse = components["schemas"]["StudentExamAttemptsResponse"];
+export type StudentAttemptDetailOut = components["schemas"]["StudentAttemptDetailOut"];
+export type StudentAttemptQuestionDetail = components["schemas"]["StudentAttemptQuestionDetail"];
+export type StudentAttemptFocusEventOut = components["schemas"]["StudentAttemptFocusEventOut"];
+export type DeleteAttemptResponse = components["schemas"]["DeleteAttemptResponse"];

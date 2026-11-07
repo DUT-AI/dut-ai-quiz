@@ -13,3 +13,7 @@ class IFocusEventRepository(Protocol):
     async def exists_for_client_event(self, client_event_id: str) -> bool:
         """Check if a focus event with the given client_event_id already exists."""
         ...
+
+    async def list_for_attempt(self, attempt_id) -> list[FocusEventEntity]:
+        """List all focus events for an attempt ordered by timestamp."""
+        ...

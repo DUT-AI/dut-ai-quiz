@@ -2,7 +2,8 @@
 
 import React from "react";
 import NextImage from "next/image";
-import { AlertTriangle, Users } from "lucide-react";
+import Link from "next/link";
+import { AlertTriangle, Users, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ParticipantStat {
@@ -13,6 +14,7 @@ interface ParticipantStat {
 }
 
 interface ParticipantsTabProps {
+  examId?: string;
   participants: ParticipantStat[];
   userMap: Map<number, {
     id: number;
@@ -22,7 +24,7 @@ interface ParticipantsTabProps {
   }>;
 }
 
-export function ParticipantsTab({ participants, userMap }: ParticipantsTabProps) {
+export function ParticipantsTab({ examId, participants, userMap }: ParticipantsTabProps) {
   return (
     <div className="bg-white dark:bg-navy-blue/40 border border-gray-100 dark:border-white/5 rounded-[3rem] p-8 md:p-10 shadow-sm">
       <h3 className="text-xl font-bold mb-8 flex items-center gap-3">
@@ -33,10 +35,10 @@ export function ParticipantsTab({ participants, userMap }: ParticipantsTabProps)
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-h-[800px] overflow-y-auto pr-2 custom-scrollbar">
         {participants.sort((a, b) => (b.best_score || 0) - (a.best_score || 0)).map((p) => {
           const user = userMap.get(p.user_id);
-          return (
-            <div key={p.user_id} className="group p-5 rounded-[2rem] bg-gray-50 dark:bg-white/5 border border-transparent hover:border-blue-500/20 transition-all flex flex-col justify-between gap-4">
+          const cardContent = (
+            <div className="group p-5 rounded-[2rem] bg-gray-50 dark:bg-white/5 border border-transparent hover:border-blue-500/30 hover:shadow-md transition-all flex flex-col justify-between gap-4 cursor-pointer">
               <div className="flex items-center gap-4">
-                <div className="size-12 rounded-full bg-blue-500/10 flex items-center justify-center font-black text-blue-500 overflow-hidden shrink-0">
+                <div className="size-12 rounded-full bg-blue-500/10 flex items-center justify-center font-black text-blue-500 overflow-hidden shrink-0 border border-blue-500/20">
                   {user?.avatar_url ? (
                     <NextImage src={user.avatar_url} alt="" width={48} height={48} className="size-full object-cover" unoptimized />
                   ) : (
@@ -44,7 +46,7 @@ export function ParticipantsTab({ participants, userMap }: ParticipantsTabProps)
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-dark-blue dark:text-white truncate">
+                  <p className="text-sm font-bold text-dark-blue dark:text-white truncate group-hover:text-blue-500 transition-colors">
                     {user?.name || `User #${p.user_id}`}
                   </p>
                   <p className="text-[10px] text-gray-navy opacity-60 uppercase font-black truncate">
@@ -62,14 +64,31 @@ export function ParticipantsTab({ participants, userMap }: ParticipantsTabProps)
                 </div>
               </div>
               
-              {p.max_tab_out > 0 && (
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-red/10 text-red text-[10px] font-black uppercase tracking-tighter w-fit">
-                  <AlertTriangle className="size-3" />
-                  {p.max_tab_out} lần thoát tab
-                </div>
-              )}
+              <div className="flex items-center justify-between gap-2 pt-1 border-t border-gray-100/60 dark:border-white/5">
+                {p.max_tab_out > 0 ? (
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-red/10 text-red text-[10px] font-black uppercase tracking-tighter">
+                    <AlertTriangle className="size-3" />
+                    {p.max_tab_out} lần thoát tab
+                  </div>
+                ) : (
+                  <div />
+                )}
+                <span className="text-[10px] font-bold text-blue-500 flex items-center gap-0.5 opacity-80 group-hover:opacity-100 transition-opacity">
+                  Chi tiết <ChevronRight className="size-3" />
+                </span>
+              </div>
             </div>
           );
+
+          if (examId) {
+            return (
+              <Link key={p.user_id} href={`/teacher/stats/${examId}/students/${p.user_id}`}>
+                {cardContent}
+              </Link>
+            );
+          }
+
+          return <div key={p.user_id}>{cardContent}</div>;
         })}
       </div>
     </div>

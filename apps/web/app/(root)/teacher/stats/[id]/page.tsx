@@ -145,7 +145,7 @@ export default function ExamStatsDetailPage() {
         </TabsContent>
 
         <TabsContent value="participants" className="outline-none mt-0">
-          <ParticipantsTab participants={participants} userMap={userMap} />
+          <ParticipantsTab examId={id} participants={participants} userMap={userMap} />
         </TabsContent>
 
         <TabsContent value="questions" className="outline-none mt-0">

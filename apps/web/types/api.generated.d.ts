@@ -1064,6 +1064,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/exams/{exam_id}/students/{student_id}/attempts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Student Attempts Route */
+        get: operations["get_student_attempts_route_api_v1_exams__exam_id__students__student_id__attempts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/exams/{exam_id}/attempts/{attempt_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Exam Attempt Route */
+        delete: operations["delete_exam_attempt_route_api_v1_exams__exam_id__attempts__attempt_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/exams/{exam_id}/my-active-attempt": {
         parameters: {
             query?: never;
@@ -2306,6 +2340,18 @@ export interface components {
              * @default true
              */
             is_success: boolean;
+        };
+        /** DeleteAttemptResponse */
+        DeleteAttemptResponse: {
+            /** Success */
+            success: boolean;
+            /** Message */
+            message: string;
+            /**
+             * Deleted Attempt Id
+             * Format: uuid
+             */
+            deleted_attempt_id: string;
         };
         /**
          * Difficulty
@@ -3862,6 +3908,15 @@ export interface components {
             /** Created By */
             created_by?: number | null;
         };
+        /** QuestionOptionDetail */
+        QuestionOptionDetail: {
+            /** Id */
+            id: string;
+            /** Content */
+            content: string;
+            /** Is Correct */
+            is_correct: boolean;
+        };
         /** QuestionOptionIn */
         QuestionOptionIn: {
             /** Id */
@@ -4162,6 +4217,94 @@ export interface components {
             status: string;
             /** Message */
             message: string;
+        };
+        /** StudentAttemptDetailOut */
+        StudentAttemptDetailOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Exam Id
+             * Format: uuid
+             */
+            exam_id: string;
+            /** User Id */
+            user_id: number;
+            /** Status */
+            status: string;
+            /** Score */
+            score: number | null;
+            /** Tab Out Count */
+            tab_out_count: number;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            /** Completed At */
+            completed_at: string | null;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Questions */
+            questions: components["schemas"]["StudentAttemptQuestionDetail"][];
+            /** Focus Events */
+            focus_events: components["schemas"]["StudentAttemptFocusEventOut"][];
+        };
+        /** StudentAttemptFocusEventOut */
+        StudentAttemptFocusEventOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Event */
+            event: string;
+            /**
+             * Received At
+             * Format: date-time
+             */
+            received_at: string;
+        };
+        /** StudentAttemptQuestionDetail */
+        StudentAttemptQuestionDetail: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Content */
+            content: string;
+            /** Options */
+            options: components["schemas"]["QuestionOptionDetail"][];
+            /** Selected Option Id */
+            selected_option_id: string | null;
+            /** Correct Option Id */
+            correct_option_id: string | null;
+            /** Is Correct */
+            is_correct: boolean | null;
+        };
+        /** StudentExamAttemptsResponse */
+        StudentExamAttemptsResponse: {
+            /** Student Id */
+            student_id: number;
+            /**
+             * Exam Id
+             * Format: uuid
+             */
+            exam_id: string;
+            /** Attempts */
+            attempts: components["schemas"]["StudentAttemptDetailOut"][];
+            /** Total Attempts */
+            total_attempts: number;
+            /** Best Score */
+            best_score: number | null;
+            /** Max Tab Out */
+            max_tab_out: number;
         };
         /** SubmissionListResponse */
         SubmissionListResponse: {
@@ -6797,6 +6940,70 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ExamStatsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_student_attempts_route_api_v1_exams__exam_id__students__student_id__attempts_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                exam_id: string;
+                student_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentExamAttemptsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_exam_attempt_route_api_v1_exams__exam_id__attempts__attempt_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                exam_id: string;
+                attempt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeleteAttemptResponse"];
                 };
             };
             /** @description Validation Error */
