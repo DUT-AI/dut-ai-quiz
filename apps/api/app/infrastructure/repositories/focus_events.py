@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities.attempt import FocusEventEntity
@@ -30,3 +30,15 @@ class FocusEventRepository(IFocusEventRepository):
             .order_by(FocusEvent.received_at.asc())
         )
         return [m.to_entity() for m in r.scalars().all()]
+
+    async def delete(self, event_id) -> bool:
+        r = await self._s.execute(delete(FocusEvent).where(FocusEvent.id == event_id))
+        await self._s.flush()
+        return (r.rowcount or 0) > 0
+
+    async def delete_for_attempt(self, attempt_id) -> int:
+        r = await self._s.execute(
+            delete(FocusEvent).where(FocusEvent.attempt_id == attempt_id)
+        )
+        await self._s.flush()
+        return r.rowcount or 0

@@ -55,6 +55,10 @@ from app.application.use_cases.exams.exam_use_case import (
 from app.application.use_cases.exams.get_student_attempts_uc import (
     GetStudentAttemptsUseCase,
 )
+from app.application.use_cases.exams.manage_focus_events_uc import (
+    ClearAttemptFocusEventsUseCase,
+    DeleteFocusEventUseCase,
+)
 from app.application.use_cases.exams.stats_use_case import GetExamStatsUseCase
 from app.application.use_cases.game import (
     FinishGameSessionUseCase,
@@ -221,6 +225,10 @@ class UseCaseProvider(Provider):
     )
     delete_exam_attempt_use_case = provide(
         DeleteExamAttemptUseCase, scope=Scope.REQUEST
+    )
+    delete_focus_event_use_case = provide(DeleteFocusEventUseCase, scope=Scope.REQUEST)
+    clear_attempt_focus_events_use_case = provide(
+        ClearAttemptFocusEventsUseCase, scope=Scope.REQUEST
     )
     create_hackathon_use_case = provide(CreateHackathonUseCase, scope=Scope.REQUEST)
     delete_hackathon_use_case = provide(DeleteHackathonUseCase, scope=Scope.REQUEST)

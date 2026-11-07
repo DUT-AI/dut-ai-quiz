@@ -17,3 +17,11 @@ class IFocusEventRepository(Protocol):
     async def list_for_attempt(self, attempt_id) -> list[FocusEventEntity]:
         """List all focus events for an attempt ordered by timestamp."""
         ...
+
+    async def delete(self, event_id) -> bool:
+        """Delete a single focus event by id. Returns True if deleted."""
+        ...
+
+    async def delete_for_attempt(self, attempt_id) -> int:
+        """Delete all focus events for an attempt. Returns the number of deleted rows."""
+        ...

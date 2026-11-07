@@ -19,6 +19,10 @@ from app.application.use_cases.exams.exam_use_case import (
 from app.application.use_cases.exams.get_student_attempts_uc import (
     GetStudentAttemptsUseCase,
 )
+from app.application.use_cases.exams.manage_focus_events_uc import (
+    ClearAttemptFocusEventsUseCase,
+    DeleteFocusEventUseCase,
+)
 from app.application.use_cases.exams.stats_use_case import GetExamStatsUseCase
 from app.core.datetime_utils import now_ict
 from app.domain.entities.auth_enums import SystemPermission
@@ -164,4 +168,46 @@ async def delete_exam_attempt_route(
         attempt_id=attempt_id,
         operator_user_id=user_id,
         operator_role=role,
+    )
+
+
+@router.delete(
+    "/{exam_id}/attempts/{attempt_id}/focus-events/{event_id}",
+)
+@inject
+async def delete_focus_event_route(
+    user: TeacherUser,
+    exam_id: UUID,
+    attempt_id: UUID,
+    event_id: UUID,
+    use_case: FromDishka[DeleteFocusEventUseCase],
+):
+    user_id = getattr(user, "id", 0)
+    role_val = getattr(user, "role", "educator")
+    return await use_case.execute(
+        exam_id=exam_id,
+        attempt_id=attempt_id,
+        event_id=event_id,
+        user_id=user_id,
+        user_role=role_val,
+    )
+
+
+@router.delete(
+    "/{exam_id}/attempts/{attempt_id}/focus-events",
+)
+@inject
+async def clear_attempt_focus_events_route(
+    user: TeacherUser,
+    exam_id: UUID,
+    attempt_id: UUID,
+    use_case: FromDishka[ClearAttemptFocusEventsUseCase],
+):
+    user_id = user.id
+    role_val = user.roles
+    return await use_case.execute(
+        exam_id=exam_id,
+        attempt_id=attempt_id,
+        user_id=user_id,
+        user_role=role_val,
     )

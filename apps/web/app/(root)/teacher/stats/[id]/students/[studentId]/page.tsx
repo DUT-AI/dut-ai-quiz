@@ -214,7 +214,12 @@ export default function StudentAttemptsDetailPage() {
 
               <TabsContent value="anticheat" className="outline-none mt-0">
                 <div className="p-8 rounded-[2.5rem] bg-white dark:bg-navy-blue/40 border border-gray-100 dark:border-white/5 shadow-sm">
-                  <AttemptFocusTimeline events={currentAttempt.focus_events} />
+                  <AttemptFocusTimeline
+                    events={currentAttempt.focus_events}
+                    examId={examId}
+                    studentId={studentId}
+                    attemptId={currentAttempt.id}
+                  />
                 </div>
               </TabsContent>
             </Tabs>

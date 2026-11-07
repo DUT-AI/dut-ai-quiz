@@ -168,7 +168,7 @@ export function useStudentExamAttempts(examId: string | null, studentId: number 
   });
 }
 
-export function useDeleteExamAttempt(examId: string | null, studentId: number | null) {
+export function useDeleteExamAttempt(examId: string, studentId: number) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (attemptId: string) => {
@@ -182,6 +182,42 @@ export function useDeleteExamAttempt(examId: string | null, studentId: number | 
       void qc.invalidateQueries({ queryKey: ["exam-stats", examId] });
       void qc.invalidateQueries({ queryKey: ["student-attempts", examId, studentId] });
       void qc.invalidateQueries({ queryKey: ["leaderboard", examId] });
+    },
+  });
+}
+
+export function useDeleteFocusEvent(examId: string, studentId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ attemptId, eventId }: { attemptId: string; eventId: string }) => {
+      const res = await apiFetch(
+        `/api/v1/exams/${examId}/attempts/${attemptId}/focus-events/${eventId}`,
+        { method: "DELETE" }
+      );
+      if (!res.ok) throw new Error("Không thể xóa sự kiện vi phạm");
+      return res.json();
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["exam-stats", examId] });
+      void qc.invalidateQueries({ queryKey: ["student-attempts", examId, studentId] });
+    },
+  });
+}
+
+export function useClearAttemptFocusEvents(examId: string, studentId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (attemptId: string) => {
+      const res = await apiFetch(
+        `/api/v1/exams/${examId}/attempts/${attemptId}/focus-events`,
+        { method: "DELETE" }
+      );
+      if (!res.ok) throw new Error("Không thể xóa tất cả vi phạm");
+      return res.json();
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["exam-stats", examId] });
+      void qc.invalidateQueries({ queryKey: ["student-attempts", examId, studentId] });
     },
   });
 }
