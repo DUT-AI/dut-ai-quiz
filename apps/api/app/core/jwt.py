@@ -16,7 +16,7 @@ def create_access_token(
     else:
         expire = datetime.now(UTC) + timedelta(minutes=settings.jwt_expire_minutes)
 
-    to_encode.update({"exp": expire})
+    to_encode.update({"exp": expire, "token_use": "access"})
     encoded_jwt = jwt.encode(
         to_encode, settings.jwt_secret_key, algorithm=settings.jwt_algorithm
     )
@@ -28,6 +28,9 @@ def decode_access_token(token: str) -> dict[str, Any] | None:
         payload = jwt.decode(
             token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm]
         )
+        # Accept existing access JWTs during rollout, but never another token kind.
+        if payload.get("token_use", "access") != "access":
+            return None
         return payload
     except jwt.ExpiredSignatureError:
         logger.warning("JWT Token has expired")

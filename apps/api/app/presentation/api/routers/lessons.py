@@ -23,7 +23,7 @@ from app.application.use_cases.questions import ListQuestionsUseCase
 from app.domain.entities.auth_enums import SystemPermission
 from app.domain.interfaces import EmbeddingServiceError, ILessonVideoRepository
 from app.domain.value_objects import Difficulty, PoolType
-from app.presentation.api.deps import CurrentUser, EducatorUser
+from app.presentation.api.deps import CurrentUser, EducatorUser, ManageService
 from app.presentation.schemas.lessons import (
     LessonBulkIndexOut,
     LessonCreate,
@@ -283,6 +283,7 @@ async def delete_lesson(
 @inject
 async def get_lesson_metadata(
     lesson_slug: str,
+    _service: ManageService,
     use_case: FromDishka[GetLessonMetadataUseCase],
 ):
     """
@@ -296,6 +297,7 @@ async def get_lesson_metadata(
 @inject
 async def get_lesson_exercises(
     lesson_slug: str,
+    _service: ManageService,
     use_case: FromDishka[GetLessonExercisesUseCase],
 ):
     """

@@ -1,8 +1,11 @@
+from datetime import UTC, datetime
+
 from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import APIRouter, Request
 
 from app.application.use_cases.attempts.attempt_use_case import ListUserAttemptsUseCase
 from app.application.use_cases.me.me_use_case import GetProfileUseCase
+from app.core.jwt import decode_access_token
 from app.presentation.api.deps import CurrentUser
 from app.presentation.schemas.attempts import AttemptOut
 
@@ -22,7 +25,13 @@ async def me(request: Request, use_case: FromDishka[GetProfileUseCase]):
 
     data = await use_case.execute(access_token)
 
-    return {"data": data, "is_success": True}
+    claims = decode_access_token(access_token) if access_token else None
+    expires_in = (
+        max(0, int(claims["exp"] - datetime.now(UTC).timestamp()))
+        if claims and "exp" in claims
+        else None
+    )
+    return {"data": data, "is_success": True, "expires_in": expires_in}
 
 
 @router.get("/attempts")

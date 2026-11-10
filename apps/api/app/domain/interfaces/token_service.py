@@ -1,0 +1,16 @@
+from datetime import datetime, timedelta
+from typing import Any, Protocol
+
+
+class ITokenService(Protocol):
+    @property
+    def access_lifetime(self) -> timedelta: ...
+
+    @property
+    def refresh_lifetime(self) -> timedelta: ...
+
+    def create_access(self, claims: dict[str, Any], expires_at: datetime) -> str: ...
+
+    def create_refresh(self) -> str: ...
+
+    def hash_refresh(self, token: str) -> str: ...

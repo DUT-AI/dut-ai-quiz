@@ -32,7 +32,7 @@ from app.application.use_cases.homeworks import (
 from app.config import settings
 from app.domain.entities.auth_enums import SystemPermission
 from app.domain.exceptions.exceptions import AppException
-from app.presentation.api.deps import CurrentUser, EducatorUser
+from app.presentation.api.deps import CurrentUser, EducatorUser, ManageService
 from app.presentation.schemas.homeworks import (
     CompletedHomeworkMembersResponse,
     DownloadUrlData,
@@ -283,6 +283,7 @@ async def list_submissions(
 @inject
 async def list_completed_members_for_manage(
     lesson_slug: str,
+    _service: ManageService,
     use_case: FromDishka[ListCompletedHomeworkMembersUseCase],
 ) -> CompletedHomeworkMembersResponse:
     return CompletedHomeworkMembersResponse(data=await use_case.execute(lesson_slug))
@@ -295,6 +296,7 @@ async def list_completed_members_for_manage(
 @inject
 async def list_submissions_for_sync_for_manage(
     lesson_slug: str,
+    _service: ManageService,
     use_case: FromDishka[ListHomeworkSubmissionsForSyncUseCase],
 ) -> HomeworkSubmissionsSyncResponse:
     return HomeworkSubmissionsSyncResponse(data=await use_case.execute(lesson_slug))

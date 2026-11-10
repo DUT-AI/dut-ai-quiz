@@ -11,6 +11,7 @@ from app.domain.entities.manage_service import (
     ManageUserEntity,
     ManageUserProfile,
 )
+from app.domain.exceptions.exceptions import ServiceUnavailableException
 from app.domain.interfaces import IDUTAIManageCache, IManageService
 
 
@@ -83,14 +84,15 @@ class DUTAIManageService(IManageService):
         headers = {"Authorization": f"Bearer {settings.manage_api_key}"}
         try:
             response = await self._client.get(url, headers=headers, timeout=10.0)
-            if response.status_code != 200:
-                logger.warning(
-                    f"Failed to fetch user {user_id} profile from Manage Service: {response.text}"
-                )
+            if response.status_code == 404:
                 return None
+            if response.status_code != 200:
+                raise ServiceUnavailableException("Không thể xác minh tài khoản Manage")
             res_json = response.json()
             if not res_json or not res_json.get("is_success"):
-                return None
+                raise ServiceUnavailableException(
+                    "Manage trả về thông tin tài khoản không hợp lệ"
+                )
 
             data = res_json.get("data") or {}
             return ManageUserProfile(
@@ -101,9 +103,11 @@ class DUTAIManageService(IManageService):
                 role_names=data.get("role_names") or [],
                 permissions=data.get("permissions") or [],
             )
-        except Exception as e:
+        except (httpx.HTTPError, ValueError, TypeError) as e:
             logger.error(f"Error fetching profile from Manage Service: {e}")
-            return None
+            raise ServiceUnavailableException(
+                "Không thể kết nối hệ thống Manage"
+            ) from e
 
     async def find_user_by_email(self, email: str) -> list[ManageUserProfile]:
         headers = {"Authorization": f"Bearer {settings.manage_api_key}"}

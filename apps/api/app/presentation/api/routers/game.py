@@ -156,7 +156,9 @@ async def get_user_game_summary_for_manage(
 @router.get("/{lesson_slug}/leaderboard", response_model=list[GameLeaderboardRowOut])
 @inject
 async def get_game_leaderboard(
-    lesson_slug: str, use_case: FromDishka[GetGameLeaderboardUseCase]
+    lesson_slug: str,
+    use_case: FromDishka[GetGameLeaderboardUseCase],
+    _user: CurrentUser,
 ):
     return await use_case.execute(lesson_slug)
 
@@ -166,6 +168,7 @@ async def get_game_leaderboard(
 async def get_user_game_history(
     lesson_slug: str,
     user_id: int,
+    _user: CurrentUser,
     use_case: FromDishka[GetUserMatchHistoryUseCase],
 ):
     return await use_case.execute(user_id=user_id, lesson_slug=lesson_slug)
@@ -175,6 +178,7 @@ async def get_user_game_history(
 @inject
 async def list_game_sessions_for_sync(
     lesson_slug: str,
+    _service: ManageService,
     use_case: FromDishka[ListGameSessionsForSyncUseCase],
 ) -> GameSessionsSyncResponse:
     data = await use_case.execute(lesson_slug)

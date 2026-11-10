@@ -1,5 +1,5 @@
 from app.application.dtos import AuthTokens
-from app.core.jwt import create_access_token
+from app.application.services.auth_sessions import AuthSessionService
 from app.domain.entities.manage_service import ManageUserProfile
 from app.domain.entities.user import UserEntity, UserSource
 from app.domain.exceptions.exceptions import AppException
@@ -14,10 +14,12 @@ class GoogleAuthUseCase:
         user_repo: IUserRepository,
         google_client: GoogleOAuthClient,
         manage_client: IManageService,
+        sessions: AuthSessionService,
     ) -> None:
         self._user_repo = user_repo
         self._google_client = google_client
         self._manage_client = manage_client
+        self._sessions = sessions
 
     async def handle_login_by_google_email_guest(self, google_user: dict[str, str]):
         email = google_user.get("email", "anonymos@gmail.com")
@@ -43,21 +45,17 @@ class GoogleAuthUseCase:
                 db_user.avatar_url = picture
                 await self._user_repo.update(db_user)
 
-        local_jwt = create_access_token(
-            {
-                "user_id": db_user.id,
-                "roles": [db_user.role or "guest"],
-                "type": "google",
-                "user_source": UserSource.GOOGLE.value,
-            }
+        if db_user.id is None:
+            raise AppException("Không thể tạo tài khoản Google", 500)
+        return await self._sessions.create(
+            db_user.id,
+            UserSource.GOOGLE.value,
+            db_user.roles or [db_user.role or "guest"],
         )
 
-        return AuthTokens(
-            access_token=local_jwt,
-            refresh_token="",
-        )
-
-    def handle_login_by_manage_email(self, profile: ManageUserProfile) -> AuthTokens:
+    async def handle_login_by_manage_email(
+        self, profile: ManageUserProfile
+    ) -> AuthTokens:
         service_a_user_id = int(profile.id)
         role_names = profile.role_names
 
@@ -65,17 +63,8 @@ class GoogleAuthUseCase:
         logger.info(
             f"Linking Google user {profile.email} to Service A user ID: {service_a_user_id}"
         )
-        local_jwt = create_access_token(
-            {
-                "user_id": service_a_user_id,
-                "roles": role_names or ["guest"],
-                "type": "service_a",
-                "user_source": UserSource.MANAGE.value,
-            }
-        )
-        return AuthTokens(
-            access_token=local_jwt,
-            refresh_token="",
+        return await self._sessions.create(
+            service_a_user_id, UserSource.MANAGE.value, role_names or ["guest"]
         )
 
     async def execute(self, code: str) -> AuthTokens:
@@ -110,7 +99,7 @@ class GoogleAuthUseCase:
                         break
 
             if matched_profile:
-                return self.handle_login_by_manage_email(matched_profile)
+                return await self.handle_login_by_manage_email(matched_profile)
 
             # Google-only user -> check / create locally
             logger.info(f"Google-only user {email}. Checking local DB.")

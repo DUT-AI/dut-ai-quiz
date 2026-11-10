@@ -45,6 +45,7 @@ async def create_comment(
 @inject
 async def get_comments(
     use_case: Inject[GetCommentsUseCase],
+    _user: CurrentUser,
     target_type: TargetType = Query(...),
     target_id: UUID | None = Query(None),
     sort_by: str = Query(
@@ -73,6 +74,7 @@ async def get_comments(
 async def get_replies(
     comment_id: UUID,
     use_case: Inject[GetCommentsUseCase],
+    _user: CurrentUser,
     sort_by: str = Query(SortMode.NEW),
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
