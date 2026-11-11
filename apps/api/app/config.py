@@ -41,7 +41,8 @@ class Settings(BaseSettings):
 
     jwt_secret_key: str = "fallback-secret-key-for-jwt-signing-change-in-prod"
     jwt_algorithm: str = "HS256"
-    jwt_expire_minutes: int = 1440
+    jwt_expire_minutes: int = Field(default=15, ge=1)
+    jwt_refresh_expire_days: int = Field(default=7, ge=1)
 
     google_client_id: str = ""
     google_client_secret: str = ""

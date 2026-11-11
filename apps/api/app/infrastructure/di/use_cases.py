@@ -2,6 +2,7 @@ from dishka import Provider, Scope, provide
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.application.services.auth_sessions import AuthSessionService
 from app.application.services.game_hydration import GameHydrationService
 from app.application.services.game_items.microscope import MicroscopeItemStrategy
 from app.application.services.game_items.registry import GameItemRegistry
@@ -34,6 +35,7 @@ from app.application.use_cases.auth import (
     LoginByManageAccountUseCase,
     LogoutUseCase,
 )
+from app.application.use_cases.auth.refresh import RefreshTokensUseCase
 from app.application.use_cases.comment import (
     CreateCommentUseCase,
     DeleteCommentUseCase,
@@ -204,6 +206,8 @@ from app.domain.interfaces import (
     IS3Client,
     IUserRepository,
 )
+from app.domain.interfaces.auth_session_repo import IAuthSessionRepository
+from app.domain.interfaces.token_service import ITokenService
 from app.domain.services.hackathon_leaderboard import HackathonLeaderboardDomainService
 from app.domain.value_objects.gamification import GamificationItem
 from app.infrastructure.cache.redis_client import ProfileCache
@@ -491,12 +495,19 @@ class UseCaseProvider(Provider):
     reorder_modules_use_case = provide(ReorderModulesUseCase, scope=Scope.REQUEST)
 
     # auth & me
+    auth_session_service = provide(AuthSessionService, scope=Scope.REQUEST)
+    refresh_tokens_use_case = provide(RefreshTokensUseCase, scope=Scope.REQUEST)
     proxy_login_use_case = provide(LoginByManageAccountUseCase, scope=Scope.REQUEST)
     google_auth_use_case = provide(GoogleAuthUseCase, scope=Scope.REQUEST)
 
     @provide(scope=Scope.REQUEST)
-    def logout_use_case(self, cache: ProfileCache) -> LogoutUseCase:
-        return LogoutUseCase(cache)
+    def logout_use_case(
+        self,
+        cache: ProfileCache,
+        repository: IAuthSessionRepository,
+        tokens: ITokenService,
+    ) -> LogoutUseCase:
+        return LogoutUseCase(cache, repository, tokens)
 
     @provide(scope=Scope.REQUEST)
     def get_profile_use_case(

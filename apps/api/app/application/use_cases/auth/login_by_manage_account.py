@@ -1,29 +1,24 @@
 from app.application.dtos import AuthTokens, LoginPayload
+from app.application.services.auth_sessions import AuthSessionService
 from app.config import settings
-from app.core.jwt import create_access_token
 from app.domain.exceptions.exceptions import AppException
 from app.domain.interfaces import IManageService
 from loguru import logger
 
 
 class LoginByManageAccountUseCase:
-    def __init__(self, manage_client: IManageService) -> None:
+    def __init__(
+        self, manage_client: IManageService, sessions: AuthSessionService
+    ) -> None:
         self._manage_client = manage_client
+        self._sessions = sessions
 
     async def execute(self, payload: LoginPayload) -> AuthTokens:
         if settings.auth_dev_bypass:
             rn = settings.auth_dev_role_name
             roles = [rn] if isinstance(rn, str) else (rn or ["admin"])
-            local_jwt = create_access_token(
-                {
-                    "user_id": settings.auth_dev_user_id,
-                    "roles": roles,
-                    "type": "service_a",
-                }
-            )
-            return AuthTokens(
-                access_token=local_jwt,
-                refresh_token="",
+            return await self._sessions.create(
+                settings.auth_dev_user_id, "MANAGE", roles
             )
 
         try:
@@ -44,17 +39,8 @@ class LoginByManageAccountUseCase:
             role_names = profile.role_names
 
             # 3. Create unified JWT token
-            local_jwt = create_access_token(
-                {
-                    "user_id": manage_user_id,
-                    "roles": role_names or ["guest"],
-                    "type": "service_a",
-                }
-            )
-
-            return AuthTokens(
-                access_token=local_jwt,
-                refresh_token="",
+            return await self._sessions.create(
+                manage_user_id, "MANAGE", role_names or ["guest"]
             )
         except AppException:
             raise

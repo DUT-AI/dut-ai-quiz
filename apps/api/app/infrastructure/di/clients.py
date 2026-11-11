@@ -17,6 +17,7 @@ from app.domain.interfaces import (
     ISubmissionQueue,
 )
 from app.domain.interfaces.pdf_import_queue import IPdfImportQueue
+from app.domain.interfaces.token_service import ITokenService
 from app.infrastructure.clients import (
     DUTAIManageService,
     GoogleOAuthClient,
@@ -39,10 +40,13 @@ from app.infrastructure.clients.rerank_service import (
     DutAiRerankService,
     LocalRerankService,
 )
+from app.infrastructure.services.token_service import TokenService
 
 
 class ClientProvider(Provider):
     """Dependency Injection provider for external API clients."""
+
+    token_service = provide(TokenService, provides=ITokenService, scope=Scope.APP)
 
     @provide(scope=Scope.APP)
     async def get_http_client(self) -> AsyncIterable[httpx.AsyncClient]:

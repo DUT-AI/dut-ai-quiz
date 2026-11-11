@@ -1,5 +1,6 @@
 from .attempt import Attempt, AttemptAnswer, FocusEvent
 from .auth_rbac import Permission, Role, role_permissions, user_roles
+from .auth_session import AuthSession, RefreshToken
 from .base import Base
 from .comment import Comment
 from .comment_reaction import CommentReaction
@@ -26,6 +27,8 @@ from .user import User
 __all__ = [
     "Attempt",
     "AttemptAnswer",
+    "AuthSession",
+    "RefreshToken",
     "Base",
     "Comment",
     "CommentReaction",

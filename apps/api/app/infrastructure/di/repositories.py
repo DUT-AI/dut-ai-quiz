@@ -19,6 +19,7 @@ from app.domain.interfaces import (
     ITagRepository,
     IUserRepository,
 )
+from app.domain.interfaces.auth_session_repo import IAuthSessionRepository
 from app.domain.interfaces.hackathon_repo import (
     IHackathonRegistrationRepository,
     IHackathonRepository,
@@ -27,6 +28,7 @@ from app.domain.interfaces.hackathon_repo import (
     IHackathonTeamRepository,
 )
 from app.infrastructure.repositories.attempts import AttemptRepository
+from app.infrastructure.repositories.auth_sessions import AuthSessionRepository
 from app.infrastructure.repositories.comment_reactions import CommentReactionRepository
 from app.infrastructure.repositories.comments import CommentRepository
 from app.infrastructure.repositories.exam_questions import ExamQuestionRepository
@@ -54,6 +56,7 @@ from app.infrastructure.repositories.users import UserRepository
 
 class RepositoryProvider(Provider):
     scope = Scope.REQUEST
+    auth_session_repo = provide(AuthSessionRepository, provides=IAuthSessionRepository)
 
     # Đăng ký kèm theo tham số provides để map concrete class với interface của nó
     lesson_repo = provide(LessonRepository, provides=ILessonRepository)

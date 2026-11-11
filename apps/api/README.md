@@ -31,11 +31,11 @@ uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ## Migration (Alembic)
 
 ```bash
-uv run alembic upgrade head
+uv run python -m alembic upgrade head
 ```
 
 Tạo revision mới:
 
 ```bash
-uv run alembic revision --autogenerate -m "message"
+uv run python -m alembic revision --autogenerate -m "message"
 ```
