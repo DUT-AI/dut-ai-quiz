@@ -2,6 +2,8 @@ from uuid import UUID
 
 from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import or_
+from sqlalchemy.orm import aliased
 
 from app.domain.entities.question import QuestionEntity, QuestionStatus
 from app.domain.interfaces import IQuestionRepository, QuestionSimilarityMatch
@@ -46,10 +48,10 @@ class QuestionRepository(IQuestionRepository):
         tag: str | None = None,
         status: QuestionStatus | None = None,
         related_questions: bool | None = None,
+        search: str | None = None,
         offset: int = 0,
         limit: int = 50,
     ) -> list[QuestionEntity]:
-        from sqlalchemy.orm import aliased
 
         PublicQuestion = aliased(Question)
         distance = Question.embedding.cosine_distance(PublicQuestion.embedding)
@@ -79,6 +81,14 @@ class QuestionRepository(IQuestionRepository):
             stmt = stmt.where(Question.import_session_id == import_session_id)
         if status is not None:
             stmt = stmt.where(Question.status == status)
+        if search:
+            search_pattern = f"%{search.strip()}%"
+            stmt = stmt.where(
+                or_(
+                    Question.content.ilike(search_pattern),
+                    Question.solution.ilike(search_pattern),
+                )
+            )
         if tag:
             # tag can be name (string) or UUID string
             tag_uuid = None
@@ -121,6 +131,78 @@ class QuestionRepository(IQuestionRepository):
                 ent.duplicate_status = DuplicateStatus.POSSIBLE_DUPLICATE
             entities.append(ent)
         return entities
+
+    async def count(
+        self,
+        *,
+        pool_type: PoolType | None = None,
+        difficulty: Difficulty | None = None,
+        lesson_id: UUID | None = None,
+        import_session_id: UUID | None = None,
+        tag: str | None = None,
+        status: QuestionStatus | None = None,
+        related_questions: bool | None = None,
+        search: str | None = None,
+    ) -> int:
+        from sqlalchemy import func, or_
+        from sqlalchemy.orm import aliased
+
+        stmt = select(func.count(Question.id))
+
+        if related_questions:
+            PublicQuestion = aliased(Question)
+            distance = Question.embedding.cosine_distance(PublicQuestion.embedding)
+            has_dup_exists = (
+                select(1)
+                .where(
+                    PublicQuestion.status == "PUBLIC",
+                    PublicQuestion.id != Question.id,
+                    PublicQuestion.embedding.is_not(None),
+                    PublicQuestion.embedding_model == Question.embedding_model,
+                    (1 - distance) >= 0.85,
+                )
+                .exists()
+            )
+            stmt = stmt.where(has_dup_exists)
+
+        if pool_type is not None:
+            stmt = stmt.where(Question.pool_type == pool_type)
+        if difficulty is not None:
+            stmt = stmt.where(Question.difficulty == difficulty)
+        if lesson_id:
+            stmt = stmt.where(Question.lesson_id == lesson_id)
+        if import_session_id:
+            stmt = stmt.where(Question.import_session_id == import_session_id)
+        if status is not None:
+            stmt = stmt.where(Question.status == status)
+        if search:
+            search_pattern = f"%{search.strip()}%"
+            stmt = stmt.where(
+                or_(
+                    Question.content.ilike(search_pattern),
+                    Question.solution.ilike(search_pattern),
+                )
+            )
+        if tag:
+            tag_uuid = None
+            from uuid import UUID as pyUUID
+
+            try:
+                tag_uuid = pyUUID(tag)
+            except ValueError:
+                tag_stmt = select(Tag.id).where(Tag.name == tag)
+                tag_res = await self._s.execute(tag_stmt)
+                tag_uuid = tag_res.scalar_one_or_none()
+
+            if tag_uuid:
+                stmt = stmt.where(func.array_position(Question.tags, tag_uuid).isnot(None))
+            else:
+                from uuid import uuid4
+
+                stmt = stmt.where(func.array_position(Question.tags, uuid4()).isnot(None))
+
+        res = await self._s.execute(stmt)
+        return res.scalar_one() or 0
 
     async def add(self, entity: QuestionEntity) -> QuestionEntity:
         from uuid import UUID as pyUUID

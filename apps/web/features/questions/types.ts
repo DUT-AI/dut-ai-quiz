@@ -62,6 +62,15 @@ export const QuestionOutSchema = z.object({
 
 export type QuestionOut = z.infer<typeof QuestionOutSchema>;
 
+export const PaginatedQuestionsOutSchema = z.object({
+  items: z.array(QuestionOutSchema),
+  total: z.number(),
+  page: z.number(),
+  page_size: z.number(),
+  total_pages: z.number(),
+});
+export type PaginatedQuestionsOut = z.infer<typeof PaginatedQuestionsOutSchema>;
+
 export const ParsedQuestionPreviewSchema = z.object({
   content: z.string(),
   options: z.array(

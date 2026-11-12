@@ -7,6 +7,7 @@ import { ArrowLeft, FileJson, FileText, Plus, Database } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface QuestionsTabHeaderProps {
+  lessonId?: string;
   lessonName?: string;
   activePoolType: "PRACTICE" | "EXAM" | "GAME";
   isTeacher: boolean;
@@ -17,6 +18,7 @@ interface QuestionsTabHeaderProps {
 }
 
 export function QuestionsTabHeader({
+  lessonId,
   lessonName,
   activePoolType,
   isTeacher,
@@ -49,9 +51,19 @@ export function QuestionsTabHeader({
             Bài học
           </Link>
           <span className="opacity-60">/</span>
-          <span className="text-slate-600 dark:text-zinc-300 max-w-[200px] truncate" title={lessonName}>
-            {lessonName ?? "Đang tải..."}
-          </span>
+          {lessonId ? (
+            <Link
+              href={`/teacher/lessons/${lessonId}/edit`}
+              className="text-slate-600 dark:text-zinc-300 hover:text-primary transition-colors max-w-[200px] truncate"
+              title={lessonName}
+            >
+              {lessonName ?? "Đang tải..."}
+            </Link>
+          ) : (
+            <span className="text-slate-600 dark:text-zinc-300 max-w-[200px] truncate" title={lessonName}>
+              {lessonName ?? "Đang tải..."}
+            </span>
+          )}
           <span className="opacity-60">/</span>
           <span className="text-primary font-black">Ngân hàng câu hỏi</span>
         </div>
