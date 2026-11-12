@@ -26,6 +26,19 @@ class ListQuestionsUseCase:
             import_session_id=query.import_session_id,
             status=query.status,
             related_questions=query.related_questions,
+            search=query.search,
             offset=query.offset,
             limit=query.limit,
+        )
+
+    async def count(self, query: QuestionListQuery) -> int:
+        return await self._question_repo.count(
+            pool_type=query.pool_type,
+            difficulty=query.difficulty,
+            lesson_id=query.lesson_id,
+            tag=query.tag,
+            import_session_id=query.import_session_id,
+            status=query.status,
+            related_questions=query.related_questions,
+            search=query.search,
         )

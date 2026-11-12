@@ -3,10 +3,12 @@ import { apiGet, apiPost, apiPatch, apiClient } from "@/lib/api";
 import { z } from "zod";
 import {
   QuestionOutSchema,
+  PaginatedQuestionsOutSchema,
   PDFParseResponseSchema,
   TagOutSchema,
   type QuestionCreate,
   type QuestionOut,
+  type PaginatedQuestionsOut,
   type PDFParseResponse,
   type TagOut,
 } from "./types";
@@ -19,6 +21,9 @@ export function useQuestions(params?: {
   status?: string;
   difficulty?: string;
   related_questions?: boolean;
+  search?: string;
+  page?: number;
+  page_size?: number;
   offset?: number;
   limit?: number;
 }) {
@@ -30,6 +35,9 @@ export function useQuestions(params?: {
   if (params?.status) search.set("status", params.status);
   if (params?.difficulty) search.set("difficulty", params.difficulty);
   if (params?.related_questions !== undefined) search.set("related_questions", String(params.related_questions));
+  if (params?.search) search.set("search", params.search);
+  if (params?.page !== undefined) search.set("page", String(params.page));
+  if (params?.page_size !== undefined) search.set("page_size", String(params.page_size));
   if (params?.offset !== undefined) search.set("offset", String(params.offset));
   if (params?.limit) search.set("limit", String(params.limit));
 
@@ -38,6 +46,40 @@ export function useQuestions(params?: {
   return useQuery({
     queryKey: ["questions", params],
     queryFn: () => apiGet<QuestionOut[]>(`/api/v1/questions${qs}`, z.array(QuestionOutSchema)),
+    staleTime: 30_000,
+  });
+}
+
+export function usePaginatedQuestions(params?: {
+  pool_type?: string;
+  tag?: string;
+  lesson_id?: string;
+  import_session_id?: string;
+  status?: string;
+  difficulty?: string;
+  related_questions?: boolean;
+  search?: string;
+  page?: number;
+  page_size?: number;
+}) {
+  const search = new URLSearchParams();
+  search.set("paginated", "true");
+  if (params?.pool_type) search.set("pool_type", params.pool_type);
+  if (params?.tag) search.set("tag", params.tag);
+  if (params?.lesson_id) search.set("lesson_id", params.lesson_id);
+  if (params?.import_session_id) search.set("import_session_id", params.import_session_id);
+  if (params?.status) search.set("status", params.status);
+  if (params?.difficulty) search.set("difficulty", params.difficulty);
+  if (params?.related_questions !== undefined) search.set("related_questions", String(params.related_questions));
+  if (params?.search) search.set("search", params.search);
+  if (params?.page !== undefined) search.set("page", String(params.page));
+  if (params?.page_size !== undefined) search.set("page_size", String(params.page_size));
+
+  const qs = `?${search.toString()}`;
+
+  return useQuery({
+    queryKey: ["questions", "paginated", params],
+    queryFn: () => apiGet<PaginatedQuestionsOut>(`/api/v1/questions${qs}`, PaginatedQuestionsOutSchema),
     staleTime: 30_000,
   });
 }

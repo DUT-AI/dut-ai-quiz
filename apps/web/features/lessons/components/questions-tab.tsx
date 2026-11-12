@@ -5,7 +5,7 @@ import { AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { Trash2, Check } from "lucide-react";
 
-import { useQuestions, useDeleteQuestion, useBulkDeleteQuestions } from "@/lib/queries";
+import { useQuestions, usePaginatedQuestions, useDeleteQuestion, useBulkDeleteQuestions } from "@/lib/queries";
 import type { QuestionOut } from "@/lib/types";
 import { PoolType } from "@/features/questions/types";
 import { PdfImport } from "@/components/pdf-import";
@@ -14,6 +14,8 @@ import { ConfirmModal } from "@/components/molecules/confirm-modal";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SearchBar } from "@/components/ui/search-bar";
 import { Button } from "@/components/ui/button";
+import { useDebounce } from "@/hooks/use-debounce";
+import { ReviewPagination } from "@/features/questions/components/review-pagination";
 import { cn } from "@/lib/utils";
 
 import {
@@ -35,11 +37,96 @@ export function QuestionsTab({ lessonId, isAdminView = false, lessonName }: Ques
   const router = useRouter();
   const [activePoolType, setActivePoolType] = useState<PoolType>("PRACTICE");
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery.trim(), 400);
 
-  // Questions query for all pool types under this lesson
-  const { data: allQuestions = [], isLoading: isLoadingQuestions } = useQuestions({
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [difficultyFilter, setDifficultyFilter] = useState<"ALL" | "EASY" | "MEDIUM" | "HARD">("ALL");
+
+  // Reset page when filter / search changes
+  useEffect(() => {
+    setPage(1);
+  }, [activePoolType, difficultyFilter, debouncedSearch]);
+
+  // Paginated Questions query directly from server
+  const {
+    data: paginatedData,
+    isLoading: isLoadingQuestions,
+    isPlaceholderData,
+  } = usePaginatedQuestions({
     lesson_id: lessonId,
+    pool_type: activePoolType,
+    difficulty: difficultyFilter === "ALL" ? undefined : difficultyFilter,
+    search: debouncedSearch || undefined,
+    page: page,
+    page_size: pageSize,
   });
+
+  const questions = useMemo(() => paginatedData?.items || [], [paginatedData]);
+  const totalCount = paginatedData?.total || 0;
+  const totalPages = paginatedData?.total_pages || 1;
+
+  // Lightweight queries for pool badge counts
+  const { data: practiceCountData } = usePaginatedQuestions({
+    lesson_id: lessonId,
+    pool_type: "PRACTICE",
+    search: debouncedSearch || undefined,
+    page: 1,
+    page_size: 1,
+  });
+  const { data: examCountData } = usePaginatedQuestions({
+    lesson_id: lessonId,
+    pool_type: "EXAM",
+    search: debouncedSearch || undefined,
+    page: 1,
+    page_size: 1,
+  });
+  const { data: gameCountData } = usePaginatedQuestions({
+    lesson_id: lessonId,
+    pool_type: "GAME",
+    search: debouncedSearch || undefined,
+    page: 1,
+    page_size: 1,
+  });
+
+  const counts = useMemo(() => ({
+    PRACTICE: practiceCountData?.total ?? 0,
+    EXAM: examCountData?.total ?? 0,
+    GAME: gameCountData?.total ?? 0,
+  }), [practiceCountData?.total, examCountData?.total, gameCountData?.total]);
+
+  // Difficulty counts under current pool
+  const { data: easyCountData } = usePaginatedQuestions({
+    lesson_id: lessonId,
+    pool_type: activePoolType,
+    difficulty: "EASY",
+    search: debouncedSearch || undefined,
+    page: 1,
+    page_size: 1,
+  });
+  const { data: mediumCountData } = usePaginatedQuestions({
+    lesson_id: lessonId,
+    pool_type: activePoolType,
+    difficulty: "MEDIUM",
+    search: debouncedSearch || undefined,
+    page: 1,
+    page_size: 1,
+  });
+  const { data: hardCountData } = usePaginatedQuestions({
+    lesson_id: lessonId,
+    pool_type: activePoolType,
+    difficulty: "HARD",
+    search: debouncedSearch || undefined,
+    page: 1,
+    page_size: 1,
+  });
+
+  const difficultyCounts = useMemo(() => ({
+    ALL: counts[activePoolType] || 0,
+    EASY: easyCountData?.total ?? 0,
+    MEDIUM: mediumCountData?.total ?? 0,
+    HARD: hardCountData?.total ?? 0,
+  }), [activePoolType, counts, easyCountData?.total, mediumCountData?.total, hardCountData?.total]);
 
   const { canManageQuestions } = useAuth();
   const isTeacher = isAdminView && canManageQuestions;
@@ -54,78 +141,10 @@ export function QuestionsTab({ lessonId, isAdminView = false, lessonName }: Ques
   const deleteMut = useDeleteQuestion();
   const bulkDeleteMut = useBulkDeleteQuestions();
 
-  const [difficultyFilter, setDifficultyFilter] = useState<"ALL" | "EASY" | "MEDIUM" | "HARD">("ALL");
-
-  // Reset selection when switching tab or filter
+  // Reset selection when switching tab or filter or page
   useEffect(() => {
     setSelectedIds(new Set());
-  }, [activePoolType, difficultyFilter, searchQuery]);
-
-  // Local client-side realtime filtering across all tabs
-  const searchedQuestions = useMemo(() => {
-    if (!searchQuery.trim()) return allQuestions;
-    const term = searchQuery.toLowerCase().trim();
-    return allQuestions.filter((q) => {
-      const matchContent = q.content?.toLowerCase().includes(term);
-      const matchSolution = q.solution?.toLowerCase().includes(term);
-      const matchOptions = q.options?.some((o) => o.text?.toLowerCase().includes(term));
-      return matchContent || matchSolution || matchOptions;
-    });
-  }, [allQuestions, searchQuery]);
-
-  // Questions matching active pool type and difficulty filter
-  const filteredQuestions = useMemo(() => {
-    return searchedQuestions.filter((q) => {
-      const matchPool = q.pool_type === activePoolType;
-      const matchDifficulty = difficultyFilter === "ALL" || q.difficulty === difficultyFilter;
-      return matchPool && matchDifficulty;
-    });
-  }, [searchedQuestions, activePoolType, difficultyFilter]);
-
-  // Dynamic counts for each category based on search results
-  const counts = useMemo(() => {
-    const res = { PRACTICE: 0, EXAM: 0, GAME: 0 };
-    searchedQuestions.forEach((q) => {
-      if (q.pool_type && res[q.pool_type] !== undefined) {
-        res[q.pool_type]++;
-      }
-    });
-    return res;
-  }, [searchedQuestions]);
-
-  // Dynamic counts for each difficulty level based on current search and active pool
-  const difficultyCounts = useMemo(() => {
-    const res: Record<"ALL" | "EASY" | "MEDIUM" | "HARD", number> = { ALL: 0, EASY: 0, MEDIUM: 0, HARD: 0 };
-    const activePoolQuestions = searchedQuestions.filter((q) => q.pool_type === activePoolType);
-    res.ALL = activePoolQuestions.length;
-    activePoolQuestions.forEach((q) => {
-      if (q.difficulty) {
-        const diffKey = q.difficulty as "EASY" | "MEDIUM" | "HARD";
-        if (res[diffKey] !== undefined) {
-          res[diffKey]++;
-        }
-      }
-    });
-    return res;
-  }, [searchedQuestions, activePoolType]);
-
-  // Auto-switch tabs to the first category that has matching questions when searching
-  useEffect(() => {
-    if (!searchQuery.trim()) return;
-
-    // Check if the current tab has any matches
-    const activeHasMatches = searchedQuestions.some((q) => q.pool_type === activePoolType);
-    if (activeHasMatches) return;
-
-    // If not, find the first category that has results and switch to it
-    const pools: PoolType[] = ["PRACTICE", "EXAM", "GAME"];
-    for (const p of pools) {
-      if (searchedQuestions.some((q) => q.pool_type === p)) {
-        setActivePoolType(p);
-        break;
-      }
-    }
-  }, [searchQuery, searchedQuestions, activePoolType]);
+  }, [activePoolType, difficultyFilter, debouncedSearch, page]);
 
   const handleEdit = useCallback((q: QuestionOut) => {
     router.push(`/teacher/lessons/${lessonId}/questions/${q.id}/edit`);
@@ -166,15 +185,15 @@ export function QuestionsTab({ lessonId, isAdminView = false, lessonName }: Ques
     });
   }, []);
 
-  const isAllSelected = filteredQuestions.length > 0 && selectedIds.size === filteredQuestions.length;
+  const isAllSelected = questions.length > 0 && selectedIds.size === questions.length;
 
   const handleSelectAll = useCallback(() => {
     if (isAllSelected) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(filteredQuestions.map((q) => q.id)));
+      setSelectedIds(new Set(questions.map((q) => q.id)));
     }
-  }, [isAllSelected, filteredQuestions]);
+  }, [isAllSelected, questions]);
 
   const handleClearSelection = useCallback(() => {
     setSelectedIds(new Set());
@@ -191,16 +210,25 @@ export function QuestionsTab({ lessonId, isAdminView = false, lessonName }: Ques
     }
   };
 
+  const handlePrevPage = () => {
+    setPage((p) => Math.max(1, p - 1));
+  };
+
+  const handleNextPage = () => {
+    setPage((p) => (p < totalPages ? p + 1 : p));
+  };
+
   return (
     <div className="space-y-8 text-left">
       {isTeacher && (
         <>
           {/* Redesigned Header using subcomponent */}
           <QuestionsTabHeader
+            lessonId={lessonId}
             lessonName={lessonName}
             activePoolType={activePoolType}
             isTeacher={isTeacher}
-            questionsCount={filteredQuestions.length}
+            questionsCount={totalCount}
             onAddClick={() => router.push(`/teacher/lessons/${lessonId}/questions/new`)}
             onBulkClick={() => setShowBulkModal(true)}
             onPdfClick={() => setShowPdfModal(true)}
@@ -280,7 +308,7 @@ export function QuestionsTab({ lessonId, isAdminView = false, lessonName }: Ques
               Danh sách câu hỏi luyện tập
             </h2>
             <p className="text-xs text-slate-500 dark:text-zinc-400">
-              Hiện có <span className="font-extrabold text-primary">{filteredQuestions.length}</span> câu hỏi được hiển thị.
+              Hiện có <span className="font-extrabold text-primary">{totalCount}</span> câu hỏi được tìm thấy.
             </p>
           </div>
 
@@ -305,13 +333,13 @@ export function QuestionsTab({ lessonId, isAdminView = false, lessonName }: Ques
       )}
 
       {/* Teacher Bulk Selection Toolbar */}
-      {isTeacher && filteredQuestions.length > 0 && (
+      {isTeacher && questions.length > 0 && (
         <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 bg-slate-50 dark:bg-zinc-900/90 rounded-2xl border border-slate-200/60 dark:border-zinc-800 transition-all">
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={handleSelectAll}
-              disabled={filteredQuestions.length === 0}
+              disabled={questions.length === 0}
               className="flex items-center gap-2.5 text-xs font-bold text-slate-700 dark:text-zinc-200 hover:text-primary transition-colors cursor-pointer select-none disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <div
@@ -329,8 +357,8 @@ export function QuestionsTab({ lessonId, isAdminView = false, lessonName }: Ques
               </div>
               <span>
                 {isAllSelected
-                  ? "Bỏ chọn tất cả"
-                  : `Chọn tất cả (${filteredQuestions.length})`}
+                  ? "Bỏ chọn tất cả trang này"
+                  : `Chọn tất cả trang này (${questions.length})`}
               </span>
             </button>
 
@@ -368,19 +396,30 @@ export function QuestionsTab({ lessonId, isAdminView = false, lessonName }: Ques
       {/* Redesigned Questions list using subcomponent */}
       <QuestionsList
         isLoading={isLoadingQuestions}
-        questions={filteredQuestions}
+        questions={questions}
         activePoolType={activePoolType}
         isTeacher={isTeacher}
         onExplain={handleExplain}
         onEdit={handleEdit}
         onDelete={handleDelete}
-        searchQuery={searchQuery}
+        searchQuery={debouncedSearch}
         onClearSearch={handleClearSearch}
         difficultyFilter={difficultyFilter}
         onClearDifficulty={handleClearDifficulty}
         selectedIds={selectedIds}
         onToggleSelect={handleToggleSelect}
       />
+
+      {/* Server Pagination Controls */}
+      {totalPages > 1 && (
+        <ReviewPagination
+          page={page}
+          isPrevDisabled={page === 1 || isPlaceholderData}
+          isNextDisabled={page >= totalPages || isPlaceholderData}
+          onPrev={handlePrevPage}
+          onNext={handleNextPage}
+        />
+      )}
 
       {/* Modals and overlay panels */}
       <AnimatePresence>

@@ -130,8 +130,17 @@ class QuestionListQuery(BaseModel):
     import_session_id: UUID | None = None
     status: QuestionStatus | None = None
     related_questions: bool | None = None
+    search: str | None = None
     offset: int = 0
     limit: int = 50
+
+
+class PaginatedQuestionsOut(BaseModel):
+    items: list[QuestionOut]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
 
 
 class QuestionBulkItem(BaseModel):

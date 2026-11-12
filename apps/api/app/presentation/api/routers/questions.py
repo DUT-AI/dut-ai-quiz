@@ -27,6 +27,7 @@ from app.domain.value_objects import Difficulty, PoolType
 from app.presentation.api.deps import CurrentUser, EducatorUser
 from app.presentation.schemas.lessons import RelatedLessonOut, RelativeDocumentOut
 from app.presentation.schemas.questions import (
+    PaginatedQuestionsOut,
     QuestionAnswerIn,
     QuestionAnswerOut,
     QuestionBulkCreate,
@@ -53,7 +54,7 @@ def sanitize_questions_for_student(questions: list) -> list:
     return [QuestionToStudent.model_validate(q) for q in questions]
 
 
-@router.get("", response_model=list[QuestionOut])
+@router.get("", response_model=list[QuestionOut] | PaginatedQuestionsOut)
 @inject
 async def list_questions_route(
     user: CurrentUser,
@@ -65,9 +66,27 @@ async def list_questions_route(
     import_session_id: UUID | None = None,
     status: QuestionStatus | None = None,
     related_questions: bool | None = Query(None),
+    search: str | None = Query(None),
+    page: int | None = Query(None, ge=1),
+    page_size: int | None = Query(None, ge=1, le=100),
     offset: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=2000),
+    paginated: bool = Query(False),
 ):
+    # Calculate offset & limit if page & page_size are supplied
+    effective_limit = limit
+    effective_offset = offset
+    current_page = page or 1
+    current_page_size = page_size or limit
+
+    if page is not None and page_size is not None:
+        effective_limit = page_size
+        effective_offset = (page - 1) * page_size
+    elif page_size is not None:
+        effective_limit = page_size
+    elif page is not None:
+        effective_offset = (page - 1) * limit
+
     # For guests/students, we only allow viewing PUBLIC questions.
     if not user.has_permission(SystemPermission.MANAGE_QUESTION):
         pool_type = PoolType.PRACTICE
@@ -83,12 +102,25 @@ async def list_questions_route(
         import_session_id=import_session_id,
         status=status,
         related_questions=related_questions,
-        offset=offset,
-        limit=limit,
+        search=search,
+        offset=effective_offset,
+        limit=effective_limit,
     )
     rows = await use_case.execute(q)
     if not user.has_permission(SystemPermission.MANAGE_QUESTION):
         rows = sanitize_questions_for_student(rows)
+
+    if paginated:
+        total = await use_case.count(q)
+        total_pages = (total + current_page_size - 1) // current_page_size if current_page_size > 0 else 1
+        return PaginatedQuestionsOut(
+            items=[QuestionOut.model_validate(r) for r in rows],
+            total=total,
+            page=current_page,
+            page_size=current_page_size,
+            total_pages=total_pages,
+        )
+
     return rows
 
 

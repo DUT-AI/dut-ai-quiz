@@ -29,10 +29,26 @@ class IQuestionRepository(Protocol):
         tag: str | None = None,
         status: QuestionStatus | None = None,
         related_questions: bool | None = None,
+        search: str | None = None,
         offset: int = 0,
         limit: int = 50,
     ) -> list[QuestionEntity]:
         """List questions matching the filters with pagination."""
+        ...
+
+    async def count(
+        self,
+        *,
+        pool_type: PoolType | None = None,
+        difficulty: Difficulty | None = None,
+        lesson_id: UUID | None = None,
+        import_session_id: UUID | None = None,
+        tag: str | None = None,
+        status: QuestionStatus | None = None,
+        related_questions: bool | None = None,
+        search: str | None = None,
+    ) -> int:
+        """Count questions matching the filters."""
         ...
 
     async def add(self, entity: QuestionEntity) -> QuestionEntity:
