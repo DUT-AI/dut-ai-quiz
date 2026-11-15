@@ -16,7 +16,7 @@ interface UseMotionControllerOptions {
   sessionId: string | null;
   questionId: string | null;
   optionIds: readonly string[];
-
+  blockedOptionIds?: readonly string[];
   onConfirm: (optionId: string) => void;
 }
 
@@ -43,6 +43,7 @@ export function useMotionController({
   sessionId,
   questionId,
   optionIds,
+  blockedOptionIds = [],
   onConfirm,
 }: UseMotionControllerOptions) {
   // Compare values rather than the identity of the optionIds array.
@@ -69,6 +70,7 @@ export function useMotionController({
     questionKey,
     enabled,
     canAnswer,
+    blockedOptionIds,
     onConfirm,
   });
 
@@ -79,6 +81,7 @@ export function useMotionController({
       questionKey,
       enabled,
       canAnswer,
+      blockedOptionIds,
       onConfirm,
     };
   }, [engine, questionKey, enabled, canAnswer, onConfirm]);
@@ -193,6 +196,7 @@ export function useMotionController({
         const confirmation = controller.processFrame(
           event.payload.frame,
           generation,
+          latestRef.current.blockedOptionIds,
         );
 
         publish();

@@ -227,3 +227,54 @@ test.describe("motion controller", () => {
     expect(controller.getState().holdProgress).toBe(0);
   });
 });
+test("blocks eliminated options without changing the mapping", () => {
+  const { controller, generation } = setup();
+  const mapping = controller.getState().mapping;
+
+  controller.processFrame(frame(0), generation);
+  controller.processFrame(frame(250), generation);
+
+  expect(controller.getState().holdProgress).toBeGreaterThan(0);
+
+  // Vật phẩm 50–50 vừa loại option-one.
+  for (let time = 500; time <= 2000; time += 250) {
+    expect(
+      controller.processFrame(
+        frame(time),
+        generation,
+        ["option-one"],
+      ),
+    ).toBeNull();
+  }
+
+  expect(controller.getState()).toMatchObject({
+    candidateOptionId: null,
+    confirmedOptionId: null,
+    holdProgress: 0,
+  });
+
+  expect(controller.getState().mapping).toBe(mapping);
+
+  // Với rng = 0, ACT_03 được gán cho option-two.
+  for (let time = 2250; time < 3750; time += 250) {
+    expect(
+      controller.processFrame(
+        frame(time, { detectedAction: "ACT_03" }),
+        generation,
+        ["option-one"],
+      ),
+    ).toBeNull();
+  }
+
+  expect(
+    controller.processFrame(
+      frame(3750, { detectedAction: "ACT_03" }),
+      generation,
+      ["option-one"],
+    ),
+  ).toEqual({
+    questionId: "question-one",
+    optionId: "option-two",
+    generation,
+  });
+});

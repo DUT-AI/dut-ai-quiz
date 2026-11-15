@@ -111,6 +111,7 @@ export function createMotionController({
   function processFrame(
     frame: PoseFrameResult,
     frameGeneration: number,
+    blockedOptionIds: readonly string[] = [],
   ): MotionConfirmation | null {
     if (
       frameGeneration !== generation ||
@@ -147,8 +148,15 @@ export function createMotionController({
             ([, actionId]) => actionId === validAction,
           )?.[0] ?? null);
 
-    const hold = detector.update(optionId, frame.timestampMs);
+    const selectableOptionId =
+      optionId !== null && !blockedOptionIds.includes(optionId)
+        ? optionId
+        : null;
 
+    const hold = detector.update(
+      selectableOptionId,
+      frame.timestampMs,
+    );
     state = {
       ...state,
       candidateOptionId: hold.candidateOptionId,
