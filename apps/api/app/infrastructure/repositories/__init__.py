@@ -15,6 +15,7 @@ from .hackathons import (
 )
 from .import_sessions import ImportSessionRepository
 from .lesson_chunks import LessonChunkRepository
+from .lesson_essay_questions import LessonEssayQuestionRepository
 from .lesson_videos import LessonVideoRepository
 from .lessons import LessonRepository
 from .modules import ModuleRepository
@@ -26,6 +27,7 @@ __all__ = [
     "UserRepository",
     "ModuleRepository",
     "LessonRepository",
+    "LessonEssayQuestionRepository",
     "LessonVideoRepository",
     "LessonChunkRepository",
     "QuestionRepository",

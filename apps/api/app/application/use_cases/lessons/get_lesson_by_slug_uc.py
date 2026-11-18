@@ -1,5 +1,6 @@
 from app.domain.exceptions.exceptions import NotFoundException
 from app.domain.interfaces import (
+    ILessonEssayQuestionRepository,
     ILessonRepository,
     ILessonVideoRepository,
     IQuestionRepository,
@@ -15,10 +16,12 @@ class GetLessonBySlugUseCase:
         lesson_repo: ILessonRepository,
         question_repo: IQuestionRepository,
         video_repo: ILessonVideoRepository,
+        essay_question_repo: ILessonEssayQuestionRepository,
     ) -> None:
         self._lesson_repo = lesson_repo
         self._question_repo = question_repo
         self._video_repo = video_repo
+        self._essay_question_repo = essay_question_repo
 
     async def execute(self, slug: str):
         lesson = await self._lesson_repo.get_by_slug(slug)
@@ -32,6 +35,7 @@ class GetLessonBySlugUseCase:
         )
         has_game_questions = len(game_questions) > 0
         videos = await self._video_repo.list_by_lesson_id(lesson.id)
+        essay_questions = await self._essay_question_repo.list_by_lesson_id(lesson.id)
 
         return {
             "id": lesson.id,
@@ -45,4 +49,5 @@ class GetLessonBySlugUseCase:
             "has_game_questions": has_game_questions,
             "questions": [],
             "videos": videos,
+            "essay_questions": essay_questions,
         }

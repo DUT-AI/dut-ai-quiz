@@ -1,6 +1,7 @@
 from uuid import UUID
 
 from app.domain.interfaces import (
+    ILessonEssayQuestionRepository,
     ILessonRepository,
     ILessonVideoRepository,
     IQuestionRepository,
@@ -9,17 +10,19 @@ from app.domain.value_objects import PoolType
 
 
 class GetLessonDetailUseCase:
-    """Get the detail of a lesson including its questions and reference videos."""
+    """Get the detail of a lesson including its questions, reference videos, and essay questions."""
 
     def __init__(
         self,
         lesson_repo: ILessonRepository,
         question_repo: IQuestionRepository,
         video_repo: ILessonVideoRepository,
+        essay_question_repo: ILessonEssayQuestionRepository,
     ) -> None:
         self._lesson_repo = lesson_repo
         self._question_repo = question_repo
         self._video_repo = video_repo
+        self._essay_question_repo = essay_question_repo
 
     async def execute(self, lesson_id: str, is_teacher: bool = False) -> dict | None:
         """Execute the use case to retrieve lesson details."""
@@ -44,6 +47,7 @@ class GetLessonDetailUseCase:
         )
         has_game_questions = len(game_questions) > 0
         videos = await self._video_repo.list_by_lesson_id(lid)
+        essay_questions = await self._essay_question_repo.list_by_lesson_id(lid)
 
         return {
             "id": lesson.id,
@@ -57,4 +61,5 @@ class GetLessonDetailUseCase:
             "questions": questions,
             "has_game_questions": has_game_questions,
             "videos": videos,
+            "essay_questions": essay_questions,
         }

@@ -5,11 +5,27 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { useCreateLesson, useUpdateLesson, useModules, useImportNotionLesson } from "@/lib/queries";
-import { LessonEditorSchema, type Lesson, type LessonVideoInput, type LessonEditorInput } from "../types";
+import {
+  useCreateLesson,
+  useUpdateLesson,
+  useModules,
+  useImportNotionLesson,
+} from "@/lib/queries";
+import {
+  LessonEditorSchema,
+  type Lesson,
+  type LessonVideoInput,
+  type LessonEditorInput,
+  type LessonEssayQuestionCreate,
+} from "../types";
 import { LessonVideoFormSection } from "./video/lesson-video-form-section";
+import {
+  LessonEssayFormSection,
+  type EssayDraftPreview,
+} from "./essay/lesson-essay-form-section";
 import {
   LessonEditorHeader,
   LessonEditorStepper,
@@ -18,7 +34,8 @@ import {
   LessonPreviewPanel,
   LessonEditorFooter,
 } from "./editor";
-import { apiPut } from "@/lib/api";
+import type { LessonEditorStep } from "./editor/lesson-editor-stepper";
+import { apiPatch, apiPut } from "@/lib/api";
 
 interface LessonEditorPageProps {
   initialData?: Lesson;
@@ -28,6 +45,7 @@ interface LessonEditorPageProps {
 export function LessonEditorPage({ initialData }: LessonEditorPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
   const defaultModuleId = searchParams.get("moduleId") || searchParams.get("module_id");
   const orderParam = searchParams.get("order");
   const defaultOrder = orderParam ? parseInt(orderParam, 10) : 1;
@@ -40,12 +58,17 @@ export function LessonEditorPage({ initialData }: LessonEditorPageProps) {
   const importNotionMut = useImportNotionLesson();
 
   const stepParam = searchParams.get("step");
-  const parsedStep = stepParam === "2" ? 2 : stepParam === "3" ? 3 : 1;
-  const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(parsedStep as 1 | 2 | 3);
+  const parsedStep: LessonEditorStep =
+    stepParam === "2" ? 2 : stepParam === "3" ? 3 : stepParam === "4" ? 4 : 1;
+  const [currentStep, setCurrentStep] = useState<LessonEditorStep>(parsedStep);
   const [viewMode, setViewMode] = useState<"split" | "editor" | "preview">("split");
   const [editorWidth, setEditorWidth] = useState<number>(55); // percent
   const [isDragging, setIsDragging] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Track newly created lesson ID if a follow-up sync fails so retrying does not duplicate the lesson
+  const createdLessonIdRef = useRef<string | null>(null);
 
   // Stage 2: Separate state for YouTube reference videos
   const [videos, setVideos] = useState<LessonVideoInput[]>(
@@ -57,6 +80,17 @@ export function LessonEditorPage({ initialData }: LessonEditorPageProps) {
       order: v.order ?? i,
     })) || []
   );
+
+  // Stage 4: Separate state for Markdown essay reflection questions
+  const [essayQuestions, setEssayQuestions] = useState<LessonEssayQuestionCreate[]>(
+    initialData?.essay_questions?.map((q, i) => ({
+      id: q.id,
+      question_md: q.question_md,
+      answer_md: q.answer_md,
+      order: q.order ?? i,
+    })) || []
+  );
+  const [essayDraft, setEssayDraft] = useState<EssayDraftPreview | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -80,7 +114,7 @@ export function LessonEditorPage({ initialData }: LessonEditorPageProps) {
     },
   });
 
-  // Sync videos & form state if initialData is loaded/updated
+  // Sync videos, essay questions & form state if initialData is loaded/updated
   useEffect(() => {
     if (initialData) {
       if (initialData.videos) {
@@ -91,6 +125,16 @@ export function LessonEditorPage({ initialData }: LessonEditorPageProps) {
             url: v.url,
             description: v.description || "",
             order: v.order ?? i,
+          }))
+        );
+      }
+      if (initialData.essay_questions) {
+        setEssayQuestions(
+          initialData.essay_questions.map((q, i) => ({
+            id: q.id,
+            question_md: q.question_md,
+            answer_md: q.answer_md,
+            order: q.order ?? i,
           }))
         );
       }
@@ -128,11 +172,13 @@ export function LessonEditorPage({ initialData }: LessonEditorPageProps) {
       }
     } else if (currentStep === 2) {
       setCurrentStep(3);
+    } else if (currentStep === 3) {
+      setCurrentStep(4);
     }
   };
 
   const handlePrevStep = () => {
-    setCurrentStep((prev) => (prev > 1 ? ((prev - 1) as 1 | 2 | 3) : 1));
+    setCurrentStep((prev) => (prev > 1 ? ((prev - 1) as LessonEditorStep) : 1));
   };
 
   const selectedModule = useMemo(
@@ -222,7 +268,9 @@ export function LessonEditorPage({ initialData }: LessonEditorPageProps) {
     } catch (err: any) {
       toast.dismiss(loadingToast);
       console.error("Failed to import Notion zip", err);
-      toast.error("Lỗi khi import file Notion: " + (err.response?.data?.detail || err.message || "Không rõ lỗi"));
+      toast.error(
+        "Lỗi khi import file Notion: " + (err.response?.data?.detail || err.message || "Không rõ lỗi")
+      );
     }
   };
 
@@ -231,35 +279,85 @@ export function LessonEditorPage({ initialData }: LessonEditorPageProps) {
   };
 
   const onSubmit = async (values: LessonEditorInput) => {
-    const payload = {
-      name: values.name,
-      description: values.description || "",
-      content_md: values.content_md || "",
-      order: values.order,
-      slug: values.slug || "",
-      module_id: values.module_id || null,
-    };
+    setIsSaving(true);
+    try {
+      const payload = {
+        name: values.name,
+        description: values.description || "",
+        content_md: values.content_md || "",
+        order: values.order,
+        slug: values.slug || "",
+        module_id: values.module_id || null,
+      };
 
-    let savedLesson: any;
-    if (isEdit) {
-      savedLesson = await updateMut.mutateAsync(payload);
-    } else {
-      savedLesson = await createMut.mutateAsync(payload);
-    }
-
-    const targetId = savedLesson?.id || initialData?.id;
-    if (targetId && (videos.length > 0 || (initialData?.videos && initialData.videos.length > 0))) {
-      try {
-        await apiPut(`/api/v1/lessons/${targetId}/videos`, { videos });
-      } catch (err) {
-        console.error("Failed to sync lesson videos", err);
+      let targetId = initialData?.id || createdLessonIdRef.current;
+      if (isEdit) {
+        const savedLesson = await updateMut.mutateAsync(payload);
+        targetId = savedLesson?.id || initialData?.id || targetId;
+      } else if (targetId) {
+        await apiPatch(`/api/v1/lessons/${targetId}`, payload);
+      } else {
+        const savedLesson = await createMut.mutateAsync(payload);
+        targetId = savedLesson?.id || null;
+        createdLessonIdRef.current = targetId;
       }
-    }
 
-    handleBack();
+      if (
+        targetId &&
+        (videos.length > 0 || (initialData?.videos && initialData.videos.length > 0))
+      ) {
+        try {
+          await apiPut(`/api/v1/lessons/${targetId}/videos`, { videos });
+        } catch (err: any) {
+          console.error("Failed to sync lesson videos", err);
+          toast.error(
+            "Không thể lưu danh sách video tham khảo: " +
+              (err?.detail || err?.message || "Vui lòng thử lại.")
+          );
+          return;
+        }
+      }
+
+      const hadInitialEssays = (initialData?.essay_questions?.length || 0) > 0;
+      if (targetId && (essayQuestions.length > 0 || hadInitialEssays)) {
+        try {
+          const normalizedEssays = essayQuestions.map((item, idx) => ({
+            id: item.id ?? null,
+            question_md: item.question_md.trim(),
+            answer_md: item.answer_md.trim(),
+            order: idx,
+          }));
+          await apiPut(`/api/v1/lessons/${targetId}/essay-questions`, {
+            essay_questions: normalizedEssays,
+          });
+        } catch (err: any) {
+          console.error("Failed to sync lesson essay questions", err);
+          toast.error(
+            "Không thể lưu câu hỏi tự luận: " +
+              (err?.detail || err?.message || "Vui lòng thử lại.")
+          );
+          return;
+        }
+      }
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["lessons"] }),
+        queryClient.invalidateQueries({ queryKey: ["lessons", "by-slug"] }),
+      ]);
+      toast.success(isEdit ? "Cập nhật bài học thành công!" : "Tạo bài học thành công!");
+      handleBack();
+    } catch (err: any) {
+      console.error("Failed to save lesson", err);
+      toast.error(
+        "Không thể lưu bài học: " + (err?.detail || err?.message || "Vui lòng thử lại.")
+      );
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const isPending = isSubmitting || createMut.isPending || updateMut.isPending;
+  const isPending =
+    isSaving || isSubmitting || createMut.isPending || updateMut.isPending;
 
   return (
     <motion.div
@@ -305,6 +403,7 @@ export function LessonEditorPage({ initialData }: LessonEditorPageProps) {
             <LessonEditorStepper
               currentStep={currentStep}
               videoCount={videos.length}
+              essayCount={essayQuestions.length}
               onSelectStep={async (targetStep) => {
                 if (targetStep > 1) {
                   const isValid = await trigger(["name", "slug", "order", "module_id"]);
@@ -337,10 +436,24 @@ export function LessonEditorPage({ initialData }: LessonEditorPageProps) {
             {/* Step 3: Markdown Content Editor */}
             {currentStep === 3 && <LessonContentStep methods={methods} />}
 
+            {/* Step 4: Markdown Essay Reflection Questions */}
+            {currentStep === 4 && (
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="bg-gray-50/50 dark:bg-white/5 p-6 md:p-8 rounded-3xl border border-gray-100 dark:border-white/5">
+                  <LessonEssayFormSection
+                    items={essayQuestions}
+                    onChange={setEssayQuestions}
+                    onDraftChange={setEssayDraft}
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Stepper Footer Controls */}
             <LessonEditorFooter
               currentStep={currentStep}
               videoCount={videos.length}
+              essayCount={essayQuestions.length}
               isPending={isPending}
               isEdit={isEdit}
               onPrevStep={handlePrevStep}
@@ -374,6 +487,9 @@ export function LessonEditorPage({ initialData }: LessonEditorPageProps) {
           viewMode={viewMode}
           editorWidth={editorWidth}
           isDesktop={isDesktop}
+          currentStep={currentStep}
+          essayQuestions={essayQuestions}
+          essayDraft={essayDraft}
         />
       </div>
     </motion.div>

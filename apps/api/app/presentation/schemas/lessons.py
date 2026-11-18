@@ -3,7 +3,7 @@ from enum import StrEnum
 from uuid import UUID
 
 from app.presentation.schemas.questions import QuestionOut
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 
 
 class LessonDeleteAction(StrEnum):
@@ -55,6 +55,43 @@ class LessonDetailOut(LessonOut):
     questions: list[QuestionOut] = []
     has_game_questions: bool = False
     videos: list["LessonVideoOut"] = []
+    essay_questions: list["LessonEssayQuestionOut"] = []
+
+
+class LessonEssayQuestionCreate(BaseModel):
+    """Schema for creating or updating a Markdown essay question for a lesson."""
+
+    id: UUID | None = None
+    question_md: str
+    answer_md: str
+    order: int = Field(default=0, ge=0)
+
+    @field_validator("question_md", "answer_md")
+    @classmethod
+    def must_not_be_blank(cls, value: str) -> str:
+        if not value or not value.strip():
+            raise ValueError("Markdown content must not be empty or whitespace-only")
+        return value.strip()
+
+
+class LessonEssayQuestionOut(BaseModel):
+    """Schema for essay reflection question output data."""
+
+    id: UUID
+    lesson_id: UUID
+    question_md: str
+    answer_md: str
+    order: int
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class LessonEssayQuestionBatchSync(BaseModel):
+    """Schema for atomically syncing all essay questions of a lesson."""
+
+    essay_questions: list[LessonEssayQuestionCreate] = []
 
 
 class LessonVideoCreate(BaseModel):

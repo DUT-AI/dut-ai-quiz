@@ -6,6 +6,7 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import rehypeRaw from "rehype-raw";
+import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { rehypeHeadingIds } from "@/features/lessons/utils/theory-parser";
@@ -20,6 +21,19 @@ interface MarkdownProps {
 
 type HighlightRange = { start: number; end: number };
 const EMPTY_HIGHLIGHTS: string[] = [];
+
+// Allow standard safe HTML plus <aside> callouts and math/code classes; strips <script>, <iframe>, on* handlers, javascript: URLs
+const markdownSanitizeSchema = {
+  ...defaultSchema,
+  tagNames: [...(defaultSchema.tagNames || []), "aside"],
+  attributes: {
+    ...defaultSchema.attributes,
+    code: [...(defaultSchema.attributes?.code || []), "className"],
+    span: [...(defaultSchema.attributes?.span || []), "className"],
+    div: [...(defaultSchema.attributes?.div || []), "className"],
+    pre: [...(defaultSchema.attributes?.pre || []), "className"],
+  },
+};
 
 function normalizeWithOffsets(value: string) {
   let text = "";
@@ -375,7 +389,12 @@ export const Markdown = React.memo(function Markdown({ content, className = "", 
       }} />
       <ReactMarkdown
         remarkPlugins={[remarkDisableIndentedCode, remarkGfm, remarkMath]}
-        rehypePlugins={[rehypeRaw, rehypeKatex, rehypeHeadingIds]}
+        rehypePlugins={[
+          rehypeRaw,
+          [rehypeSanitize, markdownSanitizeSchema],
+          rehypeKatex,
+          rehypeHeadingIds,
+        ]}
         components={customComponents}
       >
         {preparedContent}

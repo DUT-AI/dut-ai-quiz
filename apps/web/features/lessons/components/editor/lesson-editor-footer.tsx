@@ -3,10 +3,12 @@
 import React from "react";
 import { ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import type { LessonEditorStep } from "./lesson-editor-stepper";
 
 interface LessonEditorFooterProps {
-  currentStep: 1 | 2 | 3;
+  currentStep: LessonEditorStep;
   videoCount: number;
+  essayCount: number;
   isPending: boolean;
   isEdit: boolean;
   onPrevStep: () => void;
@@ -16,6 +18,7 @@ interface LessonEditorFooterProps {
 export function LessonEditorFooter({
   currentStep,
   videoCount,
+  essayCount,
   isPending,
   isEdit,
   onPrevStep,
@@ -57,12 +60,25 @@ export function LessonEditorFooter({
         )}
         {currentStep === 3 && (
           <Button
+            type="button"
+            onClick={onNextStep}
+            className="py-5 px-8 rounded-2xl bg-primary text-white font-bold flex items-center gap-2 shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95"
+          >
+            Tiếp theo: Câu hỏi tự luận ({essayCount})
+          </Button>
+        )}
+        {currentStep === 4 && (
+          <Button
             type="submit"
             form="lesson-editor-form"
             disabled={isPending}
             className="py-5 px-10 rounded-2xl bg-primary text-white font-bold flex items-center gap-2 shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95"
           >
-            {isPending ? <Loader2 className="size-5 animate-spin" /> : <CheckCircle2 className="size-5" />}
+            {isPending ? (
+              <Loader2 className="size-5 animate-spin" />
+            ) : (
+              <CheckCircle2 className="size-5" />
+            )}
             {isEdit ? "Cập nhật bài học" : "Lưu bài học"}
           </Button>
         )}

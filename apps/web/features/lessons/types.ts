@@ -1,4 +1,25 @@
 import { z } from "zod";
+import type { Schema } from "@/types/api";
+
+// OpenAPI contract-derived types (Constitution Principle II: Single Source of Truth)
+export type LessonDetail = Schema<"LessonDetailOut">;
+export type LessonEssayQuestion = Schema<"LessonEssayQuestionOut">;
+export type LessonEssayQuestionCreate = Schema<"LessonEssayQuestionCreate">;
+export type LessonEssayQuestionBatchSync = Schema<"LessonEssayQuestionBatchSync">;
+
+// Runtime Zod validation strictly for untrusted educator form inputs
+export const LessonEssayQuestionDraftSchema = z.object({
+  id: z.string().nullable().optional(),
+  question_md: z
+    .string()
+    .refine((v) => v.trim().length > 0, "Nội dung câu hỏi không được để trống"),
+  answer_md: z
+    .string()
+    .refine((v) => v.trim().length > 0, "Nội dung đáp án không được để trống"),
+  order: z.number().int().min(0).default(0),
+});
+
+export type LessonEssayQuestionDraft = z.infer<typeof LessonEssayQuestionDraftSchema>;
 
 export const LessonVideoSchema = z.object({
   id: z.string(),
@@ -37,7 +58,9 @@ export const LessonSchema = z.object({
   videos: z.array(LessonVideoSchema).optional().default([]),
 });
 
-export type Lesson = z.infer<typeof LessonSchema>;
+export type Lesson = z.infer<typeof LessonSchema> & {
+  essay_questions?: LessonEssayQuestion[];
+};
 
 export const LessonEditorSchema = LessonSchema.omit({ id: true, videos: true }).extend({
   content_md: z.string().optional(),

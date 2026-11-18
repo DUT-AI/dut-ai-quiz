@@ -55,10 +55,14 @@ async def test_get_lesson_by_slug_includes_videos():
     video_repo = AsyncMock()
     video_repo.list_by_lesson_id.return_value = [video1, video2]
 
+    essay_question_repo = AsyncMock()
+    essay_question_repo.list_by_lesson_id.return_value = []
+
     use_case = GetLessonBySlugUseCase(
         lesson_repo=lesson_repo,
         question_repo=question_repo,
         video_repo=video_repo,
+        essay_question_repo=essay_question_repo,
     )
 
     result = await use_case.execute("dai-so-tuyen-tinh")
@@ -76,11 +80,13 @@ async def test_get_lesson_by_slug_not_found():
     lesson_repo.get_by_slug.return_value = None
     question_repo = AsyncMock()
     video_repo = AsyncMock()
+    essay_question_repo = AsyncMock()
 
     use_case = GetLessonBySlugUseCase(
         lesson_repo=lesson_repo,
         question_repo=question_repo,
         video_repo=video_repo,
+        essay_question_repo=essay_question_repo,
     )
 
     with pytest.raises(NotFoundException):
@@ -117,10 +123,14 @@ async def test_get_lesson_detail_includes_videos():
     video_repo = AsyncMock()
     video_repo.list_by_lesson_id.return_value = [video]
 
+    essay_question_repo = AsyncMock()
+    essay_question_repo.list_by_lesson_id.return_value = []
+
     use_case = GetLessonDetailUseCase(
         lesson_repo=lesson_repo,
         question_repo=question_repo,
         video_repo=video_repo,
+        essay_question_repo=essay_question_repo,
     )
 
     result = await use_case.execute(str(lesson_id))

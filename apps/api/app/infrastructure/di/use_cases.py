@@ -147,9 +147,15 @@ from app.application.use_cases.lessons.index_lesson_uc import (
     IndexAllLessonsUseCase,
     IndexLessonUseCase,
 )
+from app.application.use_cases.lessons.list_lesson_essay_questions_uc import (
+    ListLessonEssayQuestionsUseCase,
+)
 from app.application.use_cases.lessons.list_lessons_uc import ListLessonsUseCase
 from app.application.use_cases.lessons.reorder_lessons_uc import (
     ReorderLessonsUseCase,
+)
+from app.application.use_cases.lessons.sync_lesson_essay_questions_uc import (
+    SyncLessonEssayQuestionsUseCase,
 )
 from app.application.use_cases.lessons.sync_lesson_videos_uc import (
     SyncLessonVideosUseCase,
@@ -475,6 +481,12 @@ class UseCaseProvider(Provider):
     )
     reorder_lessons_use_case = provide(ReorderLessonsUseCase, scope=Scope.REQUEST)
     sync_lesson_videos_use_case = provide(SyncLessonVideosUseCase, scope=Scope.REQUEST)
+    list_lesson_essay_questions_use_case = provide(
+        ListLessonEssayQuestionsUseCase, scope=Scope.REQUEST
+    )
+    sync_lesson_essay_questions_use_case = provide(
+        SyncLessonEssayQuestionsUseCase, scope=Scope.REQUEST
+    )
     index_lesson_use_case = provide(IndexLessonUseCase, scope=Scope.REQUEST)
     index_all_lessons_use_case = provide(IndexAllLessonsUseCase, scope=Scope.REQUEST)
     lesson_embedding_indexer = provide(LessonEmbeddingIndexer, scope=Scope.REQUEST)

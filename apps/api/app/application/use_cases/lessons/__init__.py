@@ -16,10 +16,12 @@ from .import_notion_lesson_uc import (
     ImportNotionLessonUseCase,
 )
 from .index_lesson_uc import IndexAllLessonsUseCase, IndexLessonUseCase
+from .list_lesson_essay_questions_uc import ListLessonEssayQuestionsUseCase
 from .list_lessons_uc import ListLessonsUseCase
 from .reorder_lessons_uc import (
     ReorderLessonsUseCase,
 )
+from .sync_lesson_essay_questions_uc import SyncLessonEssayQuestionsUseCase
 from .sync_lesson_videos_uc import SyncLessonVideosUseCase
 from .update_lesson_uc import UpdateLessonUseCase
 
@@ -30,8 +32,10 @@ __all__ = [
     "GetLessonBySlugUseCase",
     "GetLessonExercisesUseCase",
     "GetLessonMetadataUseCase",
+    "ListLessonEssayQuestionsUseCase",
     "ListLessonsUseCase",
     "ReorderLessonsUseCase",
+    "SyncLessonEssayQuestionsUseCase",
     "SyncLessonVideosUseCase",
     "UpdateLessonUseCase",
     "IndexLessonUseCase",

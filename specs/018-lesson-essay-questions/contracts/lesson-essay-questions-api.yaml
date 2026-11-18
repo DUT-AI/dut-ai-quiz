@@ -1,0 +1,211 @@
+openapi: 3.1.0
+info:
+  title: Lesson Essay Questions API Contract
+  version: 1.0.0
+  description: |
+    API contract for managing and viewing Markdown-based essay reflection questions
+    and reference answers attached to lessons in DUT-AI Quiz.
+
+paths:
+  /api/v1/lessons/{lesson_id}/essay-questions:
+    get:
+      summary: List essay questions for a lesson
+      description: |
+        Returns all essay reflection questions and reference answers for the specified
+        lesson, sorted by `order ASC, created_at ASC`. Accessible to any authenticated user.
+      operationId: list_lesson_essay_questions
+      tags:
+        - lessons
+      security:
+        - cookieAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: lesson_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Ordered list of essay questions for the lesson (empty array if none)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LessonEssayQuestionOut"
+        "401":
+          description: Unauthorized (unauthenticated request)
+        "404":
+          description: Lesson not found
+
+    put:
+      summary: Atomically synchronize essay questions for a lesson
+      description: |
+        Replaces/synchronizes the full ordered list of essay questions for a lesson.
+        Requires Educator or Admin role (`MANAGE_LESSON` permission).
+        Rejects any item with empty or whitespace-only `question_md` or `answer_md`.
+      operationId: sync_lesson_essay_questions
+      tags:
+        - lessons
+      security:
+        - cookieAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: lesson_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LessonEssayQuestionBatchSync"
+      responses:
+        "200":
+          description: Persisted, ordered list of essay questions for the lesson
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LessonEssayQuestionOut"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden (missing MANAGE_LESSON permission)
+        "404":
+          description: Lesson not found
+        "422":
+          description: Validation error (e.g., blank or whitespace-only question_md or answer_md)
+
+  /api/v1/lessons/by-slug/{slug}:
+    get:
+      summary: Get lesson detail by slug (extended)
+      description: Existing endpoint extended so `LessonDetailOut` includes `essay_questions`.
+      operationId: get_lesson_by_slug
+      tags:
+        - lessons
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Lesson details including `essay_questions` sorted by order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LessonDetailOutExtension"
+
+  /api/v1/lessons/{lesson_id}:
+    get:
+      summary: Get lesson detail by ID (extended)
+      description: Existing endpoint extended so `LessonDetailOut` includes `essay_questions`.
+      operationId: get_lesson
+      tags:
+        - lessons
+      parameters:
+        - name: lesson_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Lesson details including `essay_questions` sorted by order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LessonDetailOutExtension"
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: access_token
+    bearerAuth:
+      type: http
+      scheme: bearer
+
+  schemas:
+    LessonEssayQuestionCreate:
+      type: object
+      required:
+        - question_md
+        - answer_md
+      properties:
+        id:
+          type: string
+          format: uuid
+          nullable: true
+          description: Existing essay question UUID (when updating in place) or omitted/null for new items
+        question_md:
+          type: string
+          minLength: 1
+          description: Non-whitespace Markdown content for the essay question prompt
+        answer_md:
+          type: string
+          minLength: 1
+          description: Non-whitespace Markdown content for the reference answer
+        order:
+          type: integer
+          minimum: 0
+          default: 0
+          description: Zero-based display order within the lesson
+
+    LessonEssayQuestionBatchSync:
+      type: object
+      properties:
+        essay_questions:
+          type: array
+          default: []
+          items:
+            $ref: "#/components/schemas/LessonEssayQuestionCreate"
+
+    LessonEssayQuestionOut:
+      type: object
+      required:
+        - id
+        - lesson_id
+        - question_md
+        - answer_md
+        - order
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        lesson_id:
+          type: string
+          format: uuid
+        question_md:
+          type: string
+        answer_md:
+          type: string
+        order:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    LessonDetailOutExtension:
+      type: object
+      description: Extension fields added to existing LessonDetailOut schema
+      properties:
+        essay_questions:
+          type: array
+          default: []
+          items:
+            $ref: "#/components/schemas/LessonEssayQuestionOut"

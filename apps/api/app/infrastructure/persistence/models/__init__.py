@@ -18,6 +18,7 @@ from .homework import Homework, HomeworkSubmission, HomeworkSubmissionFingerprin
 from .import_session import ImportSession
 from .lesson import Lesson
 from .lesson_chunk import LessonChunk
+from .lesson_essay_question import LessonEssayQuestion
 from .lesson_video import LessonVideo
 from .module import Module
 from .question import Question
@@ -47,6 +48,7 @@ __all__ = [
     "HomeworkSubmissionFingerprint",
     "ImportSession",
     "Lesson",
+    "LessonEssayQuestion",
     "LessonVideo",
     "LessonChunk",
     "Module",

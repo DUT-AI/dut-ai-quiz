@@ -14,8 +14,10 @@ from app.application.use_cases.lessons import (
     ImportNotionLessonUseCase,
     IndexAllLessonsUseCase,
     IndexLessonUseCase,
+    ListLessonEssayQuestionsUseCase,
     ListLessonsUseCase,
     ReorderLessonsUseCase,
+    SyncLessonEssayQuestionsUseCase,
     SyncLessonVideosUseCase,
     UpdateLessonUseCase,
 )
@@ -29,6 +31,8 @@ from app.presentation.schemas.lessons import (
     LessonCreate,
     LessonDeleteAction,
     LessonDetailOut,
+    LessonEssayQuestionBatchSync,
+    LessonEssayQuestionOut,
     LessonIndexOut,
     LessonMetadataOut,
     LessonOut,
@@ -328,3 +332,26 @@ async def sync_lesson_videos(
 ):
     """Batch update / sync reference videos for a lesson. Requires MANAGE_LESSON permission."""
     return await use_case.execute(lesson_id, payload.videos)
+
+
+@router.get("/{lesson_id}/essay-questions", response_model=list[LessonEssayQuestionOut])
+@inject
+async def list_lesson_essay_questions(
+    lesson_id: UUID,
+    user: CurrentUser,
+    use_case: FromDishka[ListLessonEssayQuestionsUseCase],
+):
+    """List all essay reflection questions for a lesson in display order."""
+    return await use_case.execute(lesson_id)
+
+
+@router.put("/{lesson_id}/essay-questions", response_model=list[LessonEssayQuestionOut])
+@inject
+async def sync_lesson_essay_questions(
+    lesson_id: UUID,
+    payload: LessonEssayQuestionBatchSync,
+    user: EducatorUser,
+    use_case: FromDishka[SyncLessonEssayQuestionsUseCase],
+):
+    """Atomically synchronize essay reflection questions for a lesson. Requires MANAGE_LESSON permission."""
+    return await use_case.execute(lesson_id, payload.essay_questions)

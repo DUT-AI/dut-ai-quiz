@@ -342,6 +342,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/lessons/{lesson_id}/essay-questions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Lesson Essay Questions
+         * @description List all essay reflection questions for a lesson in display order.
+         */
+        get: operations["list_lesson_essay_questions_api_v1_lessons__lesson_id__essay_questions_get"];
+        /**
+         * Sync Lesson Essay Questions
+         * @description Atomically synchronize essay reflection questions for a lesson. Requires MANAGE_LESSON permission.
+         */
+        put: operations["sync_lesson_essay_questions_api_v1_lessons__lesson_id__essay_questions_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/modules": {
         parameters: {
             query?: never;
@@ -1093,6 +1117,40 @@ export interface paths {
         post?: never;
         /** Delete Exam Attempt Route */
         delete: operations["delete_exam_attempt_route_api_v1_exams__exam_id__attempts__attempt_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/exams/{exam_id}/attempts/{attempt_id}/focus-events/{event_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Focus Event Route */
+        delete: operations["delete_focus_event_route_api_v1_exams__exam_id__attempts__attempt_id__focus_events__event_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/exams/{exam_id}/attempts/{attempt_id}/focus-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Clear Attempt Focus Events Route */
+        delete: operations["clear_attempt_focus_events_route_api_v1_exams__exam_id__attempts__attempt_id__focus_events_delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -3447,6 +3505,71 @@ export interface components {
              * @default []
              */
             videos: components["schemas"]["LessonVideoOut"][];
+            /**
+             * Essay Questions
+             * @default []
+             */
+            essay_questions: components["schemas"]["LessonEssayQuestionOut"][];
+        };
+        /**
+         * LessonEssayQuestionBatchSync
+         * @description Schema for atomically syncing all essay questions of a lesson.
+         */
+        LessonEssayQuestionBatchSync: {
+            /**
+             * Essay Questions
+             * @default []
+             */
+            essay_questions: components["schemas"]["LessonEssayQuestionCreate"][];
+        };
+        /**
+         * LessonEssayQuestionCreate
+         * @description Schema for creating or updating a Markdown essay question for a lesson.
+         */
+        LessonEssayQuestionCreate: {
+            /** Id */
+            id?: string | null;
+            /** Question Md */
+            question_md: string;
+            /** Answer Md */
+            answer_md: string;
+            /**
+             * Order
+             * @default 0
+             */
+            order: number;
+        };
+        /**
+         * LessonEssayQuestionOut
+         * @description Schema for essay reflection question output data.
+         */
+        LessonEssayQuestionOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Lesson Id
+             * Format: uuid
+             */
+            lesson_id: string;
+            /** Question Md */
+            question_md: string;
+            /** Answer Md */
+            answer_md: string;
+            /** Order */
+            order: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
         };
         /** LessonExercisesMetadataOutDTO */
         LessonExercisesMetadataOutDTO: {
@@ -5130,6 +5253,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LessonVideoOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_lesson_essay_questions_api_v1_lessons__lesson_id__essay_questions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lesson_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonEssayQuestionOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    sync_lesson_essay_questions_api_v1_lessons__lesson_id__essay_questions_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lesson_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LessonEssayQuestionBatchSync"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonEssayQuestionOut"][];
                 };
             };
             /** @description Validation Error */
@@ -7006,6 +7195,71 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DeleteAttemptResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_focus_event_route_api_v1_exams__exam_id__attempts__attempt_id__focus_events__event_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                exam_id: string;
+                attempt_id: string;
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    clear_attempt_focus_events_route_api_v1_exams__exam_id__attempts__attempt_id__focus_events_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                exam_id: string;
+                attempt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */

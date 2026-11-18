@@ -12,6 +12,7 @@ from app.domain.interfaces import (
     IHomeworkRepository,
     IImportSessionRepository,
     ILessonChunkRepository,
+    ILessonEssayQuestionRepository,
     ILessonRepository,
     ILessonVideoRepository,
     IModuleRepository,
@@ -46,6 +47,9 @@ from app.infrastructure.repositories.hackathons import (
 from app.infrastructure.repositories.homeworks import HomeworkRepository
 from app.infrastructure.repositories.import_sessions import ImportSessionRepository
 from app.infrastructure.repositories.lesson_chunks import LessonChunkRepository
+from app.infrastructure.repositories.lesson_essay_questions import (
+    LessonEssayQuestionRepository,
+)
 from app.infrastructure.repositories.lesson_videos import LessonVideoRepository
 from app.infrastructure.repositories.lessons import LessonRepository
 from app.infrastructure.repositories.modules import ModuleRepository
@@ -61,6 +65,9 @@ class RepositoryProvider(Provider):
     # Đăng ký kèm theo tham số provides để map concrete class với interface của nó
     lesson_repo = provide(LessonRepository, provides=ILessonRepository)
     lesson_video_repo = provide(LessonVideoRepository, provides=ILessonVideoRepository)
+    lesson_essay_question_repo = provide(
+        LessonEssayQuestionRepository, provides=ILessonEssayQuestionRepository
+    )
     lesson_chunk_repo = provide(LessonChunkRepository, provides=ILessonChunkRepository)
     module_repo = provide(ModuleRepository, provides=IModuleRepository)
     user_repo = provide(UserRepository, provides=IUserRepository)

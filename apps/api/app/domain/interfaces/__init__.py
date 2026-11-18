@@ -24,6 +24,7 @@ from .homework_queue import IHomeworkEvaluationQueue
 from .homework_repo import IHomeworkRepository
 from .import_session_repo import IImportSessionRepository
 from .lesson_chunk_repo import ILessonChunkRepository
+from .lesson_essay_question_repo import ILessonEssayQuestionRepository
 from .lesson_index_queue import ILessonIndexQueue
 from .lesson_repo import ILessonRepository
 from .lesson_video_repo import ILessonVideoRepository
@@ -45,6 +46,7 @@ __all__ = [
     "IFocusEventRepository",
     "ILessonRepository",
     "ILessonVideoRepository",
+    "ILessonEssayQuestionRepository",
     "ILessonChunkRepository",
     "ILessonIndexQueue",
     "IEmbeddingService",

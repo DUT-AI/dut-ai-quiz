@@ -1,6 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiGet, apiPost, apiPatch, apiPut, apiClient } from "@/lib/api";
-import { LessonSchema, ModuleSchema, LessonVideoSchema, type Lesson, type Module, type LessonVideo, type LessonVideoInput } from "./types";
+import {
+  LessonSchema,
+  ModuleSchema,
+  LessonVideoSchema,
+  type Lesson,
+  type Module,
+  type LessonVideo,
+  type LessonVideoInput,
+  type LessonEssayQuestion,
+  type LessonEssayQuestionCreate,
+} from "./types";
 import { z } from "zod";
 
 export function useLessons(options?: any) {
@@ -15,7 +25,7 @@ export function useLessons(options?: any) {
 export function useLesson(id: string, options?: any) {
   return useQuery<Lesson>({
     queryKey: ["lessons", id],
-    queryFn: () => apiGet<Lesson>(`/api/v1/lessons/${id}`, LessonSchema),
+    queryFn: () => apiGet<Lesson>(`/api/v1/lessons/${id}`),
     staleTime: 60_000,
     enabled: !!id,
     ...options,
@@ -88,10 +98,37 @@ export function useDeleteLesson() {
 export function useLessonBySlug(slug: string, options?: any) {
   return useQuery<Lesson>({
     queryKey: ["lessons", "by-slug", slug],
-    queryFn: () => apiGet<Lesson>(`/api/v1/lessons/by-slug/${slug}`, LessonSchema),
+    queryFn: () => apiGet<Lesson>(`/api/v1/lessons/by-slug/${slug}`),
     staleTime: 60_000,
     enabled: !!slug,
     ...options,
+  });
+}
+
+export function useLessonEssayQuestions(lessonId: string, options?: any) {
+  return useQuery<LessonEssayQuestion[]>({
+    queryKey: ["lessons", lessonId, "essay-questions"],
+    queryFn: () =>
+      apiGet<LessonEssayQuestion[]>(`/api/v1/lessons/${lessonId}/essay-questions`),
+    staleTime: 60_000,
+    enabled: !!lessonId,
+    ...options,
+  });
+}
+
+export function useSyncLessonEssayQuestions(lessonId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (essayQuestions: LessonEssayQuestionCreate[]) =>
+      apiPut<LessonEssayQuestion[]>(
+        `/api/v1/lessons/${lessonId}/essay-questions`,
+        { essay_questions: essayQuestions }
+      ),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["lessons"] });
+      void qc.invalidateQueries({ queryKey: ["lessons", lessonId] });
+      void qc.invalidateQueries({ queryKey: ["lessons", "by-slug"] });
+    },
   });
 }
 
