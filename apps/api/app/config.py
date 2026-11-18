@@ -26,7 +26,7 @@ class Settings(BaseSettings):
 
     manage_base_url: str = ""
     manage_api_key: str = ""
-    manage_webhook_secret: str = ""
+    quiz_webhook_secret: str = ""
 
     third_party_api_keys: str = ""
 
@@ -49,9 +49,6 @@ class Settings(BaseSettings):
     google_redirect_uri: str = "http://localhost:8000/api/v1/auth/google/callback"
     frontend_url: str = "http://localhost:3000"
 
-    api_host: str = "0.0.0.0"
-    api_port: int = 8000
-
     auth_dev_bypass: bool = False
     auth_dev_user_id: int = 1
     auth_dev_role_name: str = "admin"
@@ -70,10 +67,7 @@ class Settings(BaseSettings):
         default="",
         validation_alias=AliasChoices("S3_SECRET_KEY", "MINIO_SECRET_KEY"),
     )
-    s3_region: str = Field(
-        default="us-east-1",
-        validation_alias=AliasChoices("S3_REGION", "AWS_DEFAULT_REGION"),
-    )
+    s3_region: str = "us-east-1"
     s3_bucket_name: str = Field(
         default="",
         validation_alias=AliasChoices("S3_BUCKET_NAME", "MINIO_BUCKET_NAME"),
@@ -93,17 +87,12 @@ class Settings(BaseSettings):
     )
     presigned_url_expire_seconds: int = 3600
 
-    # Homework submission and external evaluation services.
-    homework_checker_api_url: str = ""
-    submission_checker_api_url: str = ""
-
     # Homework grading policy is fixed in code rather than deployment config.
     homework_grading_enabled: ClassVar[bool] = True
     homework_grading_model: ClassVar[str] = "gemma-4-31b-it"
     homework_grading_pass_score: ClassVar[float] = 7.0
     homework_grading_max_attachment_bytes: ClassVar[int] = 20 * 1024 * 1024
     homework_grading_max_source_bytes: ClassVar[int] = 5 * 1024 * 1024
-    homework_grading_max_source_chars: ClassVar[int] = 200_000
     homework_grading_max_files: ClassVar[int] = 50
     homework_grading_max_archive_entries: ClassVar[int] = 500
     homework_plagiarism_threshold: ClassVar[float] = 0.8
@@ -138,40 +127,19 @@ class Settings(BaseSettings):
     rerank_model: str = "BAAI/bge-reranker-v2-m3"
     rerank_batch_size: int = 32
     rerank_timeout_seconds: float = 30.0
-    rerank_min_score: float = 0.0
 
     # ================= SUBMISSION SYSTEM CONFIG =================
-    submission_cooldown_seconds: int = 300  # 5 minutes
-    submission_max_quota: int = 20  # Max 20 submissions per contest
     sandbox_timeout_seconds: int = 900  # 15 minutes
     sandbox_mem_limit: str = "4g"  # 4GB RAM
     sandbox_cpu_limit: int = 2000000000  # 2 vCPUs (nano_cpus = CPU * 1e9)
     sandbox_image_name: str = "python:3.12-slim"
     log_max_lines: int = 50
-    max_script_size_bytes: int = 10 * 1024 * 1024  # 10 MB
-    max_model_size_bytes: int = 1024 * 1024 * 1024  # 1 GB
 
     # ================= HOMEWORK LLM EVALUATION CONFIG ============
-    homework_llm_provider: str = Field(
-        default="openai",
-        validation_alias=AliasChoices("HOMEWORK_LLM_PROVIDER", "LLM_PROVIDER"),
-    )
-    homework_llm_api_url: str = Field(
-        default="",
-        validation_alias=AliasChoices(
-            "HOMEWORK_LLM_API_URL", "LLM_API_URL", "OPENAI_API_BASE"
-        ),
-    )
-    homework_llm_api_key: str = Field(
-        default="",
-        validation_alias=AliasChoices(
-            "HOMEWORK_LLM_API_KEY", "LLM_API_KEY", "OPENAI_API_KEY"
-        ),
-    )
-    homework_llm_model: str = Field(
-        default="ggml-org/gemma-4-e4b-it-GGUF:Q4_0",
-        validation_alias=AliasChoices("HOMEWORK_LLM_MODEL", "LLM_MODEL"),
-    )
+    homework_llm_provider: str = "openai"
+    homework_llm_api_url: str = ""
+    homework_llm_api_key: str = ""
+    homework_llm_model: str = "ggml-org/gemma-4-e4b-it-GGUF:Q4_0"
     homework_llm_temperature: float = 0.1
     homework_llm_timeout_seconds: float = 120.0
     homework_llm_context_tokens: int = Field(default=66_816, ge=2048)
@@ -183,18 +151,12 @@ class Settings(BaseSettings):
     homework_llm_tokenizer_url: str = ""
 
     # ================= GOOGLE GENAI / GEMMA API KEY =============
-    gemini_api_key: str = Field(
-        default="",
-        validation_alias=AliasChoices("GEMINI_API_KEY", "GOOGLE_API_KEY"),
-    )
+    gemini_api_key: str = ""
 
     # ================= PDF IMPORT CONFIG ========================
     pdf_max_size_mb: int = 20
-    pdf_max_pages: int = 5
     pdf_image_min_px: int = 80  # Ignore images smaller than 80x80px
-    pdf_duplicate_threshold: float = 0.85
     review_lock_ttl_seconds: int = 60
-    review_lock_heartbeat_seconds: int = 30
     pdf_upload_bucket: str = "lms-dev"  # Same MinIO bucket
     pdf_images_prefix: str = "uploads/pdf-images"
 
@@ -248,8 +210,11 @@ class Settings(BaseSettings):
     @property
     def third_party_api_key_list(self) -> list[str]:
         keys = [k.strip() for k in self.third_party_api_keys.split(",") if k.strip()]
-        if self.manage_api_key.strip() and self.manage_api_key.strip() not in keys:
-            keys.append(self.manage_api_key.strip())
+        if (
+            self.quiz_webhook_secret.strip()
+            and self.quiz_webhook_secret.strip() not in keys
+        ):
+            keys.append(self.quiz_webhook_secret.strip())
         return keys
 
 

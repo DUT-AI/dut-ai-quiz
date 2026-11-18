@@ -8,21 +8,30 @@ from fastapi import HTTPException
 async def test_manage_service_accepts_configured_bearer_key(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(settings, "manage_api_key", "manage-secret")
+    monkeypatch.setattr(settings, "quiz_webhook_secret", "quiz-secret")
+    monkeypatch.setattr(settings, "manage_api_key", "manage-only-key")
 
-    await require_manage_service("Bearer manage-secret")
+    await require_manage_service("Bearer quiz-secret")
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "authorization",
-    [None, "", "manage-secret", "Basic manage-secret", "Bearer wrong-secret"],
+    [
+        None,
+        "",
+        "quiz-secret",
+        "Basic quiz-secret",
+        "Bearer wrong-secret",
+        "Bearer manage-only-key",
+    ],
 )
 async def test_manage_service_rejects_invalid_credentials(
     monkeypatch: pytest.MonkeyPatch,
     authorization: str | None,
 ) -> None:
-    monkeypatch.setattr(settings, "manage_api_key", "manage-secret")
+    monkeypatch.setattr(settings, "quiz_webhook_secret", "quiz-secret")
+    monkeypatch.setattr(settings, "manage_api_key", "manage-only-key")
 
     with pytest.raises(HTTPException) as exc_info:
         await require_manage_service(authorization)
@@ -34,7 +43,8 @@ async def test_manage_service_rejects_invalid_credentials(
 async def test_manage_service_fails_closed_without_configured_key(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(settings, "manage_api_key", "")
+    monkeypatch.setattr(settings, "quiz_webhook_secret", "")
+    monkeypatch.setattr(settings, "manage_api_key", "manage-only-key")
 
     with pytest.raises(HTTPException) as exc_info:
         await require_manage_service("Bearer any-value")

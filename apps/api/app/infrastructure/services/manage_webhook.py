@@ -73,7 +73,7 @@ async def _send_webhook_request(
     }
     headers = {
         "Content-Type": "application/json",
-        "X-Webhook-Secret": settings.manage_webhook_secret,
+        "X-Webhook-Secret": settings.quiz_webhook_secret,
     }
 
     try:

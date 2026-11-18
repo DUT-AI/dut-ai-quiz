@@ -47,7 +47,7 @@ Or start all services with `docker compose up`.
 - Download endpoints return short-lived presigned URLs.
 
 The completed-members endpoint is intended for the Manage service. It requires
-`Authorization: Bearer <MANAGE_API_KEY>` and returns only Manage user IDs:
+`Authorization: Bearer <QUIZ_WEBHOOK_SECRET>` and returns only Manage user IDs:
 
 ```json
 {

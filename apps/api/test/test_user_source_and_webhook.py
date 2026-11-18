@@ -98,7 +98,7 @@ async def test_webhook_sent_for_manage_user_even_with_high_id(monkeypatch):
     from app.config import settings
 
     monkeypatch.setattr(settings, "manage_base_url", "https://manage.dutai.site")
-    monkeypatch.setattr(settings, "manage_webhook_secret", "secret")
+    monkeypatch.setattr(settings, "quiz_webhook_secret", "secret")
 
     with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
         mock_post.return_value.status_code = 200
@@ -113,3 +113,4 @@ async def test_webhook_sent_for_manage_user_even_with_high_id(monkeypatch):
         mock_post.assert_called_once()
         call_args = mock_post.call_args
         assert call_args.kwargs["json"]["user_id"] == 2_500_000
+        assert call_args.kwargs["headers"]["X-Webhook-Secret"] == "secret"

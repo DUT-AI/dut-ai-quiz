@@ -71,8 +71,6 @@ services:
             - POSTGRES_PORT=5432
             - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-dut_ai_quiz}
             - REDIS_URL=redis://redis:6379/${REDIS_DB:-0}
-            - REDIS_HOST=redis
-            - REDIS_PORT=6379
         ports:
             - "8076:8076"
         networks:
@@ -112,8 +110,6 @@ services:
             - POSTGRES_PORT=5432
             - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-dut_ai_quiz}
             - REDIS_URL=redis://redis:6379/${REDIS_DB:-0}
-            - REDIS_HOST=redis
-            - REDIS_PORT=6379
             - WORKER_SANDBOX_ROOT=${WORKER_SANDBOX_ROOT:-/tmp/dut-ai-worker}
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
@@ -185,8 +181,6 @@ services:
             - POSTGRES_PORT=5432
             - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-dut_ai_quiz}
             - REDIS_URL=redis://redis:6379/${REDIS_DB:-0}
-            - REDIS_HOST=redis
-            - REDIS_PORT=6379
         networks:
             - default
             - shared
@@ -203,7 +197,6 @@ services:
             dockerfile: Dockerfile
             args:
                 - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://quiz.dutai.site}
-                - NEXT_PUBLIC_MANAGE_LOGIN_URL=${NEXT_PUBLIC_MANAGE_LOGIN_URL:-https://manage.dutai.io.vn/dashboard}
         volumes:
             - ./apps/web/public:/app/public:ro
         container_name: dut-ai-quiz-web

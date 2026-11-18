@@ -10,9 +10,9 @@ def test_s3_settings_normalize_endpoint_and_prefer_s3_names() -> None:
         S3_ENDPOINT="http://s3.internal:9000/",
         S3_ACCESS_KEY="access",
         S3_SECRET_KEY="secret",
-        S3_REGION="ap-southeast-1",
+        s3_region="ap-southeast-1",
         S3_BUCKET_NAME="hackathon",
-        S3_FORCE_PATH_STYLE="true",
+        s3_force_path_style=True,
     )
 
     assert config.s3_endpoint_url == "http://s3.internal:9000"
@@ -43,9 +43,9 @@ def test_s3_client_uses_region_path_style_and_encoded_object_url() -> None:
         S3_ENDPOINT="http://s3.internal:9000/",
         S3_ACCESS_KEY="access",
         S3_SECRET_KEY="secret",
-        S3_REGION="us-east-1",
+        s3_region="us-east-1",
         S3_BUCKET_NAME="hackathon",
-        S3_FORCE_PATH_STYLE="true",
+        s3_force_path_style=True,
     )
     boto_client = Mock()
 

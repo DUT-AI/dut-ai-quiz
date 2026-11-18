@@ -83,7 +83,7 @@ def extract_auth_context_from_request(
     # 1. Check API Key for third-party integrations
     api_key = request.headers.get("X-API-Key") or request.query_params.get("api_key")
     if api_key:
-        if api_key in settings.third_party_api_key_list:
+        if any(compare_digest(api_key, k) for k in settings.third_party_api_key_list):
             return UserContext(
                 id=0,
                 roles=["THIRD_PARTY", UserRole.TEAMMATE.value],
@@ -214,7 +214,7 @@ def require_roles(*allowed_roles: str | UserRole):
 async def require_manage_service(
     authorization: Annotated[str | None, Header()] = None,
 ) -> None:
-    expected_key = settings.manage_api_key.strip()
+    expected_key = settings.quiz_webhook_secret.strip()
     if not expected_key:
         raise HTTPException(
             status_code=503,

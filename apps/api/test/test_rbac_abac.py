@@ -351,6 +351,8 @@ async def test_extract_auth_context_api_key(monkeypatch):
     monkeypatch.setattr(
         settings, "third_party_api_keys", "secret-test-key, partner-key-123"
     )
+    monkeypatch.setattr(settings, "quiz_webhook_secret", "quiz-webhook-secret")
+    monkeypatch.setattr(settings, "manage_api_key", "manage-outbound-key")
 
     # Header X-API-Key
     req = DummyRequest(headers={"X-API-Key": "secret-test-key"})
@@ -358,6 +360,18 @@ async def test_extract_auth_context_api_key(monkeypatch):
     assert ctx.id == 0
     assert "THIRD_PARTY" in ctx.roles
     assert ctx.has_permission(SystemPermission.READ_LESSON)
+
+    # QUIZ_WEBHOOK_SECRET is accepted as inbound third-party key
+    webhook_req = DummyRequest(headers={"X-API-Key": "quiz-webhook-secret"})
+    webhook_ctx = await get_current_user(webhook_req)
+    assert webhook_ctx.id == 0
+    assert "THIRD_PARTY" in webhook_ctx.roles
+
+    # MANAGE_API_KEY is outbound-only and rejected for inbound calls
+    manage_req = DummyRequest(headers={"X-API-Key": "manage-outbound-key"})
+    with pytest.raises(HTTPException) as manage_exc:
+        await get_current_user(manage_req)
+    assert manage_exc.value.status_code == 401
 
     # Invalid API Key raises 401
     invalid_req = DummyRequest(headers={"X-API-Key": "wrong-key"})
