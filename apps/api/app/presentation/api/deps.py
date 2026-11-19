@@ -109,10 +109,18 @@ def extract_auth_context_from_request(
     if not payload:
         raise HTTPException(status_code=401, detail="Unauthorized: Invalid session")
 
-    uid = payload.get("user_id")
-    roles = payload.get("roles")
+    uid = payload.get("user_id") or payload.get("sub")
+    raw_roles = payload.get("roles") or payload.get("role_names")
+    if isinstance(raw_roles, list):
+        roles = [str(r) for r in raw_roles]
+    elif isinstance(raw_roles, str) and raw_roles:
+        roles = [raw_roles]
+    elif payload.get("role"):
+        roles = [str(payload.get("role"))]
+    else:
+        roles = ["STUDENT"]
 
-    if uid is None or roles is None or not isinstance(roles, list):
+    if uid is None:
         raise HTTPException(
             status_code=401, detail="Unauthorized: Invalid token payload"
         )
@@ -123,7 +131,7 @@ def extract_auth_context_from_request(
     user_source = UserSource.MANAGE
     if raw_source in ("google", "GOOGLE", "internal", "INTERNAL"):
         user_source = UserSource.INTERNAL
-    elif raw_source in ("manage", "MANAGE"):
+    elif raw_source in ("manage", "MANAGE", "access"):
         user_source = UserSource.MANAGE
 
     return UserContext(

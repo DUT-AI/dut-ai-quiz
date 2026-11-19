@@ -28,8 +28,9 @@ def decode_access_token(token: str) -> dict[str, Any] | None:
         payload = jwt.decode(
             token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm]
         )
-        # Accept existing access JWTs during rollout, but never another token kind.
-        if payload.get("token_use", "access") != "access":
+        # Accept existing access JWTs during rollout, but never a refresh token kind.
+        token_type = payload.get("token_use") or payload.get("type", "access")
+        if token_type != "access":
             return None
         return payload
     except jwt.ExpiredSignatureError:

@@ -30,7 +30,7 @@ class Settings(BaseSettings):
 
     third_party_api_keys: str = ""
 
-    cors_origins: str = "http://localhost:3000,https://quiz.dutai.site"
+    cors_origins: str = "http://localhost:3000,https://quiz.dutai.site,https://lms.dutai.io.vn,https://workspace.dutai.io.vn"
 
     redis_url: str = "redis://127.0.0.1:6379/0"
     hackathon_queue_name: str = "arq:hackathon"
@@ -43,6 +43,7 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = Field(default=15, ge=1)
     jwt_refresh_expire_days: int = Field(default=7, ge=1)
+    cookie_domain: str | None = None
 
     google_client_id: str = ""
     google_client_secret: str = ""

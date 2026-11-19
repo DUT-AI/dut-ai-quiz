@@ -19,22 +19,46 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 def require_trusted_origin(request: Request) -> None:
     origin = request.headers.get("origin")
     allowed = {*settings.cors_origin_list, settings.frontend_url.rstrip("/")}
-    if (origin and origin.rstrip("/") not in allowed) or (
+    is_trusted_subdomain = False
+    if origin:
+        try:
+            from urllib.parse import urlparse
+
+            hostname = urlparse(origin).hostname or ""
+            if (
+                hostname == "dutai.io.vn"
+                or hostname.endswith(".dutai.io.vn")
+                or hostname.endswith(".dutai.site")
+            ):
+                is_trusted_subdomain = True
+        except Exception:
+            pass
+
+    if (origin and origin.rstrip("/") not in allowed and not is_trusted_subdomain) or (
         not origin and request.headers.get("sec-fetch-site") == "cross-site"
     ):
         raise HTTPException(status_code=403, detail="Untrusted request origin")
 
 
+def _get_cookie_domain() -> str | None:
+    if settings.cookie_domain:
+        return settings.cookie_domain
+    if ".dutai.io.vn" in settings.frontend_url:
+        return ".dutai.io.vn"
+    if ".dutai.site" in settings.frontend_url:
+        return ".dutai.site"
+    return None
+
+
 def _clear_auth_cookies(response: Response) -> None:
-    domain = ".dutai.site" if ".dutai.site" in settings.frontend_url else None
+    domain = _get_cookie_domain()
     response.delete_cookie("access_token", domain=domain, path="/")
     response.delete_cookie("refresh_token", domain=domain, path="/")
     response.headers["Cache-Control"] = "no-store"
 
 
 def _set_auth_cookies(response: Response, tokens: AuthTokens) -> None:
-    is_prod = ".dutai.site" in settings.frontend_url
-    domain = ".dutai.site" if is_prod else None
+    domain = _get_cookie_domain()
 
     # Set Access Token Cookie
     response.set_cookie(
