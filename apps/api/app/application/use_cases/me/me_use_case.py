@@ -41,7 +41,12 @@ class GetProfileUseCase:
         if not payload:
             raise AppException("Access token không hợp lệ hoặc đã hết hạn", 401)
 
-        user_id = payload.get("user_id")
+        raw_uid = payload.get("user_id") or payload.get("sub")
+        try:
+            user_id = int(raw_uid) if raw_uid is not None else None
+        except (ValueError, TypeError):
+            user_id = raw_uid
+
         user_type = payload.get("type", "service_a")
 
         if not user_id:
@@ -85,7 +90,8 @@ class GetProfileUseCase:
                             "id": user_id,
                             "email": payload.get("email", f"user{user_id}@dutai.site"),
                             "name": payload.get("name", f"User #{user_id}"),
-                            "avatar_url": payload.get("avatar_url"),
+                            "avatar_url": payload.get("avatar_url")
+                            or payload.get("avatar"),
                             "role_names": roles_in_payload,
                             "quiz_role": quiz_role,
                         }
@@ -122,7 +128,8 @@ class GetProfileUseCase:
                         "id": user_id,
                         "email": payload.get("email", f"user{user_id}@dutai.site"),
                         "name": payload.get("name", f"User #{user_id}"),
-                        "avatar_url": payload.get("avatar_url"),
+                        "avatar_url": payload.get("avatar_url")
+                        or payload.get("avatar"),
                         "role_names": roles_in_payload,
                         "quiz_role": quiz_role,
                     }
