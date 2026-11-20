@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  basePath: '/lms',
   images: {
     remotePatterns: [
       {
@@ -20,9 +19,13 @@ const nextConfig = {
   async redirects() {
     return [
       {
-        source: '/',
-        destination: '/lms/dashboard',
-        basePath: false,
+        source: '/lms',
+        destination: '/dashboard',
+        permanent: false,
+      },
+      {
+        source: '/lms/:path*',
+        destination: '/:path*',
         permanent: false,
       },
     ];

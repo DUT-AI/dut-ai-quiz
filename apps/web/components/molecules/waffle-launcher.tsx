@@ -18,14 +18,14 @@ const APPS: AppItem[] = [
     title: "Hệ thống Quản lý",
     description: "Bảng điều khiển quản trị trung tâm và dữ liệu",
     icon: LayoutDashboard,
-    path: "/manage/dashboard",
+    path: "https://manage.dutai.io.vn",
   },
   {
     id: "lms",
     title: "Học tập & Trắc nghiệm",
     description: "Ngân hàng câu hỏi, bài tập và đề thi",
     icon: GraduationCap,
-    path: "/lms/dashboard",
+    path: "/dashboard",
     isActive: true,
   },
   {
@@ -33,7 +33,7 @@ const APPS: AppItem[] = [
     title: "Công việc Meetly",
     description: "Bảng việc Kanban, ghi chú và lịch trình",
     icon: CheckSquare,
-    path: "/meetly/tasks",
+    path: "https://meetly.dutai.io.vn",
   },
 ];
 
