@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { SidebarNav } from "@/components/molecules/sidebar-nav";
-import { WaffleLauncher } from "@/components/molecules/waffle-launcher";
+import { DutaiWaffle } from "@/components/common/DutaiWaffle";
 import { useAuth } from "@/context/auth-context";
 import SwitchTheme from "@/components/atoms/switch-theme";
 import { cn } from "@/lib/utils";
@@ -188,7 +188,7 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
 
           <div className="flex items-center gap-3">
             <SwitchTheme />
-            <WaffleLauncher />
+            <DutaiWaffle current="lms" />
           </div>
         </header>
 
