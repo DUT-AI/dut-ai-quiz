@@ -4,6 +4,7 @@ export const API_BASE =
     ? process.env.INTERNAL_API_URL?.replace(/\/$/, "") ||
       process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ||
       "http://localhost:8076"
-    : process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ||
-      (window.location.pathname.startsWith("/lms") ? "/lms" : "");
+    : (window.location.hostname.endsWith("dutai.io.vn") || window.location.pathname.startsWith("/lms"))
+      ? (window.location.pathname.startsWith("/lms") ? "/lms" : "")
+      : process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || "";
 
